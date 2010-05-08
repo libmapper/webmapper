@@ -7,6 +7,7 @@ import urllib
 import subprocess
 import threading
 import OSC
+import socket
 
 PORT = 8000
 
@@ -91,8 +92,33 @@ handlers = {'/': handler_page,
 def catchall_osc_handler(addr, typetags, args, source):
     print 'testing catch-all OSC handler:', addr, typetags, args, source
 
+# Code from http://wiki.python.org/moin/UdpCommunication
+def udp_multicast_socket(group, port, buf_size=1024):
+    """udp_multicast_socket(group, port [,buf_size]]]) - returns a multicast-enabled UDP socket"""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    # Set some options to make it multicast-friendly
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    except AttributeError:
+        pass # Some systems don't support SO_REUSEPORT
+    s.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 1)
+    s.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
+
+    # Bind to the port
+    s.bind(('', port))
+
+    # Set some more multicast options
+    intf = socket.gethostbyname(socket.gethostname())
+    s.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(intf))
+    s.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(group) + socket.inet_aton(intf))
+    return s
+
 osc_server = OSC.OSCServer(('localhost', 9000))
+osc_server.socket = udp_multicast_socket('224.0.1.3', 7570)
 osc_server.addMsgHandler('default', catchall_osc_handler)
+
 osc_thread = threading.Thread(target=osc_server.serve_forever)
 osc_thread.start()
 
