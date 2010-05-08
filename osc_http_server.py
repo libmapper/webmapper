@@ -5,6 +5,8 @@ import SocketServer
 import SimpleHTTPServer
 import urllib
 import subprocess
+import threading
+import OSC
 
 PORT = 8000
 
@@ -86,6 +88,17 @@ handlers = {'/': handler_page,
             '/wait_osc': handler_wait_osc,
             '/send_osc': handler_send_osc}
 
+def catchall_osc_handler(addr, typetags, args, source):
+    print 'testing catch-all OSC handler:', addr, typetags, args, source
+
+osc_server = OSC.OSCServer(('localhost', 9000))
+osc_server.addMsgHandler('default', catchall_osc_handler)
+osc_thread = threading.Thread(target=osc_server.serve_forever)
+osc_thread.start()
+
 httpd = ReuseTCPServer(('', PORT), OscHTTPServer)
 print "serving at port", PORT
 httpd.serve_forever()
+
+osc_server.close()
+osc_thread.join()
