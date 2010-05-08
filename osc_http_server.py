@@ -8,8 +8,11 @@ import subprocess
 import threading
 import OSC
 import socket
+import time
 
 PORT = 8000
+
+message_pipe = []
 
 class ReuseTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
@@ -80,7 +83,10 @@ function test_msg()
 </body>"""
 
 def handler_wait_osc(out, args):
-    print >>out, "<p>wait_osc: "+str(args)+"</p>"
+    while len(message_pipe)==0:
+        time.sleep(0.1)
+    msg = message_pipe.pop()
+    print >>out, "<p>wait_osc: "+str(msg)+"</p>"
 
 def handler_send_osc(out, args):
     pass
@@ -91,6 +97,7 @@ handlers = {'/': handler_page,
 
 def catchall_osc_handler(addr, typetags, args, source):
     print 'testing catch-all OSC handler:', addr, typetags, args, source
+    message_pipe.append((addr, typetags, args))
 
 # Code from http://wiki.python.org/moin/UdpCommunication
 def udp_multicast_socket(group, port, buf_size=1024):
