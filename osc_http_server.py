@@ -124,14 +124,29 @@ def udp_multicast_socket(group, port, buf_size=1024):
 
 osc_server = OSC.OSCServer(('localhost', 9000))
 osc_server.socket = udp_multicast_socket('224.0.1.3', 7570)
+osc_server.socket.settimeout(1)
 osc_server.addMsgHandler('default', catchall_osc_handler)
 
 osc_thread = threading.Thread(target=osc_server.serve_forever)
 osc_thread.start()
 
 httpd = ReuseTCPServer(('', PORT), OscHTTPServer)
-print "serving at port", PORT
-httpd.serve_forever()
 
+http_thread = threading.Thread(target=httpd.serve_forever)
+http_thread.start()
+
+print "serving at port", PORT
+try:
+    while 1:
+        time.sleep(10)
+except KeyboardInterrupt:
+    pass
+
+print "shutting down..."
 osc_server.close()
+while osc_server.running:
+    time.sleep(0.1)
+httpd.shutdown()
 osc_thread.join()
+http_thread.join()
+print 'bye.'
