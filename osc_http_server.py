@@ -9,6 +9,7 @@ import threading
 import OSC
 import socket
 import time
+import struct
 
 PORT = 8000
 
@@ -102,7 +103,7 @@ def catchall_osc_handler(addr, typetags, args, source):
 # Code from http://wiki.python.org/moin/UdpCommunication
 def udp_multicast_socket(group, port, buf_size=1024):
     """udp_multicast_socket(group, port [,buf_size]]]) - returns a multicast-enabled UDP socket"""
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
     # Set some options to make it multicast-friendly
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -118,8 +119,10 @@ def udp_multicast_socket(group, port, buf_size=1024):
 
     # Set some more multicast options
     intf = socket.gethostbyname(socket.gethostname())
-    s.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(intf))
-    s.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(group) + socket.inet_aton(intf))
+    s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                 socket.inet_aton(intf))
+    mreq = struct.pack("4sl", socket.inet_aton(group), socket.INADDR_ANY)
+    s.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
     return s
 
 osc_server = OSC.OSCServer(('localhost', 9000))
