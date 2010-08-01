@@ -15,7 +15,7 @@ PORT = 8000
 
 message_pipe = []
 
-class ReuseTCPServer(SocketServer.TCPServer):
+class ReuseTCPServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
 
 class OscHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
