@@ -29,55 +29,54 @@ class OscHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             args = dict(args_list)
         except:
             pass
-        print >>self.wfile, """
-<html>
+
+        contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8' }
+        def found(type=''):
+            print >>self.wfile, "HTTP/1.0 302 Found"
+            try:
+                print >>self.wfile, contenttype[type]
+            except KeyError:
+                pass
+            finally:
+                print >>self.wfile
+
+        def notfound(type=''):
+            print >>self.wfile, "HTTP/1.0 402 Not Found"
+            try:
+                print >>self.wfile, contenttype[type]
+            finally:
+                print >>self.wfile
+
+        def page(content):
+            print >>self.wfile, """<html>
 <head>
 <title>Testing OSC</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<script type="text/javascript">
-function request(path, args, ok_responder, error_responder) {
-  var client = new XMLHttpRequest();
-  client.onreadystatechange = function() {
-    if(this.readyState == 4)
-      ok_responder(this.responseText);
-    else if (error_responder)
-      error_responder(this.responseText);
-  }
-  a='';
-  n=0;
-  for (i in args) {
-    if (n==0)
-      a+='?';
-    else
-      a+='&';
-    a += i + '=' + args[i];
-    n++;
-  }
-  client.open("GET", path+a);
-  client.send("");
-}
-</script>
+<script type="text/javascript" src="osc.js"></script>
 </head>
 """
-        ex = False
+            content(self.wfile, args)
+            print >>self.wfile, "</html>"
+
         try:
-            ex = handlers[command]
-        except:
-            print >>self.wfile, "Error."
-        if ex: ex(self.wfile, args)
-        print >>self.wfile, "</html>"
+            content = handlers[command]
+            if content:
+                found('html')
+                page(content)
+        except KeyError:
+            try:
+                f = open(self.path[1:])
+                found()
+                for l in f:
+                    self.wfile.write(l)
+            except IOError:
+                def error(out, args):
+                    print >>self.wfile, "404 Not Found:", self.path
+                notfound('html')
+                page(error)
 
 def handler_page(out, args):
     print >>out, """
-<script type="text/javascript">
-function test_msg()
-{
-  request('wait_osc', {'asdf': 25},
-      function (text) {
-        document.getElementById('output').innerHTML += text;
-      });
-}
-</script>
 <body>
 <p>Test: <input type="button" onclick="test_msg();" value="test"/></p>
 <div id="output"></div>
