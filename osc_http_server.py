@@ -10,6 +10,7 @@ import OSC
 import socket
 import time
 import struct
+import json
 
 PORT = 8000
 
@@ -30,9 +31,10 @@ class OscHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         except:
             pass
 
-        contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8' }
+        contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8',
+                        'js': 'Content-Type: text/javascript' }
         def found(type=''):
-            print >>self.wfile, "HTTP/1.0 302 Found"
+            print >>self.wfile, "HTTP/1.0 200 OK"
             try:
                 print >>self.wfile, contenttype[type]
             except KeyError:
@@ -41,51 +43,42 @@ class OscHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 print >>self.wfile
 
         def notfound(type=''):
-            print >>self.wfile, "HTTP/1.0 402 Not Found"
+            print >>self.wfile, "HTTP/1.0 404 Not Found"
             try:
                 print >>self.wfile, contenttype[type]
             finally:
                 print >>self.wfile
 
-        def page(content):
-            print >>self.wfile, """<html>
-<head>
-<title>Testing OSC</title>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<script type="text/javascript" src="osc.js"></script>
-</head>
-"""
-            content(self.wfile, args)
-            print >>self.wfile, "</html>"
-
         try:
-            content = handlers[command]
-            if content:
-                found('html')
-                page(content)
+            handlers[command](self.wfile, args)
         except KeyError:
             try:
                 f = open(self.path[1:])
-                found()
+                found(self.path.rsplit('.',1)[-1])
                 self.copyfile(f, self.wfile)
             except IOError:
-                def error(out, args):
-                    print >>self.wfile, "404 Not Found:", self.path
                 notfound('html')
-                page(error)
+                print >>self.wfile, "404 Not Found:", self.path
 
 def handler_page(out, args):
-    print >>out, """
-<body>
-<p>Test: <input type="button" onclick="test_msg();" value="test"/></p>
+    print >>out, """<html>
+<head>
+<title>Testing OSC</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="json2.js"></script>
+<script type="text/javascript" src="osc.js"></script>
+</head>
+<body onload="test_msg();">
 <div id="output"></div>
-</body>"""
+</body>
+</html>"""
 
 def handler_wait_osc(out, args):
     while len(message_pipe)==0:
         time.sleep(0.1)
     msg = message_pipe.pop()
-    print >>out, "<p>wait_osc: "+str(msg)+"</p>"
+    print >>out, json.dumps( {"id": int(args['id']), "path": msg[0],
+                              "types": msg[1], "args": msg[2]} );
 
 def handler_send_osc(out, args):
     pass
