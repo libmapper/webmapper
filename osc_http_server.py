@@ -67,8 +67,7 @@ class OscHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             try:
                 f = open(self.path[1:])
                 found()
-                for l in f:
-                    self.wfile.write(l)
+                self.copyfile(f, self.wfile)
             except IOError:
                 def error(out, args):
                     print >>self.wfile, "404 Not Found:", self.path
