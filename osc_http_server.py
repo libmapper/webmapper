@@ -65,10 +65,12 @@ def handler_page(out, args):
 <head>
 <title>Testing OSC</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="util.js"></script>
 <script type="text/javascript" src="json2.js"></script>
 <script type="text/javascript" src="osc.js"></script>
+<script type="text/javascript" src="main.js"></script>
 </head>
-<body onload="test_msg();">
+<body>
 <div id="output"></div>
 </body>
 </html>"""

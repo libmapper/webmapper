@@ -1,71 +1,74 @@
 
-function request(path, args, ok_responder, error_responder) {
-  var client = new XMLHttpRequest();
-  client.onreadystatechange = function() {
-    if(this.readyState == 4)
-      ok_responder(this.responseText);
-    else if (error_responder)
-      error_responder(this.responseText);
-  }
-  a='';
-  n=0;
-  for (i in args) {
-    if (n==0)
-      a+='?';
-    else
-      a+='&';
-    a += i + '=' + args[i];
-    n++;
-  }
-  client.open("GET", path+a);
-  client.send("");
-}
+/* An object to provide Open Sound Control services by sending
+ * asynchronous requests to the server.  It maintains a given number
+ * of connections at all times. */
+OSC = {
+    requests: new Bucket(),
+    num_requests: 10,
+    request_id: 0,
+    handlers: {},
+    handler_id: 0,
 
-function Bucket() {
-    this.contents = [];
-    this.put = function(a) {
-        this.contents.push(a);
-    }
-    this.take = function(a) {
-        for (i in this.contents) {
-            if (this.contents[i]==a) {
-                this.contents.splice(i,1);
-                return;
-            }
-        }
-    }
-}
-
-var g_osc_requests = new Bucket();
-var g_num_osc_requests = 10;
-var g_osc_request_id = 0;
-
-function trace(text) {
-    var out = document.getElementById('output');
-    if (out)
-        out.innerHTML += '<p>'+text+'</p>\n'
-}
-
-function osc_message_request()
-{
-    g_osc_requests.put(g_osc_request_id);
-    request('wait_osc', {'id': g_osc_request_id++},
+    message_request: function ()
+    {
+        OSC.requests.put(OSC.request_id);
+        http_request('wait_osc', {'id': OSC.request_id++},
             function (text) {
-                msg = JSON.parse(text);
+                var msg = JSON.parse(text);
                 if (msg && msg['id']!=null)
-                    g_osc_requests.take(msg['id']);
-                trace(msg['path']+','+msg['types']+",["+msg['args']+"]");
-                maintain_osc_requests();
+                    OSC.requests.take(msg['id']);
+                OSC.maintain_requests();
+                var hs = OSC.handlers[msg['path']];
+                if (hs) for (h in hs)
+                    hs[h](msg['path'], msg['types'], msg['args']);
             });
-}
+    },
 
-function maintain_osc_requests()
-{
-    while (g_osc_requests.contents.length < g_num_osc_requests)
-        osc_message_request();
-}
+    /* Called to make sure the required number of connections are
+     * still active. */
+    maintain_requests: function ()
+    {
+        while (OSC.requests.contents.length < OSC.num_requests)
+            OSC.message_request();
+    },
 
-function test_msg()
-{
-    setTimeout(function() {maintain_osc_requests();}, 100);
-}
+    /* Register a handler for a particular message address. Returns a
+     * reference that must be passed to unregister. */
+    register: function(address, func)
+    {
+        var h = OSC.handlers[address];
+        if (!h) {
+            h = {};
+            OSC.handlers[address] = h;
+        }
+        h[OSC.handler_id] = func;
+        return [address, OSC.handler_id++];
+    },
+
+    /* Unregister a function.  Parameter may be a reference returned
+     * from OSC.register(), or a string containing the message
+     * address. */
+    unregister: function(handler)
+    {
+        if (typeof(handler)=="string") {
+            delete OSC.handlers[handler];
+            return;
+        }
+        var address = handler[0];
+        var id = handler[1];
+        var h = OSC.handlers[address];
+        if (h[id])
+            delete h[id];
+        var size = 0;
+        for (var key in h)
+            if (h.hasOwnProperty(key)) size ++;
+        if (size == 0)
+            delete OSC.handlers[address];
+    },
+
+    /* Start the OSC service. */
+    start: function ()
+    {
+        setTimeout(function() {OSC.maintain_requests();}, 100);
+    }
+};
