@@ -76,8 +76,13 @@ def handler_page(out, args):
 </html>"""
 
 def handler_wait_osc(out, args):
+    i=0
     while len(message_pipe)==0:
         time.sleep(0.1)
+        i = i + 1
+        if (i>50):
+            print >>out, json.dumps( {"id": int(args['id'])} );
+            return
     msg = message_pipe.pop()
     print >>out, json.dumps( {"id": int(args['id']), "path": msg[0],
                               "types": msg[1], "args": msg[2]} );

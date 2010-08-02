@@ -14,13 +14,17 @@ OSC = {
         OSC.requests.put(OSC.request_id);
         http_request('wait_osc', {'id': OSC.request_id++},
             function (text) {
+                if (text.length==0)
+                    return;
                 var msg = JSON.parse(text);
                 if (msg && msg['id']!=null)
                     OSC.requests.take(msg['id']);
                 OSC.maintain_requests();
-                var hs = OSC.handlers[msg['path']];
-                if (hs) for (h in hs)
-                    hs[h](msg['path'], msg['types'], msg['args']);
+                if (msg['path']) {
+                    var hs = OSC.handlers[msg['path']];
+                    if (hs) for (h in hs)
+                        hs[h](msg['path'], msg['types'], msg['args']);
+                }
             });
     },
 
