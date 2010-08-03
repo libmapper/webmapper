@@ -4,7 +4,7 @@
  * of connections at all times. */
 OSC = {
     requests: new Bucket(),
-    num_requests: 10,
+    num_requests: 5,
     request_id: 0,
     handlers: {},
     handler_id: 0,
@@ -74,5 +74,16 @@ OSC = {
     start: function ()
     {
         setTimeout(function() {OSC.maintain_requests();}, 100);
+    },
+
+    /* Send a message. */
+    send: function (path, types, args)
+    {
+        http_request('send_osc',
+                     {'msg':
+                      JSON.stringify({'path': path,
+                                      'types': types ? types : '',
+                                      'args': args ? args : []})},
+                     function () {});
     }
 };

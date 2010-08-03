@@ -88,7 +88,17 @@ def handler_wait_osc(out, args):
                               "types": msg[1], "args": msg[2]} );
 
 def handler_send_osc(out, args):
-    pass
+    try:
+        msgstring = args['msg']
+        vals = json.loads(msgstring)
+        osc = OSC.OSCMessage(vals['path'])
+        for a in zip(vals['args'],list(vals['types'])):
+            osc.append(*a)
+        osc_client.sendto(osc, ('224.0.1.3', 7570))
+    except KeyError:
+        print 'send_osc: no message found in "%s"'%str(msgstring)
+    except ValueError:
+        print 'send_osc: bad embedded JSON "%s"'%str(vals)
 
 handlers = {'/': handler_page,
             '/wait_osc': handler_wait_osc,
@@ -127,6 +137,9 @@ osc_server = OSC.OSCServer(('localhost', 9000))
 osc_server.socket = udp_multicast_socket('224.0.1.3', 7570)
 osc_server.socket.settimeout(1)
 osc_server.addMsgHandler('default', catchall_osc_handler)
+
+osc_client = OSC.OSCClient()
+osc_client.socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
 
 osc_thread = threading.Thread(target=osc_server.serve_forever)
 osc_thread.start()
