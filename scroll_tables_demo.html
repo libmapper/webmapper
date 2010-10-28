@@ -54,13 +54,11 @@ function onScroll()
   var elem10 = document.getElementById('elem10');
   var elem12 = document.getElementById('elem12');
 
-  var x1 = table1.offsetLeft + table1.offsetWidth - top.offsetLeft;
-  var y1 = elem10.offsetTop + table1.offsetTop - table1.scrollTop
-           - top.offsetTop + elem10.offsetHeight/2;
+  var x1 = 0;
+  var y1 = elem10.offsetTop - table1.scrollTop + elem10.offsetHeight/2;
 
-  var x2 = table2.offsetLeft - top.offsetLeft;
-  var y2 = elem12.offsetTop + table2.offsetTop - table2.scrollTop
-           - top.offsetTop + elem12.offsetHeight/2;
+  var x2 = parseInt(svg.style.width);
+  var y2 = elem12.offsetTop - table2.scrollTop + elem12.offsetHeight/2;
 
   var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1 + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
   line.setAttribute("d", p);
@@ -68,7 +66,14 @@ function onScroll()
 
 function onLoad()
 {
+  var table1 = document.getElementById('table1');
+  var table2 = document.getElementById('table2');
   svg = document.createElementNS(svgns, "svg");
+  svg.setAttribute("style", "position:absolute"
+    + ";left:" + (table1.offsetLeft + table1.offsetWidth)
+    + ";width:" + (table2.offsetLeft - table1.offsetWidth - table1.offsetLeft)
+    + ";top:" + table2.offsetTop
+    + ";height:" + table2.offsetHeight);
   line = document.createElementNS(svgns, "path");
   line.setAttribute("stroke", "black");
   line.setAttribute("fill", "none");
