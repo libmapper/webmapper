@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import webmapper_http_server
 import mapper
