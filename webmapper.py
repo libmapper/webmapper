@@ -10,4 +10,4 @@ def dummy(a,b):
 
 monitor.db.add_device_callback(dummy)
 
-webmapper_http_server.serve(port=8000, poll=lambda: monitor.poll(10))
+webmapper_http_server.serve(port=8000, poll=lambda: monitor.poll(100))
