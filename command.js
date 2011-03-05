@@ -9,23 +9,26 @@ command = {
     handlers: {},
     handler_id: 0,
 
+    json_handler: function (text)
+    {
+        if (text.length==0)
+            return;
+        var msg = JSON.parse(text);
+        if (msg && msg['id']!=null)
+            command.requests.take(msg['id']);
+        command.maintain_requests();
+        if (msg['cmd']) {
+            var hs = command.handlers[msg['cmd']];
+            if (hs) for (h in hs)
+                        hs[h](msg['cmd'], msg['args']);
+        }
+    },
+
     message_request: function ()
     {
         command.requests.put(command.request_id);
         http_request('wait_cmd', {'id': command.request_id++},
-            function (text) {
-                if (text.length==0)
-                    return;
-                var msg = JSON.parse(text);
-                if (msg && msg['id']!=null)
-                    command.requests.take(msg['id']);
-                command.maintain_requests();
-                if (msg['cmd']) {
-                    var hs = command.handlers[msg['cmd']];
-                    if (hs) for (h in hs)
-                        hs[h](msg['cmd'], msg['args']);
-                }
-            });
+                     command.json_handler);
     },
 
     /* Called to make sure the required number of connections are
@@ -83,6 +86,8 @@ command = {
                      {'msg':
                       JSON.stringify({'cmd': cmd,
                                       'args': args ? args : []})},
-                     function () {});
+                     function (text) {
+                         command.json_handler(text);
+                     });
     }
 };

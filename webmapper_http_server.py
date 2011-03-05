@@ -87,25 +87,35 @@ def handler_wait_command(out, args):
     print 'Sending command:',msg
     print >>out, json.dumps( {"id": int(args['id']),
                               "cmd": msg[0],
-                              "args": msg[1]} );
+                              "args": msg[1]} )
 
 def handler_send_command(out, args):
     try:
         msgstring = args['msg']
         vals = json.loads(msgstring)
-        # TODO send command to back-end
-        print 'Got command:',vals
+        h = cmd_handlers[vals['cmd']]
     except KeyError:
         print 'send_command: no message found in "%s"'%str(msgstring)
+        return
     except ValueError:
         print 'send_command: bad embedded JSON "%s"'%str(vals)
+        return
+    res = h(vals['args'])
+    if res:
+        print >>out, json.dumps( { "cmd": res[0],
+                                   "args": res[1] } )
 
 handlers = {'/': handler_page,
             '/wait_cmd': handler_wait_command,
             '/send_cmd': handler_send_command}
 
+cmd_handlers = {}
+
 def send_command(cmd, args):
     message_pipe.append((cmd, args))
+
+def add_command_handler(cmd, handler):
+    cmd_handlers[cmd] = handler
 
 def serve(port=8000, poll=lambda: time.sleep(10)):
     httpd = ReuseTCPServer(('', port), MapperHTTPServer)

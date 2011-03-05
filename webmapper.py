@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 
-import webmapper_http_server
+import webmapper_http_server as server
 import mapper
 
 monitor = mapper.monitor()
 
-def dummy(a,b):
-    print 'found',a['name']
-    webmapper_http_server.send_command("newdevice", a)
+def on_device(dev, action):
+    if action == mapper.MDB_NEW:
+        server.send_command("newdevice", dev)
 
-monitor.db.add_device_callback(dummy)
+monitor.db.add_device_callback(on_device)
 
-webmapper_http_server.serve(port=8000, poll=lambda: monitor.poll(100))
+server.add_command_handler("alldevices",
+                           lambda x: ("alldevices",
+                                      list(monitor.db.all_devices())))
+
+server.serve(port=8000, poll=lambda: monitor.poll(100))

@@ -13,11 +13,17 @@ function test_send()
 /* The main program. */
 function main()
 {
+    command.register("alldevices", function(cmd, args) {
+        for (d in args)
+            trace(cmd+", "+args[d].name);
+    });
     command.register("newdevice", function(cmd, args) {
         trace(cmd+", "+args.name);
     });
 
     command.start();
+
+    command.send('alldevices');
 
     test_send();
 }
