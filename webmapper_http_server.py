@@ -5,6 +5,7 @@ import urllib
 import threading
 import time
 import json
+from select import select
 
 message_pipe = []
 
@@ -73,8 +74,14 @@ def handler_wait_command(out, args):
         time.sleep(0.1)
         i = i + 1
         if (i>50):
+            r, w, e=select([out._sock],[],[out._sock], 0)
+            if len(r)>0 or len(e)>0:
+                return
             print >>out, json.dumps( {"id": int(args['id'])} );
             return
+    r, w, e=select([out._sock],[],[out._sock], 0)
+    if len(r)>0 or len(e)>0:
+        return
     # Receive command from back-end
     msg = message_pipe.pop()
     print 'Sending command:',msg
