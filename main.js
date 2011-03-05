@@ -3,9 +3,9 @@ function test_send()
 {
     div = document.createElement('div');
     inp = document.createElement('input');
-    inp.value = "Send /test,si,asdf,123";
+    inp.value = "Send /test,asdf,123";
     inp.type = "button";
-    inp.onclick = function(){OSC.send('/test', 'si', ['asdf', 123]);}
+    inp.onclick = function(){command.send('/test', ['asdf', 123]);}
     div.appendChild(inp);
     document.body.insertBefore(div, document.getElementById('output'));
 }
@@ -13,11 +13,11 @@ function test_send()
 /* The main program. */
 function main()
 {
-    OSC.register("/test", function(path, types, args) {
-        trace(path+','+types+",["+args+"]");
+    command.register("newdevice", function(cmd, args) {
+        trace(cmd+", "+args.name);
     });
 
-    OSC.start();
+    command.start();
 
     test_send();
 }

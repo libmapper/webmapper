@@ -7,6 +7,7 @@ monitor = mapper.monitor()
 
 def dummy(a,b):
     print 'found',a['name']
+    webmapper_http_server.send_command("newdevice", a)
 
 monitor.db.add_device_callback(dummy)
 

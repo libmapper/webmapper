@@ -1,8 +1,8 @@
 
-/* An object to provide Open Sound Control services by sending
- * asynchronous requests to the server.  It maintains a given number
- * of connections at all times. */
-OSC = {
+/* An object to provide command services by sending asynchronous
+ * requests to the server.  It maintains a given number of connections
+ * at all times. */
+command = {
     requests: new Bucket(),
     num_requests: 5,
     request_id: 0,
@@ -11,19 +11,19 @@ OSC = {
 
     message_request: function ()
     {
-        OSC.requests.put(OSC.request_id);
-        http_request('wait_osc', {'id': OSC.request_id++},
+        command.requests.put(command.request_id);
+        http_request('wait_cmd', {'id': command.request_id++},
             function (text) {
                 if (text.length==0)
                     return;
                 var msg = JSON.parse(text);
                 if (msg && msg['id']!=null)
-                    OSC.requests.take(msg['id']);
-                OSC.maintain_requests();
-                if (msg['path']) {
-                    var hs = OSC.handlers[msg['path']];
+                    command.requests.take(msg['id']);
+                command.maintain_requests();
+                if (msg['cmd']) {
+                    var hs = command.handlers[msg['cmd']];
                     if (hs) for (h in hs)
-                        hs[h](msg['path'], msg['types'], msg['args']);
+                        hs[h](msg['cmd'], msg['args']);
                 }
             });
     },
@@ -32,57 +32,56 @@ OSC = {
      * still active. */
     maintain_requests: function ()
     {
-        while (OSC.requests.contents.length < OSC.num_requests)
-            OSC.message_request();
+        while (command.requests.contents.length < command.num_requests)
+            command.message_request();
     },
 
     /* Register a handler for a particular message address. Returns a
      * reference that must be passed to unregister. */
     register: function(address, func)
     {
-        var h = OSC.handlers[address];
+        var h = command.handlers[address];
         if (!h) {
             h = {};
-            OSC.handlers[address] = h;
+            command.handlers[address] = h;
         }
-        h[OSC.handler_id] = func;
-        return [address, OSC.handler_id++];
+        h[command.handler_id] = func;
+        return [address, command.handler_id++];
     },
 
     /* Unregister a function.  Parameter may be a reference returned
-     * from OSC.register(), or a string containing the message
+     * from command.register(), or a string containing the message
      * address. */
     unregister: function(handler)
     {
         if (typeof(handler)=="string") {
-            delete OSC.handlers[handler];
+            delete command.handlers[handler];
             return;
         }
         var address = handler[0];
         var id = handler[1];
-        var h = OSC.handlers[address];
+        var h = command.handlers[address];
         if (h[id])
             delete h[id];
         var size = 0;
         for (var key in h)
             if (h.hasOwnProperty(key)) size ++;
         if (size == 0)
-            delete OSC.handlers[address];
+            delete command.handlers[address];
     },
 
-    /* Start the OSC service. */
+    /* Start the command service. */
     start: function ()
     {
-        setTimeout(function() {OSC.maintain_requests();}, 100);
+        setTimeout(function() {command.maintain_requests();}, 100);
     },
 
     /* Send a message. */
-    send: function (path, types, args)
+    send: function (cmd, args)
     {
-        http_request('send_osc',
+        http_request('send_cmd',
                      {'msg':
-                      JSON.stringify({'path': path,
-                                      'types': types ? types : '',
+                      JSON.stringify({'cmd': cmd,
                                       'args': args ? args : []})},
                      function () {});
     }
