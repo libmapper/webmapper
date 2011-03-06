@@ -17,6 +17,8 @@
   font-size: 10pt;
   height: 13pt;
   vertical-align: top;
+  border: solid 1px black;
+  font-family: sans;
 }
 
 .leftTable {
