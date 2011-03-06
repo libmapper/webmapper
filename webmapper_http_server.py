@@ -63,6 +63,7 @@ def handler_page(out, args):
 <title>Testing mapper interface</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="jquery-ui.min.js"></script>
 <script type="text/javascript" src="util.js"></script>
 <script type="text/javascript" src="json2.js"></script>
 <script type="text/javascript" src="command.js"></script>
