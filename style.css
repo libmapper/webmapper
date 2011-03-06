@@ -1,17 +1,21 @@
 
-.displayTable {
-  border-collapse: collapse;
-  height: 4in;
+.tableDiv {
   position: absolute;
   overflow: auto;
   top: 1in;
+  width: 3.18in;
+  height: 4in;
+}
+
+.displayTable {
+  border-collapse: collapse;
   width: 3in;
 }
 
 .displayTable tr td {
   margin: 3pt;
   font-size: 10pt;
-  height: 10pt;
+  height: 13pt;
   vertical-align: top;
 }
 

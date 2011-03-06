@@ -51,6 +51,8 @@ function table_updater(tab)
             tab.removeChild(t);
         }
     }
+    tab.style.height = "3in";
+    tab.style.overflow = "scroll";
 }
 
 /* The main program. */
@@ -82,19 +84,20 @@ function main()
 
 function add_display_tables()
 {
+    var body = document.getElementsByTagName('body')[0];
     var make = function(cls) {
-        t = document.createElement('table');
+        var d = document.createElement('div');
+        d.className = "tableDiv "+cls;
+        var t = document.createElement('table');
         t.border = 1;
-        t.className = "displayTable "+cls;
+        t.className = "displayTable";
+        d.appendChild(t);
+        body.insertBefore(d, body.firstChild);
         return t;
     }
 
     leftTable = make('leftTable');
     rightTable = make('rightTable');
-
-    var body = document.getElementsByTagName('body')[0];
-    body.insertBefore(rightTable, body.firstChild);
-    body.insertBefore(leftTable, body.firstChild);
 }
 
 /* Kick things off. */
