@@ -28,7 +28,7 @@ function table_updater(tab)
         var tr = document.createElement('tr');
         for (col in row) {
             var td = document.createElement('td');
-            td.innerText = row[col];
+            td.textContent = row[col];
             tr.appendChild(td);
         }
         trs.push(tr);
