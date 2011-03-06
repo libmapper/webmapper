@@ -6,6 +6,7 @@ import threading
 import time
 import json
 from select import select
+import sys
 
 message_pipe = []
 

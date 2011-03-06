@@ -45,3 +45,23 @@ function trace(text) {
     if (out)
         out.innerHTML += '<p>'+text+'</p>\n'
 }
+
+/* Class to wrap an association list. */
+function Assoc() {
+    this.contents = {};
+    this.add = function(key, value) {
+        this.contents[key] = value;
+    },
+    this.remove = function(name) {
+        delete this.contents[name];
+    },
+    this.get = function(name) {
+        return this.contents[name];
+    },
+    this.keys = function() {
+        var keys = [];
+        for (k in this.contents)
+            keys.push(k);
+        return keys;
+    }
+}
