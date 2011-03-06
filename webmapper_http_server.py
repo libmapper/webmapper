@@ -26,7 +26,9 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             pass
 
         contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8',
-                        'js': 'Content-Type: text/javascript' }
+                        'js': 'Content-Type: text/javascript',
+                        'css': 'Content-Type: text/css',
+                        'json': 'Content-Type: text/javascript' }
         def found(type=''):
             print >>self.wfile, "HTTP/1.0 200 OK"
             try:
@@ -44,7 +46,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 print >>self.wfile
 
         try:
-            handlers[command](self.wfile, args)
+            found(handlers[command][1])
+            handlers[command][0](self.wfile, args)
         except KeyError:
             try:
                 f = open(self.path[1:])
@@ -106,9 +109,9 @@ def handler_send_command(out, args):
         print >>out, json.dumps( { "cmd": res[0],
                                    "args": res[1] } )
 
-handlers = {'/': handler_page,
-            '/wait_cmd': handler_wait_command,
-            '/send_cmd': handler_send_command}
+handlers = {'/': [handler_page, 'html'],
+            '/wait_cmd': [handler_wait_command, 'json'],
+            '/send_cmd': [handler_send_command, 'json']}
 
 cmd_handlers = {}
 
