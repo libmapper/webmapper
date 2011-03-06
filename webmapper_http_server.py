@@ -66,6 +66,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="json2.js"></script>
 <script type="text/javascript" src="command.js"></script>
 <script type="text/javascript" src="main.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css"></link>
 </head>
 <body>
 <div id="output"></div>

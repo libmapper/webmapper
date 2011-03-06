@@ -1,0 +1,24 @@
+
+.displayTable {
+  border-collapse: collapse;
+  height: 4in;
+  position: absolute;
+  overflow: auto;
+  top: 1in;
+  width: 3in;
+}
+
+.displayTable tr td {
+  margin: 3pt;
+  font-size: 10pt;
+  height: 10pt;
+  vertical-align: top;
+}
+
+.leftTable {
+  left: 1in;
+}
+
+.rightTable {
+  left: 7in;
+}
