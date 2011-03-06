@@ -1,15 +1,4 @@
 
-function test_send()
-{
-    div = document.createElement('div');
-    inp = document.createElement('input');
-    inp.value = "Send /test,asdf,123";
-    inp.type = "button";
-    inp.onclick = function(){command.send('/test', ['asdf', 123]);}
-    div.appendChild(inp);
-    document.body.insertBefore(div, document.getElementById('output'));
-}
-
 devices = new Assoc();
 
 function update_display()
@@ -47,8 +36,6 @@ function main()
             command.start();
             command.send('all_devices');},
         100);
-
-    test_send();
 }
 
 /* Kick things off. */
