@@ -1,5 +1,7 @@
 
 devices = new Assoc();
+signals = new Assoc();
+
 leftTable = null;
 rightTable = null;
 
@@ -15,8 +17,11 @@ function update_display()
         updaterLeft.addrow([dev.name, dev.host, dev.port]);
         updaterRight.addrow([dev.name, dev.host, dev.port]);
     }
-    updaterLeft.apply()
-    updaterRight.apply()
+    updaterLeft.apply();
+    updaterRight.apply();
+
+    document.getElementById('output').innerHTML = 'Signals: '
+        +JSON.stringify(signals);
 }
 
 /* Update a table with the rows and columns contained in text, add
@@ -72,13 +77,28 @@ function main()
         update_display();
     });
 
+    command.register("all_signals", function(cmd, args) {
+        for (d in args)
+            signals.add(args[d].name, args[d]);
+        update_display();
+    });
+    command.register("new_signal", function(cmd, args) {
+        signals.add(args.name, args);
+        update_display();
+    });
+    command.register("del_signal", function(cmd, args) {
+        signals.remove(args.name);
+        update_display();
+    });
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
             add_display_tables();
             command.start();
-            command.send('all_devices');},
+            command.send('all_devices');
+            command.send('all_signals');},
         100);
 }
 
