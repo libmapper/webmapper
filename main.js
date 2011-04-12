@@ -8,6 +8,9 @@ selectedTab = null;
 leftTable = null;
 rightTable = null;
 selectLists = {};
+actionDiv = null;
+devActions = null;
+sigActions = null;
 
 function update_display()
 {
@@ -134,6 +137,15 @@ function select_tab(tab)
     selectedTab = tab.innerHTML;
     $(".tabsel").removeClass("tabsel");
     $(tab).addClass("tabsel");
+
+    if (tab == tabDevices) {
+        $(sigActions).css("visibility","hidden");
+        $(devActions).css("visibility","visible");
+    } else {
+        $(devActions).css("visibility","hidden");
+        $(sigActions).css("visibility","visible");
+    }
+
     update_display();
 }
 
@@ -201,10 +213,13 @@ function main()
     setTimeout(
         function(){
             add_display_tables();
+            add_actions();
             add_tabs();
             command.start();
             command.send('all_devices');
-            command.send('all_signals');},
+            command.send('all_signals');
+            select_tab(tabDevices);
+        },
         100);
 }
 
@@ -239,6 +254,48 @@ function add_tabs()
     tabList.appendChild(tabDevices);
     body.insertBefore(tabList, body.firstChild);
     selectedTab = tabDevices.innerHTML;
+}
+
+function add_actions()
+{
+    var body = document.getElementsByTagName('body')[0];
+    actionDiv = document.createElement('div');
+    body.insertBefore(actionDiv, body.firstChild);
+
+    add_signal_actions();
+    add_device_actions();
+}
+
+function add_signal_actions()
+{
+    sigActions = document.createElement('ul');
+    sigActions.className = "sigActions";
+    sigActions.style.position = "absolute";
+    var buttonConnect = document.createElement('button');
+    buttonConnect.innerHTML = "Connect";
+    buttonConnect.id = "btnConnect";
+    sigActions.appendChild(buttonConnect);
+    var buttonDisconnect = document.createElement('button');
+    buttonDisconnect.innerHTML = "Disconnect";
+    buttonDisconnect.id = "btnDisconnect";
+    sigActions.appendChild(buttonDisconnect);
+    actionDiv.insertBefore(sigActions, actionDiv.firstChild);
+}
+
+function add_device_actions()
+{
+    devActions = document.createElement('ul');
+    devActions.className = "devActions";
+    devActions.style.position = "absolute";
+    var buttonLink = document.createElement('button');
+    buttonLink.innerHTML = "Link";
+    buttonLink.id = "btnLink";
+    devActions.appendChild(buttonLink);
+    var buttonUnlink = document.createElement('button');
+    buttonUnlink.innerHTML = "Unlink";
+    buttonUnlink.id = "btnUnlink";
+    devActions.appendChild(buttonUnlink);
+    actionDiv.insertBefore(devActions, actionDiv.firstChild);
 }
 
 /* Kick things off. */

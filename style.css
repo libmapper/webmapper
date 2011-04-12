@@ -55,3 +55,17 @@
 .rightTable .trsel {
   border-left: solid 7pt red;
 }
+
+.actionDiv ul {
+  clear: none;
+  display: inline;
+}
+
+.actionDiv {
+}
+
+.devActions {
+}
+
+.sigActions {
+}
