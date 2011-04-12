@@ -64,4 +64,30 @@ function Assoc() {
             keys.push(k);
         return keys;
     }
+    this.length = function() {
+        return keys.length;
+    }
+}
+
+/* Split a full signal name into device and signal parts. */
+function splitSigName(signame)
+{
+    var i = signame.indexOf("/", 1);
+    if (i<0)
+        return null;
+
+    return [signame.substring(0, i),
+            signame.substring(i)];
+}
+
+/* Get the full offset and size of an element. */
+function fullOffset(e)
+{
+    var o = {left:0,top:0,width:0,height:0};
+    if (e.parentElement)
+        o = fullOffset(e.parentNode);
+    return {left:e.offsetLeft + o.left,
+            top:e.offsetTop + o.top,
+            width:e.offsetWidth,
+            height:e.offsetHeight};
 }

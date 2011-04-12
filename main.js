@@ -1,24 +1,34 @@
 
+var svgns = 'http://www.w3.org/2000/svg';
+
 devices = new Assoc();
 signals = new Assoc();
+links = new Assoc();
+connections = new Assoc();
 
 tabList = null;
 tabDevices = null;
 selectedTab = null;
 leftTable = null;
 rightTable = null;
+svgArea = null;
 selectLists = {};
 actionDiv = null;
 devActions = null;
 sigActions = null;
+arrows = [];
 
 function update_display()
 {
     update_tabs();
-    if (selectedTab == "All Devices")
+    if (selectedTab == "All Devices") {
         update_devices();
-    else
+        update_links();
+    }
+    else {
         update_signals(selectedTab);
+        update_connections();
+    }
 
     update_selection();
 }
@@ -132,6 +142,78 @@ function update_selection()
     checksel(rightTable, 1);
 }
 
+function cleanup_arrows()
+{
+    for (a in arrows) {
+        svgArea.removeChild(arrows[a]);
+    }
+    arrows = [];
+}
+
+function update_links()
+{
+    cleanup_arrows();
+
+    var keys = links.keys();
+    for (var k in keys) {
+        var l = links.get(keys[k]);
+        $('td:contains('+l.src_name+')', leftTable).each(
+            function(i,e){
+                var left = e.parentNode;
+                $('td:contains('+l.dest_name+')', rightTable).each(
+                    function(i,e){
+                        var right = e.parentNode;
+                        create_arrow(left, right);
+                    });
+            });
+    }
+}
+
+function update_connections()
+{
+    cleanup_arrows();
+
+    var keys = connections.keys();
+    for (var k in keys) {
+        var c = connections.get(keys[k]);
+        $('td:contains('+c.src_name+')', leftTable).each(
+            function(i,e){
+                var left = e.parentNode;
+                $('td:contains('+c.dest_name+')', rightTable).each(
+                    function(i,e){
+                        var right = e.parentNode;
+                        create_arrow(left, right);
+                    });
+            });
+    }
+}
+
+/* params are TR elements, one from each table */
+function create_arrow(left, right)
+{
+    var line = document.createElementNS(svgns, "path");
+    line.setAttribute("stroke", "black");
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke-width", 2);
+
+    var L = fullOffset(left);
+    var R = fullOffset(right);
+    var S = fullOffset(svgArea);
+
+    var x1 = 0;
+    var y1 = L.top+L.height/2-S.top;
+
+    var x2 = S.width;
+    var y2 = R.top+R.height/2-S.top;
+
+    var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1
+        + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
+    line.setAttribute("d", p);
+
+    svgArea.appendChild(line);
+    arrows.push(line);
+}
+
 function select_tab(tab)
 {
     selectedTab = tab.innerHTML;
@@ -177,6 +259,55 @@ function select_tr(tr)
     selectLists[selectedTab][i] = l;
 }
 
+function apply_selected_pairs(f)
+{
+    $('tr.trsel', leftTable).each(
+        function(i,e){
+            var left = e;
+            $('tr.trsel', rightTable).each(
+                function(i,e){
+                    var right = e;
+                    f(left, right);
+                });
+        });
+}
+
+function on_link()
+{
+    function do_link(l, r) {
+        command.send('link', [l.firstChild.innerHTML,
+                              r.firstChild.innerHTML]);
+    }
+    apply_selected_pairs(do_link);
+}
+
+function on_unlink()
+{
+    function do_unlink(l, r) {
+        command.send('unlink', [l.firstChild.innerHTML,
+                                r.firstChild.innerHTML]);
+    }
+    apply_selected_pairs(do_unlink);
+}
+
+function on_connect()
+{
+    function do_connect(l, r) {
+        command.send('connect', [l.firstChild.innerHTML,
+                                 r.firstChild.innerHTML]);
+    }
+    apply_selected_pairs(do_connect);
+}
+
+function on_disconnect()
+{
+    function do_disconnect(l, r) {
+        command.send('disconnect', [l.firstChild.innerHTML,
+                                    r.firstChild.innerHTML]);
+    }
+    apply_selected_pairs(do_disconnect);
+}
+
 /* The main program. */
 function main()
 {
@@ -208,16 +339,49 @@ function main()
         update_display();
     });
 
+    command.register("all_links", function(cmd, args) {
+        for (l in args)
+            links.add(args[l].src_name+'>'+args[l].dest_name,
+                      args[l]);
+        update_display();
+    });
+    command.register("new_link", function(cmd, args) {
+        links.add(args.src_name+'>'+args.dest_name, args);
+        update_display();
+    });
+    command.register("del_link", function(cmd, args) {
+        links.remove(args.src_name+'>'+args.dest_name);
+        update_display();
+    });
+
+    command.register("all_connections", function(cmd, args) {
+        for (d in args)
+            connections.add(args[d].src_name+'>'+args[d].dest_name,
+                            args[d]);
+        update_display();
+    });
+    command.register("new_connection", function(cmd, args) {
+        connections.add(args.src_name+'>'+args.dest_name, args);
+        update_display();
+    });
+    command.register("del_connection", function(cmd, args) {
+        connections.remove(args.src_name+'>'+args.dest_name);
+        update_display();
+    });
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
             add_display_tables();
+            add_svg_area();
             add_actions();
             add_tabs();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
+            command.send('all_links');
+            command.send('all_connections');
             select_tab(tabDevices);
         },
         100);
@@ -239,6 +403,21 @@ function add_display_tables()
 
     leftTable = make('leftTable');
     rightTable = make('rightTable');
+}
+
+function add_svg_area()
+{
+    var body = document.getElementsByTagName('body')[0];
+    svgArea = document.createElementNS(svgns, "svg");
+    var l = fullOffset(leftTable);
+    var r = fullOffset(rightTable);
+    var x = "position:absolute"
+        + ";left:" + (l.left+l.width)+"px"
+        + ";width:" + (r.left-l.left-l.width)+"px"
+        + ";top:" + (l.top)+"px"
+        + ";height:" + "5in";
+    svgArea.setAttribute("style", x);
+    body.insertBefore(svgArea, body.firstChild);
 }
 
 function add_tabs()
@@ -274,10 +453,12 @@ function add_signal_actions()
     var buttonConnect = document.createElement('button');
     buttonConnect.innerHTML = "Connect";
     buttonConnect.id = "btnConnect";
+    buttonConnect.onclick = on_connect;
     sigActions.appendChild(buttonConnect);
     var buttonDisconnect = document.createElement('button');
     buttonDisconnect.innerHTML = "Disconnect";
     buttonDisconnect.id = "btnDisconnect";
+    buttonDisconnect.onclick = on_disconnect;
     sigActions.appendChild(buttonDisconnect);
     actionDiv.insertBefore(sigActions, actionDiv.firstChild);
 }
@@ -290,10 +471,12 @@ function add_device_actions()
     var buttonLink = document.createElement('button');
     buttonLink.innerHTML = "Link";
     buttonLink.id = "btnLink";
+    buttonLink.onclick = on_link;
     devActions.appendChild(buttonLink);
     var buttonUnlink = document.createElement('button');
     buttonUnlink.innerHTML = "Unlink";
     buttonUnlink.id = "btnUnlink";
+    buttonUnlink.onclick = on_unlink;
     devActions.appendChild(buttonUnlink);
     actionDiv.insertBefore(devActions, actionDiv.firstChild);
 }
