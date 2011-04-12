@@ -4,12 +4,13 @@
   overflow: auto;
   top: 1in;
   width: 3.18in;
-  height: 4in;
+  height: 7in;
 }
 
 .displayTable {
   border-collapse: collapse;
   width: 3in;
+  overflow: scroll;
 }
 
 .displayTable tr td {

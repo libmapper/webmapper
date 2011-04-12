@@ -56,8 +56,6 @@ function table_updater(tab)
             tab.removeChild(t);
         }
     }
-    tab.style.height = "3in";
-    tab.style.overflow = "scroll";
 }
 
 /* The main program. */
