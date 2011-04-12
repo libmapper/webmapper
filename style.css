@@ -20,6 +20,7 @@
   vertical-align: top;
   border: solid 1px black;
   font-family: sans;
+  cursor: pointer;
 }
 
 .leftTable {
@@ -45,4 +46,12 @@
 
 .tabsel {
   background: lightgrey;
+}
+
+.leftTable .trsel {
+  border-right: solid 5pt red;
+}
+
+.rightTable .trsel {
+  border-left: solid 7pt red;
 }

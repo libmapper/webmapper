@@ -7,6 +7,7 @@ tabDevices = null;
 selectedTab = null;
 leftTable = null;
 rightTable = null;
+selectLists = {};
 
 function update_display()
 {
@@ -15,6 +16,8 @@ function update_display()
         update_devices();
     else
         update_signals(selectedTab);
+
+    update_selection();
 }
 
 function update_devices()
@@ -40,6 +43,7 @@ function table_updater(tab)
     var trs = [];
     this.addrow = function(row) {
         var tr = document.createElement('tr');
+        tr.onclick = function(y) { return function() { select_tr(y); }; } (tr);
         for (col in row) {
             var td = document.createElement('td');
             td.textContent = row[col];
@@ -102,12 +106,63 @@ function update_signals()
     updaterRight.apply();
 }
 
+function update_selection()
+{
+    l = selectLists[selectedTab];
+    if (!l) return;
+
+    function checksel(table, i) {
+        if (!selectLists[selectedTab])
+            return;
+        var l = selectLists[selectedTab][i];
+        var tr = table.firstChild;
+        while (tr) {
+            if (l.get(tr.firstChild.innerHTML))
+                $(tr).addClass("trsel");
+            else
+                $(tr).removeClass("trsel");
+            tr = tr.nextSibling;
+        }
+    }
+
+    checksel(leftTable, 0);
+    checksel(rightTable, 1);
+}
+
 function select_tab(tab)
 {
     selectedTab = tab.innerHTML;
     $(".tabsel").removeClass("tabsel");
     $(tab).addClass("tabsel");
     update_display();
+}
+
+function select_tr(tr)
+{
+    var t = $(tr);
+    var name = tr.firstChild.innerHTML;
+
+    var i = (tr.parentNode == leftTable) ? 0 : (tr.parentNode == rightTable) ? 1 : null;
+    if (i==null)
+        return;
+
+    var l = null;
+    if (selectLists[selectedTab])
+        l = selectLists[selectedTab][i];
+    else
+        selectLists[selectedTab] = [null, null];
+    if (!l)
+        l = new Assoc();
+
+    if (t.hasClass("trsel")) {
+        t.removeClass("trsel");
+        l.remove(name);
+    } else {
+        t.addClass("trsel");
+        l.add(name, tr.parentNode);
+    }
+
+    selectLists[selectedTab][i] = l;
 }
 
 /* The main program. */
