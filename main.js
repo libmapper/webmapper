@@ -2,10 +2,22 @@
 devices = new Assoc();
 signals = new Assoc();
 
+tabList = null;
+tabDevices = null;
+selectedTab = null;
 leftTable = null;
 rightTable = null;
 
 function update_display()
+{
+    update_tabs();
+    if (selectedTab == "All Devices")
+        update_devices();
+    else
+        update_signals(selectedTab);
+}
+
+function update_devices()
 {
     keys = devices.keys();
     var updaterLeft = new table_updater(leftTable);
@@ -19,9 +31,6 @@ function update_display()
     }
     updaterLeft.apply();
     updaterRight.apply();
-
-    document.getElementById('output').innerHTML = 'Signals: '
-        +JSON.stringify(signals);
 }
 
 /* Update a table with the rows and columns contained in text, add
@@ -56,6 +65,49 @@ function table_updater(tab)
             tab.removeChild(t);
         }
     }
+}
+
+function update_tabs()
+{
+    var t = tabDevices;
+    var keys = devices.keys();
+    for (var d in keys) {
+        if (t.nextSibling)
+            t = t.nextSibling;
+        else {
+            var x = document.createElement('li');
+            x.onclick = function(y) { return function() { select_tab(y); }; } (x);
+            t.parentNode.appendChild(x);
+            t = x;
+        }
+        t.innerHTML = devices.get(keys[d]).name;
+    }
+}
+
+function update_signals()
+{
+    keys = signals.keys();
+    var updaterLeft = new table_updater(leftTable);
+    var updaterRight = new table_updater(rightTable);
+    for (var s in keys) {
+        var k = keys[s];
+        var dev = signals.get(k);
+
+        if (dev.device_name == selectedTab)
+            updaterLeft.addrow([dev.device_name+dev.name, dev.type, dev.length]);
+        if (dev.device_name != selectedTab)
+            updaterRight.addrow([dev.device_name+dev.name, dev.type, dev.length]);
+    }
+    updaterLeft.apply();
+    updaterRight.apply();
+}
+
+function select_tab(tab)
+{
+    selectedTab = tab.innerHTML;
+    $(".tabsel").removeClass("tabsel");
+    $(tab).addClass("tabsel");
+    update_display();
 }
 
 /* The main program. */
@@ -94,6 +146,7 @@ function main()
     setTimeout(
         function(){
             add_display_tables();
+            add_tabs();
             command.start();
             command.send('all_devices');
             command.send('all_signals');},
@@ -116,6 +169,21 @@ function add_display_tables()
 
     leftTable = make('leftTable');
     rightTable = make('rightTable');
+}
+
+function add_tabs()
+{
+    var body = document.getElementsByTagName('body')[0];
+    tabList = document.createElement('ul');
+    tabList.className = "topTabs";
+    tabDevices = document.createElement('li');
+    tabDevices.innerHTML = "All Devices";
+    tabDevices.className = "tabsel";
+    tabDevices.id = "allDevices";
+    tabDevices.onclick = function() { select_tab(tabDevices); };
+    tabList.appendChild(tabDevices);
+    body.insertBefore(tabList, body.firstChild);
+    selectedTab = tabDevices.innerHTML;
 }
 
 /* Kick things off. */

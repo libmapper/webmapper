@@ -29,3 +29,20 @@
 .rightTable {
   left: 7in;
 }
+
+.topTabs {
+  margin: 15pt 0px 0px 0px;
+}
+
+.topTabs li {
+  border: solid 1 black;
+  padding: 2pt 10px 2pt 10px;
+  margin: 0px;
+  display: inline-block;
+  list-style: none;
+  cursor: pointer;
+}
+
+.tabsel {
+  background: lightgrey;
+}
