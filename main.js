@@ -88,18 +88,29 @@ function table_updater(tab)
 function update_tabs()
 {
     var t = tabDevices;
-    var keys = devices.keys();
-    for (var d in keys) {
+    var keys = links.keys();
+    var srcs = {};
+    for (var l in keys)
+        srcs[links.get(keys[l]).src_name] = null;
+    for (var s in srcs) {
         if (t.nextSibling)
             t = t.nextSibling;
         else {
             var x = document.createElement('li');
-            x.onclick = function(y) { return function(e) { select_tab(y);
-                                                           e.stopPropagation(); }; } (x);
+            x.onclick = function(y) {
+                return function(e) { select_tab(y);
+                                     e.stopPropagation(); };
+            } (x);
             t.parentNode.appendChild(x);
             t = x;
         }
-        t.innerHTML = devices.get(keys[d]).name;
+        t.innerHTML = s;
+    }
+    if (t) t = t.nextSibling;
+    while (t) {
+        var u = t.nextSibling;
+        t.parentNode.removeChild(t);
+        t = u;
     }
 }
 
