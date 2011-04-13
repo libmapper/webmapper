@@ -449,6 +449,13 @@ function add_svg_area()
         + ";height:" + "5in";
     svgArea.setAttribute("style", x);
     body.insertBefore(svgArea, body.firstChild);
+
+    // the offset* variables are not available for SVG elements in
+    // FireFox, so assign them here.
+    svgArea.offsetTop = parseInt(svgArea.style.top);
+    svgArea.offsetLeft = parseInt(svgArea.style.left);
+    svgArea.offsetWidth = parseInt(svgArea.style.width);
+    svgArea.offsetHeight = parseInt(svgArea.style.height);
 }
 
 function add_tabs()
