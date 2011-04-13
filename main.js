@@ -353,15 +353,15 @@ function main()
 
     command.register("all_signals", function(cmd, args) {
         for (d in args)
-            signals.add(args[d].name, args[d]);
+            signals.add(args[d].device_name+args[d].name, args[d]);
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        signals.add(args.name, args);
+        signals.add(args.device_name+args.name, args);
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        signals.remove(args.name);
+        signals.remove(args.device_name+args.name);
         update_display();
     });
 
