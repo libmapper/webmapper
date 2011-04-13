@@ -86,8 +86,8 @@ function fullOffset(e)
     var o = {left:0,top:0,width:0,height:0};
     if (e.parentElement)
         o = fullOffset(e.parentNode);
-    return {left:e.offsetLeft + o.left,
-            top:e.offsetTop + o.top,
+    return {left:e.offsetLeft - e.scrollLeft + o.left,
+            top:e.offsetTop - e.scrollTop + o.top,
             width:e.offsetWidth,
             height:e.offsetHeight};
 }

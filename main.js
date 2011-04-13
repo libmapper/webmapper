@@ -273,6 +273,14 @@ function deselect_all()
         });
 }
 
+function on_table_scroll()
+{
+    if (selectedTab == "All Devices")
+        update_links();
+    else
+        update_connections();
+}
+
 function apply_selected_pairs(f)
 {
     $('tr.trsel', leftTable).each(
@@ -414,6 +422,7 @@ function add_display_tables()
     var make = function(cls) {
         var d = document.createElement('div');
         d.className = "tableDiv "+cls;
+        d.onscroll = on_table_scroll;
         var t = document.createElement('table');
         t.border = 1;
         t.className = "displayTable";
