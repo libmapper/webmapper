@@ -110,12 +110,13 @@ function update_signals()
     var updaterRight = new table_updater(rightTable);
     for (var s in keys) {
         var k = keys[s];
-        var dev = signals.get(k);
+        var sig = signals.get(k);
+        var lnk = links.get(selectedTab+'>'+sig.device_name);
 
-        if (dev.device_name == selectedTab)
-            updaterLeft.addrow([dev.device_name+dev.name, dev.type, dev.length]);
-        if (dev.device_name != selectedTab)
-            updaterRight.addrow([dev.device_name+dev.name, dev.type, dev.length]);
+        if (sig.device_name == selectedTab && sig.direction == 1)
+            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length]);
+        if (sig.device_name != selectedTab && sig.direction == 0 && lnk!=null)
+            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length]);
     }
     updaterLeft.apply();
     updaterRight.apply();
