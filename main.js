@@ -56,7 +56,8 @@ function table_updater(tab)
     var trs = [];
     this.addrow = function(row) {
         var tr = document.createElement('tr');
-        tr.onclick = function(y) { return function() { select_tr(y); }; } (tr);
+        tr.onclick = function(y) { return function(e) { select_tr(y);
+                                                        e.stopPropagation(); }; } (tr);
         for (col in row) {
             var td = document.createElement('td');
             td.textContent = row[col];
@@ -93,7 +94,8 @@ function update_tabs()
             t = t.nextSibling;
         else {
             var x = document.createElement('li');
-            x.onclick = function(y) { return function() { select_tab(y); }; } (x);
+            x.onclick = function(y) { return function(e) { select_tab(y);
+                                                           e.stopPropagation(); }; } (x);
             t.parentNode.appendChild(x);
             t = x;
         }
@@ -259,6 +261,18 @@ function select_tr(tr)
     selectLists[selectedTab][i] = l;
 }
 
+function deselect_all()
+{
+    $('tr.trsel', leftTable).each(function(i,e){
+            selectLists[selectedTab][0].remove(e.firstChild.innerHTML);
+            $(this).removeClass('trsel');
+        });
+    $('tr.trsel', rightTable).each(function(i,e){
+            selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
+            $(this).removeClass('trsel');
+        });
+}
+
 function apply_selected_pairs(f)
 {
     $('tr.trsel', leftTable).each(
@@ -272,40 +286,44 @@ function apply_selected_pairs(f)
         });
 }
 
-function on_link()
+function on_link(e)
 {
     function do_link(l, r) {
         command.send('link', [l.firstChild.innerHTML,
                               r.firstChild.innerHTML]);
     }
     apply_selected_pairs(do_link);
+    e.stopPropagation();
 }
 
-function on_unlink()
+function on_unlink(e)
 {
     function do_unlink(l, r) {
         command.send('unlink', [l.firstChild.innerHTML,
                                 r.firstChild.innerHTML]);
     }
     apply_selected_pairs(do_unlink);
+    e.stopPropagation();
 }
 
-function on_connect()
+function on_connect(e)
 {
     function do_connect(l, r) {
         command.send('connect', [l.firstChild.innerHTML,
                                  r.firstChild.innerHTML]);
     }
     apply_selected_pairs(do_connect);
+    e.stopPropagation();
 }
 
-function on_disconnect()
+function on_disconnect(e)
 {
     function do_disconnect(l, r) {
         command.send('disconnect', [l.firstChild.innerHTML,
                                     r.firstChild.innerHTML]);
     }
     apply_selected_pairs(do_disconnect);
+    e.stopPropagation();
 }
 
 /* The main program. */
@@ -369,6 +387,9 @@ function main()
         update_display();
     });
 
+    var body = document.getElementsByTagName('body')[0];
+    body.onclick = deselect_all;
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
@@ -429,7 +450,8 @@ function add_tabs()
     tabDevices.innerHTML = "All Devices";
     tabDevices.className = "tabsel";
     tabDevices.id = "allDevices";
-    tabDevices.onclick = function() { select_tab(tabDevices); };
+    tabDevices.onclick = function(e) { select_tab(tabDevices);
+                                       e.stopPropagation(); };
     tabList.appendChild(tabDevices);
     body.insertBefore(tabList, body.firstChild);
     selectedTab = tabDevices.innerHTML;
