@@ -62,13 +62,13 @@ def handler_page(out, args):
 <head>
 <title>Testing mapper interface</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<script type="text/javascript" src="jquery.min.js"></script>
-<script type="text/javascript" src="jquery-ui.min.js"></script>
-<script type="text/javascript" src="util.js"></script>
-<script type="text/javascript" src="json2.js"></script>
-<script type="text/javascript" src="command.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<link rel="stylesheet" type="text/css" href="style.css"></link>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/json2.js"></script>
+<script type="text/javascript" src="js/command.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+<link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
 <body>
 <div id="output"></div>
