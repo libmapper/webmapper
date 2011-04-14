@@ -69,3 +69,36 @@
 
 .sigActions {
 }
+
+.boundary {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url(/images/boundary_icons.png);
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.boundaryNone {
+  background-position: 0px 0px;
+}
+
+.boundaryContinueUp {
+  background-position: -24px 0px;
+}
+
+.boundaryContinueDown {
+  background-position: -48px 0px;
+}
+
+.boundaryMute {
+  background-position: -72px 0px;
+}
+
+.boundaryClamp {
+  background-position: -96px 0px;
+}
+
+.boundaryWrap {
+  background-position: -120px 0px;
+}

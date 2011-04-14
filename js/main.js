@@ -346,6 +346,24 @@ function on_disconnect(e)
     e.stopPropagation();
 }
 
+function on_boundary(e)
+{
+    var types = ["boundaryNone", "boundaryContinueUp", "boundaryContinueDown",
+                 "boundaryMute", "boundaryClamp", "boundaryWrap",
+                 null];
+    var b = $(e.currentTarget);
+
+    for (t in types) {
+        if (b.hasClass(types[t])) {
+            var u = types[parseInt(t)+1];
+            if (u==null) u = types[0];
+            b.removeClass(types[t]);
+            b.addClass(u);
+            break;
+        }
+    }
+}
+
 /* The main program. */
 function main()
 {
@@ -492,6 +510,7 @@ function add_actions()
     body.insertBefore(actionDiv, body.firstChild);
 
     add_signal_actions();
+    add_signal_property_controls();
     add_device_actions();
 }
 
@@ -529,6 +548,19 @@ function add_device_actions()
     buttonUnlink.onclick = on_unlink;
     devActions.appendChild(buttonUnlink);
     actionDiv.insertBefore(devActions, actionDiv.firstChild);
+}
+
+function add_signal_property_controls()
+{
+    var controls = document.createElement('div');
+    controls.style.display = "inline-block";
+
+    var i = document.createElement('div');
+    i.className = "boundary boundaryClamp";
+    i.onclick = on_boundary;
+    controls.appendChild(i);
+
+    sigActions.appendChild(controls);
 }
 
 /* Kick things off. */
