@@ -7,6 +7,19 @@
   user-select: none;
 }
 
+input {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -o-user-select: text;
+  user-select: text;
+}
+
+body {
+  font-family: sans;
+  font-size: 10pt;
+}
+
 .tableDiv {
   position: absolute;
   overflow: auto;
@@ -23,11 +36,9 @@
 
 .displayTable tr td {
   margin: 3pt;
-  font-size: 10pt;
   height: 13pt;
   vertical-align: top;
   border: solid 1px black;
-  font-family: sans;
   cursor: pointer;
 }
 
@@ -78,8 +89,35 @@
 .sigActions {
 }
 
-.boundary {
+.signalControlsDiv {
   display: inline-block;
+  margin-left: 20pt;
+}
+
+.signalControlsDiv div {
+  display: inline-block;
+}
+
+.modesDiv div {
+  margin: 5pt;
+  padding: 5pt;
+  border: solid 1px black;
+  cursor: pointer;
+}
+
+.range {
+  margin-left: 20pt;
+}
+
+.rangeSwitch {
+  width: 20px;
+  height: 20px;
+  background: url(/images/range_switch.png);
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.boundary {
   width: 24px;
   height: 24px;
   background: url(/images/boundary_icons.png);

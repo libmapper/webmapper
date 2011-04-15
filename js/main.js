@@ -553,12 +553,91 @@ function add_device_actions()
 function add_signal_property_controls()
 {
     var controls = document.createElement('div');
-    controls.style.display = "inline-block";
+    controls.className = "signalControlsDiv";
 
-    var i = document.createElement('div');
-    i.className = "boundary boundaryClamp";
-    i.onclick = on_boundary;
-    controls.appendChild(i);
+    var modesdiv = document.createElement('div');
+    modesdiv.className = "modesDiv";
+    var modes = ["Mute", "Byp", "Line", "Calib", "Expr"];
+    for (m in modes) {
+        var d = document.createElement('div');
+        d.innerHTML = modes[m];
+        modesdiv.appendChild(d);
+    }
+
+    var d = document.createElement('input');
+    d.maxLength = 15;
+    d.size = 15;
+    d.id = 'expression';
+    modesdiv.appendChild(d);
+    controls.appendChild(modesdiv);
+
+    var rangesdiv = document.createElement('div');
+    rangesdiv.className = "rangesDiv";
+
+    var srcrange = document.createElement('div');
+    srcrange.className = "range";
+
+    var d = document.createElement('div');
+    d.innerHTML = "Source Range:";
+    srcrange.appendChild(d);
+
+    var d = document.createElement('input');
+    d.maxLength = 15;
+    d.size = 5;
+    d.className = "rangeMin";
+    d.id = 'rangeSrcMin';
+    srcrange.appendChild(d);
+
+    var d = document.createElement('div');
+    d.className = "rangeSwitch";
+    srcrange.appendChild(d);
+
+    var d = document.createElement('input');
+    d.maxLength = 15;
+    d.size = 5;
+    d.className = "rangeMax";
+    d.id = 'rangeSrcMax';
+    srcrange.appendChild(d);
+    rangesdiv.appendChild(srcrange);
+
+    var destrange = document.createElement('div');
+    destrange.className = "range";
+
+    var d = document.createElement('div');
+    d.innerHTML = "Dest Range:";
+    destrange.appendChild(d);
+
+    var d = document.createElement('div');
+    d.className = "boundary boundaryClamp";
+    d.onclick = on_boundary;
+    destrange.appendChild(d);
+
+    var d = document.createElement('input');
+    d.maxLength = 15;
+    d.size = 5;
+    d.className = "rangeMin";
+    d.id = 'rangeDestMin';
+    destrange.appendChild(d);
+
+    var d = document.createElement('div');
+    d.className = "rangeSwitch";
+    destrange.appendChild(d);
+
+    var d = document.createElement('input');
+    d.maxLength = 15;
+    d.size = 5;
+    d.className = "rangeMax";
+    d.id = 'rangeDestMax';
+    destrange.appendChild(d);
+
+    var d = document.createElement('div');
+    d.className = "boundary boundaryClamp";
+    d.onclick = on_boundary;
+    destrange.appendChild(d);
+
+    rangesdiv.appendChild(destrange);
+
+    controls.appendChild(rangesdiv);
 
     sigActions.appendChild(controls);
 }
