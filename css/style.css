@@ -20,12 +20,20 @@ body {
   font-size: 10pt;
 }
 
+/* Used to position the tables and connection area. */
+#spacerTable {
+  width: 100%;
+  height: 0px;
+  visibility: hidden;
+}
+
 .tableDiv {
   position: absolute;
   overflow: auto;
   top: 1in;
   width: 3.18in;
   height: 5in;
+  border: solid 1px lightgrey;
 }
 
 .displayTable {

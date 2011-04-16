@@ -21,15 +21,12 @@ arrows = [];
 function update_display()
 {
     update_tabs();
-    if (selectedTab == "All Devices") {
+    if (selectedTab == "All Devices")
         update_devices();
-        update_links();
-    }
-    else {
+    else
         update_signals(selectedTab);
-        update_connections();
-    }
 
+    update_arrows();
     update_selection();
 }
 
@@ -183,6 +180,14 @@ function update_links()
     }
 }
 
+function update_arrows()
+{
+    if (selectedTab == "All Devices")
+        update_links();
+    else
+        update_connections();
+}
+
 function update_connections()
 {
     cleanup_arrows();
@@ -234,14 +239,12 @@ function select_tab(tab)
     $(".tabsel").removeClass("tabsel");
     $(tab).addClass("tabsel");
 
-    if (tab == tabDevices) {
-        $(sigActions).css("visibility","hidden");
-        $(devActions).css("visibility","visible");
-    } else {
-        $(devActions).css("visibility","hidden");
-        $(sigActions).css("visibility","visible");
-    }
+    if (tab == tabDevices)
+        set_actions(devActions);
+    else
+        set_actions(sigActions);
 
+    position_dynamic_elements();
     update_display();
 }
 
@@ -364,6 +367,60 @@ function on_boundary(e)
     }
 }
 
+function set_actions(a)
+{
+    if (actionDiv.firstChild)
+        actionDiv.removeChild(actionDiv.firstChild);
+    actionDiv.appendChild(a);
+}
+
+function position_dynamic_elements()
+{
+    var hT = fullOffset($("#spacerTable")[0]);
+
+    var L = leftTable.parentNode;
+    var R = rightTable.parentNode;
+
+    L.style.height =
+    R.style.height =
+    svgArea.style.height = (document.body.clientHeight - hT.top - 10) + "px";
+
+    L.style.top =
+    R.style.top =
+    svgArea.style.top = (hT.top) + "px";
+
+    // Allow tables to collapse the columns naturally, and then we'll
+    // expand to fill the space if necessary.
+    leftTable.style.width = "auto";
+    rightTable.style.width = "auto";
+
+    // Need to run this twice, since movement of the table causes
+    // appearance or disappearance of scroll bars, which changes the
+    // layout.
+    var update_tables = function() {
+        var h = $("#spacerTable").find("tr").find("td").map(
+            function(){return fullOffset(this);});
+
+        L.style.left = h[0].left+"px";
+        R.style.left = h[2].left+"px";
+        svgArea.style.left = h[1].left+"px";
+
+        L.style.width = h[0].width+"px";
+        R.style.width = h[2].width+"px";
+        svgArea.style.width = h[1].width+"px";
+
+        if (parseInt(leftTable.offsetWidth) < h[0].width) {
+            leftTable.style.width = h[0].width + "px";
+        }
+
+        if (parseInt(rightTable.offsetWidth) < h[2].width) {
+            rightTable.style.width = h[2].width + "px";
+        }
+    }
+    update_tables();
+    update_tables();
+}
+
 /* The main program. */
 function main()
 {
@@ -434,7 +491,7 @@ function main()
         function(){
             add_display_tables();
             add_svg_area();
-            add_actions();
+            add_action_div();
             add_tabs();
             command.start();
             command.send('all_devices');
@@ -442,6 +499,10 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             select_tab(tabDevices);
+            window.onresize = function (e) {
+                position_dynamic_elements();
+                update_arrows();
+            }
         },
         100);
 }
@@ -503,22 +564,21 @@ function add_tabs()
     selectedTab = tabDevices.innerHTML;
 }
 
-function add_actions()
+function add_action_div()
 {
     var body = document.getElementsByTagName('body')[0];
     actionDiv = document.createElement('div');
     body.insertBefore(actionDiv, body.firstChild);
 
-    add_signal_actions();
+    make_signal_actions();
     add_signal_property_controls();
-    add_device_actions();
+    make_device_actions();
 }
 
-function add_signal_actions()
+function make_signal_actions()
 {
     sigActions = document.createElement('ul');
     sigActions.className = "sigActions";
-    sigActions.style.position = "absolute";
     var buttonConnect = document.createElement('button');
     buttonConnect.innerHTML = "Connect";
     buttonConnect.id = "btnConnect";
@@ -529,14 +589,12 @@ function add_signal_actions()
     buttonDisconnect.id = "btnDisconnect";
     buttonDisconnect.onclick = on_disconnect;
     sigActions.appendChild(buttonDisconnect);
-    actionDiv.insertBefore(sigActions, actionDiv.firstChild);
 }
 
-function add_device_actions()
+function make_device_actions()
 {
     devActions = document.createElement('ul');
     devActions.className = "devActions";
-    devActions.style.position = "absolute";
     var buttonLink = document.createElement('button');
     buttonLink.innerHTML = "Link";
     buttonLink.id = "btnLink";
@@ -547,7 +605,6 @@ function add_device_actions()
     buttonUnlink.id = "btnUnlink";
     buttonUnlink.onclick = on_unlink;
     devActions.appendChild(buttonUnlink);
-    actionDiv.insertBefore(devActions, actionDiv.firstChild);
 }
 
 function add_signal_property_controls()

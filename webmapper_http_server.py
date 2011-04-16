@@ -71,6 +71,7 @@ def handler_page(out, args):
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
 <body>
+<table id="spacerTable"><tr><td></td><td></td><td></td></tr></table>
 <div id="output"></div>
 </body>
 </html>"""
