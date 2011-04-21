@@ -156,6 +156,7 @@ function update_selection()
 function cleanup_arrows()
 {
     for (a in arrows) {
+        svgArea.removeChild(arrows[a].border);
         svgArea.removeChild(arrows[a]);
     }
     arrows = [];
@@ -222,6 +223,12 @@ function create_arrow(left, right, sel)
     line.setAttribute("fill", "none");
     line.setAttribute("stroke-width", 2);
 
+    line.border = document.createElementNS(svgns, "path");
+    line.border.setAttribute("stroke", "blue");
+    line.border.setAttribute("fill", "none");
+    line.border.setAttribute("stroke-width", "10pt");
+    line.border.setAttribute("stroke-opacity", "0");
+
     var L = fullOffset(left);
     var R = fullOffset(right);
     var S = fullOffset(svgArea);
@@ -235,9 +242,19 @@ function create_arrow(left, right, sel)
     var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1
         + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
     line.setAttribute("d", p);
+    line.border.setAttribute("d", p);
 
+    svgArea.appendChild(line.border);
     svgArea.appendChild(line);
     arrows.push(line);
+
+    var onclick = function (e) {
+        select_tr(left);
+        select_tr(right);
+        e.stopPropagation();
+    };
+    line.onclick = onclick;
+    line.border.onclick = onclick;
 }
 
 function select_tab(tab)
