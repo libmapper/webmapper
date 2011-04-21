@@ -26,8 +26,8 @@ function update_display()
     else
         update_signals(selectedTab);
 
-    update_arrows();
     update_selection();
+    update_arrows();
 }
 
 function update_devices()
@@ -171,10 +171,12 @@ function update_links()
         $('td:contains('+l.src_name+')', leftTable).each(
             function(i,e){
                 var left = e.parentNode;
+                var leftsel = $(left).hasClass('trsel');
                 $('td:contains('+l.dest_name+')', rightTable).each(
                     function(i,e){
                         var right = e.parentNode;
-                        create_arrow(left, right);
+                        var rightsel = $(right).hasClass('trsel');
+                        create_arrow(left, right, leftsel && rightsel);
                     });
             });
     }
@@ -198,20 +200,25 @@ function update_connections()
         $('td:contains('+c.src_name+')', leftTable).each(
             function(i,e){
                 var left = e.parentNode;
+                var leftsel = $(left).hasClass('trsel');
                 $('td:contains('+c.dest_name+')', rightTable).each(
                     function(i,e){
                         var right = e.parentNode;
-                        create_arrow(left, right);
+                        var rightsel = $(right).hasClass('trsel');
+                        create_arrow(left, right, leftsel && rightsel);
                     });
             });
     }
 }
 
 /* params are TR elements, one from each table */
-function create_arrow(left, right)
+function create_arrow(left, right, sel)
 {
     var line = document.createElementNS(svgns, "path");
-    line.setAttribute("stroke", "black");
+    if (sel)
+        line.setAttribute("stroke", "red");
+    else
+        line.setAttribute("stroke", "black");
     line.setAttribute("fill", "none");
     line.setAttribute("stroke-width", 2);
 
@@ -274,6 +281,7 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
+    update_arrows();
 }
 
 function deselect_all()
@@ -286,6 +294,7 @@ function deselect_all()
             selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
             $(this).removeClass('trsel');
         });
+    update_arrows();
 }
 
 function on_table_scroll()
