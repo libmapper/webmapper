@@ -228,12 +228,14 @@ function create_arrow(left, right, sel)
         line.setAttribute("stroke", "black");
     line.setAttribute("fill", "none");
     line.setAttribute("stroke-width", 2);
+    line.setAttribute("cursor", "pointer");
 
     line.border = document.createElementNS(svgns, "path");
     line.border.setAttribute("stroke", "blue");
     line.border.setAttribute("fill", "none");
     line.border.setAttribute("stroke-width", "10pt");
     line.border.setAttribute("stroke-opacity", "0");
+    line.border.setAttribute("cursor", "pointer");
 
     var L = fullOffset(left);
     var R = fullOffset(right);
