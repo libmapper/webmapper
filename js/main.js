@@ -18,6 +18,12 @@ devActions = null;
 sigActions = null;
 arrows = [];
 
+connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
+connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
+boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
+                 "boundaryMute", "boundaryClamp", "boundaryWrap"];
+
 function update_display()
 {
     update_tabs();
@@ -299,6 +305,7 @@ function select_tr(tr)
 
     selectLists[selectedTab][i] = l;
     update_arrows();
+    update_connection_properties();
 }
 
 function deselect_all()
@@ -312,6 +319,80 @@ function deselect_all()
             $(this).removeClass('trsel');
         });
     update_arrows();
+}
+
+function update_connection_properties()
+{
+    if (selectedTab == "All Devices")
+        return;
+
+    var a = function(x) { return $(x,actionDiv); };
+
+    var clear_props = function() {
+        a(".mode").removeClass("modesel");
+        a("#expression").val('');
+        a("#rangeSrcMin").val('');
+        a("#rangeSrcMax").val('');
+        a("#rangeDestMin").val('');
+        a("#rangeDestMax").val('');
+        set_boundary(a(".boundary"), 0);
+    }
+
+    var conns = get_selected(connections);
+    if (conns.length > 1) {
+        // TODO
+        clear_props();
+    }
+    else if (conns.length == 1) {
+        var c = conns[0];
+        clear_props();
+        a(".mode"+connectionModes[c.mode]).addClass("modesel");
+        a("#expression").val(c.expression);
+        if (c.range[0]!=null) { a("#rangeSrcMin").val(c.range[0]); }
+        if (c.range[1]!=null) { a("#rangeSrcMax").val(c.range[1]); }
+        if (c.range[2]!=null) { a("#rangeDestMin").val(c.range[2]); }
+        if (c.range[3]!=null) { a("#rangeDestMax").val(c.range[3]); }
+        if (c.clip_min!=null) { set_boundary(a("#boundaryMin",0), c.clip_min); };
+        if (c.clip_max!=null) { set_boundary(a("#boundaryMax",1), c.clip_max); };
+    }
+    else {
+        clear_props();
+    }
+}
+
+function get_selected(list)
+{
+    var L = $('.trsel', leftTable);
+    var R = $('.trsel', rightTable);
+    var vals = [];
+
+    L.map(function() {
+            var left = this;
+            R.map(function() {
+                    var right = this;
+                    var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+                    var v = list.get(key);
+                    if (v)
+                        vals.push(v);
+                });
+        });
+    return vals;
+}
+
+function set_boundary(boundaryElement, value, ismax)
+{
+    for (i in boundaryIcons)
+        boundaryElement.removeClass(boundaryIcons[i]);
+
+    if (value == 3) { //'Fold' special case, icon depends on direction
+        if (ismax)
+            boundaryElement.addClass('boundaryDown');
+        else
+            boundaryElement.addClass('boundaryUp');
+    }
+    else if (value < 5) {
+        boundaryElement.addClass('boundary'+boundaryModes[value]);
+    }
 }
 
 function on_table_scroll()
@@ -377,20 +458,20 @@ function on_disconnect(e)
 
 function on_boundary(e)
 {
-    var types = ["boundaryNone", "boundaryContinueUp", "boundaryContinueDown",
-                 "boundaryMute", "boundaryClamp", "boundaryWrap",
-                 null];
-    var b = $(e.currentTarget);
-
-    for (t in types) {
-        if (b.hasClass(types[t])) {
-            var u = types[parseInt(t)+1];
-            if (u==null) u = types[0];
-            b.removeClass(types[t]);
-            b.addClass(u);
+    for (var i in boundaryIcons) {
+        if ($(e.currentTarget).hasClass(boundaryIcons[i]))
             break;
-        }
     }
+    if (i >= boundaryIcons.length)
+        return;
+
+    var b = [0, 3, 3, 1, 2, 4][i];
+    b = b + 1;
+    if (b >= boundaryModes.length)
+        b = 0;
+
+    set_boundary($(e.currentTarget), b,
+                 e.currentTarget.id=='boundaryMax');
 }
 
 function set_actions(a)
@@ -640,10 +721,10 @@ function add_signal_property_controls()
 
     var modesdiv = document.createElement('div');
     modesdiv.className = "modesDiv";
-    var modes = ["Mute", "Byp", "Line", "Calib", "Expr"];
-    for (m in modes) {
+    for (m in connectionModesDisplayOrder) {
         var d = document.createElement('div');
-        d.innerHTML = modes[m];
+        d.innerHTML = connectionModesDisplayOrder[m];
+        d.className = "mode mode"+connectionModesDisplayOrder[m];
         modesdiv.appendChild(d);
     }
 
@@ -693,6 +774,7 @@ function add_signal_property_controls()
     var d = document.createElement('div');
     d.className = "boundary boundaryClamp";
     d.onclick = on_boundary;
+    d.id = "boundaryMin";
     destrange.appendChild(d);
 
     var d = document.createElement('input');
@@ -716,6 +798,7 @@ function add_signal_property_controls()
     var d = document.createElement('div');
     d.className = "boundary boundaryClamp";
     d.onclick = on_boundary;
+    d.id = "boundaryMax";
     destrange.appendChild(d);
 
     rangesdiv.appendChild(destrange);

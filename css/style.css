@@ -113,6 +113,10 @@ body {
   cursor: pointer;
 }
 
+.modesel {
+  background: lightgrey;
+}
+
 .range {
   margin-left: 20pt;
 }
@@ -137,11 +141,11 @@ body {
   background-position: 0px 0px;
 }
 
-.boundaryContinueUp {
+.boundaryUp {
   background-position: -24px 0px;
 }
 
-.boundaryContinueDown {
+.boundaryDown {
   background-position: -48px 0px;
 }
 
