@@ -362,6 +362,17 @@ function update_connection_properties()
     }
 }
 
+function update_connection_properties_for(conn, conns)
+{
+    if (conns.length == 1) {
+        if (conns[0].src_name == conn.src_name
+            && conns[0].dest_name == conn.dest_name)
+        {
+            update_connection_properties();
+        }
+    }
+}
+
 function get_selected(list)
 {
     var L = $('.trsel', leftTable);
@@ -581,14 +592,20 @@ function main()
             connections.add(args[d].src_name+'>'+args[d].dest_name,
                             args[d]);
         update_display();
+        for (d in args)
+            update_connection_properties_for(args[d],
+                                             get_selected(connections));
     });
     command.register("new_connection", function(cmd, args) {
         connections.add(args.src_name+'>'+args.dest_name, args);
         update_display();
+        update_connection_properties_for(args, get_selected(connections));
     });
     command.register("del_connection", function(cmd, args) {
+        var conns = get_selected(connections);
         connections.remove(args.src_name+'>'+args.dest_name);
         update_display();
+        update_connection_properties_for(args, conns);
     });
 
     var body = document.getElementsByTagName('body')[0];
