@@ -321,6 +321,7 @@ function deselect_all()
             $(this).removeClass('trsel');
         });
     update_arrows();
+    update_connection_properties();
 }
 
 function update_connection_properties()
