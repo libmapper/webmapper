@@ -20,6 +20,10 @@ arrows = [];
 
 connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
 connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+connectionModeCommands = {"Byp": 'bypass',
+                          "Line": 'linear',
+                          "Calib": 'calibrate',
+                          "Expr": 'expression'};
 boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
 boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
@@ -409,6 +413,26 @@ function set_boundary(boundaryElement, value, ismax)
     }
 }
 
+function selected_connection_set_mode(modestring)
+{
+    var modecmd = connectionModeCommands[modestring];
+    if (!modecmd) return;
+    var conns = get_selected(connections);
+    if (conns.length!=1) return;
+    var args = {};
+
+    // copy existing connection properties
+    for (c in conns[0]) {
+        args[c] = conns[0][c];
+    }
+
+    // adjust the mode
+    args['mode'] = modecmd;
+
+    // send the command, should receive a /connection/modify message after.
+    command.send('set_connection', args);
+}
+
 function on_table_scroll()
 {
     if (selectedTab == "All Devices")
@@ -602,6 +626,11 @@ function main()
         update_display();
         update_connection_properties_for(args, get_selected(connections));
     });
+    command.register("mod_connection", function(cmd, args) {
+        connections.add(args.src_name+'>'+args.dest_name, args);
+        update_display();
+        update_connection_properties_for(args, get_selected(connections));
+    });
     command.register("del_connection", function(cmd, args) {
         var conns = get_selected(connections);
         connections.remove(args.src_name+'>'+args.dest_name);
@@ -745,6 +774,10 @@ function add_signal_property_controls()
         var d = document.createElement('div');
         d.innerHTML = connectionModesDisplayOrder[m];
         d.className = "mode mode"+connectionModesDisplayOrder[m];
+        d.onclick = function(m) { return function(e) {
+            selected_connection_set_mode(m);
+            e.stopPropagation();
+            }; }(connectionModesDisplayOrder[m]);
         modesdiv.appendChild(d);
     }
 
