@@ -2,6 +2,7 @@
 import SocketServer
 import SimpleHTTPServer
 import urllib
+import urlparse
 import threading
 import time
 import json
@@ -18,12 +19,11 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         command = self.path
         args = []
         try:
-            (command, args_together) = self.path.split('?')
-            args_list = [[urllib.unquote(y) for y in x.split('=')]
-                         for x in args_together.split('&')]
-            args = dict(args_list)
-        except:
-            pass
+            parsed = urlparse.urlparse(self.path)
+            command = parsed.path
+            args = dict(urlparse.parse_qsl(parsed.query))
+        except Exception, e:
+            print e
 
         contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8',
                         'js': 'Content-Type: text/javascript',
