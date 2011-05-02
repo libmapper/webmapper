@@ -108,6 +108,11 @@ def handler_send_command(out, args):
     except ValueError:
         print 'send_command: bad embedded JSON "%s"'%str(vals)
         return
+
+    # JSON decoding returns unicode which doesn't work well with
+    # our C library, so convert any strings to str.
+    vals['args'] = deunicode(vals['args'])
+
     res = h(vals['args'])
     if res:
         print >>out, json.dumps( { "cmd": res[0],
@@ -118,6 +123,22 @@ handlers = {'/': [handler_page, 'html'],
             '/send_cmd': [handler_send_command, 'json']}
 
 cmd_handlers = {}
+
+def deunicode(o):
+    d = dir(o)
+    if 'items' in d:
+        p = dict([(deunicode(x),deunicode(y)) for (x,y) in o.items()])
+    elif '__dict__' in d:
+        p = o.copy()
+        p.__dict__ = dict([(deunicode(x),deunicode(y))
+                           for (x,y) in o.__dict__.items()])
+    elif '__iter__' in d:
+        p = [deunicode(x) for x in o]
+    elif o.__class__==unicode:
+        p = o.encode('ascii','replace')
+    else:
+        p = o
+    return p
 
 def send_command(cmd, args):
     message_pipe.append((cmd, args))
