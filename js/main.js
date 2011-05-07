@@ -658,7 +658,7 @@ function main()
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
-            }
+            };
         },
         100);
 }

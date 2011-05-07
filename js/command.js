@@ -35,8 +35,13 @@ command = {
      * still active. */
     maintain_requests: function ()
     {
-        while (command.requests.contents.length < command.num_requests)
-            command.message_request();
+        if (command.ws) {
+            if (command.ws.is_closed)
+                command.open_websocket();
+        }
+        if (!command.ws || !command.ws.is_opened)
+            while (command.requests.contents.length < command.num_requests)
+                command.message_request();
     },
 
     /* Register a handler for a particular message address. Returns a
@@ -76,18 +81,61 @@ command = {
     /* Start the command service. */
     start: function ()
     {
+        command.open_websocket();
         setTimeout(function() {command.maintain_requests();}, 100);
     },
 
     /* Send a message. */
     send: function (cmd, args)
     {
-        http_request('send_cmd',
-                     {'msg':
-                      JSON.stringify({'cmd': cmd,
-                                      'args': args ? args : []})},
-                     function (text) {
-                         command.json_handler(text);
-                     });
+        if (command.ws && command.ws.is_opened)
+        {
+            command.ws.send(JSON.stringify({'cmd': cmd,
+                                            'args': args ? args : []}));
+        }
+        else {
+            http_request('send_cmd',
+                         {'msg':
+                          JSON.stringify({'cmd': cmd,
+                                          'args': args ? args : []})},
+                         function (text) {
+                             command.json_handler(text);
+                         });
+        }
+    },
+
+    open_websocket: function()
+    {
+        command.ws = null;
+        if ("WebSocket" in window) {
+            var L = (''+window.location).split('/');
+            if (L.length > 2)
+                L=L[2];
+            else
+                L=L[0];
+            command.ws = new WebSocket("ws://"+L+"/sock");
+        }
+        if (!command.ws) {
+            if (console)
+                console.log("Couldn't create web socket.");
+            return;
+        }
+        command.ws.is_closed = false;
+        command.ws.is_opened = false;
+        command.ws.onopen = function() {
+            console.log("websocket opened");
+            command.ws.is_opened = true;
+        }
+        command.ws.onmessage = function(e) {
+            command.json_handler(e.data);
+        }
+        command.ws.onerror = function(e) {
+            console.log('websocket error: '+e.data);
+        }
+        command.ws.onclose = function(e) {
+            console.log("websocket closed");
+            command.ws.is_closed = true;
+            command.ws.is_opened = false;
+        }
     }
 };

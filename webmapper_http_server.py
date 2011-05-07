@@ -8,6 +8,9 @@ import time
 import json
 from select import select
 import sys
+import struct
+import hashlib
+from cStringIO import StringIO
 
 message_pipe = []
 
@@ -30,6 +33,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         'css': 'Content-Type: text/css',
                         'json': 'Content-Type: text/javascript' }
         def found(type=''):
+            if (type=='socket'):
+                return self.do_websocket()
             print >>self.wfile, "HTTP/1.0 200 OK"
             try:
                 print >>self.wfile, contenttype[type]
@@ -56,6 +61,58 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             except IOError:
                 notfound('html')
                 print >>self.wfile, "404 Not Found:", self.path
+
+    def do_websocket(self):
+        self.websocket_handshake()
+        msg = ""
+        while True:
+            time.sleep(0.1)
+
+            if len(message_pipe)>0:
+                sendmsg = message_pipe.pop()
+                print 'Sending command over websocket:',sendmsg
+                self.wfile.write(chr(0)+json.dumps({"cmd": sendmsg[0],
+                                                    "args": sendmsg[1]})
+                                 + chr(0xFF));
+                self.wfile.flush()
+
+            while len(select([self.rfile._sock],[],[],0)[0])>0:
+                msg += self.rfile.read(1)
+                if ord(msg[-1])==0x00:
+                    msg = "";
+                elif ord(msg[-1])==0xFF:
+                    break;
+
+            if len(msg)>0 and ord(msg[-1])==0xFF:
+                out = StringIO()
+                handler_send_command(out, {'msg':msg[:-1]})
+                msg = ""
+                r = out.getvalue()
+                if len(r) > 0:
+                    self.wfile.write(chr(0)+r.encode('utf-8')+chr(0xFF))
+                    self.wfile.flush()
+
+    def websocket_handshake(self):
+        print >>self.wfile, ("HTTP/1.1 101 Web Socket Protocol Handshake\r")
+        print >>self.wfile,'Upgrade: %s\r'%self.headers['Upgrade']
+        print >>self.wfile,'Connection: %s\r'%self.headers['Connection'],'\r'
+        print >>self.wfile,('Sec-WebSocket-Origin: %s\r'
+                            %self.headers['Origin'])
+        print >>self.wfile,('Sec-WebSocket-Location: ws://%s%s\r'
+                            %(self.headers['Host'], self.path))
+
+        key1 = self.headers['Sec-WebSocket-Key1']
+        key2 = self.headers['Sec-WebSocket-Key2']
+        code = self.rfile.read(8)
+
+        def websocket_key_calc(key1,key2,code):
+            i1=int(filter(lambda x: x.isdigit(),key1))/key1.count(' ')
+            i2=int(filter(lambda x: x.isdigit(),key2))/key2.count(' ')
+            return hashlib.md5(struct.pack('!II',i1,i2)+code).digest()
+
+        print >>self.wfile,'\r'
+        self.wfile.write(websocket_key_calc(key1,key2,code))
+        self.wfile.flush()
 
 def handler_page(out, args):
     print >>out, """<html>
@@ -118,9 +175,13 @@ def handler_send_command(out, args):
         print >>out, json.dumps( { "cmd": res[0],
                                    "args": res[1] } )
 
+def handler_sock(out, args):
+    pass
+
 handlers = {'/': [handler_page, 'html'],
             '/wait_cmd': [handler_wait_command, 'json'],
-            '/send_cmd': [handler_send_command, 'json']}
+            '/send_cmd': [handler_send_command, 'json'],
+            '/sock': [handler_sock, 'socket']}
 
 cmd_handlers = {}
 
