@@ -36,10 +36,11 @@ def on_connection(con, action):
         server.send_command("del_connection", con)
 
 def set_connection(con):
-    con['mode'] = {'bypass': mapper.MO_BYPASS,
-                   'linear': mapper.MO_LINEAR,
-                   'calibrate': mapper.MO_CALIBRATE,
-                   'expression': mapper.MO_EXPRESSION}[con['mode']]
+    if con.has_key('mode'):
+        con['mode'] = {'bypass': mapper.MO_BYPASS,
+                       'linear': mapper.MO_LINEAR,
+                       'calibrate': mapper.MO_CALIBRATE,
+                       'expression': mapper.MO_EXPRESSION}[con['mode']]
     monitor.modify(con)
 
 monitor.db.add_device_callback(on_device)

@@ -337,6 +337,7 @@ function update_connection_properties()
 
     var clear_props = function() {
         a(".mode").removeClass("modesel");
+        a("*").removeClass('waiting');
         a("#expression").val('');
         a("#rangeSrcMin").val('');
         a("#rangeSrcMax").val('');
@@ -413,24 +414,54 @@ function set_boundary(boundaryElement, value, ismax)
     }
 }
 
-function selected_connection_set_mode(modestring)
+function copy_selected_connection()
 {
-    var modecmd = connectionModeCommands[modestring];
-    if (!modecmd) return;
     var conns = get_selected(connections);
     if (conns.length!=1) return;
     var args = {};
 
     // copy existing connection properties
-    for (c in conns[0]) {
+    for (var c in conns[0]) {
         args[c] = conns[0][c];
     }
+    return args;
+}
+
+function selected_connection_set_mode(modestring)
+{
+    var modecmd = connectionModeCommands[modestring];
+    if (!modecmd) return;
+
+    var args = copy_selected_connection();
 
     // adjust the mode
     args['mode'] = modecmd;
 
     // send the command, should receive a /connection/modify message after.
     command.send('set_connection', args);
+}
+
+function selected_connection_set(what,field,idx)
+{
+    var args = copy_selected_connection();
+
+    // TODO: this is a bit out of hand, need to simplify the mode
+    // strings and indexes.
+    var modecmd = connectionModeCommands[connectionModes[args['mode']]];
+    args['mode'] = modecmd;
+
+    // adjust the field
+    console.log('before: '+args[what]);
+    if (idx===undefined)
+        args[what] = field.value;
+    else
+        args[what][idx] = parseFloat(field.value);
+    console.log('after: '+args[what]);
+
+    // send the command, should receive a /connection/modify message after.
+    command.send('set_connection', args);
+
+    $(field).addClass('waiting');
 }
 
 function on_table_scroll()
@@ -781,11 +812,19 @@ function add_signal_property_controls()
         modesdiv.appendChild(d);
     }
 
+    var handle_input=function(inp,field,idx) {
+        inp.onclick = function(e){e.stopPropagation();};
+        inp.onkeyup = function(e){if (e.keyCode==13)
+                selected_connection_set(field,inp,idx);};
+        inp.onblur = function(){selected_connection_set(field,inp,idx);};
+    };
+
     var d = document.createElement('input');
+    d.type = 'text';
     d.maxLength = 15;
     d.size = 15;
     d.id = 'expression';
-    d.onclick = function(e){e.stopPropagation();};
+    handle_input(d, 'expression');
     modesdiv.appendChild(d);
     controls.appendChild(modesdiv);
 
@@ -800,11 +839,11 @@ function add_signal_property_controls()
     srcrange.appendChild(d);
 
     var d = document.createElement('input');
-    d.onclick = function(e){e.stopPropagation();};
     d.maxLength = 15;
     d.size = 5;
     d.className = "rangeMin";
     d.id = 'rangeSrcMin';
+    handle_input(d, 'range', 0);
     srcrange.appendChild(d);
 
     var d = document.createElement('div');
@@ -816,7 +855,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMax";
     d.id = 'rangeSrcMax';
-    d.onclick = function(e){e.stopPropagation();};
+    handle_input(d, 'range', 1);
     srcrange.appendChild(d);
     rangesdiv.appendChild(srcrange);
 
@@ -838,7 +877,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMin";
     d.id = 'rangeDestMin';
-    d.onclick = function(e){e.stopPropagation();};
+    handle_input(d, 'range', 2);
     destrange.appendChild(d);
 
     var d = document.createElement('div');
@@ -850,7 +889,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMax";
     d.id = 'rangeDestMax';
-    d.onclick = function(e){e.stopPropagation();};
+    handle_input(d, 'range', 3);
     destrange.appendChild(d);
 
     var d = document.createElement('div');

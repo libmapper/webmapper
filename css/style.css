@@ -160,3 +160,7 @@ body {
 .boundaryWrap {
   background-position: -120px 0px;
 }
+
+.waiting {
+  background: #EEEEEE;
+}
