@@ -785,6 +785,7 @@ function add_signal_property_controls()
     d.maxLength = 15;
     d.size = 15;
     d.id = 'expression';
+    d.onclick = function(e){e.stopPropagation();};
     modesdiv.appendChild(d);
     controls.appendChild(modesdiv);
 
@@ -799,6 +800,7 @@ function add_signal_property_controls()
     srcrange.appendChild(d);
 
     var d = document.createElement('input');
+    d.onclick = function(e){e.stopPropagation();};
     d.maxLength = 15;
     d.size = 5;
     d.className = "rangeMin";
@@ -814,6 +816,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMax";
     d.id = 'rangeSrcMax';
+    d.onclick = function(e){e.stopPropagation();};
     srcrange.appendChild(d);
     rangesdiv.appendChild(srcrange);
 
@@ -835,6 +838,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMin";
     d.id = 'rangeDestMin';
+    d.onclick = function(e){e.stopPropagation();};
     destrange.appendChild(d);
 
     var d = document.createElement('div');
@@ -846,6 +850,7 @@ function add_signal_property_controls()
     d.size = 5;
     d.className = "rangeMax";
     d.id = 'rangeDestMax';
+    d.onclick = function(e){e.stopPropagation();};
     destrange.appendChild(d);
 
     var d = document.createElement('div');
