@@ -2,6 +2,10 @@
 
 import webmapper_http_server as server
 import mapper
+import sys
+
+if 'tracing' in sys.argv[1:]:
+    server.tracing = True
 
 monitor = mapper.monitor()
 
@@ -24,7 +28,6 @@ def on_link(link, action):
         server.send_command("del_link", link)
 
 def on_connection(con, action):
-    print con
     if action == mapper.MDB_NEW:
         server.send_command("new_connection", con)
     if action == mapper.MDB_MODIFY:

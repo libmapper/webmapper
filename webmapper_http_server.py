@@ -13,6 +13,7 @@ import hashlib
 from cStringIO import StringIO
 
 message_pipe = []
+tracing = False
 
 class ReuseTCPServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
@@ -52,6 +53,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         try:
             found(handlers[command][1])
+            if command=='/send_cmd':
+                if tracing: print 'hxr_recv:',args['msg']
             handlers[command][0](self.wfile, args)
         except KeyError:
             try:
@@ -70,7 +73,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if len(message_pipe)>0:
                 sendmsg = message_pipe.pop()
-                print 'Sending command over websocket:',sendmsg
+                if tracing: print 'ws_send:',sendmsg
                 self.wfile.write(chr(0)+json.dumps({"cmd": sendmsg[0],
                                                     "args": sendmsg[1]})
                                  + chr(0xFF));
@@ -85,10 +88,12 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             if len(msg)>0 and ord(msg[-1])==0xFF:
                 out = StringIO()
+                if tracing: print 'ws_recv:',msg[:-1]
                 handler_send_command(out, {'msg':msg[:-1]})
                 msg = ""
                 r = out.getvalue()
                 if len(r) > 0:
+                    if tracing: print 'ws_send:',r
                     self.wfile.write(chr(0)+r.encode('utf-8')+chr(0xFF))
                     self.wfile.flush()
 
@@ -149,7 +154,7 @@ def handler_wait_command(out, args):
         return
     # Receive command from back-end
     msg = message_pipe.pop()
-    print 'Sending command:',msg
+    if tracing: print 'hxr_send:',msg
     print >>out, json.dumps( {"id": int(args['id']),
                               "cmd": msg[0],
                               "args": msg[1]} )
