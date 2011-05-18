@@ -17,7 +17,8 @@ input {
 
 body {
   font-family: sans;
-  font-size: 10pt;
+  font-size: 11pt;
+  background: lightgrey;
 }
 
 /* Used to position the tables and connection area. */
@@ -33,7 +34,8 @@ body {
   top: 1in;
   width: 3.18in;
   height: 5in;
-  border: solid 1px lightgrey;
+  background: white;
+  border: solid 1px black;
 }
 
 .displayTable {
@@ -60,10 +62,14 @@ body {
 
 .topTabs {
   margin: 15pt 0px 0px 0px;
+  border-bottom: solid 1pt darkgrey;
+  background: darkgrey;
 }
 
 .topTabs li {
-  border: solid 1 black;
+  border-left: solid 1px black;
+  border-right: solid 1px black;
+  border-bottom: solid 1px black;
   padding: 2pt 10px 2pt 10px;
   margin: 0px;
   display: inline-block;
@@ -76,11 +82,13 @@ body {
 }
 
 .leftTable .trsel {
-  border-right: solid 5pt red;
+  //border-right: solid 7pt red;
+  background: lightblue;
 }
 
 .rightTable .trsel {
-  border-left: solid 7pt red;
+  //border-left: solid 7pt red;
+  background: lightblue;
 }
 
 .actionDiv ul {
@@ -114,7 +122,7 @@ body {
 }
 
 .modesel {
-  background: lightgrey;
+  background: darkgrey;
 }
 
 .range {

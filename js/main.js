@@ -57,7 +57,7 @@ function update_devices()
 }
 
 /* Update a table with the rows and columns contained in text, add
- * rows one ata time and then apply. */
+ * rows one at a time and then apply. */
 function table_updater(tab)
 {
     var trs = [];
@@ -587,6 +587,8 @@ function position_dynamic_elements()
     L.style.height =
     R.style.height =
     svgArea.style.height = (document.body.clientHeight - hT.top - 10) + "px";
+    svgArea.style.background = "white";
+    svgArea.style.border = "solid 1pt black";
 
     L.style.top =
     R.style.top =
