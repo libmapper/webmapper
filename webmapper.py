@@ -46,7 +46,7 @@ def set_connection(con):
 monitor.db.add_device_callback(on_device)
 monitor.db.add_signal_callback(on_signal)
 monitor.db.add_link_callback(on_link)
-monitor.db.add_mapping_callback(on_connection)
+monitor.db.add_connection_callback(on_connection)
 
 server.add_command_handler("all_devices",
                            lambda x: ("all_devices",
@@ -63,7 +63,7 @@ server.add_command_handler("all_links",
 
 server.add_command_handler("all_connections",
                            lambda x: ("all_connections",
-                                      list(monitor.db.all_mappings())))
+                                      list(monitor.db.all_connections())))
 
 server.add_command_handler("set_connection", set_connection)
 
