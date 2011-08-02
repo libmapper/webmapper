@@ -488,6 +488,7 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
 
 function on_table_scroll()
 {
+    // TODO: should check first to see if scroll was vertical
     if (selectedTab == "All Devices")
         update_links();
     else
