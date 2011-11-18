@@ -133,7 +133,7 @@ function update_signals()
 
         if (sig.device_name == selectedTab && sig.direction == 1)
             updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length]);
-        if (sig.device_name != selectedTab && sig.direction == 0 && lnk!=null)
+        if (sig.direction == 0 && lnk!=null)
             updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length]);
     }
     updaterLeft.apply();
@@ -643,15 +643,19 @@ function main()
 
     command.register("all_signals", function(cmd, args) {
         for (d in args)
-            signals.add(args[d].device_name+args[d].name, args[d]);
+            signals.add(args[d].device_name+args[d].name
+                        +'/_dir_'+args[d].direction,
+                        args[d]);
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        signals.add(args.device_name+args.name, args);
+        signals.add(args.device_name+args.name
+                    +'/_dir_'+args.direction, args);
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        signals.remove(args.device_name+args.name);
+        signals.remove(args.device_name+args.name
+                       +'/_dir_'+args.direction);
         update_display();
     });
 
