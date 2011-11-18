@@ -63,7 +63,7 @@ body {
 }
 
 .topTabs li {
-  border: solid 1 black;
+  border: solid 1px black;
   padding: 2pt 10px 2pt 10px;
   margin: 0px;
   display: inline-block;
