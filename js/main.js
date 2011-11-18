@@ -591,6 +591,7 @@ function position_dynamic_elements()
     L.style.top =
     R.style.top =
     svgArea.style.top = (hT.top) + "px";
+    svgArea.offsetTop = hT.top;
 
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
@@ -611,6 +612,7 @@ function position_dynamic_elements()
         L.style.width = h[0].width+"px";
         R.style.width = h[2].width+"px";
         svgArea.style.width = h[1].width+"px";
+        svgArea.offsetWidth = h[1].width;
 
         if (parseInt(leftTable.offsetWidth) < h[0].width) {
             leftTable.style.width = h[0].width + "px";
