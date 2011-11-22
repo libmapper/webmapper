@@ -43,10 +43,20 @@ def set_connection(con):
                        'expression': mapper.MO_EXPRESSION}[con['mode']]
     monitor.modify(con)
 
-monitor.db.add_device_callback(on_device)
-monitor.db.add_signal_callback(on_signal)
-monitor.db.add_link_callback(on_link)
-monitor.db.add_connection_callback(on_connection)
+def on_refresh(arg):
+    global monitor
+    del monitor
+    monitor = mapper.monitor()
+    init_monitor()
+
+def init_monitor():
+    monitor.request_devices()
+    monitor.db.add_device_callback(on_device)
+    monitor.db.add_signal_callback(on_signal)
+    monitor.db.add_link_callback(on_link)
+    monitor.db.add_connection_callback(on_connection)
+
+init_monitor()
 
 server.add_command_handler("all_devices",
                            lambda x: ("all_devices",
@@ -78,5 +88,7 @@ server.add_command_handler("connect",
 
 server.add_command_handler("disconnect",
                            lambda x: monitor.disconnect(*map(str,x)))
+
+server.add_command_handler("refresh", on_refresh)
 
 server.serve(port=8000, poll=lambda: monitor.poll(100))

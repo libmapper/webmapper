@@ -164,3 +164,15 @@ body {
 .waiting {
   background: #EEEEEE;
 }
+
+.extratools {
+  float: right;
+}
+
+#refresh {
+  background:url(/images/refresh.png) no-repeat;
+  cursor: pointer;
+  border: none;
+  width: 24px;
+  height: 24px;
+}

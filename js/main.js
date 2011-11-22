@@ -768,6 +768,16 @@ function add_svg_area()
     svgArea.offsetHeight = parseInt(svgArea.style.height);
 }
 
+function refresh_all()
+{
+    devices = new Assoc();
+    signals = new Assoc();
+    links = new Assoc();
+    connections = new Assoc();
+    update_display();
+    command.send('refresh');
+}
+
 function add_tabs()
 {
     var body = document.getElementsByTagName('body')[0];
@@ -782,6 +792,13 @@ function add_tabs()
     tabList.appendChild(tabDevices);
     body.insertBefore(tabList, body.firstChild);
     selectedTab = tabDevices.innerHTML;
+
+    var refresh = document.createElement('input');
+    refresh.id = 'refresh';
+    refresh.className = 'extratools';
+    refresh.type = 'button';
+    refresh.onclick = refresh_all;
+    body.insertBefore(refresh, tabList);
 }
 
 function add_action_div()
