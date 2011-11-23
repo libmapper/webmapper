@@ -15,7 +15,7 @@ function http_request(path, args, ok_responder, error_responder) {
       a+='?';
     else
       a+='&';
-    a += i + '=' + args[i];
+    a += encodeURIComponent(i) + '=' + encodeURIComponent(args[i]);
     n++;
   }
   client.open("GET", path+a);
