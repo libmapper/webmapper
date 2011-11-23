@@ -42,15 +42,33 @@ function update_display()
 
 function update_devices()
 {
-    keys = devices.keys();
+    var keys = devices.keys();
+    var sigkeys = signals.keys();
     var updaterLeft = new table_updater(leftTable);
     var updaterRight = new table_updater(rightTable);
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
 
-        updaterLeft.addrow([dev.name, dev.host, dev.port]);
-        updaterRight.addrow([dev.name, dev.host, dev.port]);
+        var found_input = false;
+        var found_output = false;
+        for (var s in sigkeys) {
+            var sk = sigkeys[s];
+            var sig = signals.get(sk);
+            if (sig.device_name == dev.name) {
+                if (sig.direction == 0)
+                    found_input = true;
+                else if (sig.direction == 1)
+                    found_output = true;
+            }
+            if (found_input && found_output)
+                break;
+        }
+
+        if (found_output)
+            updaterLeft.addrow([dev.name, dev.host, dev.port]);
+        if (found_input)
+            updaterRight.addrow([dev.name, dev.host, dev.port]);
     }
     updaterLeft.apply();
     updaterRight.apply();
