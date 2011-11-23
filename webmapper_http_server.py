@@ -33,6 +33,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         'js': 'Content-Type: text/javascript',
                         'css': 'Content-Type: text/css',
                         'json': 'Content-Type: text/javascript',
+                        'png': 'Content-Type: image/png',
                         'dl': None}
         def found(type=''):
             if (type=='socket'):
