@@ -75,6 +75,19 @@ body {
   background: lightgrey;
 }
 
+.topMenu {
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}
+
+.topMenu li {
+  margin: 2pt 10px 2pt 10px;
+  display: inline-block;
+  list-style: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .leftTable .trsel {
   border-right: solid 5pt red;
 }

@@ -17,6 +17,7 @@ actionDiv = null;
 devActions = null;
 sigActions = null;
 arrows = [];
+menuSave = null;
 
 all_devices = 'All Devices';
 
@@ -40,6 +41,7 @@ function update_display()
 
     update_selection();
     update_arrows();
+    update_save_location();
 }
 
 function update_devices()
@@ -646,6 +648,24 @@ function position_dynamic_elements()
     update_tables();
 }
 
+function on_load()
+{
+}
+
+function update_save_location()
+{
+    if (selectedTab==all_devices) {
+        menuSave.href = '';
+        menuSave.style.color = 'gray';
+        menuSave.onclick=function(){return false;};
+    }
+    else {
+        menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
+        menuSave.style.color = 'black';
+        menuSave.onclick=null;
+    }
+}
+
 /* The main program. */
 function main()
 {
@@ -733,6 +753,7 @@ function main()
             add_svg_area();
             add_action_div();
             add_tabs();
+            add_menu();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -973,6 +994,27 @@ function add_signal_property_controls()
     controls.appendChild(rangesdiv);
 
     sigActions.appendChild(controls);
+}
+
+function add_menu()
+{
+    var body = document.getElementsByTagName('body')[0];
+    var menuList = document.createElement('ul');
+    menuList.className = "topMenu";
+    var menuLoadLi = document.createElement('li');
+    var menuLoad = document.createElement('a');
+    menuLoad.innerHTML = 'Load';
+    menuLoad.onclick = on_load;
+    menuLoadLi.appendChild(menuLoad);
+    menuList.appendChild(menuLoadLi);
+
+    var menuSaveLi = document.createElement('li');
+    menuSave = document.createElement('a');
+    menuSave.innerHTML = 'Save';
+    menuSaveLi.appendChild(menuSave);
+    menuList.appendChild(menuSaveLi);
+
+    body.insertBefore(menuList, body.firstChild);
 }
 
 /* Kick things off. */

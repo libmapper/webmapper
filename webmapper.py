@@ -2,7 +2,7 @@
 
 import webmapper_http_server as server
 import mapper
-import sys
+import sys, json
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
@@ -49,6 +49,15 @@ def on_refresh(arg):
     monitor = mapper.monitor()
     init_monitor()
 
+def on_save(arg):
+    d = arg['dev']
+    ds = list(monitor.db.match_devices_by_name(arg['dev']))
+    fn = '/'.join(ds[0]['name'].split('/')[1:])
+    fn.replace('/','_')
+    fn = '.'.join(fn.split('.')[:-1]+['json'])
+    cs = list(monitor.db.connections_by_device_name(arg['dev']))
+    return fn, json.dumps(cs)
+
 def init_monitor():
     monitor.request_devices()
     monitor.db.add_device_callback(on_device)
@@ -90,5 +99,7 @@ server.add_command_handler("disconnect",
                            lambda x: monitor.disconnect(*map(str,x)))
 
 server.add_command_handler("refresh", on_refresh)
+
+server.add_command_handler("save", on_save)
 
 server.serve(port=8000, poll=lambda: monitor.poll(100))

@@ -32,11 +32,13 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         contenttype = { 'html': 'Content-Type: text/html; charset=UTF-8',
                         'js': 'Content-Type: text/javascript',
                         'css': 'Content-Type: text/css',
-                        'json': 'Content-Type: text/javascript' }
+                        'json': 'Content-Type: text/javascript',
+                        'dl': None}
         def found(type=''):
             if (type=='socket'):
                 return self.do_websocket()
             print >>self.wfile, "HTTP/1.0 200 OK"
+            if type=='dl': return
             try:
                 print >>self.wfile, contenttype[type]
             except KeyError:
@@ -183,10 +185,34 @@ def handler_send_command(out, args):
 def handler_sock(out, args):
     pass
 
+def handler_save(out, args):
+    if not 'save' in cmd_handlers:
+        print >>out
+        print >>out, "Error, no save handler registered."
+        return
+    f = cmd_handlers['save']
+    result = f(args)
+    if result==None:
+        print >>out
+        print >>out, "Error saving", args
+        return
+    fn, content = result
+
+    print >>out, 'Expires: 0'
+    print >>out, 'Cache-Control: no-store'
+    print >>out, 'Content-Description: File Transfer'
+    print >>out, 'Content-Disposition: attachment; filename="%s"'%fn
+    print >>out, 'Content-Type: text/javascript'
+    print >>out, 'Content-Transfer-Encoding: binary'
+    print >>out, 'Content-Length: %d'%len(content)
+    print >>out
+    print >>out, content
+
 handlers = {'/': [handler_page, 'html'],
             '/wait_cmd': [handler_wait_command, 'json'],
             '/send_cmd': [handler_send_command, 'json'],
-            '/sock': [handler_sock, 'socket']}
+            '/sock': [handler_sock, 'socket'],
+            '/save': [handler_save, 'dl']}
 
 cmd_handlers = {}
 
