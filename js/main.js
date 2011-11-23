@@ -18,6 +18,8 @@ devActions = null;
 sigActions = null;
 arrows = [];
 
+all_devices = 'All Devices';
+
 connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
 connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
 connectionModeCommands = {"Byp": 'bypass',
@@ -31,7 +33,7 @@ boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 function update_display()
 {
     update_tabs();
-    if (selectedTab == "All Devices")
+    if (selectedTab == all_devices)
         update_devices();
     else
         update_signals(selectedTab);
@@ -213,7 +215,7 @@ function update_links()
 
 function update_arrows()
 {
-    if (selectedTab == "All Devices")
+    if (selectedTab == all_devices)
         update_links();
     else
         update_connections();
@@ -348,7 +350,7 @@ function deselect_all()
 
 function update_connection_properties()
 {
-    if (selectedTab == "All Devices")
+    if (selectedTab == all_devices)
         return;
 
     var a = function(x) { return $(x,actionDiv); };
@@ -502,7 +504,7 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
 
 function on_table_scroll()
 {
-    if (selectedTab == "All Devices")
+    if (selectedTab == all_devices)
         update_links();
     else
         update_connections();
@@ -802,14 +804,14 @@ function add_tabs()
     tabList = document.createElement('ul');
     tabList.className = "topTabs";
     tabDevices = document.createElement('li');
-    tabDevices.innerHTML = "All Devices";
+    tabDevices.innerHTML = all_devices;
     tabDevices.className = "tabsel";
     tabDevices.id = "allDevices";
     tabDevices.onclick = function(e) { select_tab(tabDevices);
                                        e.stopPropagation(); };
     tabList.appendChild(tabDevices);
     body.insertBefore(tabList, body.firstChild);
-    selectedTab = tabDevices.innerHTML;
+    selectedTab = all_devices;
 
     var refresh = document.createElement('input');
     refresh.id = 'refresh';
