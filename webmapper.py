@@ -55,8 +55,50 @@ def on_save(arg):
     fn = '/'.join(ds[0]['name'].split('/')[1:])
     fn.replace('/','_')
     fn = '.'.join(fn.split('.')[:-1]+['json'])
-    cs = list(monitor.db.connections_by_device_name(arg['dev']))
-    return fn, json.dumps(cs)
+    sources = {}
+    destinations = {}
+    connections = {}
+    next_src = 0
+    next_dest = 0
+    modeStr = {mapper.MO_BYPASS: 'bypass',
+               mapper.MO_LINEAR: 'linear',
+               mapper.MO_CALIBRATE: 'calibrate',
+               mapper.MO_EXPRESSION: 'expression'}
+    clipStr = {mapper.CT_NONE: 'none',
+               mapper.CT_MUTE: 'mute',
+               mapper.CT_CLAMP: 'clamp',
+               mapper.CT_FOLD: 'fold',
+               mapper.CT_WRAP: 'wrap'}
+    for c in monitor.db.connections_by_device_name(arg['dev']):
+        if not sources.has_key(c['src_name']):
+            sources[c['src_name']] = {
+                'id': 's%d'%next_src,
+                'device': c['src_name'].split('/')[1],
+                'parameter': '/'+'/'.join(c['src_name'].split('/')[2:])
+                }
+            next_src += 1
+        if not destinations.has_key(c['dest_name']):
+            destinations[c['dest_name']] = {
+                'id': 'd%s'%next_dest,
+                'device': c['dest_name'].split('/')[1],
+                'parameter': '/'+'/'.join(c['dest_name'].split('/')[2:])
+                }
+            next_dest += 1
+        connections[(c['src_name'],c['dest_name'])] = {
+            'scaling': modeStr[c['mode']],
+            'range': ' '.join(map(str,c['range'])),
+            'expression': (c['expression'].
+                           replace('x', sources[c['src_name']]['id']).
+                           replace('y', destinations[c['dest_name']]['id'])),
+            'clipMin': clipStr[c['clip_min']],
+            'clipMax': clipStr[c['clip_max']],
+            'muted': clipStr[c['muted']],
+            }
+    contents = {"mapping": {"fileversion": "dot-1",
+                            "sources": sources.values(),
+                            "destinations": destinations.values(),
+                            "connections": connections.values()}}
+    return fn, json.dumps(contents, indent=4)
 
 def init_monitor():
     monitor.request_devices()
