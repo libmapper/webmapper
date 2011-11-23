@@ -79,7 +79,7 @@ function update_devices()
 }
 
 /* Update a table with the rows and columns contained in text, add
- * rows one ata time and then apply. */
+ * rows one at a time and then apply. */
 function table_updater(tab)
 {
     var trs = [];
@@ -194,6 +194,10 @@ function cleanup_arrows()
     arrows = [];
 }
 
+$.expr[":"].endswith = function(obj, index, meta, stack){
+return (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) >=0 && (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) == ((obj.textContent || obj.innerText || $(obj).text() || "").length - meta[3].length);
+}
+
 function update_links()
 {
     cleanup_arrows();
@@ -201,11 +205,11 @@ function update_links()
     var keys = links.keys();
     for (var k in keys) {
         var l = links.get(keys[k]);
-        $('td:contains('+l.src_name+')', leftTable).each(
+        $('td:endswith('+l.src_name+')', leftTable).each(
             function(i,e){
                 var left = e.parentNode;
                 var leftsel = $(left).hasClass('trsel');
-                $('td:contains('+l.dest_name+')', rightTable).each(
+                $('td:endswith('+l.dest_name+')', rightTable).each(
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
@@ -230,11 +234,11 @@ function update_connections()
     var keys = connections.keys();
     for (var k in keys) {
         var c = connections.get(keys[k]);
-        $('td:contains('+c.src_name+')', leftTable).each(
+        $('td:endswith('+c.src_name+')', leftTable).each(
             function(i,e){
                 var left = e.parentNode;
                 var leftsel = $(left).hasClass('trsel');
-                $('td:contains('+c.dest_name+')', rightTable).each(
+                $('td:endswith('+c.dest_name+')', rightTable).each(
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
@@ -507,6 +511,7 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
 function on_table_scroll()
 {
     if (selectedTab == all_devices)
+    // TODO: should check first to see if scroll was vertical
         update_links();
     else
         update_connections();
@@ -609,6 +614,8 @@ function position_dynamic_elements()
     L.style.height =
     R.style.height =
     svgArea.style.height = (document.body.clientHeight - hT.top - 10) + "px";
+    svgArea.style.background = "white";
+    svgArea.style.border = "solid 1pt black";
 
     L.style.top =
     R.style.top =
