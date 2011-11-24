@@ -92,13 +92,88 @@ def on_save(arg):
                            replace('y', destinations[c['dest_name']]['id'])),
             'clipMin': clipStr[c['clip_min']],
             'clipMax': clipStr[c['clip_max']],
-            'muted': clipStr[c['muted']],
+            'muted': c['muted'],
             }
     contents = {"mapping": {"fileversion": "dot-1",
                             "sources": sources.values(),
                             "destinations": destinations.values(),
                             "connections": connections.values()}}
     return fn, json.dumps(contents, indent=4)
+
+def on_load(mapping_json):
+    modeIdx = {'bypass': mapper.MO_BYPASS,
+               'linear': mapper.MO_LINEAR,
+               'calibrate': mapper.MO_CALIBRATE,
+               'expression': mapper.MO_EXPRESSION}
+    clipIdx = {'none': mapper.CT_NONE,
+               'mute': mapper.CT_MUTE,
+               'clamp': mapper.CT_CLAMP,
+               'fold': mapper.CT_FOLD,
+               'wrap': mapper.CT_WRAP}
+
+    m = mapping_json['mapping']
+    srcs = {}
+    dests = {}
+    for s in m['sources']:
+        srcs[s['id']] = s
+    for d in m['destinations']:
+        dests[d['id']] = d
+    for c in m['connections']:
+        s = [srcs[s] for s in srcs.keys() if (s in c['expression'])]
+        d = [dests[d] for d in dests.keys() if (d in c['expression'])]
+        links = [(x,y) for x in s for y in d]
+        if len(links)>1:
+            print 'Error, multiple links specified for connection', c
+            continue
+        link = links[0]
+
+        srcdev = str('/'+link[0]['device'])
+        destdev = str('/'+link[1]['device'])
+
+        # Only make a link if it doesn't already exist.
+        if not monitor.db.link_by_src_dest_names(srcdev, destdev):
+            monitor.link(srcdev, destdev)
+
+        e = (c['expression'].replace(link[0]['id'], 'x')
+                            .replace(link[1]['id'], 'y'))
+
+        # Range may have integers, floats, or '-' strings. When
+        # converting to a list of floats, pass through anything that
+        # doesn't parse as a float or int.
+        rng = []
+        for r in c['range'].split():
+            try:
+                rng.append(int(r))
+            except:
+                try:
+                    rng.append(float(r))
+                except:
+                    rng.append(r)
+
+        args = (srcdev + str(link[0]['parameter']),
+                destdev + str(link[1]['parameter']),
+                {'mode': modeIdx[c['scaling']],
+                 'range': map(float,c['range'].split()),
+                 'expression': e,
+                 'clip_min': clipIdx[c['clipMin']],
+                 'clip_max': clipIdx[c['clipMax']],
+                 'muted': c['muted']})
+
+        # If connection already exists, use 'modify', otherwise 'connect'.
+        cs = list(monitor.db.connections_by_device_and_signal_names(
+                str(link[0]['device']), str(link[0]['parameter']),
+                str(link[1]['device']), str(link[1]['parameter'])))
+        if len(cs)>0:
+            args[2]['src_name'] = args[0]
+            args[2]['dest_name'] = args[1]
+            monitor.modify(args[2])
+        else:
+            monitor.connect(*args)
+
+        # TODO: Strictly speaking we should wait until links are
+        # acknowledged before continuing with a connection.  An
+        # asynchronous approach would be necessary for this, by
+        # passing a continuation to the monitor's link handler.
 
 def init_monitor():
     monitor.request_devices()
@@ -143,5 +218,6 @@ server.add_command_handler("disconnect",
 server.add_command_handler("refresh", on_refresh)
 
 server.add_command_handler("save", on_save)
+server.add_command_handler("load", on_load)
 
 server.serve(port=8000, poll=lambda: monitor.poll(100))

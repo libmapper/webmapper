@@ -3,6 +3,7 @@ import SocketServer
 import SimpleHTTPServer
 import urllib
 import urlparse
+import cgi
 import threading
 import time
 import json
@@ -19,6 +20,26 @@ class ReuseTCPServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
 
 class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    def do_POST(self):
+        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        if ctype == 'multipart/form-data':
+            query = cgi.parse_multipart(self.rfile, pdict)
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        fn = query['filename'][0].split('\\')[-1]
+        er = 0
+        try:
+            js = json.loads(query['mapping_json'][0])
+            er = 1
+            if cmd_handlers.has_key('load'):
+                er = 2
+                cmd_handlers['load'](js)
+            print >>self.wfile, "Success: %s loaded successfully."%fn
+        except Exception, e:
+            print >>self.wfile, "Error: loading %s (%d)."%(fn,er)
+            raise e
+
     def do_GET(self):
         command = self.path
         args = []

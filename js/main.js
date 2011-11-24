@@ -17,6 +17,7 @@ actionDiv = null;
 devActions = null;
 sigActions = null;
 arrows = [];
+menuList = null;
 menuSave = null;
 
 all_devices = 'All Devices';
@@ -655,8 +656,60 @@ function position_dynamic_elements()
     update_tables();
 }
 
+function notify(msg)
+{
+    var li = document.createElement('li');
+    li.className = 'notification';
+    li.innerHTML = msg;
+    menuList.appendChild(li);
+    setTimeout(function(){
+        $(li).fadeOut('slow', function(){menuList.removeChild(li);});
+    }, 5000);
+}
+
 function on_load()
 {
+    var body = document.getElementsByTagName('body')[0];
+    var iframe = document.createElement('iframe');
+    iframe.name = 'file_upload';
+    iframe.style.visibility = 'hidden';
+    body.appendChild(iframe);
+
+    var form = document.createElement('form');
+    form.innerHTML = '<input id="file" type="file"                   \
+                       name="mapping_json" size="40" accept="json">  \
+                      <input type="submit" style="display: none;">   \
+                      <input type="button" value="Cancel" id="cancel">';
+    form.method = 'POST';
+    form.enctype = 'multipart/form-data';
+    form.action = '/load';
+    form.target = 'file_upload';
+
+    var l = document.createElement('li');
+    l.appendChild(form);
+    menuList.appendChild(l);
+
+    iframe.onload = function(){
+        notify(iframe.contentDocument.body.innerText);
+        menuList.removeChild(l);
+        body.removeChild(iframe);
+    };
+
+    $('#cancel',form).click(function(){
+        menuList.removeChild(l);
+        body.removeChild(iframe);
+    });
+
+    form.firstChild.onchange = function(){
+        var fn = document.createElement('input');
+        fn.type = 'hidden';
+        fn.name = 'filename';
+        fn.value = form.firstChild.value;
+        console.log(form.firstChild.value);
+        form.appendChild(fn);
+        form.submit();
+    };
+    return false;
 }
 
 function update_save_location()
@@ -1006,7 +1059,7 @@ function add_signal_property_controls()
 function add_menu()
 {
     var body = document.getElementsByTagName('body')[0];
-    var menuList = document.createElement('ul');
+    menuList = document.createElement('ul');
     menuList.className = "topMenu";
     var menuLoadLi = document.createElement('li');
     var menuLoad = document.createElement('a');
