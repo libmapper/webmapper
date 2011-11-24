@@ -690,7 +690,10 @@ function on_load()
     menuList.appendChild(l);
 
     iframe.onload = function(){
-        notify(iframe.contentDocument.body.innerText);
+        var t = $(iframe.contentDocument.body).text();
+        if (t.search('Success:')==-1 && t.search('Error:')==-1)
+            return;
+        notify($(iframe.contentDocument.body).text());
         menuList.removeChild(l);
         body.removeChild(iframe);
     };
