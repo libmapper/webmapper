@@ -287,8 +287,9 @@ def handler_send_command(out, args):
     except KeyError:
         print 'send_command: no message found in "%s"'%str(msgstring)
         return
-    except ValueError:
-        print 'send_command: bad embedded JSON "%s"'%str(vals)
+    except ValueError, e:
+        print 'send_command: bad embedded JSON "%s"'%msgstring
+        raise e
         return
 
     # JSON decoding returns unicode which doesn't work well with
