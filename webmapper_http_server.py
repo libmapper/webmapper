@@ -1,6 +1,7 @@
 
 import SocketServer
 import SimpleHTTPServer
+import socket, errno
 import urllib
 import urlparse
 import cgi
@@ -91,10 +92,19 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_websocket(self):
         ws_version = self.websocket_handshake()
-        if ws_version < 8:
-            self.do_websocket_0()
-        else:
-            self.do_websocket_8()
+        try:
+            if ws_version < 8:
+                self.do_websocket_0()
+            else:
+                self.do_websocket_8()
+        except socket.error, e:
+            if e.errno == errno.EPIPE:
+                # Avoid reporting a huge stack trace for broken pipe
+                # exception, it just means that the websocket closed
+                # because the browser window was closed for example.
+                print '[ws]',e
+            else:
+                raise e
 
     def do_websocket_0(self):
         msg = ""
