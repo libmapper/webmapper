@@ -64,6 +64,7 @@ body {
 .topTabs {
   margin: 15pt 0px 0px 0px;
   border-bottom: solid 1pt darkgrey;
+  border-radius: 5px;
   background: darkgrey;
 }
 
@@ -71,6 +72,8 @@ body {
   border-left: solid 1px black;
   border-right: solid 1px black;
   border-bottom: solid 1px black;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
   padding: 2pt 10px 2pt 10px;
   margin: 0px;
   display: inline-block;
@@ -95,7 +98,20 @@ body {
 }
 
 .topMenu li a {
+  color: black;
+  text-decoration: none;
+}
+
+.topMenu li a:hover {
   text-decoration: underline;
+}
+
+.topMenu li a.disabled:hover {
+  text-decoration: none;
+}
+
+.topMenu li a.disabled {
+  color: gray;
 }
 
 .leftTable .trsel {
@@ -197,7 +213,10 @@ body {
 #refresh {
   background:url(/images/refresh.png) no-repeat;
   cursor: pointer;
-  border: none;
+  border: solid 1px darkgray;
+  border-radius: 5px;
+  margin: 0px;
+  padding: 0px;
   width: 24px;
   height: 24px;
 }

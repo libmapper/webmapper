@@ -719,12 +719,12 @@ function update_save_location()
 {
     if (selectedTab==all_devices) {
         menuSave.href = '';
-        menuSave.style.color = 'gray';
+        $(menuSave).addClass('disabled');
         menuSave.onclick=function(){return false;};
     }
     else {
         menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
-        menuSave.style.color = 'black';
+        $(menuSave).removeClass('disabled');
         menuSave.onclick=null;
     }
 }
@@ -817,6 +817,7 @@ function main()
             add_action_div();
             add_tabs();
             add_menu();
+            add_extra_tools();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -896,13 +897,6 @@ function add_tabs()
     tabList.appendChild(tabDevices);
     body.insertBefore(tabList, body.firstChild);
     selectedTab = all_devices;
-
-    var refresh = document.createElement('input');
-    refresh.id = 'refresh';
-    refresh.className = 'extratools';
-    refresh.type = 'button';
-    refresh.onclick = refresh_all;
-    body.insertBefore(refresh, tabList);
 }
 
 function add_action_div()
@@ -1067,6 +1061,7 @@ function add_menu()
     var menuLoadLi = document.createElement('li');
     var menuLoad = document.createElement('a');
     menuLoad.innerHTML = 'Load';
+    menuLoad.href = '/';
     menuLoad.onclick = on_load;
     menuLoadLi.appendChild(menuLoad);
     menuList.appendChild(menuLoadLi);
@@ -1078,6 +1073,17 @@ function add_menu()
     menuList.appendChild(menuSaveLi);
 
     body.insertBefore(menuList, body.firstChild);
+}
+
+function add_extra_tools()
+{
+    var body = document.getElementsByTagName('body')[0];
+    var refresh = document.createElement('input');
+    refresh.id = 'refresh';
+    refresh.className = 'extratools';
+    refresh.type = 'button';
+    refresh.onclick = refresh_all;
+    body.insertBefore(refresh, body.firstChild);
 }
 
 /* Kick things off. */
