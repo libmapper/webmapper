@@ -90,7 +90,13 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 print >>self.wfile, "404 Not Found:", self.path
 
     def do_websocket(self):
-        self.websocket_handshake()
+        ws_version = self.websocket_handshake()
+        if ws_version < 8:
+            self.do_websocket_0()
+        else:
+            self.do_websocket_8()
+
+    def do_websocket_0(self):
         msg = ""
         while True:
             time.sleep(0.1)
@@ -105,6 +111,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             while len(select([self.rfile._sock],[],[],0)[0])>0:
                 msg += self.rfile.read(1)
+                if len(msg)==0:
+                    break
                 if ord(msg[-1])==0x00:
                     msg = "";
                 elif ord(msg[-1])==0xFF:
@@ -121,27 +129,115 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     self.wfile.write(chr(0)+r.encode('utf-8')+chr(0xFF))
                     self.wfile.flush()
 
+    def do_websocket_8(self):
+        def send_string(s):
+            opcode = chr((1<<7)|1) # FIN + text
+            if len(s)<126:
+                L = chr(len(s))
+            elif len(s)>=126 and len(s)<65536:
+                L = chr(126)+chr((len(s)>>8)&0xFF)+chr(len(s)&0xFF)
+            else:
+                print '[ws] message too long! (TODO extended-length msgs)'
+            self.wfile.write(opcode+L)
+            self.wfile.write(s)
+            self.wfile.flush()
+
+        msg = ""
+        length = -1
+        offset = -1
+        while True:
+            to_read = len(select([self.rfile._sock],[],[],0.1)[0]) > 0
+
+            if len(message_pipe)>0:
+                sendmsg = message_pipe.pop()
+                if tracing: print 'ws_send:',sendmsg
+                s = json.dumps({"cmd": sendmsg[0],
+                                "args": sendmsg[1]})
+                send_string(s)
+
+            while to_read:
+                prevlen = len(msg)
+                msg += self.rfile.read(1)
+                if len(msg)==prevlen:
+                    return
+                if len(msg)==1:
+                    opcode=ord(msg[0]) # TODO check FIN
+                    # opcode&0x7F should be 1 for text, 2 for binary
+                    if (opcode&0x7F) == 8:
+                        # Connection close
+                        return
+                    if (opcode&0x7F)!=1 and (opcode&0x7F)!=2:
+                        print '[ws] unknown opcode %#x'%(opcode&0x7F)
+                if len(msg)==2:
+                    mask = ord(msg[1]) & 0x80
+                    length = ord(msg[1]) & 0x7F
+                    offset = 2 + 4*(mask!=0)
+                if len(msg)==4:
+                    if length == 126:
+                        length = (ord(msg[2])<<8) | ord(msg[3])
+                        offset = 4 + 4*(mask!=0)
+                    elif length == 127:
+                        print 'TODO extended message length'
+                if len(msg)==6 and length<126:
+                    key = map(ord,msg[2:6])
+                elif len(msg)==8 and mask!=0 and length >= 126:
+                    key = map(ord,msg[4:8])
+                if len(msg)==length+offset:
+                    break
+                to_read = len(select([self.rfile._sock],[],[],0)[0]) > 0
+
+            if len(msg)==length+offset:
+                m = ''.join([chr(ord(c)^key[n%4])
+                             for n,c in enumerate(msg[offset:])])
+                out = StringIO()
+                if tracing: print 'ws_recv:',m
+                handler_send_command(out, {'msg':m})
+                msg = ""
+                length = offset = -1
+                r = out.getvalue()
+                if len(r) > 0:
+                    if tracing: print 'ws_send2:',r
+                    send_string(r.encode('utf-8'))
+
     def websocket_handshake(self):
         print >>self.wfile, ("HTTP/1.1 101 Web Socket Protocol Handshake\r")
         print >>self.wfile,'Upgrade: %s\r'%self.headers['Upgrade']
         print >>self.wfile,'Connection: %s\r'%self.headers['Connection'],'\r'
-        print >>self.wfile,('Sec-WebSocket-Origin: %s\r'
-                            %self.headers['Origin'])
-        print >>self.wfile,('Sec-WebSocket-Location: ws://%s%s\r'
-                            %(self.headers['Host'], self.path))
 
-        key1 = self.headers['Sec-WebSocket-Key1']
-        key2 = self.headers['Sec-WebSocket-Key2']
-        code = self.rfile.read(8)
+        if (not self.headers.has_key('Sec-WebSocket-Version')
+            or int(self.headers['Sec-WebSocket-Version'])<8):
+            print >>self.wfile,('Sec-WebSocket-Origin: %s\r'
+                                %self.headers['Origin'])
+            print >>self.wfile,('Sec-WebSocket-Location: ws://%s%s\r'
+                                %(self.headers['Host'], self.path))
 
-        def websocket_key_calc(key1,key2,code):
-            i1=int(filter(lambda x: x.isdigit(),key1))/key1.count(' ')
-            i2=int(filter(lambda x: x.isdigit(),key2))/key2.count(' ')
-            return hashlib.md5(struct.pack('!II',i1,i2)+code).digest()
+            key1 = self.headers['Sec-WebSocket-Key1']
+            key2 = self.headers['Sec-WebSocket-Key2']
+            code = self.rfile.read(8)
 
-        print >>self.wfile,'\r'
-        self.wfile.write(websocket_key_calc(key1,key2,code))
+            def websocket_key_calc(key1,key2,code):
+                i1=int(filter(lambda x: x.isdigit(),key1))/key1.count(' ')
+                i2=int(filter(lambda x: x.isdigit(),key2))/key2.count(' ')
+                return hashlib.md5(struct.pack('!II',i1,i2)+code).digest()
+
+            print >>self.wfile,'\r'
+            self.wfile.write(websocket_key_calc(key1,key2,code))
+
+        elif int(self.headers['Sec-WebSocket-Version'])>=8:
+            key = self.headers['Sec-WebSocket-Key']
+            magic_guid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+            import hashlib, base64
+            sha1 = hashlib.sha1(key+magic_guid)
+            result = base64.b64encode(sha1.digest())
+            print >>self.wfile,'Sec-WebSocket-Accept: %s\r'%result
+            print >>self.wfile,'Sec-WebSocket-Protocol: chat\r'
+            print >>self.wfile,'\r'
         self.wfile.flush()
+
+        if not self.headers.has_key('Sec-WebSocket-Version'):
+            return 0
+        else:
+            return int(self.headers['Sec-WebSocket-Version'])
 
 def handler_page(out, args):
     print >>out, """<html>

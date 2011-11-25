@@ -107,13 +107,16 @@ command = {
     open_websocket: function()
     {
         command.ws = null;
-        if ("WebSocket" in window) {
+        if ("WebSocket" in window || "MozWebSocket" in window) {
             var L = (''+window.location).split('/');
             if (L.length > 2)
                 L=L[2];
             else
                 L=L[0];
-            command.ws = new WebSocket("ws://"+L+"/sock");
+            if ("WebSocket" in window)
+                command.ws = new WebSocket("ws://"+L+"/sock");
+            else if ("MozWebSocket" in window)
+                command.ws = new MozWebSocket("ws://"+L+"/sock");
         }
         if (!command.ws) {
             if (console)
@@ -123,17 +126,17 @@ command = {
         command.ws.is_closed = false;
         command.ws.is_opened = false;
         command.ws.onopen = function() {
-            console.log("websocket opened");
+            if (console) console.log("websocket opened");
             command.ws.is_opened = true;
         }
         command.ws.onmessage = function(e) {
             command.json_handler(e.data);
         }
         command.ws.onerror = function(e) {
-            console.log('websocket error: '+e.data);
+            if (console) console.log('websocket error: '+e.data);
         }
         command.ws.onclose = function(e) {
-            console.log("websocket closed");
+            if (console) console.log("websocket closed");
             command.ws.is_closed = true;
             command.ws.is_opened = false;
         }
