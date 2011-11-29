@@ -2,10 +2,31 @@
 
 import webmapper_http_server as server
 import mapper
-import sys, json
+import sys, os, threading, json
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
+
+def open_gui():
+    url = 'http://localhost:8000'
+    apps = [(os.environ['HOME']
+             + '/AppData/Local/Google/Chrome/Application/chrome.exe'
+             + ' --app=%s'),
+            '"/Applications/Google Chrome.app/Content/MacOS/Google Chrome" --app=%s',
+            '/usr/bin/chromium-browser --app=%s',
+            ]
+    def launch():
+        try:
+            import webbrowser, time
+            time.sleep(0.2)
+            for a in apps:
+                if webbrowser.get(a).open(url):
+                    return
+            webbrowser.open(url)
+        except:
+            print 'Error opening web browser, continuing anyway.'
+    launcher = threading.Thread(target=launch)
+    launcher.start()
 
 monitor = mapper.monitor()
 
@@ -219,5 +240,8 @@ server.add_command_handler("refresh", on_refresh)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
+
+if not '--no-browser' in sys.argv and not '-n' in sys.argv:
+    open_gui()
 
 server.serve(port=8000, poll=lambda: monitor.poll(100))
