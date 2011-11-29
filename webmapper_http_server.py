@@ -252,7 +252,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def handler_page(out, args):
     print >>out, """<html>
 <head>
-<title>Testing mapper interface</title>
+<title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery-ui.min.js"></script>
