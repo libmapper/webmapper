@@ -100,7 +100,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             handlers[command][0](self.wfile, args)
         except KeyError:
             try:
-                f = open(self.path[1:])
+                f = open(self.path[1:], 'rb')
                 found(self.path.rsplit('.',1)[-1])
                 self.copyfile(f, self.wfile)
             except IOError:
