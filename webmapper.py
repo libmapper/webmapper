@@ -11,7 +11,7 @@ if 'tracing' in sys.argv[1:]:
 def open_gui(port):
     url = 'http://localhost:%d'%port
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
-            '"/Applications/Google Chrome.app/Content/MacOS/Google Chrome" --app=%s',
+            'open -a "Google Chrome" --args --app=%s',
             '/usr/bin/chromium-browser --app=%s',
             ]
     def launch():
