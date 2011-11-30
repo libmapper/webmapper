@@ -42,6 +42,7 @@ command = {
         else if (!command.ws || !command.ws.is_opened)
             while (command.requests.contents.length < command.num_requests)
                 command.message_request();
+        setTimeout(function() {command.maintain_requests();}, 1000);
     },
 
     /* Register a handler for a particular message address. Returns a

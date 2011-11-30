@@ -17,6 +17,23 @@ from cStringIO import StringIO
 message_pipe = []
 tracing = False
 
+class RequestCounter(object):
+    def __init__(self):
+        self.count = 1
+        self.started = False
+    def start(self):
+        if not self.started:
+            self.started = True
+            self.count -= 1
+    def inc(self):
+        if (not self.started):
+            self.start()
+        self.count += 1
+    def dec(self):
+        if (self.started):
+            self.count -= 1
+ref = RequestCounter()
+
 class ReuseTCPServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
 
@@ -91,6 +108,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 print >>self.wfile, "404 Not Found:", self.path
 
     def do_websocket(self):
+        ref.inc()
         ws_version = self.websocket_handshake()
         try:
             if ws_version < 8:
@@ -105,6 +123,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 print '[ws]',e
             else:
                 raise e
+        finally:
+            ref.dec()
 
     def do_websocket_0(self):
         msg = ""
@@ -270,15 +290,18 @@ def handler_page(out, args):
 
 def handler_wait_command(out, args):
     i=0
+    ref.inc()
     while len(message_pipe)==0:
         time.sleep(0.1)
         i = i + 1
         if (i>50):
             r, w, e=select([out._sock],[],[out._sock], 0)
+            ref.dec()
             if len(r)>0 or len(e)>0:
                 return
             print >>out, json.dumps( {"id": int(args['id'])} );
             return
+    ref.dec()
     r, w, e=select([out._sock],[],[out._sock], 0)
     if len(r)>0 or len(e)>0:
         return
@@ -375,9 +398,10 @@ def serve(port=8000, poll=lambda: time.sleep(10)):
 
     print "serving at port", port
     try:
-        while 1:
-            time.sleep(1)
+        while ref.count > 0:
+            time.sleep(10)
             poll()
+        print "Lost connection."
     except KeyboardInterrupt:
         pass
 
