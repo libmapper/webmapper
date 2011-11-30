@@ -10,9 +10,7 @@ if 'tracing' in sys.argv[1:]:
 
 def open_gui(port):
     url = 'http://localhost:%d'%port
-    apps = [(os.environ['HOME']
-             + '/AppData/Local/Google/Chrome/Application/chrome.exe'
-             + ' --app=%s'),
+    apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
             '"/Applications/Google Chrome.app/Content/MacOS/Google Chrome" --app=%s',
             '/usr/bin/chromium-browser --app=%s',
             ]
@@ -21,6 +19,8 @@ def open_gui(port):
             import webbrowser, time
             time.sleep(0.2)
             for a in apps:
+                a = os.path.expanduser(a)
+                a = a.replace('\\','\\\\')
                 if webbrowser.get(a).open(url):
                     return
             webbrowser.open(url)
