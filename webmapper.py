@@ -3,12 +3,13 @@
 import webmapper_http_server as server
 import mapper
 import sys, os, threading, json
+from random import randint
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
 
-def open_gui():
-    url = 'http://localhost:8000'
+def open_gui(port):
+    url = 'http://localhost:%d'%port
     apps = [(os.environ['HOME']
              + '/AppData/Local/Google/Chrome/Application/chrome.exe'
              + ' --app=%s'),
@@ -241,7 +242,13 @@ server.add_command_handler("refresh", on_refresh)
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
 
-if not '--no-browser' in sys.argv and not '-n' in sys.argv:
-    open_gui()
+try:
+    port = int(sys.argv[sys.argv.index('--port'):][1])
+except:
+    port = randint(1025,65535)
 
-server.serve(port=8000, poll=lambda: monitor.poll(100))
+on_open = lambda: ()
+if not '--no-browser' in sys.argv and not '-n' in sys.argv:
+    on_open = lambda: open_gui(port)
+
+server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open)

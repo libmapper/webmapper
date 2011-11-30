@@ -390,8 +390,9 @@ def send_command(cmd, args):
 def add_command_handler(cmd, handler):
     cmd_handlers[cmd] = handler
 
-def serve(port=8000, poll=lambda: time.sleep(10)):
+def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: ()):
     httpd = ReuseTCPServer(('', port), MapperHTTPServer)
+    on_open()
 
     http_thread = threading.Thread(target=httpd.serve_forever)
     http_thread.start()
