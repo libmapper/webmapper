@@ -1,5 +1,7 @@
 from distutils.core import setup
-import py2exe
+import sys
+if 'py2exe' in sys.argv: import py2exe
+if 'py2app' in sys.argv: import py2app
 
 data_files = [('js',['js/command.js',
                      'js/main.js',
@@ -21,4 +23,5 @@ setup(name='WebMapper',
       url='http://libmapper.org',
       data_files = data_files,
       windows=['webmapper.py'],
+      app=['webmapper.py'],
      )
