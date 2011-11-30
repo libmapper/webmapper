@@ -233,6 +233,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         print >>self.wfile, ("HTTP/1.1 101 Web Socket Protocol Handshake\r")
         print >>self.wfile,'Upgrade: %s\r'%self.headers['Upgrade']
         print >>self.wfile,'Connection: %s\r'%self.headers['Connection'],'\r'
+        import hashlib
 
         if (not self.headers.has_key('Sec-WebSocket-Version')
             or int(self.headers['Sec-WebSocket-Version'])<8):
@@ -256,7 +257,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif int(self.headers['Sec-WebSocket-Version'])>=8:
             key = self.headers['Sec-WebSocket-Key']
             magic_guid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-            import hashlib, base64
+            import base64
             sha1 = hashlib.sha1(key+magic_guid)
             result = base64.b64encode(sha1.digest())
             print >>self.wfile,'Sec-WebSocket-Accept: %s\r'%result
