@@ -39,7 +39,7 @@ command = {
             if (command.ws.is_closed)
                 command.open_websocket();
         }
-        if (!command.ws || !command.ws.is_opened)
+        else if (!command.ws || !command.ws.is_opened)
             while (command.requests.contents.length < command.num_requests)
                 command.message_request();
     },
