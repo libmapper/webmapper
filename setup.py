@@ -20,5 +20,5 @@ setup(name='WebMapper',
       author_email='sinclair@music.mcgill.ca',
       url='http://libmapper.org',
       data_files = data_files,
-      console=['webmapper.py'],
+      windows=['webmapper.py'],
      )
