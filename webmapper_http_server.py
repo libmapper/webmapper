@@ -401,8 +401,8 @@ def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: ()):
     print "serving at port", port
     try:
         while ref.count > 0:
-            time.sleep(10)
-            poll()
+            for i in range(100):
+                poll()
         print "Lost connection."
     except KeyboardInterrupt:
         pass
