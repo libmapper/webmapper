@@ -108,7 +108,8 @@ def on_save(arg):
             next_dest += 1
         connections[(c['src_name'],c['dest_name'])] = {
             'scaling': modeStr[c['mode']],
-            'range': ' '.join(map(str,c['range'])),
+            'range': ' '.join(map(lambda x: '-' if x==None else str(x),
+                                  c['range'])),
             'expression': (c['expression'].
                            replace('x', sources[c['src_name']]['id']).
                            replace('y', destinations[c['dest_name']]['id'])),
@@ -175,7 +176,8 @@ def on_load(mapping_json):
         args = (srcdev + str(link[0]['parameter']),
                 destdev + str(link[1]['parameter']),
                 {'mode': modeIdx[c['scaling']],
-                 'range': map(float,c['range'].split()),
+                 'range': map(lambda x: None if x=='-' else float(x),
+                              c['range'].split()),
                  'expression': e,
                  'clip_min': clipIdx[c['clipMin']],
                  'clip_max': clipIdx[c['clipMax']],
