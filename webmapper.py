@@ -2,7 +2,7 @@
 
 import webmapper_http_server as server
 import mapper
-import sys, os, threading, json
+import sys, os, threading, json, re
 from random import randint
 
 if 'tracing' in sys.argv[1:]:
@@ -142,8 +142,10 @@ def on_load(mapping_json):
     for d in m['destinations']:
         dests[d['id']] = d
     for c in m['connections']:
-        s = [srcs[s] for s in srcs.keys() if (s in c['expression'])]
-        d = [dests[d] for d in dests.keys() if (d in c['expression'])]
+        s = [srcs[s] for s in srcs.keys()
+             if (s in re.findall('(s\\d+)', c['expression']))]
+        d = [dests[d] for d in dests.keys()
+             if (d in re.findall('(d\\d+)', c['expression']))]
         links = [(x,y) for x in s for y in d]
         if len(links)>1:
             print 'Error, multiple links specified for connection', c
