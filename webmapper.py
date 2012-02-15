@@ -11,9 +11,12 @@ if 'tracing' in sys.argv[1:]:
 def open_gui(port):
     url = 'http://localhost:%d'%port
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
-            'open -n -a "Google Chrome" --args --app=%s',
             '/usr/bin/chromium-browser --app=%s',
             ]
+    if 'darwin' in sys.platform:
+        # Dangerous to run 'open' on platforms other than OS X, so
+        # check for OS explicitly in this case.
+        apps = ['open -n -a "Google Chrome" --args --app=%s']
     def launch():
         try:
             import webbrowser, time
