@@ -153,6 +153,12 @@ def on_load(mapping_json):
         if len(links)>1:
             print 'Error, multiple links specified for connection', c
             continue
+        if len(links)<1:
+            # If not enough sources or destinations are specified in the
+            # expression string, ignore this connection.
+            # This can happen e.g. if expression is a constant: "d1=1"
+            continue
+
         link = links[0]
 
         srcdev = str('/'+link[0]['device'])
