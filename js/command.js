@@ -8,6 +8,7 @@ command = {
     request_id: 0,
     handlers: {},
     handler_id: 0,
+    num_ws_tries: 0,
 
     json_handler: function (text)
     {
@@ -108,6 +109,18 @@ command = {
     open_websocket: function()
     {
         command.ws = null;
+
+        if (command.num_ws_tries == 10) {
+            websocketStatus.innerHTML = 'websocket: too many tries';
+            setTimeout(function(){
+                    websocketStatus.innerHTML = '';
+                }, 10000);
+            command.num_ws_tries ++;
+            return;
+        }
+        else if (command.num_ws_tries < 10)
+            command.num_ws_tries ++;
+
         if ("WebSocket" in window || "MozWebSocket" in window) {
             var L = (''+window.location).split('/');
             if (L.length > 2)
@@ -122,6 +135,7 @@ command = {
         if (!command.ws) {
             if (console)
                 console.log("Couldn't create web socket.");
+            websocketStatus.innerHTML = 'websocket unavailable';
             return;
         }
         command.ws.is_closed = false;
@@ -136,6 +150,7 @@ command = {
         }
         command.ws.onerror = function(e) {
             if (console) console.log('websocket error: '+e.data);
+            websocketStatus.innerHTML = 'websocket error: '+e.data;
         }
         command.ws.onclose = function(e) {
             if (console) console.log("websocket closed");

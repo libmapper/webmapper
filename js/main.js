@@ -1082,7 +1082,7 @@ function add_extra_tools()
     var refresh = document.createElement('input');
     websocketStatus = document.createElement('div');
     websocketStatus.id = 'wsstatus';
-    websocketStatus.innerHTML = 'Not yet initialized';
+    websocketStatus.innerHTML = 'websocket uninitialized';
     websocketStatus.style.bgcolor = 'white';
     websocketStatus.className = 'extratools';
     refresh.id = 'refresh';
