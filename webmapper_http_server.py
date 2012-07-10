@@ -77,6 +77,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         'dl': None}
         def found(type=''):
             if (type=='socket'):
+                if tracing: print 'websocket requested'
                 return self.do_websocket()
             print >>self.wfile, "HTTP/1.0 200 OK"
             if type=='dl': return
@@ -117,7 +118,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 self.do_websocket_8()
         except socket.error, e:
-            if e.errno == errno.EPIPE:
+            if e.errno == errno.EPIPE or e.errno == errno.ECONNRESET:
                 # Avoid reporting a huge stack trace for broken pipe
                 # exception, it just means that the websocket closed
                 # because the browser window was closed for example.
@@ -156,7 +157,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 msg = ""
                 r = out.getvalue()
                 if len(r) > 0:
-                    if tracing: print 'ws_send:',r
+                    if tracing: print 'ws_send2:',r
                     self.wfile.write(chr(0)+r.encode('utf-8')+chr(0xFF))
                     self.wfile.flush()
 
@@ -227,7 +228,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 length = offset = -1
                 r = out.getvalue()
                 if len(r) > 0:
-                    if tracing: print 'ws_send2:',r
+                    if tracing: print 'ws_send:',r
                     send_string(r.encode('utf-8'))
 
     def websocket_handshake(self):
