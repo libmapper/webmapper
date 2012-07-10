@@ -129,6 +129,7 @@ command = {
         command.ws.onopen = function() {
             if (console) console.log("websocket opened");
             command.ws.is_opened = true;
+            websocketStatus.innerHTML = 'websocket open';
         }
         command.ws.onmessage = function(e) {
             command.json_handler(e.data);
@@ -140,6 +141,7 @@ command = {
             if (console) console.log("websocket closed");
             command.ws.is_closed = true;
             command.ws.is_opened = false;
+            websocketStatus.innerHTML = 'websocket closed';
         }
     }
 };

@@ -19,6 +19,7 @@ sigActions = null;
 arrows = [];
 menuList = null;
 menuSave = null;
+websocketStatus = null;
 
 all_devices = 'All Devices';
 
@@ -1079,11 +1080,17 @@ function add_extra_tools()
 {
     var body = document.getElementsByTagName('body')[0];
     var refresh = document.createElement('input');
+    websocketStatus = document.createElement('div');
+    websocketStatus.id = 'wsstatus';
+    websocketStatus.innerHTML = 'Not yet initialized';
+    websocketStatus.style.bgcolor = 'white';
+    websocketStatus.className = 'extratools';
     refresh.id = 'refresh';
     refresh.className = 'extratools';
     refresh.type = 'button';
     refresh.onclick = refresh_all;
-    body.insertBefore(refresh, body.firstChild);
+    body.insertBefore(websocketStatus, body.firstChild);
+    body.insertBefore(refresh, websocketStatus);
 }
 
 /* Kick things off. */
