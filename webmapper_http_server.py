@@ -16,6 +16,7 @@ from cStringIO import StringIO
 
 message_pipe = []
 tracing = False
+done = False
 
 class RequestCounter(object):
     def __init__(self):
@@ -128,7 +129,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_websocket_0(self):
         msg = ""
-        while True:
+        while not done:
             time.sleep(0.1)
 
             if len(message_pipe)>0:
@@ -175,7 +176,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         msg = ""
         length = -1
         offset = -1
-        while True:
+        while not done:
             to_read = len(select([self.rfile._sock],[],[],0.1)[0]) > 0
 
             if len(message_pipe)>0:
