@@ -264,4 +264,5 @@ on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
 
-server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open)
+server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open,
+             quit_on_disconnect=not '--stay-alive' in sys.argv)

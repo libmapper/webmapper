@@ -396,7 +396,8 @@ def send_command(cmd, args):
 def add_command_handler(cmd, handler):
     cmd_handlers[cmd] = handler
 
-def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: ()):
+def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: (),
+          quit_on_disconnect=True):
     httpd = ReuseTCPServer(('', port), MapperHTTPServer)
     on_open()
 
@@ -405,7 +406,7 @@ def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: ()):
 
     print "serving at port", port
     try:
-        while ref.count > 0:
+        while ref.count > 0 or not quit_on_disconnect:
             for i in range(100):
                 poll()
         print "Lost connection."
