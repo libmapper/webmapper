@@ -263,7 +263,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             sha1 = hashlib.sha1(key+magic_guid)
             result = base64.b64encode(sha1.digest())
             print >>self.wfile,'Sec-WebSocket-Accept: %s\r'%result
-            print >>self.wfile,'Sec-WebSocket-Protocol: chat\r'
+            if self.headers.has_key('Sec-WebSocket-Protocol'):
+                print >>self.wfile,'Sec-WebSocket-Protocol: webmapper\r'
             print >>self.wfile,'\r'
         self.wfile.flush()
 
