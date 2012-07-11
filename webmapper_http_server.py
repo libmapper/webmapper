@@ -180,12 +180,14 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         while not done:
             to_read = len(select([self.rfile._sock],[],[],0.1)[0]) > 0
 
-            if len(message_pipe)>0:
+            n = 0
+            while len(message_pipe)>0 and n < 30:
                 sendmsg = message_pipe.pop()
                 if tracing: print 'ws_send:',sendmsg
                 s = json.dumps({"cmd": sendmsg[0],
                                 "args": sendmsg[1]})
                 send_string(s)
+                n += 1
 
             while to_read:
                 prevlen = len(msg)
