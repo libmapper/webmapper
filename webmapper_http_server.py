@@ -49,11 +49,10 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         fn = query['filename'][0].split('\\')[-1]
         er = 0
         try:
-            js = json.loads(query['mapping_json'][0])
             er = 1
             if cmd_handlers.has_key('load'):
                 er = 2
-                cmd_handlers['load'](js)
+                cmd_handlers['load'](query['mapping_json'][0])
             print >>self.wfile, "Success: %s loaded successfully."%fn
         except Exception, e:
             print >>self.wfile, "Error: loading %s (%d)."%(fn,er)
