@@ -5,7 +5,7 @@ import socket, errno
 import urllib
 import urlparse
 import cgi
-import threading
+import threading, Queue
 import time
 import json
 from select import select
@@ -14,7 +14,7 @@ import struct
 import hashlib
 from cStringIO import StringIO
 
-message_pipe = []
+message_pipe = Queue.Queue()
 tracing = False
 done = False
 
@@ -132,8 +132,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         while not done:
             time.sleep(0.1)
 
-            if len(message_pipe)>0:
-                sendmsg = message_pipe.pop()
+            if not message_pipe.empty():
+                sendmsg = message_pipe.get()
                 if tracing: print 'ws_send:',sendmsg
                 self.wfile.write(chr(0)+json.dumps({"cmd": sendmsg[0],
                                                     "args": sendmsg[1]})
@@ -180,8 +180,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             to_read = len(select([self.rfile._sock],[],[],0.1)[0]) > 0
 
             n = 0
-            while len(message_pipe)>0 and n < 30:
-                sendmsg = message_pipe.pop()
+            while not message_pipe.empty() and n < 30:
+                sendmsg = message_pipe.get()
                 if tracing: print 'ws_send:',sendmsg
                 s = json.dumps({"cmd": sendmsg[0],
                                 "args": sendmsg[1]})
@@ -311,7 +311,7 @@ def handler_wait_command(out, args):
     if len(r)>0 or len(e)>0:
         return
     # Receive command from back-end
-    msg = message_pipe.pop()
+    msg = message_pipe.get()
     if tracing: print 'hxr_send:',msg
     print >>out, json.dumps( {"id": int(args['id']),
                               "cmd": msg[0],
@@ -390,7 +390,7 @@ def deunicode(o):
     return p
 
 def send_command(cmd, args):
-    message_pipe.append((cmd, args))
+    message_pipe.put((cmd, args))
 
 def add_command_handler(cmd, handler):
     cmd_handlers[cmd] = handler
