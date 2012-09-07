@@ -3,8 +3,10 @@
 import webmapper_http_server as server
 import mapper
 import mapperstorage
-import sys, os, threading, json, re
+import sys, os, os.path, threading, json, re
 from random import randint
+
+os.chdir(os.path.dirname(__file__))
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
