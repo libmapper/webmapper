@@ -6,7 +6,9 @@ import mapperstorage
 import sys, os, os.path, threading, json, re
 from random import randint
 
-os.chdir(os.path.dirname(__file__))
+dirname = os.path.dirname(__file__)
+if dirname:
+   os.chdir(os.path.dirname(__file__))
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
