@@ -78,13 +78,16 @@ function update_devices()
     }
     updaterLeft.apply();
     updaterRight.apply();
+
 }
 
 /* Update a table with the rows and columns contained in text, add
  * rows one at a time and then apply. */
-function table_updater(tab)
+function table_updater(tableBody)
 {
     var trs = [];
+    tableBody.appendChild(document.createElement('tr'));
+
     this.addrow = function(row) {
         var tr = document.createElement('tr');
         tr.onclick = function(y) { return function(e) { select_tr(y);
@@ -95,23 +98,27 @@ function table_updater(tab)
             tr.appendChild(td);
         }
         trs.push(tr);
+        
     }
     this.apply = function() {
-        var tr = tab.firstChild;
+        //Add a child under the 'body' of the table
+        //tab.firstChild.nextSibling.appendChild('tr');
+        //var tr = tab.firstChild.nextSibling.firstChild;
+        var tr = tableBody.firstChild;
         var i = 0;
         while (tr && i < trs.length) {
-            tab.insertBefore(trs[i], tr);
+            tableBody.insertBefore(trs[i], tr);
             i++;
             var t = tr;
             tr = tr.nextSibling;
-            tab.removeChild(t);
+            tableBody.removeChild(t);
         }
         while (i < trs.length)
-            tab.appendChild(trs[i++]);
+            tableBody.appendChild(trs[i++]);
         while (tr) {
             var t = tr;
             tr = tr.nextSibling;
-            tab.removeChild(t);
+            tableBody.removeChild(t);
         }
     }
 }
@@ -317,6 +324,7 @@ function select_tr(tr)
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
+    //tr.parentNode = <body>, <body>.parentNode = <table>
     var i = (tr.parentNode == leftTable) ? 0 : (tr.parentNode == rightTable) ? 1 : null;
     if (i==null)
         return;
@@ -843,13 +851,29 @@ function add_display_tables()
         var t = document.createElement('table');
         t.border = 1;
         t.className = "displayTable";
+        t.appendChild(document.createElement('thead'));
+        b = document.createElement('tbody');
+        t.appendChild(document.createElement('tbody'));
+        add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
-        return t;
+        return b;
     }
 
     leftTable = make('leftTable');
     rightTable = make('rightTable');
+}
+
+//Add the header rows to the table
+function add_table_header(tab)
+{
+    var headtr = tab.firstChild;
+    var columnHeaders = ['Name', 'IP', 'Port'] //TODO change to reflect actual values
+    for (var i = 0; i < 3; i ++) {
+        var th = document.createElement('th');
+        th.textContent = columnHeaders[i];
+        headtr.appendChild(th);
+    }
 }
 
 function add_svg_area()
