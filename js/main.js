@@ -50,8 +50,8 @@ function update_devices()
 {
     var keys = devices.keys();
     var sigkeys = signals.keys();
-    var updaterLeft = new table_updater(leftTable.lastChild);
-    var updaterRight = new table_updater(rightTable.lastChild);
+    var updaterLeft = new table_updater($("tbody", leftTable)[0]);
+    var updaterRight = new table_updater($("tbody", rightTable)[0]);
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
@@ -95,7 +95,6 @@ function table_updater(tableBody)
         for (col in row) {
             var td = document.createElement('td');
             td.textContent = row[col];
-            console.log(row[col]+' type of = '+typeof row[col]);
             tr.appendChild(td);
         }
         trs.push(tr);
@@ -326,7 +325,7 @@ function select_tr(tr)
     var name = tr.firstChild.innerHTML;
 
     //tr.parentNode = <body>, <body>.parentNode = <table>
-    var i = (tr.parentNode == leftTable) ? 0 : (tr.parentNode == rightTable) ? 1 : null;
+    var i = (t.parents('.displayTable')[0] == leftTable) ? 0 : (t.parents('.displayTable')[0] == rightTable) ? 1 : null;
     if (i==null)
         return;
 
@@ -858,7 +857,6 @@ function add_display_tables()
         add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
-        console.log('buttz!');
         return t;
     }
 
