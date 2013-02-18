@@ -50,8 +50,8 @@ function update_devices()
 {
     var keys = devices.keys();
     var sigkeys = signals.keys();
-    var updaterLeft = new table_updater(leftTable);
-    var updaterRight = new table_updater(rightTable);
+    var updaterLeft = new table_updater(leftTable.lastChild);
+    var updaterRight = new table_updater(rightTable.lastChild);
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
@@ -95,6 +95,7 @@ function table_updater(tableBody)
         for (col in row) {
             var td = document.createElement('td');
             td.textContent = row[col];
+            console.log(row[col]+' type of = '+typeof row[col]);
             tr.appendChild(td);
         }
         trs.push(tr);
@@ -857,7 +858,8 @@ function add_display_tables()
         add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
-        return b;
+        console.log('buttz!');
+        return t;
     }
 
     leftTable = make('leftTable');
