@@ -120,6 +120,7 @@ function table_updater(tableBody)
             tr = tr.nextSibling;
             tableBody.removeChild(t);
         }
+        //$(tableBody).parents('table').tablesorter({debug:true});
     }
 }
 
@@ -839,6 +840,7 @@ function main()
             };
         },
         100);
+
 }
 
 function add_display_tables()

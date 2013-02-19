@@ -137,7 +137,8 @@ server.add_command_handler("load", on_load)
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
 except:
-    port = randint(49152,65535)
+    #port = randint(49152,65535)
+    port = 50000
 
 on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
