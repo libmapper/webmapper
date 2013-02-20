@@ -121,7 +121,7 @@ function table_updater(tableBody)
             tableBody.removeChild(t);
         }
         //$(tableBody).parents('table').tablesorter({debug:true});
-        $(tableBody).parents('table').trigger('update');
+        //$(tableBody).parents('table').trigger('update');
     }
 }
 
@@ -157,8 +157,8 @@ function update_tabs()
 function update_signals()
 {
     keys = signals.keys();
-    var updaterLeft = new table_updater(leftTable);
-    var updaterRight = new table_updater(rightTable);
+    var updaterLeft = new table_updater($("tbody", leftTable)[0]);
+    var updaterRight = new table_updater($("tbody", rightTable)[0]);
     for (var s in keys) {
         var k = keys[s];
         var sig = signals.get(k);
@@ -860,7 +860,7 @@ function add_display_tables()
         add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
-        $(t).tablesorter();
+        //$(t).tablesorter();
         return t;
     }
 
