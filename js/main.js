@@ -121,6 +121,7 @@ function table_updater(tableBody)
             tableBody.removeChild(t);
         }
         //$(tableBody).parents('table').tablesorter({debug:true});
+        $(tableBody).parents('table').trigger('update');
     }
 }
 
@@ -859,6 +860,7 @@ function add_display_tables()
         add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
+        $(t).tablesorter();
         return t;
     }
 

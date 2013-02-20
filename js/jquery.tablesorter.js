@@ -587,7 +587,7 @@
                     l = sortList.length;
 
 
-                sortList[0][0] = 0;
+                //sortList[0][0] = 0;
                 // TODO: inline functions.
                 for (var i = 0; i < l; i++) {
 
@@ -811,7 +811,7 @@
                     }).bind("sorton", function (e, list) {
                         $(this).trigger("sortStart");
                         config.sortList = list;
-                        // update and store the sortlist
+                        // update and store the sortList
                         var sortList = config.sortList;
                         // update header count index
                         updateHeaderSortCount(this, sortList);
@@ -827,8 +827,8 @@
                         // apply widgets
                         applyWidget(this);
                     });
-                    if ($.metadata && ($(this).metadata() && $(this).metadata().sortlist)) {
-                        config.sortList = $(this).metadata().sortlist;
+                    if ($.metadata && ($(this).metadata() && $(this).metadata().sortList)) {
+                        config.sortList = $(this).metadata().sortList;
                     }
                     // if user has supplied a sort list to constructor.
                     if (config.sortList.length > 0) {
