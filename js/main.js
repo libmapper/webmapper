@@ -50,8 +50,10 @@ function update_devices()
 {
     var keys = devices.keys();
     var sigkeys = signals.keys();
-    var updaterLeft = new table_updater($("tbody", leftTable)[0]);
-    var updaterRight = new table_updater($("tbody", rightTable)[0]);
+    var updaterLeft = new table_updater(leftTable);
+    var updaterRight = new table_updater(rightTable);
+    //var updaterLeft = new table_updater($("tbody", leftTable)[0]);
+    //var updaterRight = new table_updater($("tbody", rightTable)[0]);
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
@@ -76,6 +78,10 @@ function update_devices()
         if (found_input)
             updaterRight.addrow([dev.name, dev.host, dev.port]);
     }
+
+    //updaterLeft.setHeaders();
+    //updaterRight.setHeaders();
+
     updaterLeft.apply();
     updaterRight.apply();
 
@@ -83,9 +89,10 @@ function update_devices()
 
 /* Update a table with the rows and columns contained in text, add
  * rows one at a time and then apply. */
-function table_updater(tableBody)
+function table_updater(table)
 {
     var trs = [];
+    var tableBody = $("tbody", table)[0];
     tableBody.appendChild(document.createElement('tr'));
 
     this.addrow = function(row) {
@@ -102,8 +109,6 @@ function table_updater(tableBody)
     }
     this.apply = function() {
         //Add a child under the 'body' of the table
-        //tab.firstChild.nextSibling.appendChild('tr');
-        //var tr = tab.firstChild.nextSibling.firstChild;
         var tr = tableBody.firstChild;
         var i = 0;
         while (tr && i < trs.length) {
@@ -120,7 +125,23 @@ function table_updater(tableBody)
             tr = tr.nextSibling;
             tableBody.removeChild(t);
         }
-        $(tableBody).parents('table').trigger('update');
+        $(tableBody, "table").trigger('update');
+    }
+
+    this.setHeaders = function() {
+        //Set the text of the table headers
+        //Check to see if we are signals or devices
+        if(selectedTab == all_devices) {
+            var columnHeaders = ['Name', 'IP', 'Port']; //TODO change to reflect actual values
+        }
+        else {
+            var columnHeaders = ['Name', 'Type', 'Length']; //TODO change to reflect actual values
+
+        }
+        var ths = $('th', table);
+        for(var i in ths){
+            ths[i].textContent = columnHeaders[i];
+        }
     }
 }
 
@@ -156,8 +177,10 @@ function update_tabs()
 function update_signals()
 {
     keys = signals.keys();
-    var updaterLeft = new table_updater($("tbody", leftTable)[0]);
-    var updaterRight = new table_updater($("tbody", rightTable)[0]);
+    var updaterLeft = new table_updater(leftTable);
+    var updaterRight = new table_updater(rightTable);
+    //var updaterLeft = new table_updater($("tbody", leftTable)[0]);
+    //var updaterRight = new table_updater($("tbody", rightTable)[0]);
     for (var s in keys) {
         var k = keys[s];
         var sig = signals.get(k);
