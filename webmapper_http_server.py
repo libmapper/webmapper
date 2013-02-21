@@ -279,9 +279,9 @@ def handler_page(out, args):
 <head>
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<script type="text/javascript" src="js/jquery-1.9.0.min.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>

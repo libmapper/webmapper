@@ -120,8 +120,7 @@ function table_updater(tableBody)
             tr = tr.nextSibling;
             tableBody.removeChild(t);
         }
-        //$(tableBody).parents('table').tablesorter({debug:true});
-        //$(tableBody).parents('table').trigger('update');
+        $(tableBody).parents('table').trigger('update');
     }
 }
 
@@ -860,7 +859,7 @@ function add_display_tables()
         add_table_header(t);
         d.appendChild(t);
         body.insertBefore(d, body.firstChild);
-        //$(t).tablesorter();
+        $(t).tablesorter();
         return t;
     }
 
@@ -871,7 +870,9 @@ function add_display_tables()
 //Add the header rows to the table
 function add_table_header(tab)
 {
-    var headtr = tab.firstChild;
+    var header = tab.firstChild;
+    var headtr = document.createElement('tr');
+    header.appendChild(headtr);
     var columnHeaders = ['Name', 'IP', 'Port'] //TODO change to reflect actual values
     for (var i = 0; i < 3; i ++) {
         var th = document.createElement('th');
