@@ -74,9 +74,9 @@ function update_devices()
         }
 
         if (found_output)
-            updaterLeft.addrow([dev.name, dev.host, dev.port]);
+            updaterLeft.addrow([dev.name, dev.n_outputs, dev.host, dev.port]);
         if (found_input)
-            updaterRight.addrow([dev.name, dev.host, dev.port]);
+            updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
     }
 
     updaterLeft.setHeaders();
@@ -89,10 +89,11 @@ function update_devices()
 
 /* Update a table with the rows and columns contained in text, add
  * rows one at a time and then apply. */
-function table_updater(table)
+function table_updater(tab)
 {
     var trs = [];
-    var tableBody = $("tbody", table)[0];
+    this.$table = $(tab);
+    var tableBody = this.$table.children('tbody')[0];
     tableBody.appendChild(document.createElement('tr'));
 
     this.addrow = function(row) {
@@ -125,20 +126,21 @@ function table_updater(table)
             tr = tr.nextSibling;
             tableBody.removeChild(t);
         }
-        $(tableBody).parent('table').trigger('update'); //Update tablesorter with new data
+        this.$table.trigger('update'); //Update tablesorter with new data
     }
 
     this.setHeaders = function() {
         //Set the text of the table headers
         //Check to see if we are signals or devices
         if(selectedTab == all_devices) {
-            var columnHeaders = ['Name', 'IP', 'Port']; //TODO change to reflect actual values
+            var columnHeaders = ['Name', '#Outputs', 'IP', 'Port']; //TODO change to reflect actual values
         }
         else {
-            var columnHeaders = ['Name', 'Type', 'Length']; //TODO change to reflect actual values
+            var columnHeaders = ['Name', 'Type', 'Units', 'Length']; //TODO change to reflect actual values
 
         }
         var ths = $('th', $(tableBody).parent('table') );
+        //var ths = this.$table.find('th');
         for(var i in ths){
             ths[i].textContent = columnHeaders[i];
         }
@@ -187,9 +189,9 @@ function update_signals()
         var lnk = links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1)
-            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length]);
+            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.units, sig.length]);
         if (sig.direction == 0 && lnk!=null)
-            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length]);
+            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.units, sig.length]);
     }
 
     updaterLeft.setHeaders();
@@ -900,10 +902,10 @@ function add_table_header(tab)
     var header = tab.firstChild;
     var headtr = document.createElement('tr');
     header.appendChild(headtr);
-    var columnHeaders = ['Name', 'IP', 'Port'] //TODO change to reflect actual values
-    for (var i = 0; i < 3; i ++) {
+    //var columnHeaders = ['Name', 'IP', 'Port'] //TODO change to reflect actual values
+    for (var i = 0; i < 4; i ++) {
         var th = document.createElement('th');
-        th.textContent = columnHeaders[i];
+        //th.textContent = columnHeaders[i];
         headtr.appendChild(th);
     }
 }
