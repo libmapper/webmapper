@@ -79,8 +79,8 @@ function update_devices()
             updaterRight.addrow([dev.name, dev.host, dev.port]);
     }
 
-    //updaterLeft.setHeaders();
-    //updaterRight.setHeaders();
+    updaterLeft.setHeaders();
+    updaterRight.setHeaders();
 
     updaterLeft.apply();
     updaterRight.apply();
@@ -125,7 +125,7 @@ function table_updater(table)
             tr = tr.nextSibling;
             tableBody.removeChild(t);
         }
-        $(tableBody, "table").trigger('update');
+        $(tableBody).parent('table').trigger('update'); //Update tablesorter with new data
     }
 
     this.setHeaders = function() {
@@ -138,7 +138,7 @@ function table_updater(table)
             var columnHeaders = ['Name', 'Type', 'Length']; //TODO change to reflect actual values
 
         }
-        var ths = $('th', table);
+        var ths = $('th', $(tableBody).parent('table') );
         for(var i in ths){
             ths[i].textContent = columnHeaders[i];
         }
@@ -191,6 +191,10 @@ function update_signals()
         if (sig.direction == 0 && lnk!=null)
             updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length]);
     }
+
+    updaterLeft.setHeaders();
+    updaterRight.setHeaders();
+
     updaterLeft.apply();
     updaterRight.apply();
 }
