@@ -181,17 +181,16 @@ function update_signals()
     keys = signals.keys();
     var updaterLeft = new table_updater(leftTable);
     var updaterRight = new table_updater(rightTable);
-    //var updaterLeft = new table_updater($("tbody", leftTable)[0]);
-    //var updaterRight = new table_updater($("tbody", rightTable)[0]);
+    
     for (var s in keys) {
         var k = keys[s];
         var sig = signals.get(k);
         var lnk = links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1)
-            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.units, sig.length]);
+            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.unit, sig.length]);
         if (sig.direction == 0 && lnk!=null)
-            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.units, sig.length]);
+            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.unit, sig.length]);
     }
 
     updaterLeft.setHeaders();
@@ -906,6 +905,12 @@ function add_table_header(tab)
     for (var i = 0; i < 4; i ++) {
         var th = document.createElement('th');
         //th.textContent = columnHeaders[i];
+        $(th).click(function() {
+            $(tab).on("sortEnd", function() {
+                update_arrows();
+            } );
+            //$(tab).bind("sortEnd", function() { update_arrows(); }; ); 
+        });
         headtr.appendChild(th);
     }
 }
