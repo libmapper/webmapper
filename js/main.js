@@ -84,6 +84,8 @@ function update_devices()
 
     updaterLeft.apply();
     updaterRight.apply();
+    
+    
 
 }
 
@@ -134,6 +136,8 @@ function table_updater(tab)
         //Check to see if we are signals or devices
         if(selectedTab == all_devices) {
             var columnHeaders = ['Name', '#Outputs', 'IP', 'Port']; //TODO change to reflect actual values
+            console.log("this.$table == $(rightTable)"+ this.$table == $(rightTable));
+            if(this.$table.hasClass('rightTable')) { columnHeaders[1] = '#Inputs'; }
         }
         else {
             var columnHeaders = ['Name', 'Type', 'Units', 'Length']; //TODO change to reflect actual values
@@ -880,7 +884,7 @@ function add_display_tables()
         d.onscroll = on_table_scroll;
         var t = document.createElement('table');
         t.border = 1;
-        t.className = "displayTable";
+        t.className = "displayTable "+cls;
         t.appendChild(document.createElement('thead'));
         b = document.createElement('tbody');
         t.appendChild(document.createElement('tbody'));
@@ -909,7 +913,6 @@ function add_table_header(tab)
             $(tab).on("sortEnd", function() {
                 update_arrows();
             } );
-            //$(tab).bind("sortEnd", function() { update_arrows(); }; ); 
         });
         headtr.appendChild(th);
     }

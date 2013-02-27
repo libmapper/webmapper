@@ -49,7 +49,7 @@ body {
   height: 13pt;
   vertical-align: top;
   border: solid 1px black;
-  cursor: pointer;
+  /*cursor: pointer;*/
 }
 
 .leftTable {
