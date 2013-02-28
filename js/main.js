@@ -52,8 +52,7 @@ function update_devices()
     var sigkeys = signals.keys();
     var updaterLeft = new table_updater(leftTable);
     var updaterRight = new table_updater(rightTable);
-    //var updaterLeft = new table_updater($("tbody", leftTable)[0]);
-    //var updaterRight = new table_updater($("tbody", rightTable)[0]);
+    
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
@@ -136,7 +135,6 @@ function table_updater(tab)
         //Check to see if we are signals or devices
         if(selectedTab == all_devices) {
             var columnHeaders = ['Name', '#Outputs', 'IP', 'Port']; //TODO change to reflect actual values
-            console.log("this.$table == $(rightTable)"+ this.$table == $(rightTable));
             if(this.$table.hasClass('rightTable')) { columnHeaders[1] = '#Inputs'; }
         }
         else {
