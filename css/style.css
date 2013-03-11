@@ -247,6 +247,15 @@ thead {
   cursor: pointer;
 }
 
+.status {
+  position: absolute;
+  bottom: 0px;
+  height: 22px;
+  width: 100%;
+  background-color: darkgray;
+  border-top: 1px solid black;
+}
+
 /*th {
   border-left: 2px solid black;
   border-right: 2px solid black;

@@ -873,6 +873,8 @@ function main()
 
 }
 
+
+
 function add_display_tables()
 {
     var body = document.getElementsByTagName('body')[0];
@@ -888,6 +890,7 @@ function add_display_tables()
         t.appendChild(document.createElement('tbody'));
         add_table_header(t);
         d.appendChild(t);
+        add_status_footer(d);
         body.insertBefore(d, body.firstChild);
         $(t).tablesorter();
         return t;
@@ -914,6 +917,14 @@ function add_table_header(tab)
         });
         headtr.appendChild(th);
     }
+}
+
+//add the status bar that appears at the bottom of the tables
+function add_status_footer(d)
+{
+    var statusDiv = document.createElement('div');
+    d.appendChild(statusDiv);
+    statusDiv.className = "status";
 }
 
 function add_svg_area()
