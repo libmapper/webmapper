@@ -290,7 +290,6 @@ def handler_page(out, args):
 </head>
 <body>
 <table id="spacerTable"><tr><td></td><td></td><td></td></tr></table>
-<div id="output"></div>
 </body>
 </html>"""
 
