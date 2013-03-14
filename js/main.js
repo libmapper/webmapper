@@ -638,6 +638,7 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
+
 function set_actions(a)
 {
     if (actionDiv.firstChild)
@@ -652,16 +653,27 @@ function position_dynamic_elements()
     var L = leftTable.parentNode;
     var R = rightTable.parentNode;
 
+    //The div that contains our svg canvas
+    svgDiv = svgArea.parentElement;
+
     L.style.height =
     R.style.height =
-    svgArea.style.height = (document.body.clientHeight - hT.top - 10) + "px";
+    svgDiv.style.height =
+    //svgArea.style.height = 
+    (document.body.clientHeight - hT.top - 10) + "px";
     svgArea.style.background = "white";
-    svgArea.style.border = "solid 1pt black";
+    svgDiv.style.border = 
+    //svgArea.style.border = 
+    "solid 1pt black";
 
     L.style.top =
     R.style.top =
-    svgArea.style.top = (hT.top) + "px";
-    svgArea.offsetTop = hT.top;
+    svgDiv.style.top = 
+    //svgArea.style.top = 
+    (hT.top) + "px";
+    svgDiv.soffsetTop =
+    //svgArea.offsetTop = 
+    hT.top;
 
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
@@ -677,12 +689,18 @@ function position_dynamic_elements()
 
         L.style.left = h[0].left+"px";
         R.style.left = h[2].left+"px";
-        svgArea.style.left = h[1].left+"px";
+        svgDiv.style.left =
+        //svgArea.style.left = 
+        h[1].left+"px";
 
         L.style.width = h[0].width+"px";
         R.style.width = h[2].width+"px";
-        svgArea.style.width = h[1].width+"px";
-        svgArea.offsetWidth = h[1].width;
+        svgDiv.style.width = 
+        //svgArea.style.width = 
+        h[1].width+"px";
+        svgDiv.offsetWidth =
+        //svgArea.offsetWidth = 
+        h[1].width;
 
         if (parseInt(leftTable.offsetWidth) < h[0].width) {
             leftTable.style.width = h[0].width + "px";
@@ -930,6 +948,8 @@ function add_status_footer(d)
 function add_svg_area()
 {
     var body = document.getElementsByTagName('body')[0];
+    var svgDiv = document.createElement('div');
+
     svgArea = document.createElementNS(svgns, "svg");
     var l = fullOffset(leftTable);
     var r = fullOffset(rightTable);
@@ -938,8 +958,11 @@ function add_svg_area()
         + ";width:" + (r.left-l.left-l.width)+"px"
         + ";top:" + (l.top)+"px"
         + ";height:" + "5in";
-    svgArea.setAttribute("style", x);
-    body.insertBefore(svgArea, body.firstChild);
+    var y = "width:100%;height:100%";
+    svgArea.setAttribute("style", y);
+    svgDiv.setAttribute("style", x);
+    body.insertBefore(svgDiv, body.firstChild);
+    svgDiv.appendChild(svgArea);
 
     // the offset* variables are not available for SVG elements in
     // FireFox, so assign them here.
@@ -947,6 +970,8 @@ function add_svg_area()
     svgArea.offsetLeft = parseInt(svgArea.style.left);
     svgArea.offsetWidth = parseInt(svgArea.style.width);
     svgArea.offsetHeight = parseInt(svgArea.style.height);
+
+    add_status_footer(svgDiv);
 }
 
 function refresh_all()
