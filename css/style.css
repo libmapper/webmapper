@@ -242,7 +242,7 @@ body {
 }
 
 thead {
-  background-color: darkgray;
+  background-color: lightgray;
   border-bottom: 2px solid black;
   cursor: pointer;
 }
@@ -252,7 +252,7 @@ thead {
   bottom: 0px;
   height: 22px;
   width: 100%;
-  background-color: darkgray;
+  background-color: lightgray;
   border-top: 1px solid black;
 }
 

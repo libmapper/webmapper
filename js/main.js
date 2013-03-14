@@ -943,6 +943,8 @@ function add_status_footer(d)
     var statusDiv = document.createElement('div');
     d.appendChild(statusDiv);
     statusDiv.className = "status";
+    statusDiv.setAttribute("padding", "1px")
+    statusDiv.textContent = "0 of 0 devices";
 }
 
 function add_svg_area()
