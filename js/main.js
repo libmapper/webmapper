@@ -81,11 +81,11 @@ function update_devices()
     updaterLeft.setHeaders();
     updaterRight.setHeaders();
 
+    updaterLeft.updateStatusBar('devices');
+    updaterRight.updateStatusBar('devices');
+
     updaterLeft.apply();
     updaterRight.apply();
-    
-    
-
 }
 
 /* Update a table with the rows and columns contained in text, add
@@ -94,6 +94,7 @@ function table_updater(tab)
 {
     var trs = [];
     this.$table = $(tab);
+    this.$footer = $(tab).siblings('.status');
     var tableBody = this.$table.children('tbody')[0];
     tableBody.appendChild(document.createElement('tr'));
 
@@ -147,6 +148,17 @@ function table_updater(tab)
             ths[i].textContent = columnHeaders[i];
         }
     }
+
+    this.updateStatusBar = function(name) {
+        //set the text of the bars at the bottom of each table
+        if(name == "devices") 
+            var total = devices.keys().length;
+        else
+            var total = trs.length;
+        this.$footer.text(
+            trs.length + " of " +total+ " " +name
+        );
+    }
 }
 
 function update_tabs()
@@ -197,6 +209,9 @@ function update_signals()
 
     updaterLeft.setHeaders();
     updaterRight.setHeaders();
+
+    updaterLeft.updateStatusBar('signals');
+    updaterRight.updateStatusBar('signals');
 
     updaterLeft.apply();
     updaterRight.apply();
@@ -943,8 +958,8 @@ function add_status_footer(d)
     var statusDiv = document.createElement('div');
     d.appendChild(statusDiv);
     statusDiv.className = "status";
-    statusDiv.setAttribute("padding", "1px")
-    statusDiv.textContent = "0 of 0 devices";
+    //statusDiv.setAttribute("padding", "1px")
+    //statusDiv.textContent = "0 of 0 devices";
 }
 
 function add_svg_area()

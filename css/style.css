@@ -250,13 +250,10 @@ thead {
 .status {
   position: absolute;
   bottom: 0px;
-  height: 22px;
+  height: 19px;
   width: 100%;
   background-color: lightgray;
   border-top: 1px solid black;
+  padding-left: 10px;
+  padding-top: 3px;
 }
-
-/*th {
-  border-left: 2px solid black;
-  border-right: 2px solid black;
-}*/
