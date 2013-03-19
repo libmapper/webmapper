@@ -268,10 +268,17 @@ function update_links()
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
-                        create_arrow(left, right, leftsel && rightsel);
+                        //Make sure that the row is not hidden
+                        if( $(left).css('display') != "none" && $(right).css('display') != "none" )
+                            create_arrow(left, right, leftsel && rightsel);
                     });
             });
     }
+
+    $('.svgDiv').children('.status').text(
+        links.keys().length + " of " + links.keys().length + " links"
+    );
+
 }
 
 function update_arrows()
@@ -285,6 +292,7 @@ function update_arrows()
 function update_connections()
 {
     cleanup_arrows();
+    var n_connections = 0;
 
     var keys = connections.keys();
     for (var k in keys) {
@@ -298,9 +306,14 @@ function update_connections()
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
                         create_arrow(left, right, leftsel && rightsel);
+                        n_connections++;
                     });
             });
     }
+
+    $('.svgDiv').children('.status').text(
+        n_connections + " of " + n_connections + " connections"
+    );
 }
 
 /* params are TR elements, one from each table */
@@ -980,6 +993,7 @@ function add_svg_area()
     svgDiv.setAttribute("style", x);
     body.insertBefore(svgDiv, body.firstChild);
     svgDiv.appendChild(svgArea);
+    svgDiv.className = "svgDiv";
 
     // the offset* variables are not available for SVG elements in
     // FireFox, so assign them here.
