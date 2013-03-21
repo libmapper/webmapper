@@ -151,10 +151,7 @@ function table_updater(tab)
 
     this.updateStatusBar = function(name) {
         //set the text of the bars at the bottom of each table
-        if(name == "devices") 
-            var total = devices.keys().length;
-        else
-            var total = trs.length;
+        var total = trs.length;
         this.$footer.text(
             trs.length + " of " +total+ " " +name
         );
@@ -1036,6 +1033,7 @@ function add_action_div()
     var body = document.getElementsByTagName('body')[0];
     actionDiv = document.createElement('div');
     body.insertBefore(actionDiv, body.firstChild);
+    $(actionDiv).addClass("actionDiv");
 
     make_signal_actions();
     add_signal_property_controls();
@@ -1072,6 +1070,12 @@ function make_device_actions()
     buttonUnlink.id = "btnUnlink";
     buttonUnlink.onclick = on_unlink;
     devActions.appendChild(buttonUnlink);
+}
+
+function make_search_boxes()
+{
+    searchBoxLeft = document.createElement('ul')
+    searchBoxRight = document.createElement('ul')
 }
 
 function add_signal_property_controls()
