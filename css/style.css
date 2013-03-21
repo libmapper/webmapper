@@ -126,7 +126,7 @@ body {
 
 .actionDiv ul {
   clear: none;
-  display: inline;
+  display: inline-block;
 }
 
 .actionDiv {
@@ -257,5 +257,4 @@ thead {
   padding-left: 10px;
   padding-top: 3px;
 }
-
 

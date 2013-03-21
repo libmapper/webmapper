@@ -907,6 +907,7 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             select_tab(tabDevices);
+            add_search_boxes();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -1072,10 +1073,12 @@ function make_device_actions()
     devActions.appendChild(buttonUnlink);
 }
 
-function make_search_boxes()
+function add_search_boxes()
 {
-    searchBoxLeft = document.createElement('ul')
-    searchBoxRight = document.createElement('ul')
+    //As of now, it only creates one box
+    $('.actionDiv').append('<ul class="search"></ul>');
+    $('.search').append('<input class="leftSearch"></input>');
+    //searchBoxRight = document.createElement('ul')
 }
 
 function add_signal_property_controls()
