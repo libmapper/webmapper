@@ -1075,10 +1075,16 @@ function make_device_actions()
 
 function add_search_boxes()
 {
-    //As of now, it only creates one box
-    $('.actionDiv').append('<ul class="search"></ul>');
-    $('.search').append('<input class="leftSearch"></input>');
-    //searchBoxRight = document.createElement('ul')
+    $('.actionDiv').append('<ul class="searchDivLeft"></ul>');
+    $('.searchDivLeft').append('<input type="text" class="searchBox leftSearch"></input>');
+    $('.actionDiv').append('<ul class="searchDivRight"></ul>');
+    $('.searchDivRight').append('<input type="text" class="searchBox rightSearch"></input>');
+
+    //Add keyup handlers (to detect changes in box)
+    $('.rightSearch, .leftSearch').keyup( function(){
+        console.log(this.value);
+    });
+
 }
 
 function add_signal_property_controls()
