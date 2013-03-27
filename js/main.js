@@ -16,7 +16,7 @@ selectLists = {};
 actionDiv = null;
 devActions = null;
 sigActions = null;
-searchDiv = null;
+searchBar = null;
 arrows = [];
 menuList = null;
 menuSave = null;
@@ -313,6 +313,14 @@ function update_connections()
     $('.svgDiv').children('.status').text(
         n_connections + " of " + n_connections + " connections"
     );
+}
+
+//A function to filter tables by text in boxes
+function search_filter(searchBox, side)
+{
+    filterText = $(searchBox).val();
+    console.log(filterText);
+    console.log('a');
 }
 
 /* params are TR elements, one from each table */
@@ -1077,24 +1085,39 @@ function make_device_actions()
 
 function add_search_boxes()
 {
+    /* XMLDOM style
     searchBar = document.createElement('ul');
     searchBar.className = "searchBar";
 
     var leftSearch = document.createElement('input');
     leftSearch.id = "leftSearch";
     leftSearch.setAttribute("type","text");
-    //leftSearch.onkeyup = search_filter(leftSearch, "left");
+    leftSearch.onkeyup = search_filter(leftSearch, "left");
     searchBar.appendChild(leftSearch);
 
     var rightSearch = document.createElement('input');
     rightSearch.id = "rightSearch";
     rightSearch.setAttribute("type","text");
-    //rightSearch.onkeyup = search_filter(rightSearch, "right");
+    rightSearch.onkeyup = search_filter(rightSearch, "right");
     searchBar.appendChild(rightSearch);
 
     var svgDiv = document.getElementsByClassName('svgDiv')[0];
     var body = document.getElementsByTagName('body')[0];
     body.insertBefore(searchBar, svgDiv);
+    */
+
+    // GAGNAM STYLE!! (jQuery)
+
+    $searchBar = $('<ul class="searchBar"></ul>');
+
+    var $leftSearch = $('<input type="text" id="leftSearch"></input>');
+    $leftSearch.on('keyup', function(){search_filter($leftSearch, "left")});
+    $searchBar.append($leftSearch);
+
+    var $leftSearch = $('<input type="text" id="leftSearch"></input>');
+    $searchBar.append($leftSearch);
+
+    $searchBar.insertAfter('.actionDiv');
 }
 
 function add_signal_property_controls()
