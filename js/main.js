@@ -909,6 +909,7 @@ function main()
             command.send('all_connections');
             select_tab(tabDevices);
             add_search_boxes();
+            position_dynamic_elements();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -1076,24 +1077,24 @@ function make_device_actions()
 
 function add_search_boxes()
 {
-    searchDiv = document.createElement('div');
-    searchDiv.className = "searchDiv";
+    searchBar = document.createElement('ul');
+    searchBar.className = "searchBar";
 
-    var leftSearch = document.createElement('text');
+    var leftSearch = document.createElement('input');
     leftSearch.id = "leftSearch";
     leftSearch.setAttribute("type","text");
     //leftSearch.onkeyup = search_filter(leftSearch, "left");
-    searchDiv.appendChild(leftSearch);
+    searchBar.appendChild(leftSearch);
 
-    var rightSearch = document.createElement('text');
+    var rightSearch = document.createElement('input');
     rightSearch.id = "rightSearch";
     rightSearch.setAttribute("type","text");
     //rightSearch.onkeyup = search_filter(rightSearch, "right");
-    searchDiv.appendChild(rightSearch);
+    searchBar.appendChild(rightSearch);
 
     var svgDiv = document.getElementsByClassName('svgDiv')[0];
     var body = document.getElementsByTagName('body')[0];
-    body.insertBefore(searchDiv, svgDiv);
+    body.insertBefore(searchBar, svgDiv);
 }
 
 function add_signal_property_controls()
