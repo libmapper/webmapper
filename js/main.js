@@ -16,6 +16,7 @@ selectLists = {};
 actionDiv = null;
 devActions = null;
 sigActions = null;
+searchDiv = null;
 arrows = [];
 menuList = null;
 menuSave = null;
@@ -95,6 +96,7 @@ function table_updater(tab)
     var trs = [];
     this.$table = $(tab);
     this.$footer = $(tab).siblings('.status');
+    //this.$filter = $('.leftSearch')[0].value;
     var tableBody = this.$table.children('tbody')[0];
     tableBody.appendChild(document.createElement('tr'));
 
@@ -666,8 +668,7 @@ function on_boundary(e)
 
 function set_actions(a)
 {
-    if (actionDiv.firstChild)
-        actionDiv.removeChild(actionDiv.firstChild);
+    $(actionDiv).empty();
     actionDiv.appendChild(a);
 }
 
@@ -1075,16 +1076,24 @@ function make_device_actions()
 
 function add_search_boxes()
 {
-    $('.actionDiv').append('<ul class="searchDivLeft"></ul>');
-    $('.searchDivLeft').append('<input type="text" class="searchBox leftSearch"></input>');
-    $('.actionDiv').append('<ul class="searchDivRight"></ul>');
-    $('.searchDivRight').append('<input type="text" class="searchBox rightSearch"></input>');
+    searchDiv = document.createElement('div');
+    searchDiv.className = "searchDiv";
 
-    //Add keyup handlers (to detect changes in box)
-    $('.rightSearch, .leftSearch').keyup( function(){
-        console.log(this.value);
-    });
+    var leftSearch = document.createElement('text');
+    leftSearch.id = "leftSearch";
+    leftSearch.setAttribute("type","text");
+    //leftSearch.onkeyup = search_filter(leftSearch, "left");
+    searchDiv.appendChild(leftSearch);
 
+    var rightSearch = document.createElement('text');
+    rightSearch.id = "rightSearch";
+    rightSearch.setAttribute("type","text");
+    //rightSearch.onkeyup = search_filter(rightSearch, "right");
+    searchDiv.appendChild(rightSearch);
+
+    var svgDiv = document.getElementsByClassName('svgDiv')[0];
+    var body = document.getElementsByTagName('body')[0];
+    body.insertBefore(searchDiv, svgDiv);
 }
 
 function add_signal_property_controls()
