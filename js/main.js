@@ -16,7 +16,6 @@ selectLists = {};
 actionDiv = null;
 devActions = null;
 sigActions = null;
-searchBar = null;
 arrows = [];
 menuList = null;
 menuSave = null;
@@ -45,6 +44,8 @@ function update_display()
     update_selection();
     update_arrows();
     update_save_location();
+    search_filter( $('#leftSearch') );
+    search_filter( $('#rightSearch') );
 }
 
 function update_devices()
@@ -316,11 +317,39 @@ function update_connections()
 }
 
 //A function to filter tables by text in boxes
-function search_filter(searchBox, side)
+function search_filter($searchBox)
 {
-    filterText = $(searchBox).val();
-    console.log(filterText);
-    console.log('a');
+    filterText = $searchBox.val();
+
+    //Is it the left box
+    if( $searchBox.attr('id').search('left') == 0 ) {
+        var $tableBody = $(leftTable).children('tbody');
+    }
+    else var $tableBody = $(rightTable).children('tbody');
+
+    var $trs = $tableBody.children('tr');
+
+
+    $trs.each( function(i, row) {
+        var cells = $(row).find('td');
+        if(cells.length > 0)
+        {
+            var found = false;
+            cells.each( function(j, td) 
+            {
+                var regExp = new RegExp(filterText, 'i');
+                if(regExp.test( $(td).text() ))
+                {
+                    found = true;
+                    return false;
+                }
+            });
+            if(found == true)$(row).show();
+            else $(row).hide();
+        }
+    });
+
+    update_arrows();
 }
 
 /* params are TR elements, one from each table */
@@ -376,10 +405,14 @@ function select_tab(tab)
     $(".tabsel").removeClass("tabsel");
     $(tab).addClass("tabsel");
 
-    if (tab == tabDevices)
+    if (tab == tabDevices) {
         set_actions(devActions);
-    else
+        $('#svgTitle').text("Links");
+    }
+    else {
         set_actions(sigActions);
+        $('#svgTitle').text("Connections");
+    }
 
     position_dynamic_elements();
     update_display();
@@ -743,9 +776,18 @@ function position_dynamic_elements()
         if (parseInt(rightTable.offsetWidth) < h[2].width) {
             rightTable.style.width = h[2].width + "px";
         }
+
+        //Position titles and search bars
+        $('#leftTitle').css("left", h[0].left+10+"px");
+        $('#leftSearch').css("left", h[1].left-124+"px");
+        $('#svgTitle').css("left", (h[1].left+h[2].left)/2+"px");
+        $('#rightTitle').css("left", h[2].left+10+"px");
+        $('#rightSearch').css("right", "20px");
     }
     update_tables();
     update_tables();
+
+
 }
 
 function notify(msg)
@@ -907,6 +949,7 @@ function main()
             add_display_tables();
             add_svg_area();
             add_action_div();
+            add_title_bar();
             add_tabs();
             add_menu();
             add_extra_tools();
@@ -916,7 +959,6 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             select_tab(tabDevices);
-            add_search_boxes();
             position_dynamic_elements();
             window.onresize = function (e) {
                 position_dynamic_elements();
@@ -924,7 +966,6 @@ function main()
             };
         },
         100);
-
 }
 
 
@@ -1083,41 +1124,24 @@ function make_device_actions()
     devActions.appendChild(buttonUnlink);
 }
 
-function add_search_boxes()
+function add_title_bar()
 {
-    /* XMLDOM style
-    searchBar = document.createElement('ul');
-    searchBar.className = "searchBar";
 
-    var leftSearch = document.createElement('input');
-    leftSearch.id = "leftSearch";
-    leftSearch.setAttribute("type","text");
-    leftSearch.onkeyup = search_filter(leftSearch, "left");
-    searchBar.appendChild(leftSearch);
+    var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
 
-    var rightSearch = document.createElement('input');
-    rightSearch.id = "rightSearch";
-    rightSearch.setAttribute("type","text");
-    rightSearch.onkeyup = search_filter(rightSearch, "right");
-    searchBar.appendChild(rightSearch);
+    var $leftTitle = $('<h2 id="leftTitle" class="searchBar">Sources</h2></li>');
+    var $svgTitle = $('<h2 id="svgTitle" class="searchBar">Links</h2></li>');
+    var $rightTitle = $('<h2 id="rightTitle" class="searchBar">Destinations</h2></li>');
 
-    var svgDiv = document.getElementsByClassName('svgDiv')[0];
-    var body = document.getElementsByTagName('body')[0];
-    body.insertBefore(searchBar, svgDiv);
-    */
+    var $leftSearch = $('<input type="text" id="leftSearch" class="searchBar"></input></li>');
+    var $rightSearch = $('<input type="text" id="rightSearch" class="searchBar"></input></li>');
 
-    // GAGNAM STYLE!! (jQuery)
+    $titleSearchDiv.append($leftTitle, $leftSearch, $svgTitle, $rightTitle, $rightSearch);
+    $titleSearchDiv.insertAfter('.actionDiv');
 
-    $searchBar = $('<ul class="searchBar"></ul>');
-
-    var $leftSearch = $('<input type="text" id="leftSearch"></input>');
-    $leftSearch.on('keyup', function(){search_filter($leftSearch, "left")});
-    $searchBar.append($leftSearch);
-
-    var $leftSearch = $('<input type="text" id="leftSearch"></input>');
-    $searchBar.append($leftSearch);
-
-    $searchBar.insertAfter('.actionDiv');
+    $('#leftSearch, #rightSearch').on('keyup', function() {
+        search_filter( $(this) );
+    });
 }
 
 function add_signal_property_controls()

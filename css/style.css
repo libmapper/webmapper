@@ -262,3 +262,12 @@ thead {
   float: left;
 }
 
+.searchBar {
+  position: absolute;
+  margin: 0px;
+}
+
+#titleSearchDiv {
+  height: 40px;
+}
+
