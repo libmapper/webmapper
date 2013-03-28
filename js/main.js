@@ -414,6 +414,7 @@ function select_tab(tab)
         $('#svgTitle').text("Connections");
     }
 
+    $('#leftSearch, #rightSearch').val('');
     position_dynamic_elements();
     update_display();
 }
