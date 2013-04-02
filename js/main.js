@@ -984,6 +984,7 @@ function main()
             add_tabs();
             add_menu();
             add_extra_tools();
+            add_UI_handlers();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -1323,6 +1324,25 @@ function add_extra_tools()
     refresh.onclick = refresh_all;
     body.insertBefore(websocketStatus, body.firstChild);
     body.insertBefore(refresh, websocketStatus);
+}
+
+function add_UI_handlers()
+{
+    $('body').keypress( function(e) {
+        var keyCode = e.which;
+        if (keyCode == 99) {
+            if (selectedTab == all_devices) 
+                on_link(e);
+            else
+                on_connect(e);
+        }
+        if (keyCode == 100) {
+            if (selectedTab == all_devices) 
+                on_unlink(e);
+            else
+                on_disconnect(e);
+        }
+    });
 }
 
 /* Kick things off. */
