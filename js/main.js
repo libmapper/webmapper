@@ -811,7 +811,7 @@ function position_dynamic_elements()
         //Position titles and search bars
         $('#leftTitle').css("left", h[0].left+10+"px");
         $('#leftSearch').css("left", h[1].left-124+"px");
-        $('#svgTitle').css("left", (h[1].left+h[2].left)/2+"px");
+        $('#svgTitle').width( $(window).width() );
         $('#rightTitle').css("left", h[2].left+10+"px");
         $('#rightSearch').css("right", "20px");
     }
@@ -1167,6 +1167,8 @@ function add_title_bar()
 
     var $leftSearch = $('<input type="text" id="leftSearch" class="searchBar"></input></li>');
     var $rightSearch = $('<input type="text" id="rightSearch" class="searchBar"></input></li>');
+
+    $svgTitle.css('text-align','center');
 
     $titleSearchDiv.append($leftTitle, $leftSearch, $svgTitle, $rightTitle, $rightSearch);
     $titleSearchDiv.insertAfter('.actionDiv');
