@@ -319,7 +319,7 @@ function update_connections()
 //A function to filter tables by text in boxes
 function search_filter($searchBox)
 {
-    filterText = $searchBox.val();
+    var filterText = $searchBox.val();
 
     //Is it the left box
     if( $searchBox.attr('id').search('left') == 0 ) {
@@ -328,7 +328,8 @@ function search_filter($searchBox)
     else var $tableBody = $(rightTable).children('tbody');
 
     var $trs = $tableBody.children('tr');
-
+    var total = $trs.length;
+    var numberDisplayed = total;
 
     $trs.each( function(i, row) {
         var cells = $(row).find('td');
@@ -345,11 +346,30 @@ function search_filter($searchBox)
                 }
             });
             if(found == true)$(row).show();
-            else $(row).hide();
+            else {
+                $(row).hide();
+                numberDisplayed--;
+            }
         }
     });
 
+    //Make sure the status display at the bottom has the proper numbers
+    update_status_bar($tableBody, numberDisplayed, total);
     update_arrows();
+}
+
+function update_status_bar($tableBody, numberDisplayed, total)
+{
+    //Find the appropriate status bar
+    var $status = $tableBody.parents('.tableDiv').children('.status');
+
+    var name; //Devices or signals
+    if( selectedTab == all_devices ) {
+        name = "devices";
+    }
+    else name = "signals";
+
+    $status.text(numberDisplayed + " of " + total + " " + name);
 }
 
 /* params are TR elements, one from each table */
