@@ -257,6 +257,9 @@ function update_links()
 {
     cleanup_arrows();
 
+    // How many are actually being displayed?
+    var n_visibleLinks = 0;
+
     var keys = links.keys();
     for (var k in keys) {
         var l = links.get(keys[k]);
@@ -269,14 +272,16 @@ function update_links()
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
                         //Make sure that the row is not hidden
-                        if( $(left).css('display') != "none" && $(right).css('display') != "none" )
+                        if( $(left).css('display') != "none" && $(right).css('display') != "none" ) {
                             create_arrow(left, right, leftsel && rightsel);
+                            n_visibleLinks++;
+                        }
                     });
             });
     }
 
     $('.svgDiv').children('.status').text(
-        links.keys().length + " of " + links.keys().length + " links"
+        n_visibleLinks + " of " + links.keys().length + " links"
     );
 
 }
@@ -293,6 +298,7 @@ function update_connections()
 {
     cleanup_arrows();
     var n_connections = 0;
+    var n_visibleConnections = 0;
 
     var keys = connections.keys();
     for (var k in keys) {
@@ -305,14 +311,18 @@ function update_connections()
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
-                        create_arrow(left, right, leftsel && rightsel);
+                        //Are these rows being displayed?
+                        if( $(left).css('display') != 'none' && $(right).css('display') != 'none' ) {
+                            create_arrow(left, right, leftsel && rightsel);
+                            n_visibleConnections++;
+                        }
                         n_connections++;
                     });
             });
     }
 
     $('.svgDiv').children('.status').text(
-        n_connections + " of " + n_connections + " connections"
+        n_visibleConnections + " of " + n_connections + " connections"
     );
 }
 
@@ -328,8 +338,8 @@ function search_filter($searchBox)
     else var $tableBody = $(rightTable).children('tbody');
 
     var $trs = $tableBody.children('tr');
-    var total = $trs.length;
-    var numberDisplayed = total;
+    var n_total = $trs.length;
+    var n_visible = n_total;
 
     $trs.each( function(i, row) {
         var cells = $(row).find('td');
@@ -348,17 +358,17 @@ function search_filter($searchBox)
             if(found == true)$(row).show();
             else {
                 $(row).hide();
-                numberDisplayed--;
+                n_visible--;
             }
         }
     });
 
     //Make sure the status display at the bottom has the proper numbers
-    update_status_bar($tableBody, numberDisplayed, total);
+    update_status_bar($tableBody, n_visible, n_total);
     update_arrows();
 }
 
-function update_status_bar($tableBody, numberDisplayed, total)
+function update_status_bar($tableBody, n_visible, n_total)
 {
     //Find the appropriate status bar
     var $status = $tableBody.parents('.tableDiv').children('.status');
@@ -369,7 +379,7 @@ function update_status_bar($tableBody, numberDisplayed, total)
     }
     else name = "signals";
 
-    $status.text(numberDisplayed + " of " + total + " " + name);
+    $status.text(n_visible + " of " + n_total + " " + name);
 }
 
 /* params are TR elements, one from each table */
