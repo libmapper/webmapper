@@ -1173,6 +1173,9 @@ function add_title_bar()
     $titleSearchDiv.append($leftTitle, $leftSearch, $svgTitle, $rightTitle, $rightSearch);
     $titleSearchDiv.insertAfter('.actionDiv');
 
+    //Make sure that noting appears in front of the text inputs
+    $('#titleSearchDiv input').css('z-index', '1')
+
     $('#leftSearch, #rightSearch').on('keyup', function() {
         search_filter( $(this) );
     });
