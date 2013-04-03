@@ -748,35 +748,14 @@ function position_dynamic_elements()
 {
     var hT = fullOffset($("#spacerTable")[0]);
 
-    var L = leftTable.parentNode;
-    var R = rightTable.parentNode;
-
-    //The div that contains our svg canvas
-    svgDiv = svgArea.parentElement;
-
-    L.style.height =
-    R.style.height =
-    svgDiv.style.height =
-    //svgArea.style.height = 
-    (document.body.clientHeight - hT.top - 10) + "px";
-    svgArea.style.background = "white";
-    svgDiv.style.border = 
-    //svgArea.style.border = 
-    "solid 1pt black";
-
-    L.style.top =
-    R.style.top =
-    svgDiv.style.top = 
-    //svgArea.style.top = 
-    (hT.top) + "px";
-    svgDiv.soffsetTop =
-    //svgArea.offsetTop = 
-    hT.top;
+    $('.svgDiv, .tableDiv').css({
+        'height': (document.body.clientHeight - hT.top - 10) + "px",
+        'top': (hT.top) + 'px'
+    });
 
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
-    leftTable.style.width = "auto";
-    rightTable.style.width = "auto";
+    $('.displayTable').css('width','auto');
 
     // Need to run this twice, since movement of the table causes
     // appearance or disappearance of scroll bars, which changes the
@@ -785,21 +764,26 @@ function position_dynamic_elements()
         var h = $("#spacerTable").find("tr").find("td").map(
             function(){return fullOffset(this);});
 
-        L.style.left = h[0].left+"px";
-        R.style.left = h[2].left+"px";
-        svgDiv.style.left =
-        //svgArea.style.left = 
-        h[1].left+"px";
+        $('.leftTable.tableDiv, .leftTable.displayTable').css({
+            'left': h[0].left+"px",
+            'width': h[0].width+'px'
+        });
 
-        L.style.width = h[0].width+"px";
-        R.style.width = h[2].width+"px";
-        svgDiv.style.width = 
-        //svgArea.style.width = 
-        h[1].width+"px";
+        $('.svgDiv').css({
+            'left': h[1].left+'px',
+            'width': h[1].width+'px'
+        });
+
+        $('.rightTable.tableDiv, .rightTable.displayTable').css({
+            'left': h[2].left+"px",
+            'width': h[2].width+'px'
+        });
+        /*
         svgDiv.offsetWidth =
         //svgArea.offsetWidth = 
         h[1].width;
 
+        //What are these for?
         if (parseInt(leftTable.offsetWidth) < h[0].width) {
             leftTable.style.width = h[0].width + "px";
         }
@@ -807,6 +791,7 @@ function position_dynamic_elements()
         if (parseInt(rightTable.offsetWidth) < h[2].width) {
             rightTable.style.width = h[2].width + "px";
         }
+        */
 
         //Position titles and search bars
         $('#leftTitle').css("left", h[0].left+10+"px");
@@ -814,6 +799,8 @@ function position_dynamic_elements()
         $('#svgTitle').width( $(window).width() );
         $('#rightTitle').css("left", h[2].left+10+"px");
         $('#rightSearch').css("right", "20px");
+
+        //Make sure status bars are proper width
     }
     update_tables();
     update_tables();
@@ -1082,6 +1069,9 @@ function add_svg_area()
     svgArea.offsetLeft = parseInt(svgArea.style.left);
     svgArea.offsetWidth = parseInt(svgArea.style.width);
     svgArea.offsetHeight = parseInt(svgArea.style.height);
+
+    $(svgDiv).css('border', "solid 1px black");
+    $(svgArea).css('background', 'white');
 
     add_status_footer(svgDiv);
 }

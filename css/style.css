@@ -5,6 +5,9 @@
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box;
 }
 
 input {
@@ -250,7 +253,7 @@ thead {
 .status {
   position: absolute;
   bottom: 0px;
-  height: 19px;
+  height: 23px;
   width: 100%;
   background-color: lightgray;
   border-top: 1px solid black;
