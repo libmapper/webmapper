@@ -40,7 +40,6 @@ def open_gui(port):
 monitor = mapper.monitor(enable_autorequest=0)
 
 def on_device(dev, action):
-    print "got device", dev["name"]
     if action == mapper.MDB_NEW:
         server.send_command("new_device", dev)
     if action == mapper.MDB_MODIFY:
@@ -49,7 +48,6 @@ def on_device(dev, action):
         server.send_command("del_device", dev)
 
 def on_signal(sig, action):
-    print "got signal", sig["name"]
     if action == mapper.MDB_NEW:
         server.send_command("new_signal", sig)
     if action == mapper.MDB_MODIFY:
@@ -58,7 +56,6 @@ def on_signal(sig, action):
         server.send_command("del_signal", sig)
 
 def on_link(link, action):
-    print "got link", link["src_name"], link["dest_name"]
     if action == mapper.MDB_NEW:
         server.send_command("new_link", link)
     if action == mapper.MDB_MODIFY:
@@ -67,7 +64,6 @@ def on_link(link, action):
         server.send_command("del_link", link)
 
 def on_connection(con, action):
-    print "got connection", con["src_name"], con["dest_name"]
     if action == mapper.MDB_NEW:
         server.send_command("new_connection", con)
     if action == mapper.MDB_MODIFY:
@@ -128,7 +124,7 @@ def sync_device(name, is_src):
     if sigs_reported != sigs_recorded:
         if is_src:
             monitor.request_output_signals_by_device_name(name)
-    else:
+        else:
             monitor.request_input_signals_by_device_name(name)
     monitor.request_device_info(name)
 
@@ -141,6 +137,7 @@ def select_tab(src_dev):
         for i in links:
             sync_device(i["dest_name"], 0)
         sync_device(src_dev, 1)
+        monitor.request_connections_by_src_device_name(src_dev)
 
 server.add_command_handler("tab", lambda x: select_tab(x))
 
