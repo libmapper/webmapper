@@ -59,24 +59,9 @@ function update_devices()
         var k = keys[d];
         var dev = devices.get(k);
 
-        var found_input = false;
-        var found_output = false;
-        for (var s in sigkeys) {
-            var sk = sigkeys[s];
-            var sig = signals.get(sk);
-            if (sig.device_name == dev.name) {
-                if (sig.direction == 0)
-                    found_input = true;
-                else if (sig.direction == 1)
-                    found_output = true;
-            }
-            if (found_input && found_output)
-                break;
-        }
-
-        if (found_output)
+        if (dev.n_outputs)
             updaterLeft.addrow([dev.name, dev.n_outputs, dev.host, dev.port]);
-        if (found_input)
+        if (dev.n_inputs)
             updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
     }
 
