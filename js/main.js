@@ -430,6 +430,7 @@ function select_tab(tab)
     }
 
     $('#leftSearch, #rightSearch').val('');
+    command.send('tab', selectedTab);
     position_dynamic_elements();
     update_display();
 }
