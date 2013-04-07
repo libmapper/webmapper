@@ -881,7 +881,10 @@ function main()
     });
     command.register("del_device", function(cmd, args) {
         devices.remove(args.name);
-        update_display();
+        if (selectedTab==args.name)
+            select_tab(tabDevices);
+        else
+            update_display();
     });
 
     command.register("all_signals", function(cmd, args) {
