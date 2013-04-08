@@ -1331,7 +1331,7 @@ function add_UI_handlers()
             else
                 on_connect(e);
         }
-        if (keyCode == 100) {
+        else if (keyCode == 100) {
             if (selectedTab == all_devices) 
                 on_unlink(e);
             else
