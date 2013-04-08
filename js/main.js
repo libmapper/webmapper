@@ -1013,7 +1013,8 @@ function add_table_header(tab)
     for (var i = 0; i < 4; i ++) {
         var th = document.createElement('th');
         //th.textContent = columnHeaders[i];
-        $(th).click(function() {
+        $(th).click(function(e) {
+            e.stopPropagation();
             $(tab).on("sortEnd", function() {
                 update_arrows();
             } );
@@ -1180,8 +1181,11 @@ function add_signal_property_controls()
 
     var handle_input=function(inp,field,idx) {
         inp.onclick = function(e){e.stopPropagation();};
-        inp.onkeyup = function(e){if (e.keyCode==13)
-                selected_connection_set(field,inp,idx);};
+        $(inp).keypress( function(e){
+            e.stopPropagation();
+            if (e.keyCode==13)
+                selected_connection_set_input(field,inp,idx);
+        });
         inp.onblur = function(){selected_connection_set_input(field,inp,idx);};
     };
 
