@@ -123,12 +123,11 @@ function table_updater(tab)
         //Set the text of the table headers
         //Check to see if we are signals or devices
         if(selectedTab == all_devices) {
-            var columnHeaders = ['Name', '#Outputs', 'IP', 'Port']; //TODO change to reflect actual values
-            if(this.$table.hasClass('rightTable')) { columnHeaders[1] = '#Inputs'; }
+            var columnHeaders = ['device', 'outputs', 'IP', 'port']; //TODO change to reflect actual values
+            if(this.$table.hasClass('rightTable')) { columnHeaders[1] = 'inputs'; }
         }
         else {
-            var columnHeaders = ['Name', 'Type', 'Units', 'Length']; //TODO change to reflect actual values
-
+            var columnHeaders = ['name', 'type', 'length', 'units']; //TODO change to reflect actual values
         }
         var ths = $('th', $(tableBody).parent('table') );
         //var ths = this.$table.find('th');
@@ -187,9 +186,9 @@ function update_signals()
         var lnk = links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1)
-            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.unit, sig.length]);
+            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
         if (sig.direction == 0 && lnk!=null)
-            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.unit, sig.length]);
+            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
     }
 
     updaterLeft.setHeaders();
