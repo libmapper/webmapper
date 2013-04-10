@@ -131,14 +131,8 @@ body {
   color: gray;
 }
 
-.leftTable .trsel {
-  //border-right: solid 7pt red;
-  background: lightblue;
-}
-
-.rightTable .trsel {
-  //border-left: solid 7pt red;
-  background: lightblue;
+.trsel {
+  background: lightblue !important;
 }
 
 .actionDiv ul {

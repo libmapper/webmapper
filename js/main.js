@@ -1190,7 +1190,7 @@ function add_signal_property_controls()
 
     var d = document.createElement('input');
     d.type = 'text';
-    d.maxLength = 15;
+    //d.maxLength = 15;
     d.size = 15;
     d.id = 'expression';
     handle_input(d, 'expression');
