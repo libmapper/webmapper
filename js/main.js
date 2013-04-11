@@ -323,7 +323,7 @@ function search_filter($searchBox)
 
     var $trs = $tableBody.children('tr');
     var n_total = $trs.length;
-    var n_visible = n_total;
+    var n_visible = 0;
 
     $trs.each( function(i, row) {
         var cells = $(row).find('td');
@@ -339,10 +339,18 @@ function search_filter($searchBox)
                     return false;
                 }
             });
-            if(found == true)$(row).show();
+            if(found == true) {
+                $(row).show();
+                n_visible++;
+                if( n_visible % 2 == 0 ) {
+                    $(row).addClass('even');
+                }
+                else {
+                    $(row).removeClass('even');
+                }
+            }
             else {
-                $(row).hide();
-                n_visible--;
+                $(row).hide();   
             }
         }
     });
