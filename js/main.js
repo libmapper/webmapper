@@ -1180,7 +1180,7 @@ function add_signal_property_controls()
 
     var handle_input=function(inp,field,idx) {
         inp.onclick = function(e){e.stopPropagation();};
-        $(inp).keypress( function(e){
+        $(inp).keyup( function(e){
             e.stopPropagation();
             if (e.keyCode==13)
                 selected_connection_set_input(field,inp,idx);
@@ -1315,15 +1315,18 @@ function add_extra_tools()
 
 function add_UI_handlers()
 {
-    $('body').keypress( function(e) {
-        var keyCode = e.which;
-        if (keyCode == 99) {
+    $(document).keydown( function(e) {
+        if (e.keyCode == 67) {
+            e.stopPropagation();
             if (selectedTab == all_devices) 
                 on_link(e);
             else
                 on_connect(e);
         }
-        else if (keyCode == 100) {
+        else if (e.keyCode == 8) {
+            if( !$(':focus').is('input') ) {
+                e.preventDefault();
+            }
             if (selectedTab == all_devices) 
                 on_unlink(e);
             else
