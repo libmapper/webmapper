@@ -343,6 +343,7 @@ function search_filter($searchBox)
                 $(row).show();
                 n_visible++;
                 if( n_visible % 2 == 0 ) {
+                    // for getting the zebra stripe effect
                     $(row).addClass('even');
                 }
                 else {
@@ -1163,7 +1164,8 @@ function add_title_bar()
     //Make sure that noting appears in front of the text inputs
     $('#titleSearchDiv input').css('z-index', '1')
 
-    $('#leftSearch, #rightSearch').on('keyup', function() {
+    $('#leftSearch, #rightSearch').on('keyup', function(e) {
+        e.stopPropagation();
         search_filter( $(this) );
     });
 }
@@ -1188,7 +1190,8 @@ function add_signal_property_controls()
 
     var handle_input=function(inp,field,idx) {
         inp.onclick = function(e){e.stopPropagation();};
-        $(inp).keyup( function(e){
+        $(inp).on('keydown', function(e){
+            console.log(this);
             e.stopPropagation();
             if (e.keyCode==13)
                 selected_connection_set_input(field,inp,idx);
@@ -1324,14 +1327,15 @@ function add_extra_tools()
 function add_UI_handlers()
 {
     $(document).keydown( function(e) {
-        if (e.keyCode == 67) {
-            e.stopPropagation();
+        if (e.which == 67) { // connect on 'c'
             if (selectedTab == all_devices) 
                 on_link(e);
             else
                 on_connect(e);
         }
-        else if (e.keyCode == 8) {
+        else if (e.which == 8) { // disconnect on 'delete'
+            //Prevent the browser from going back a page
+            //but NOT if you're focus is an input and deleting text
             if( !$(':focus').is('input') ) {
                 e.preventDefault();
             }
@@ -1340,7 +1344,15 @@ function add_UI_handlers()
             else
                 on_disconnect(e);
         }
+        else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
+            console.log('select all');
+        }
     });
+    $('input').on('keydown click', function(e) {
+        e.stopPropagation();
+        console.log(this);
+    });
+
 }
 
 /* Kick things off. */
