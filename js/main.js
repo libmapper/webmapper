@@ -976,6 +976,7 @@ function main()
             command.send('all_connections');
             select_tab(tabDevices);
             position_dynamic_elements();
+            add_signal_control_bar();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -1168,6 +1169,35 @@ function add_title_bar()
         e.stopPropagation();
         search_filter( $(this) );
     });
+}
+
+function add_signal_control_bar() //A jQuery copy of the below, more or less
+{
+    $('.topMenu').append("<div class='signalControlsDiv'></div>");
+
+    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
+    for (m in connectionModesDisplayOrder) {
+        $('.modesDiv').append(
+            "<div class='mode mode'"+connectionModesDisplayOrder[m]+">"+connectionModesDisplayOrder[m]+"</div>");
+    }
+    $('.mode').on("click", function(e) {
+        e.stopPropagation();
+        selected_connection_set_mode(e.currentTarget.innerHTML);
+    });
+    $('.modesDiv').append("<input type='text' size=15 id='expression'></input>");
+
+    $('.signalControlsDiv').append(
+        "<div class='rangesDiv'><div class='range'></div><div class='range'></div></div>");
+
+    $('.range').html(
+        "<div>Source Range:</div><input><input>");
+
+    $('.range').children('input').attr({
+        'maxLength': 15,
+        "size": 5,
+        'class': 'rangeMin'
+    });
+
 }
 
 function add_signal_property_controls()
