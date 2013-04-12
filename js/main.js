@@ -493,17 +493,13 @@ function update_connection_properties()
     if (selectedTab == all_devices)
         return;
 
-    var a = function(x) { return $(x,actionDiv); };
+    //var a = function(x) { return $(x,actionDiv); };
 
     var clear_props = function() {
-        a(".mode").removeClass("modesel");
-        a("*").removeClass('waiting');
-        a("#expression").val('');
-        a("#rangeSrcMin").val('');
-        a("#rangeSrcMax").val('');
-        a("#rangeDestMin").val('');
-        a("#rangeDestMax").val('');
-        set_boundary(a(".boundary"), 0);
+        $(".mode").removeClass("modesel");
+        $("*").removeClass('waiting');
+        $(".topMenu input").val('')
+        //set_boundary(a(".boundary"), 0);
     }
 
     var conns = get_selected(connections);
@@ -514,14 +510,14 @@ function update_connection_properties()
     else if (conns.length == 1) {
         var c = conns[0];
         clear_props();
-        a(".mode"+connectionModes[c.mode]).addClass("modesel");
-        a("#expression").val(c.expression);
-        if (c.range[0]!=null) { a("#rangeSrcMin").val(c.range[0]); }
-        if (c.range[1]!=null) { a("#rangeSrcMax").val(c.range[1]); }
-        if (c.range[2]!=null) { a("#rangeDestMin").val(c.range[2]); }
-        if (c.range[3]!=null) { a("#rangeDestMax").val(c.range[3]); }
-        if (c.clip_min!=null) { set_boundary(a("#boundaryMin"),c.clip_min,0);};
-        if (c.clip_max!=null) { set_boundary(a("#boundaryMax"),c.clip_max,1);};
+        $(".mode"+connectionModes[c.mode]).addClass("modesel");
+        $(".expression").val(c.expression);
+        if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
+        if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
+        if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
+        if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
+        if (c.clip_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
+        if (c.clip_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
     }
     else {
         clear_props();
@@ -976,6 +972,7 @@ function main()
             command.send('all_connections');
             select_tab(tabDevices);
             position_dynamic_elements();
+            add_signal_control_bar();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -1108,7 +1105,7 @@ function add_action_div()
     $(actionDiv).addClass("actionDiv");
 
     make_signal_actions();
-    add_signal_property_controls();
+    //add_signal_property_controls();
     make_device_actions();
 }
 
@@ -1170,6 +1167,54 @@ function add_title_bar()
     });
 }
 
+function add_signal_control_bar() //A jQuery copy of the below, more or less
+{
+    $('.topMenu').append("<div class='signalControlsDiv'></div>");
+
+    //Add the mode controls
+    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
+    for (m in connectionModesDisplayOrder) {
+        $('.modesDiv').append(
+            "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
+    }
+    $('.mode').on("click", function(e) {
+        e.stopPropagation();
+        selected_connection_set_mode(e.currentTarget.innerHTML);
+    });
+    $('.modesDiv').append("<input type='text' size=15 class='expression'></input>");
+
+    //Add the range controls
+    $('.signalControlsDiv').append(
+        "<div class='rangesDiv'><div class='range'></div><div class='range'></div></div>");
+    $('.range').html(
+        "<div>Source Range:</div><input><input>");
+    $('.range').children('input').each( function(i) {
+        var minOrMax = 'Max'   // A variable storing minimum or maximum
+        var srcOrDest = 'Src'
+        if(i%2==0)  minOrMax = 'Min';
+        if(i>1)     srcOrDest = 'Dest';
+        $(this).attr({
+            'maxLength': 15,
+            "size": 5,
+            // Previously this was stored as 'rangeMin' or 'rangeMax'
+            'class': 'range',   
+            'id': 'range'+srcOrDest+minOrMax,
+            'index': i
+        })
+    });
+
+    //The expression and range input handlers
+    $('.topMenu').on({
+        keydown: function(e) {
+            e.stopPropagation();
+            if(e.which == 13) //'enter' key
+                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
+        },
+        click: function(e) { e.stopPropagation(); },
+        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
+    }, 'input');
+}
+
 function add_signal_property_controls()
 {
     var controls = document.createElement('div');
@@ -1191,7 +1236,7 @@ function add_signal_property_controls()
     var handle_input=function(inp,field,idx) {
         inp.onclick = function(e){e.stopPropagation();};
         $(inp).on('keydown', function(e){
-            console.log(this);
+            //console.log(this);
             e.stopPropagation();
             if (e.keyCode==13)
                 selected_connection_set_input(field,inp,idx);
@@ -1348,11 +1393,6 @@ function add_UI_handlers()
             console.log('select all');
         }
     });
-    $('input').on('keydown click', function(e) {
-        e.stopPropagation();
-        console.log(this);
-    });
-
 }
 
 /* Kick things off. */
