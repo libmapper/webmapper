@@ -158,10 +158,16 @@ body {
   display: inline-block;
 }
 
+.modesDiv {
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 0 10px;
+  background-color: lightgrey;
+
+}
+
 .modesDiv div {
-  margin: 5pt;
   padding: 5pt;
-  border: solid 1px black;
   cursor: pointer;
 }
 
@@ -169,8 +175,12 @@ body {
   background: darkgrey;
 }
 
-.range {
-  margin-left: 20pt;
+div.range {
+  border: 1px solid black;
+  margin-left: 10px;
+  border-radius: 10px;
+  padding: 3px 3px;
+  background-color: lightgray;
 }
 
 .rangeSwitch {

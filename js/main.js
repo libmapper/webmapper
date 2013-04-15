@@ -971,8 +971,8 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             select_tab(tabDevices);
-            position_dynamic_elements();
             add_signal_control_bar();
+            position_dynamic_elements();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -1181,13 +1181,15 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
         e.stopPropagation();
         selected_connection_set_mode(e.currentTarget.innerHTML);
     });
-    $('.modesDiv').append("<input type='text' size=15 class='expression'></input>");
+    $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
 
     //Add the range controls
     $('.signalControlsDiv').append(
-        "<div class='rangesDiv'><div class='range'></div><div class='range'></div></div>");
-    $('.range').html(
-        "<div>Source Range:</div><input><input>");
+        "<div class='rangesDiv'>"+
+            "<div class='range'>Source Range:</div>"+
+            "<div class='range'>Dest Range:</div>"+
+        "</div>");
+    $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
         var minOrMax = 'Max'   // A variable storing minimum or maximum
         var srcOrDest = 'Src'
