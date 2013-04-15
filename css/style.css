@@ -292,3 +292,12 @@ thead {
   height: 40px;
 }
 
+#svgTop {
+  width: 100%;
+  height: 19px;
+  border-bottom: 1px solid black;
+  background-color: lightgray;
+  position: absolute;
+}
+
+

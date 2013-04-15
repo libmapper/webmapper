@@ -1043,6 +1043,8 @@ function add_svg_area()
     var body = document.getElementsByTagName('body')[0];
     var svgDiv = document.createElement('div');
 
+    $(svgDiv).append("<div id='svgTop'></div>");
+
     svgArea = document.createElementNS(svgns, "svg");
     var l = fullOffset(leftTable);
     var r = fullOffset(rightTable);
@@ -1109,6 +1111,7 @@ function add_action_div()
     //make_device_actions();
 }
 
+/* NO LONGER NECESSARY
 function make_signal_actions()
 {
     sigActions = document.createElement('ul');
@@ -1139,7 +1142,7 @@ function make_device_actions()
     //buttonUnlink.id = "btnUnlink";
     //buttonUnlink.onclick = on_unlink;
     //devActions.appendChild(buttonUnlink);
-}
+} */
 
 function add_title_bar()
 {
@@ -1217,6 +1220,7 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
     }, 'input');
 }
 
+/*
 function add_signal_property_controls()
 {
     var controls = document.createElement('div');
@@ -1330,7 +1334,7 @@ function add_signal_property_controls()
     controls.appendChild(rangesdiv);
 
     sigActions.appendChild(controls);
-}
+} */
 
 function add_menu()
 {
