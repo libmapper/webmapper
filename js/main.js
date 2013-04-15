@@ -429,11 +429,11 @@ function select_tab(tab)
     $(tab).addClass("tabsel");
 
     if (tab == tabDevices) {
-        set_actions(devActions);
+        //set_actions(devActions);
         $('#svgTitle').text("Links");
     }
     else {
-        set_actions(sigActions);
+        //set_actions(sigActions);
         $('#svgTitle').text("Connections");
     }
 
@@ -1000,7 +1000,7 @@ function add_display_tables()
         d.appendChild(t);
         add_status_footer(d);
         body.insertBefore(d, body.firstChild);
-        $(t).tablesorter();
+        $(t).tablesorter({widgets: ['zebra']});
         return t;
     }
 
@@ -1104,9 +1104,9 @@ function add_action_div()
     body.insertBefore(actionDiv, body.firstChild);
     $(actionDiv).addClass("actionDiv");
 
-    make_signal_actions();
+    //make_signal_actions();
     //add_signal_property_controls();
-    make_device_actions();
+    //make_device_actions();
 }
 
 function make_signal_actions()
@@ -1128,17 +1128,17 @@ function make_signal_actions()
 function make_device_actions()
 {
     devActions = document.createElement('ul');
-    devActions.className = "devActions";
-    var buttonLink = document.createElement('button');
-    buttonLink.innerHTML = "Link";
-    buttonLink.id = "btnLink";
-    buttonLink.onclick = on_link;
-    devActions.appendChild(buttonLink);
-    var buttonUnlink = document.createElement('button');
-    buttonUnlink.innerHTML = "Unlink";
-    buttonUnlink.id = "btnUnlink";
-    buttonUnlink.onclick = on_unlink;
-    devActions.appendChild(buttonUnlink);
+    //devActions.className = "devActions";
+    //var buttonLink = document.createElement('button');
+    //buttonLink.innerHTML = "Link";
+    //buttonLink.id = "btnLink";
+    //buttonLink.onclick = on_link;
+    //devActions.appendChild(buttonLink);
+    //var buttonUnlink = document.createElement('button');
+    //buttonUnlink.innerHTML = "Unlink";
+    //buttonUnlink.id = "btnUnlink";
+    //buttonUnlink.onclick = on_unlink;
+    //devActions.appendChild(buttonUnlink);
 }
 
 function add_title_bar()
@@ -1395,11 +1395,6 @@ function add_UI_handlers()
             console.log('select all');
         }
     });
-    $('input').on('keydown click', function(e) {
-        e.stopPropagation();
-        console.log(this);
-    });
-
 }
 
 /* Kick things off. */
