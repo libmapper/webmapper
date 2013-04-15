@@ -1175,6 +1175,7 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
 {
     $('.topMenu').append("<div class='signalControlsDiv'></div>");
 
+    //Add the mode controls
     $('.signalControlsDiv').append("<div class='modesDiv'></div>");
     for (m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
@@ -1184,20 +1185,38 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
         e.stopPropagation();
         selected_connection_set_mode(e.currentTarget.innerHTML);
     });
-    $('.modesDiv').append("<input type='text' size=15 id='expression'></input>");
+    $('.modesDiv').append("<input type='text' size=15 class='expression'></input>");
 
+    //Add the range controls
     $('.signalControlsDiv').append(
         "<div class='rangesDiv'><div class='range'></div><div class='range'></div></div>");
-
     $('.range').html(
         "<div>Source Range:</div><input><input>");
-
-    $('.range').children('input').attr({
-        'maxLength': 15,
-        "size": 5,
-        'class': 'rangeMin'
+    $('.range').children('input').each( function(i) {
+        var minOrMax = 'Max'   // A variable storing minimum or maximum
+        var srcOrDest = 'Src'
+        if(i%2==0)  minOrMax = 'Min';
+        if(i>1)     srcOrDest = 'Dest';
+        $(this).attr({
+            'maxLength': 15,
+            "size": 5,
+            // Previously this was stored as 'rangeMin' or 'rangeMax'
+            'class': 'range',   
+            'id': 'range'+srcOrDest+minOrMax,
+            'index': i
+        })
     });
 
+    //The expression and range input handlers
+    $('.topMenu').on({
+        keydown: function(e) {
+            e.stopPropagation();
+            var inputType = $(this).attr('class');
+            if(e.which == 13) //'enter' key
+                selected_connection_set_input( inputType, this, $(this).attr('index') );
+        },
+        click: function(e) { e.stopPropagation(); }
+    }, 'input');
 }
 
 function add_signal_property_controls()
@@ -1221,7 +1240,7 @@ function add_signal_property_controls()
     var handle_input=function(inp,field,idx) {
         inp.onclick = function(e){e.stopPropagation();};
         $(inp).on('keydown', function(e){
-            console.log(this);
+            //console.log(this);
             e.stopPropagation();
             if (e.keyCode==13)
                 selected_connection_set_input(field,inp,idx);
@@ -1378,11 +1397,6 @@ function add_UI_handlers()
             console.log('select all');
         }
     });
-    $('input').on('keydown click', function(e) {
-        e.stopPropagation();
-        console.log(this);
-    });
-
 }
 
 /* Kick things off. */
