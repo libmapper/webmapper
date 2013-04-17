@@ -298,6 +298,7 @@ thead {
   border-bottom: 1px solid black;
   background-color: lightgray;
   position: absolute;
+  top: 0px;
 }
 
 

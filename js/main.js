@@ -5,6 +5,7 @@ devices = new Assoc();
 signals = new Assoc();
 links = new Assoc();
 connections = new Assoc();
+var line;
 
 tabList = null;
 tabDevices = null;
@@ -257,7 +258,7 @@ function update_links()
                         var rightsel = $(right).hasClass('trsel');
                         //Make sure that the row is not hidden
                         if( $(left).css('display') != "none" && $(right).css('display') != "none" ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            //create_arrow(left, right, leftsel && rightsel);
                             n_visibleLinks++;
                         }
                     });
@@ -297,7 +298,7 @@ function update_connections()
                         var rightsel = $(right).hasClass('trsel');
                         //Are these rows being displayed?
                         if( $(left).css('display') != 'none' && $(right).css('display') != 'none' ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            //create_arrow(left, right, leftsel && rightsel);
                             n_visibleConnections++;
                         }
                         n_connections++;
@@ -1042,33 +1043,20 @@ function add_svg_area()
 {
     var body = document.getElementsByTagName('body')[0];
     var svgDiv = document.createElement('div');
+    $(svgDiv).addClass('svgDiv');
+    $(svgDiv).css({
+        'position': 'absolute',
+        'background-color': 'white'
+    });
 
     $(svgDiv).append("<div id='svgTop'></div>");
-
-    svgArea = document.createElementNS(svgns, "svg");
-    var l = fullOffset(leftTable);
-    var r = fullOffset(rightTable);
-    var x = "position:absolute"
-        + ";left:" + (l.left+l.width)+"px"
-        + ";width:" + (r.left-l.left-l.width)+"px"
-        + ";top:" + (l.top)+"px"
-        + ";height:" + "5in";
-    var y = "width:100%;height:100%";
-    svgArea.setAttribute("style", y);
-    svgDiv.setAttribute("style", x);
     body.insertBefore(svgDiv, body.firstChild);
-    svgDiv.appendChild(svgArea);
-    svgDiv.className = "svgDiv";
-
-    // the offset* variables are not available for SVG elements in
-    // FireFox, so assign them here.
-    svgArea.offsetTop = parseInt(svgArea.style.top);
-    svgArea.offsetLeft = parseInt(svgArea.style.left);
-    svgArea.offsetWidth = parseInt(svgArea.style.width);
-    svgArea.offsetHeight = parseInt(svgArea.style.height);
 
     $(svgDiv).css('border', "solid 1px black");
     $(svgArea).css('background', 'white');
+
+    paper = Raphael(svgDiv, '100%', '100%');
+    
 
     add_status_footer(svgDiv);
 }
@@ -1105,44 +1093,7 @@ function add_action_div()
     actionDiv = document.createElement('div');
     body.insertBefore(actionDiv, body.firstChild);
     $(actionDiv).addClass("actionDiv");
-
-    //make_signal_actions();
-    //add_signal_property_controls();
-    //make_device_actions();
 }
-
-/* NO LONGER NECESSARY
-function make_signal_actions()
-{
-    sigActions = document.createElement('ul');
-    sigActions.className = "sigActions";
-    var buttonConnect = document.createElement('button');
-    buttonConnect.innerHTML = "Connect";
-    buttonConnect.id = "btnConnect";
-    buttonConnect.onclick = on_connect;
-    sigActions.appendChild(buttonConnect);
-    var buttonDisconnect = document.createElement('button');
-    buttonDisconnect.innerHTML = "Disconnect";
-    buttonDisconnect.id = "btnDisconnect";
-    buttonDisconnect.onclick = on_disconnect;
-    sigActions.appendChild(buttonDisconnect);
-}
-
-function make_device_actions()
-{
-    devActions = document.createElement('ul');
-    //devActions.className = "devActions";
-    //var buttonLink = document.createElement('button');
-    //buttonLink.innerHTML = "Link";
-    //buttonLink.id = "btnLink";
-    //buttonLink.onclick = on_link;
-    //devActions.appendChild(buttonLink);
-    //var buttonUnlink = document.createElement('button');
-    //buttonUnlink.innerHTML = "Unlink";
-    //buttonUnlink.id = "btnUnlink";
-    //buttonUnlink.onclick = on_unlink;
-    //devActions.appendChild(buttonUnlink);
-} */
 
 function add_title_bar()
 {
@@ -1220,122 +1171,6 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
     }, 'input');
 }
 
-/*
-function add_signal_property_controls()
-{
-    var controls = document.createElement('div');
-    controls.className = "signalControlsDiv";
-
-    var modesdiv = document.createElement('div');
-    modesdiv.className = "modesDiv";
-    for (m in connectionModesDisplayOrder) {
-        var d = document.createElement('div');
-        d.innerHTML = connectionModesDisplayOrder[m];
-        d.className = "mode mode"+connectionModesDisplayOrder[m];
-        d.onclick = function(m) { return function(e) {
-            selected_connection_set_mode(m);
-            e.stopPropagation();
-            }; }(connectionModesDisplayOrder[m]);
-        modesdiv.appendChild(d);
-    }
-
-    var handle_input=function(inp,field,idx) {
-        inp.onclick = function(e){e.stopPropagation();};
-        $(inp).on('keydown', function(e){
-            //console.log(this);
-            e.stopPropagation();
-            if (e.keyCode==13)
-                selected_connection_set_input(field,inp,idx);
-        });
-        inp.onblur = function(){selected_connection_set_input(field,inp,idx);};
-    };
-
-    var d = document.createElement('input');
-    d.type = 'text';
-    //d.maxLength = 15;
-    d.size = 15;
-    d.id = 'expression';
-    handle_input(d, 'expression');
-    modesdiv.appendChild(d);
-    controls.appendChild(modesdiv);
-
-    var rangesdiv = document.createElement('div');
-    rangesdiv.className = "rangesDiv";
-
-    var srcrange = document.createElement('div');
-    srcrange.className = "range";
-
-    var d = document.createElement('div');
-    d.innerHTML = "Source Range:";
-    srcrange.appendChild(d);
-
-    var d = document.createElement('input');
-    d.maxLength = 15;
-    d.size = 5;
-    d.className = "rangeMin";
-    d.id = 'rangeSrcMin';
-    handle_input(d, 'range', 0);
-    srcrange.appendChild(d);
-
-    var d = document.createElement('div');
-    d.className = "rangeSwitch";
-    srcrange.appendChild(d);
-
-    var d = document.createElement('input');
-    d.maxLength = 15;
-    d.size = 5;
-    d.className = "rangeMax";
-    d.id = 'rangeSrcMax';
-    handle_input(d, 'range', 1);
-    srcrange.appendChild(d);
-    rangesdiv.appendChild(srcrange);
-
-    var destrange = document.createElement('div');
-    destrange.className = "range";
-
-    var d = document.createElement('div');
-    d.innerHTML = "Dest Range:";
-    destrange.appendChild(d);
-
-    var d = document.createElement('div');
-    d.className = "boundary boundaryClamp";
-    d.onclick = on_boundary;
-    d.id = "boundaryMin";
-    destrange.appendChild(d);
-
-    var d = document.createElement('input');
-    d.maxLength = 15;
-    d.size = 5;
-    d.className = "rangeMin";
-    d.id = 'rangeDestMin';
-    handle_input(d, 'range', 2);
-    destrange.appendChild(d);
-
-    var d = document.createElement('div');
-    d.className = "rangeSwitch";
-    destrange.appendChild(d);
-
-    var d = document.createElement('input');
-    d.maxLength = 15;
-    d.size = 5;
-    d.className = "rangeMax";
-    d.id = 'rangeDestMax';
-    handle_input(d, 'range', 3);
-    destrange.appendChild(d);
-
-    var d = document.createElement('div');
-    d.className = "boundary boundaryClamp";
-    d.onclick = on_boundary;
-    d.id = "boundaryMax";
-    destrange.appendChild(d);
-
-    rangesdiv.appendChild(destrange);
-
-    controls.appendChild(rangesdiv);
-
-    sigActions.appendChild(controls);
-} */
-
 function add_menu()
 {
     var body = document.getElementsByTagName('body')[0];
@@ -1399,6 +1234,58 @@ function add_UI_handlers()
             console.log('select all');
         }
     });
+
+    $(document).on({
+        mousedown: function() {
+            $('svg').on({
+                mouseenter: function(enterEvent) {
+                    
+                    line = paper.path().attr({'stroke-width': 2});
+                    var start = [enterEvent.offsetX, enterEvent.offsetY];
+                    var x = start[0];
+                    var y = start[1];
+                    path = [ ["M", x, y], ["C", x, y, x, y, x, y]];
+                    
+
+                    $('svg').on('mousemove', function(moveEvent) {
+                        var end = [moveEvent.offsetX, moveEvent.offsetY];
+                        change_bezier_path(start, end, line, path);
+                    });
+                },
+                mouseleave: function() {
+                    $('svg').off('mousemove');
+                    line.remove();
+                    line = paper.path();
+                }
+            });
+        },
+        mouseup: function() {
+            $('svg').off('mouseenter').off('mousemove');
+            line.remove();
+            line = paper.path();
+        }
+    });
+
+
+}
+
+function change_bezier_path(start, end, line, path) {
+    
+    path[1][1] = path[1][3] = (end[0] + start[0]) / 2;
+    path[1][4] = end[1];
+    path[1][5] = end[0];
+    path[1][6] = end[1];
+
+    $('#xstart').text(start[0]);
+    $('#ystart').text(start[1]);
+    $('#c1x').text(path[1][1]);
+    $('#c1y').text(path[1][2]);
+    $('#c2x').text(path[1][3]);
+    $('#c2y').text(path[1][4]);
+    $('#xend').text(path[1][5]);
+    $('#yend').text(path[1][6]);
+
+    line.attr({'path':path});
 }
 
 /* Kick things off. */
