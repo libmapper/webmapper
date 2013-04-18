@@ -404,7 +404,7 @@ function create_arrow(left, right, sel)
         "stroke": "blue",
         "fill": "none",
         "stroke-width": "10pt",
-        "stroke-opacity": 0.5,
+        "stroke-opacity": 0,
         "cursor": "pointer",
         "border": "1px solid blue"
     });
@@ -419,18 +419,29 @@ function create_arrow(left, right, sel)
     var x2 = S.width;
     var y2 = R.top+R.height/2-S.top;
 
-    var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1
-        + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
-    line.attr({"path": p});
-    line.border.attr({"path": p});
+    var path = [ ["M", x1, y1] , ["C", (x1+x2)/2, y1, (x1+x2)/2, y2, x2, y2]];
 
-    //svgArea.appendChild(line.border);
-    //svgArea.appendChild(line);
+    line.attr({"path": path});
+    line.border.attr({"path": path});
+
+    // So that the arrow remembers which rows it is attached to
+    line.rightTr = right;
+    line.leftTr = left;
+
     arrows.push(line);
 
     line.border.click(function(e) {
-        select_tr(left);
-        select_tr(right);
+        //So that the arrow is deselected if both rows are selected
+        if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
+            select_tr(left);
+            select_tr(right);
+        }
+        else {
+            if( ! $(left).hasClass('trsel') )
+                select_tr(left);
+            if( ! $(right).hasClass('trsel') )
+                select_tr(right);
+        }
         e.stopPropagation();
     });
 }
@@ -1251,13 +1262,15 @@ function add_UI_handlers()
         }
     });
 
+    // For drawing the bezier curves on click and drag
+    // Attaches handler to each display table, but works with the table rows
     $('.displayTable').on('mousedown', 'tr', function(tableClick) {
-        console.log(this);
+        var row = this;
         $('svg').on({
-            mouseenter: function(enterEvent) {
+            mouseenter: function() {
                 drawLine = svgArea.path().attr({'stroke-width': 2});
                 $('svg').on('mousemove', function(moveEvent) {
-                    draw_bezier_path(enterEvent, moveEvent, drawLine);
+                    draw_bezier_path(row, moveEvent, drawLine);
                 });
             },
             mouseleave: function() {
@@ -1275,27 +1288,21 @@ function add_UI_handlers()
     });
 }
 
-function draw_bezier_path(start, end, drawLine) {
+function draw_bezier_path(row, end, drawLine) {
+
+    var h = $(row).css('height'); // Returns '##px'
+    h = +h.substring(0, h.length - 2); // Returns ##
     
-    var start = [start.offsetX, start.offsetY];
-    var x = 0;
-    var y = start[1];
-    path = [ ["M", 0, y], ["C", x, y, x, y, x, y]];
+    //Puts the initial height in the middle of the selected row
+    var y0 = ( $(row).index() + 1.5 ) * h;
+    var x0 = 0;
+    path = [ ["M", x0, y0], ["C", x0, y0, x0, y0, x0, y0]];
     var end = [end.offsetX, end.offsetY];
 
-    path[1][1] = path[1][3] = (end[0] + start[0]) / 2;
+    path[1][1] = path[1][3] = (end[0] + x0) / 2;
     path[1][4] = end[1];
     path[1][5] = end[0];
     path[1][6] = end[1];
-
-    $('#xstart').text(start[0]);
-    $('#ystart').text(start[1]);
-    $('#c1x').text(path[1][1]);
-    $('#c1y').text(path[1][2]);
-    $('#c2x').text(path[1][3]);
-    $('#c2y').text(path[1][4]);
-    $('#xend').text(path[1][5]);
-    $('#yend').text(path[1][6]);
 
     drawLine.attr({'path':path});
 }
