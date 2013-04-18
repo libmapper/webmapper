@@ -512,6 +512,18 @@ function deselect_all()
     update_connection_properties();
 }
 
+function select_all()
+{
+    for( i in arrows ) {
+        //Test to see if those rows are already selected
+        //(select_tr() just toggles selection)
+        if( ! $(arrows[i].leftTr).hasClass('trsel') )
+            select_tr(arrows[i].leftTr);
+        if( ! $(arrows[i].rightTr).hasClass('trsel') )
+            select_tr(arrows[i].rightTr);
+    }
+}
+
 function update_connection_properties()
 {
     if (selectedTab == all_devices)
@@ -1258,7 +1270,7 @@ function add_UI_handlers()
             deselect_all();
         }
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
-            console.log('select all');
+            select_all();
         }
     });
 
