@@ -5,7 +5,7 @@ devices = new Assoc();
 signals = new Assoc();
 links = new Assoc();
 connections = new Assoc();
-var line;
+var drawLine;
 
 tabList = null;
 tabDevices = null;
@@ -228,8 +228,8 @@ function update_selection()
 function cleanup_arrows()
 {
     for (a in arrows) {
-        svgArea.removeChild(arrows[a].border);
-        svgArea.removeChild(arrows[a]);
+        //svgArea.removeChild(arrows[a].border);
+        arrows[a].remove();
     }
     arrows = [];
 }
@@ -258,7 +258,7 @@ function update_links()
                         var rightsel = $(right).hasClass('trsel');
                         //Make sure that the row is not hidden
                         if( $(left).css('display') != "none" && $(right).css('display') != "none" ) {
-                            //create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel);
                             n_visibleLinks++;
                         }
                     });
@@ -298,7 +298,7 @@ function update_connections()
                         var rightsel = $(right).hasClass('trsel');
                         //Are these rows being displayed?
                         if( $(left).css('display') != 'none' && $(right).css('display') != 'none' ) {
-                            //create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel);
                             n_visibleConnections++;
                         }
                         n_connections++;
@@ -379,25 +379,31 @@ function update_status_bar($tableBody, n_visible, n_total)
 /* params are TR elements, one from each table */
 function create_arrow(left, right, sel)
 {
-    var line = document.createElementNS(svgns, "path");
+    var line = svgArea.path();
     if (sel)
-        line.setAttribute("stroke", "red");
+        line.attr({"stroke": "red"});
     else
-        line.setAttribute("stroke", "black");
-    line.setAttribute("fill", "none");
-    line.setAttribute("stroke-width", 2);
-    line.setAttribute("cursor", "pointer");
+        line.attr({"stroke": "black"});
+    line.attr({
+        "fill": "none",
+        "stroke-width": 2,
+        "cursor": "pointer"
+    });
 
-    line.border = document.createElementNS(svgns, "path");
-    line.border.setAttribute("stroke", "blue");
-    line.border.setAttribute("fill", "none");
-    line.border.setAttribute("stroke-width", "10pt");
-    line.border.setAttribute("stroke-opacity", "0");
-    line.border.setAttribute("cursor", "pointer");
+    /*
+    var lineBorder = svgArea.path();
+    lineBorder.attr({
+        "stroke": "blue",
+        "fill": "none",
+        "stroke-width": "10pt",
+        "stroke-opacity": 0,
+        "cursor": "pointer",
+        "border": "1px solid blue"
+    });*/
 
     var L = fullOffset(left);
     var R = fullOffset(right);
-    var S = fullOffset(svgArea);
+    var S = fullOffset($('.svgDiv')[0]);
 
     var x1 = 0;
     var y1 = L.top+L.height/2-S.top;
@@ -407,11 +413,11 @@ function create_arrow(left, right, sel)
 
     var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1
         + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
-    line.setAttribute("d", p);
-    line.border.setAttribute("d", p);
+    line.attr({"path": p});
+    //lineBorder.attr({"path": p});
 
-    svgArea.appendChild(line.border);
-    svgArea.appendChild(line);
+    //svgArea.appendChild(line.border);
+    //svgArea.appendChild(line);
     arrows.push(line);
 
     var onclick = function (e) {
@@ -420,7 +426,7 @@ function create_arrow(left, right, sel)
         e.stopPropagation();
     };
     line.onclick = onclick;
-    line.border.onclick = onclick;
+    //lineBorder.onclick = onclick;
 }
 
 function select_tab(tab)
@@ -1055,7 +1061,7 @@ function add_svg_area()
     $(svgDiv).css('border', "solid 1px black");
     $(svgArea).css('background', 'white');
 
-    paper = Raphael(svgDiv, '100%', '100%');
+    svgArea = Raphael(svgDiv, '100%', '100%');
     
 
     add_status_footer(svgDiv);
@@ -1240,7 +1246,7 @@ function add_UI_handlers()
             $('svg').on({
                 mouseenter: function(enterEvent) {
                     
-                    line = paper.path().attr({'stroke-width': 2});
+                    drawLine = svgArea.path().attr({'stroke-width': 2});
                     var start = [enterEvent.offsetX, enterEvent.offsetY];
                     var x = start[0];
                     var y = start[1];
@@ -1249,27 +1255,28 @@ function add_UI_handlers()
 
                     $('svg').on('mousemove', function(moveEvent) {
                         var end = [moveEvent.offsetX, moveEvent.offsetY];
-                        change_bezier_path(start, end, line, path);
+                        change_bezier_path(start, end, drawLine, path);
                     });
                 },
                 mouseleave: function() {
                     $('svg').off('mousemove');
-                    line.remove();
-                    line = paper.path();
+                    drawLine.remove();
+                    drawLine = svgArea.path();
                 }
             });
         },
         mouseup: function() {
             $('svg').off('mouseenter').off('mousemove');
-            line.remove();
-            line = paper.path();
+            if(drawLine)
+                drawLine.remove();
+            drawLine = svgArea.path();
         }
     });
 
 
 }
 
-function change_bezier_path(start, end, line, path) {
+function change_bezier_path(start, end, drawLine, path) {
     
     path[1][1] = path[1][3] = (end[0] + start[0]) / 2;
     path[1][4] = end[1];
@@ -1285,7 +1292,7 @@ function change_bezier_path(start, end, line, path) {
     $('#xend').text(path[1][5]);
     $('#yend').text(path[1][6]);
 
-    line.attr({'path':path});
+    drawLine.attr({'path':path});
 }
 
 /* Kick things off. */
