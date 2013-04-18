@@ -1280,9 +1280,13 @@ function add_UI_handlers()
         var row = this;
         $('svg').on({
             mouseenter: function() {
+                //Find the width of the svg container in px (as a number)
+                var width = $('.svgDiv').css('width');
+                width = +width.substring(0, width.length -2);
                 drawLine = svgArea.path().attr({'stroke-width': 2});
-                $('svg').on('mousemove', function(moveEvent) {
-                    draw_bezier_path(row, moveEvent, drawLine);
+
+                $(this).on('mousemove', function(moveEvent) {
+                    draw_bezier_path(row, moveEvent, drawLine, width);
                 });
             },
             mouseleave: function() {
@@ -1300,7 +1304,7 @@ function add_UI_handlers()
     });
 }
 
-function draw_bezier_path(row, end, drawLine) {
+function draw_bezier_path(row, end, drawLine, width) {
 
     var h = $(row).css('height'); // Returns '##px'
     h = +h.substring(0, h.length - 2); // Returns ##
@@ -1315,6 +1319,25 @@ function draw_bezier_path(row, end, drawLine) {
     path[1][4] = end[1];
     path[1][5] = end[0];
     path[1][6] = end[1];
+
+    //Check to see if we've gotten close enough to the right table
+    if( width - end[0] < 50) {
+        //Set x dimension to end of area
+        path[1][5] = width;
+        //Set y dimension to middle of nearest row
+        index = Math.round( path[1][6]/h );
+        path[1][6] = (index + 0.5) * h;
+
+        $('svg').on('mouseup', function(e) {
+            select_tr( $('.rightTable').find('tr')[index] )
+                if (selectedTab == all_devices) 
+                    on_link(e);
+                else
+                    on_connect(e);
+            drawLine.remove();
+            drawLine = svgArea.path();
+        });//.off('mouseenter').off('mousemove');
+    }
 
     drawLine.attr({'path':path});
 }

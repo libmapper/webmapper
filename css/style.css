@@ -131,7 +131,11 @@ body {
   color: gray;
 }
 
-.trsel {
+.trsel.even{
+  background: #9CC2CF !important; /*Exactly 1 shade darker than lightblue*/
+}
+
+.trsel.odd{
   background: lightblue !important;
 }
 
