@@ -89,8 +89,16 @@ function table_updater(tab)
 
     this.addrow = function(row) {
         var tr = document.createElement('tr');
-        tr.onclick = function(y) { return function(e) { select_tr(y);
-                                                        e.stopPropagation(); }; } (tr);
+        $(tr).on({
+            mousedown: function(e) {
+                select_tr(this);
+            },
+            click: function(e) {
+                e.stopPropagation();
+            }
+        });
+        //tr.onclick = function(y) { return function(e) { select_tr(y);
+        //                                                e.stopPropagation(); }; } (tr);
         for (col in row) {
             var td = document.createElement('td');
             td.textContent = row[col];
@@ -228,7 +236,7 @@ function update_selection()
 function cleanup_arrows()
 {
     for (a in arrows) {
-        //svgArea.removeChild(arrows[a].border);
+        arrows[a].border.remove();
         arrows[a].remove();
     }
     arrows = [];
@@ -390,16 +398,16 @@ function create_arrow(left, right, sel)
         "cursor": "pointer"
     });
 
-    /*
-    var lineBorder = svgArea.path();
-    lineBorder.attr({
+    
+    line.border = svgArea.path();
+    line.border.attr({
         "stroke": "blue",
         "fill": "none",
         "stroke-width": "10pt",
-        "stroke-opacity": 0,
+        "stroke-opacity": 0.5,
         "cursor": "pointer",
         "border": "1px solid blue"
-    });*/
+    });
 
     var L = fullOffset(left);
     var R = fullOffset(right);
@@ -414,19 +422,17 @@ function create_arrow(left, right, sel)
     var p = "M " + x1 + " " + y1 + " C " + (x1+x2)/2 + " " + y1
         + " " + (x1+x2)/2 + " " + y2 + " " + x2 + " " + y2;
     line.attr({"path": p});
-    //lineBorder.attr({"path": p});
+    line.border.attr({"path": p});
 
     //svgArea.appendChild(line.border);
     //svgArea.appendChild(line);
     arrows.push(line);
 
-    var onclick = function (e) {
+    line.border.click(function(e) {
         select_tr(left);
         select_tr(right);
         e.stopPropagation();
-    };
-    line.onclick = onclick;
-    //lineBorder.onclick = onclick;
+    });
 }
 
 function select_tab(tab)
@@ -958,7 +964,7 @@ function main()
     });
 
     var body = document.getElementsByTagName('body')[0];
-    body.onclick = deselect_all;
+    //body.onclick = deselect_all;
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
@@ -1218,6 +1224,9 @@ function add_extra_tools()
 
 function add_UI_handlers()
 {
+    $('body').on('click', function() {
+        deselect_all();
+    });
     $(document).keydown( function(e) {
         if (e.which == 67) { // connect on 'c'
             if (selectedTab == all_devices) 
@@ -1235,49 +1244,45 @@ function add_UI_handlers()
                 on_unlink(e);
             else
                 on_disconnect(e);
+            deselect_all();
         }
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             console.log('select all');
         }
     });
 
-    $(document).on({
-        mousedown: function() {
-            $('svg').on({
-                mouseenter: function(enterEvent) {
-                    
-                    drawLine = svgArea.path().attr({'stroke-width': 2});
-                    var start = [enterEvent.offsetX, enterEvent.offsetY];
-                    var x = start[0];
-                    var y = start[1];
-                    path = [ ["M", x, y], ["C", x, y, x, y, x, y]];
-                    
-
-                    $('svg').on('mousemove', function(moveEvent) {
-                        var end = [moveEvent.offsetX, moveEvent.offsetY];
-                        change_bezier_path(start, end, drawLine, path);
-                    });
-                },
-                mouseleave: function() {
-                    $('svg').off('mousemove');
-                    drawLine.remove();
-                    drawLine = svgArea.path();
-                }
-            });
-        },
-        mouseup: function() {
+    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
+        console.log(this);
+        $('svg').on({
+            mouseenter: function(enterEvent) {
+                drawLine = svgArea.path().attr({'stroke-width': 2});
+                $('svg').on('mousemove', function(moveEvent) {
+                    draw_bezier_path(enterEvent, moveEvent, drawLine);
+                });
+            },
+            mouseleave: function() {
+                $('svg').off('mouseenter').off('mousemove');
+                drawLine.remove();
+                drawLine = svgArea.path();
+            }
+        });
+        $(document).on('mouseup', function() {
             $('svg').off('mouseenter').off('mousemove');
             if(drawLine)
                 drawLine.remove();
             drawLine = svgArea.path();
-        }
+        });
     });
-
-
 }
 
-function change_bezier_path(start, end, drawLine, path) {
+function draw_bezier_path(start, end, drawLine) {
     
+    var start = [start.offsetX, start.offsetY];
+    var x = 0;
+    var y = start[1];
+    path = [ ["M", 0, y], ["C", x, y, x, y, x, y]];
+    var end = [end.offsetX, end.offsetY];
+
     path[1][1] = path[1][3] = (end[0] + start[0]) / 2;
     path[1][4] = end[1];
     path[1][5] = end[0];
