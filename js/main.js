@@ -1278,7 +1278,7 @@ function add_UI_handlers()
     // Attaches handler to each display table, but works with the table rows
     $('.displayTable').on('mousedown', 'tr', function(tableClick) {
         var row = this;
-        $('svg').on({
+        $('svg').one({
             mouseenter: function() {
                 //Find the width of the svg container in px (as a number)
                 var width = $('.svgDiv').css('width');
@@ -1290,7 +1290,13 @@ function add_UI_handlers()
                 select_tr(row);
 
                 $(this).on('mousemove', function(moveEvent) {
-                    draw_bezier_path(row, moveEvent, drawLine, width);
+                    draw_bezier_path(row, [moveEvent.offsetX, moveEvent.offsetY], drawLine, width);
+                    console.log(moveEvent.offsetY);
+                });
+                $('.tableDiv').on('mousemove', function(moveEvent) {
+                    console.log(moveEvent);
+                    draw_bezier_path(row, [width, moveEvent.offsetY], drawLine, width);
+                    console.log(moveEvent.offsetY);
                 });
             },
             /*mouseleave: function() {
@@ -1301,6 +1307,7 @@ function add_UI_handlers()
         });
         $(document).on('mouseup', function() {
             $('svg').off('mouseenter').off('mousemove');
+            $('.tableDiv').off('mousemove');
             if(drawLine)
                 drawLine.remove();
             drawLine = svgArea.path();
@@ -1317,7 +1324,6 @@ function draw_bezier_path(row, end, drawLine, width) {
     var y0 = ( $(row).index() + 1.5 ) * h;
     var x0 = 0;
     path = [ ["M", x0, y0], ["C", x0, y0, x0, y0, x0, y0]];
-    var end = [end.offsetX, end.offsetY];
 
     path[1][1] = path[1][3] = (end[0] + x0) / 2;
     path[1][4] = end[1];
@@ -1328,19 +1334,26 @@ function draw_bezier_path(row, end, drawLine, width) {
     if( width - end[0] < 50) {
         //Set x dimension to end of area
         path[1][5] = width;
-        //Set y dimension to middle of nearest row
+        
         index = Math.round( path[1][6]/h );
+        //See if we're off the table area
+        if( index > $('.rightTable').find('tr').length - 1)
+            index = $('.rightTable').find('tr').length - 1;
+
+        //Set y dimension to middle of nearest row
         path[1][6] = (index + 0.5) * h;
 
+
         $(document).one('mouseup', function(e) {
-            select_tr( $('.rightTable').find('tr')[index] )
-                if (selectedTab == all_devices) 
-                    on_link(e);
-                else
-                    on_connect(e);
+            e.stopPropagation();
+            if( ! $($('.rightTable').find('tr')[index]).hasClass('trsel') )
+                select_tr( $('.rightTable').find('tr')[index] )
+            if (selectedTab == all_devices) 
+                on_link(e);
+            else
+                on_connect(e);
             drawLine.remove();
             drawLine = svgArea.path();
-            $('svg').off('mousemove');
         });
     }
 
