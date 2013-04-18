@@ -430,7 +430,7 @@ function create_arrow(left, right, sel)
 
     arrows.push(line);
 
-    line.border.click(function(e) {
+    $(line.border.node).on('click', function(e) {
         //So that the arrow is deselected if both rows are selected
         if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
             select_tr(left);
@@ -1285,15 +1285,19 @@ function add_UI_handlers()
                 width = +width.substring(0, width.length -2);
                 drawLine = svgArea.path().attr({'stroke-width': 2});
 
+                //Make sure row is selected
+                deselect_all();
+                select_tr(row);
+
                 $(this).on('mousemove', function(moveEvent) {
                     draw_bezier_path(row, moveEvent, drawLine, width);
                 });
             },
-            mouseleave: function() {
+            /*mouseleave: function() {
                 $('svg').off('mouseenter').off('mousemove');
                 drawLine.remove();
                 drawLine = svgArea.path();
-            }
+            }*/
         });
         $(document).on('mouseup', function() {
             $('svg').off('mouseenter').off('mousemove');
@@ -1328,7 +1332,7 @@ function draw_bezier_path(row, end, drawLine, width) {
         index = Math.round( path[1][6]/h );
         path[1][6] = (index + 0.5) * h;
 
-        $('svg').on('mouseup', function(e) {
+        $(document).one('mouseup', function(e) {
             select_tr( $('.rightTable').find('tr')[index] )
                 if (selectedTab == all_devices) 
                     on_link(e);
@@ -1336,7 +1340,8 @@ function draw_bezier_path(row, end, drawLine, width) {
                     on_connect(e);
             drawLine.remove();
             drawLine = svgArea.path();
-        });//.off('mouseenter').off('mousemove');
+            $('svg').off('mousemove');
+        });
     }
 
     drawLine.attr({'path':path});
