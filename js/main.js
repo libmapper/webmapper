@@ -89,6 +89,7 @@ function table_updater(tab)
 
     this.addrow = function(row) {
         var tr = document.createElement('tr');
+        $(tr).addClass('odd');  // Because tablesorter's zebra widget does not work when there is only 1 row
         $(tr).on({
             mousedown: function(e) {
                 select_tr(this);
