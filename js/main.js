@@ -1349,6 +1349,8 @@ function draw_bezier_path(row, end, drawLine, width) {
     }
     else {
         $(document).off("mouseup.toConnect");
+        deselect_all();
+        select_tr(row);
     }
 
     drawLine.attr({'path':path});
@@ -1364,15 +1366,19 @@ function add_drawing_handlers()
         var row = this; // Store which row was clicked
         var rowIndex;   // The snapped to row
 
+        // We'll need to know the width of the canvas, in px, as a number
+        var canvasWidth = $(this).css('width');  // Which returns "##px"
+        canvasWidth = +canvasWidth.substring(0, canvasWidth.length - 2);  // Returning a ##
+
+        // Do the same thing for the row height
+        var rowHeight = $(row).css('height');
+        rowHeight = +rowHeight.substring(0, rowHeight.length - 2);
+
+        var x0 = 0; //Start the curve at the left
+        var y0 = ( $(row).index() + 1.5 ) * rowHeight;  // And middle of selected row
+
+        // Cursor enters the canvas
         $('svg').one('mouseenter.drawing', function() {
-
-            // We'll need to know the width of the canvas, in px, as a number
-            var canvasWidth = $(this).css('width');  // Which returns "##px"
-            canvasWidth = +canvasWidth.substring(0, canvasWidth.length - 2);  // Returning a ##
-
-            // Do the same thing for the row height
-            var rowHeight = $(row).css('height');
-            rowHeight = +rowHeight.substring(0, rowHeight.length - 2);
 
             // Make sure only the proper row is selected
             deselect_all();
@@ -1380,9 +1386,6 @@ function add_drawing_handlers()
 
             //Create the line
             drawLine = svgArea.path().attr({'stroke-width': 2});
-
-            var x0 = 0; //Start the curve at the left
-            var y0 = ( $(row).index() + 1.5 ) * rowHeight;  // And middle of selected row
 
             $(this).on('mousemove.drawing', function(moveEvent) {
                 
@@ -1407,32 +1410,64 @@ function add_drawing_handlers()
 
                     // Connect on mouseup
                     $(this).off("mouseup.toConnect");
-                    $(this).on('mouseup.toConnect', function(e) {
-                        $('svg').off('mouseenter.drawing').off('mousemove.drawing');
+                    $(this).on("mouseup.toConnect", function(e) {
+                        $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
                         e.stopPropagation();
                         if (selectedTab == all_devices) 
                             on_link(e);
                         else
                             on_connect(e);
                         drawLine.remove();
-                        drawLine = svgArea.path();
                     });
                     
                 }
                 else {
                     $(this).off("mouseup.toConnect");
+                    deselect_all();
+                    select_tr(row);
                 }
                 // Modify the path
                 var path = get_bezier_path( [x0, y0], [x1, y1], moveEvent.offsetY);
                 drawLine.attr({'path': path});
             });
 
+            // Mouse has transited to next table
+            $('.displayTable').on('mouseenter.drawing', 'tr', function() {
+
+                // I should probably create a function to do this (or modify the ones in place)
+                deselect_all();
+                select_tr(row);
+                select_tr(this);
+
+                // The middle of landing row
+                var y1 = ( $(this).index() + 1.5 ) * rowHeight;
+
+                // Get an offset for pretty transition purposes, totally non-essential
+                var c1 = y1;
+                $('.displayTable').on('mousemove.drawing', function(e) {
+                    c1 = y1 + ( e.offsetY - rowHeight/2 ); 
+                    var path = get_bezier_path( [x0, y0], [canvasWidth, y1], c1);
+                    drawLine.attr({'path': path});
+                });
+
+                $(this).one("mouseup.toConnect", function(e) {
+                    $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
+                    e.stopPropagation();
+                    if (selectedTab == all_devices) 
+                        on_link(e);
+                    else
+                        on_connect(e);
+                    drawLine.remove();
+                });
+
+            });
         });
+
+        // Drawing has finished without connecting
         $(document).one('mouseup.drawing', function() {
-            $('svg').off('mouseenter.drawing').off('mousemove.drawing');
+            $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
             if(drawLine)
                 drawLine.remove();
-            drawLine = svgArea.path();
         });
     });
 }
