@@ -781,7 +781,7 @@ function position_dynamic_elements()
 
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
-    $('.displayTable').css('width','auto');
+    $('.displayTable').css('width','100%');
 
     // Need to run this twice, since movement of the table causes
     // appearance or disappearance of scroll bars, which changes the
@@ -790,7 +790,7 @@ function position_dynamic_elements()
         var h = $("#spacerTable").find("tr").find("td").map(
             function(){return fullOffset(this);});
 
-        $('.leftTable.tableDiv, .leftTable.displayTable').css({
+        $('.leftTable.tableDiv').css({
             'left': h[0].left+"px",
             'width': h[0].width+'px'
         });
@@ -800,7 +800,7 @@ function position_dynamic_elements()
             'width': h[1].width+'px'
         });
 
-        $('.rightTable.tableDiv, .rightTable.displayTable').css({
+        $('.rightTable.tableDiv').css({
             'left': h[2].left+"px",
             'width': h[2].width+'px'
         });
