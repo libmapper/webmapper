@@ -55,6 +55,9 @@ function update_devices()
     var sigkeys = signals.keys();
     var updaterLeft = new table_updater(leftTable);
     var updaterRight = new table_updater(rightTable);
+
+    updaterLeft.setHeaders();
+    updaterRight.setHeaders();
     
     for (var d in keys) {
         var k = keys[d];
@@ -65,9 +68,6 @@ function update_devices()
         if (dev.n_inputs)
             updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
     }
-
-    updaterLeft.setHeaders();
-    updaterRight.setHeaders();
 
     updaterLeft.updateStatusBar('devices');
     updaterRight.updateStatusBar('devices');
@@ -102,6 +102,10 @@ function table_updater(tab)
         //                                                e.stopPropagation(); }; } (tr);
         for (col in row) {
             var td = document.createElement('td');
+            // The cell's corresponding header
+            var tdHeader = this.$table.find('th')[col];
+            $(td).addClass( $(tdHeader).text() );
+
             td.textContent = row[col];
             tr.appendChild(td);
         }
@@ -189,6 +193,9 @@ function update_signals()
     keys = signals.keys();
     var updaterLeft = new table_updater(leftTable);
     var updaterRight = new table_updater(rightTable);
+
+    updaterLeft.setHeaders();
+    updaterRight.setHeaders();
     
     for (var s in keys) {
         var k = keys[s];
@@ -200,9 +207,6 @@ function update_signals()
         if (sig.direction == 0 && lnk!=null)
             updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
     }
-
-    updaterLeft.setHeaders();
-    updaterRight.setHeaders();
 
     updaterLeft.updateStatusBar('signals');
     updaterRight.updateStatusBar('signals');
@@ -515,7 +519,9 @@ function deselect_all()
 
 function select_all()
 {
-    for( i in arrows ) {
+    deselect_all();
+    // Need the var! Damn variable scope
+    for(var i in arrows ) {
         //Test to see if those rows are already selected
         //(select_tr() just toggles selection)
         if( ! $(arrows[i].leftTr).hasClass('trsel') )
@@ -1282,7 +1288,7 @@ function add_drawing_handlers()
 {
     // Wait for a mousedown on either table
     // Handler is attached to table, but 'this' is the table row
-    $('.displayTable').on('mousedown.drawing', 'tr', function(tableClick) {
+    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
 
         var row = this; // Store which row was clicked
         var rowIndex;   // The snapped to row
@@ -1300,11 +1306,11 @@ function add_drawing_handlers()
         var x0;
         var clampBoundary;
         if( $(this).parents().hasClass('leftTable') ) {
-            $targetTable = $('.rightTable');
+            $targetTable = $('.displayTable.rightTable');
             x0 = 0; //Start the curve at the left
         }
         else {
-            $targetTable = $('.leftTable');
+            $targetTable = $('.displayTable.leftTable');
             x0 = canvasWidth; // Start the curve at right
         }
 
@@ -1316,6 +1322,9 @@ function add_drawing_handlers()
             // Make sure only the proper row is selected
             deselect_all();
             select_tr(row);
+
+            if( selectedTab != all_devices )
+                fade_incompatible_signals(row, $targetTable);
 
             //Create the line
             drawLine = svgArea.path().attr({'stroke-width': 2});
@@ -1345,14 +1354,13 @@ function add_drawing_handlers()
 
                     // Connect on mouseup
                     $(this).off("mouseup.toConnect");
-                    $(this).on("mouseup.toConnect", function(e) {
-                        $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
+                    $(this).one("mouseup.toConnect", function(e) {
+                        finish_drawing();
                         e.stopPropagation();
                         if (selectedTab == all_devices) 
                             on_link(e);
                         else
                             on_connect(e);
-                        drawLine.remove();
                     });
                     
                 }
@@ -1386,13 +1394,12 @@ function add_drawing_handlers()
                 });
 
                 $(this).one("mouseup.toConnect", function(e) {
-                    $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
+                    finish_drawing();
                     e.stopPropagation();
                     if (selectedTab == all_devices) 
                         on_link(e);
                     else
                         on_connect(e);
-                    drawLine.remove();
                 });
 
             });
@@ -1400,13 +1407,17 @@ function add_drawing_handlers()
 
         // Drawing has finished without connecting
         $(document).one('mouseup.drawing', function() {
-            $('svg, .displayTable').off('mouseenter.drawing').off('mousemove.drawing');
-            if(drawLine)
-                drawLine.remove();
+            finish_drawing();
         });
     });
 }
 
+function finish_drawing() 
+{
+    $("*").off('.drawing').removeClass('incompatible');
+    if(drawLine)
+        drawLine.remove();
+}
 
 // Finds a bezier curve between two points
 function get_bezier_path(start, end, controlEnd) 
@@ -1426,6 +1437,18 @@ function get_bezier_path(start, end, controlEnd)
     path[1][6] = end[1];
 
     return path;
+}
+
+function fade_incompatible_signals(row, $targetTable)
+{
+    var sourceLength = $(row).children('.length').text();
+    
+    $targetTable.find('tbody tr').each( function(index, element) {
+        var targetLength =  $(element).children('.length').text();
+        if( sourceLength != targetLength ) 
+            $(element).addClass('incompatible');
+    }); 
+
 }
 
 /* Kick things off. */

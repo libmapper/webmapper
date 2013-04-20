@@ -306,4 +306,7 @@ thead {
   top: 0px;
 }
 
+.incompatible {
+  opacity: 0.5;
+}
 
