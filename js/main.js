@@ -1339,18 +1339,23 @@ function add_drawing_handlers()
 
                     x1 = canvasWidth - x0;
 
-                    rowIndex = Math.round( y1/rowHeight ); // Which row are we nearest to?
+                    var nearestRow = Math.round( y1/rowHeight );
+                    nearestRow = Math.round( y1/rowHeight ); // Which row are we nearest to?
 
                     // See if it's off the table
-                    if( rowIndex > $targetTable.find('tr').length - 1)
-                        rowIndex = $targetTable.find('tr').length - 1;
+                    if( nearestRow > $targetTable.find('tr').length - 1)
+                        nearestRow = $targetTable.find('tr').length - 1;
 
-                    //Set y dimension to middle of nearest row
+                    // See if it's compatible
+                    if( !$( $targetTable.find('tr')[nearestRow] ).hasClass("incompatible") ) { 
+                        //Set y dimension to middle of nearest row
+                        rowIndex = nearestRow;
+                        deselect_all();
+                        select_tr(row);
+                        select_tr( $targetTable.find('tr')[rowIndex] );   
+                    }
+
                     y1 = (rowIndex + 0.5) * rowHeight;
-
-                    deselect_all();
-                    select_tr(row);
-                    select_tr( $targetTable.find('tr')[rowIndex] )
 
                     // Connect on mouseup
                     $(this).off("mouseup.toConnect");
@@ -1448,7 +1453,6 @@ function fade_incompatible_signals(row, $targetTable)
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
-
 }
 
 /* Kick things off. */
