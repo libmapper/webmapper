@@ -1274,86 +1274,6 @@ function add_UI_handlers()
             select_all();
         }
     });
-
-    // For drawing the bezier curves on click and drag
-    // Attaches handler to each display table, but works with the table rows
-    /*
-    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
-        var row = this;
-        $('.svgDiv').one('mouseenter', function() {
-            //Find the width of the svg container in px (as a number)
-            var width = $('.svgDiv').css('width');
-            width = +width.substring(0, width.length -2);
-            drawLine = svgArea.path().attr({'stroke-width': 2});
-            //Make sure row is selected
-            deselect_all();
-            select_tr(row);
-            $(this).on('mousemove', function(moveEvent) {
-                draw_bezier_path(row, [moveEvent.offsetX, moveEvent.offsetY], drawLine, width);
-            });
-            $('.tableDiv tbody tr').on('mousemove', function(moveEvent) {
-                draw_bezier_path(row, [width, moveEvent.offsetY], drawLine, width);
-                console.log( this );
-            });
-        });
-        $(document).one('mouseup', function() {
-            $('.svgDiv').off('mouseenter').off('mousemove');
-            $('.tableDiv tbody tr').off('mousemove');
-            if(drawLine)
-                drawLine.remove();
-            drawLine = svgArea.path();
-        });
-    });*/
-}
-
-function draw_bezier_path(row, end, drawLine, width) {
-
-    var h = $(row).css('height'); // Returns '##px'
-    h = +h.substring(0, h.length - 2); // Returns ##
-    
-    //Puts the initial height in the middle of the selected row
-    var y0 = ( $(row).index() + 1.5 ) * h;
-    var x0 = 0;
-    path = [ ["M", x0, y0], ["C", x0, y0, x0, y0, x0, y0]];
-
-    path[1][1] = path[1][3] = (end[0] + x0) / 2;
-    path[1][4] = end[1];
-    path[1][5] = end[0];
-    path[1][6] = end[1];
-
-    //Check to see if we've gotten close enough to the right table
-    if( width - end[0] < 50) {
-        //Set x dimension to end of area
-        path[1][5] = width;
-        
-        index = Math.round( path[1][6]/h );
-        //See if we're off the table area
-        if( index > $('.rightTable').find('tr').length - 1)
-            index = $('.rightTable').find('tr').length - 1;
-
-        //Set y dimension to middle of nearest row
-        path[1][6] = (index + 0.5) * h;
-
-
-        $(document).one('mouseup.toConnect', function(e) {
-            e.stopPropagation();
-            if( ! $($('.rightTable').find('tr')[index]).hasClass('trsel') )
-                select_tr( $('.rightTable').find('tr')[index] )
-            if (selectedTab == all_devices) 
-                on_link(e);
-            else
-                on_connect(e);
-            drawLine.remove();
-            drawLine = svgArea.path();
-        });
-    }
-    else {
-        $(document).off("mouseup.toConnect");
-        deselect_all();
-        select_tr(row);
-    }
-
-    drawLine.attr({'path':path});
 }
 
 // Add handlers for drag/drop connections
@@ -1374,7 +1294,19 @@ function add_drawing_handlers()
         var rowHeight = $(row).css('height');
         rowHeight = +rowHeight.substring(0, rowHeight.length - 2);
 
-        var x0 = 0; //Start the curve at the left
+        // Are we on the left or the right table
+        var $targetTable;
+        var x0;
+        var clampBoundary;
+        if( $(this).parents().hasClass('leftTable') ) {
+            $targetTable = $('.rightTable');
+            x0 = 0; //Start the curve at the left
+        }
+        else {
+            $targetTable = $('.leftTable');
+            x0 = canvasWidth; // Start the curve at right
+        }
+
         var y0 = ( $(row).index() + 1.5 ) * rowHeight;  // And middle of selected row
 
         // Cursor enters the canvas
@@ -1393,20 +1325,22 @@ function add_drawing_handlers()
                 var y1 = moveEvent.offsetY;
 
                 // Clamp the edges
-                if( canvasWidth - x1 < 50 ) {
-                    x1 = canvasWidth;
+                if( canvasWidth - Math.abs(x1 - x0) < 50 ) {
+
+                    x1 = canvasWidth - x0;
+
                     rowIndex = Math.round( y1/rowHeight ); // Which row are we nearest to?
 
                     // See if it's off the table
-                    if( rowIndex > $('.rightTable').find('tr').length - 1)
-                        rowIndex = $('.rightTable').find('tr').length - 1;
+                    if( rowIndex > $targetTable.find('tr').length - 1)
+                        rowIndex = $targetTable.find('tr').length - 1;
 
                     //Set y dimension to middle of nearest row
                     y1 = (rowIndex + 0.5) * rowHeight;
 
                     deselect_all();
                     select_tr(row);
-                    select_tr( $('.rightTable').find('tr')[rowIndex] )
+                    select_tr( $targetTable.find('tr')[rowIndex] )
 
                     // Connect on mouseup
                     $(this).off("mouseup.toConnect");
@@ -1446,7 +1380,7 @@ function add_drawing_handlers()
                 var c1 = y1;
                 $('.displayTable').on('mousemove.drawing', function(e) {
                     c1 = y1 + ( e.offsetY - rowHeight/2 ); 
-                    var path = get_bezier_path( [x0, y0], [canvasWidth, y1], c1);
+                    var path = get_bezier_path( [x0, y0], [canvasWidth - x0, y1], c1);
                     drawLine.attr({'path': path});
                 });
 
