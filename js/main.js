@@ -1008,7 +1008,8 @@ function main()
             add_menu();
             add_extra_tools();
             add_UI_handlers();
-            add_drawing_handlers();
+            //add_drawing_handlers();
+            drawing_handlers();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -1283,6 +1284,138 @@ function add_UI_handlers()
     });
 }
 
+function drawing_curve(sourceRow)
+{
+    this.sourceRow = sourceRow;
+    this.targetRow;
+    // We'll need to know the width of the canvas, in px, as a number
+    var widthInPx = $('svg').css('width'); // Which returns "##px"
+    this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
+    // Do the same thing for the row height
+    var heightInPx = $(sourceRow).css('height');
+    this.rowHeight = +heightInPx.substring(0, heightInPx.length - 2);
+
+    this.clamptorow = function( row ) {
+        var y = ( $(row).index() + 1.5 ) * this.rowHeight;
+        return y;
+    }
+
+    this.findrow = function ( y ) {
+        var index = Math.round( y/this.rowHeight );
+        if( index > $(this.targetTable).find('tr').length - 1)
+            index = $(this.targetTable).find('tr').length - 1;
+        var row = $(this.targetTable).find('tr')[index];
+        var incompatible = $(row).hasClass('incompatible');
+        if( !incompatible )
+            return row;
+        else
+            return null;
+    }
+
+    // Our bezier curve points
+    this.path = [ ["M"], ["C"]];
+
+    // Are we aiming for the left or right table?
+    this.targetTable;
+    if( $(this.sourceRow).parents().hasClass('leftTable') ) {
+        this.targetTable = $('.displayTable.rightTable')[0];
+        this.path[0][1] = 0; // Start the curve at left
+    }
+    else {
+        this.targetTable = $('.displayTable.leftTable')[0];
+        this.path[0][1] = this.canvasWidth; // Start the curve at right
+    }
+
+    this.path[0][2] = this.clamptorow(this.sourceRow) // And in the middle of the starting row
+
+    // The actual line
+    this.line = svgArea.path().attr({'stroke-width': 2});
+
+    this.update = function( moveEvent ) {
+        var target = moveEvent.currentTarget;
+        var start = [ this.path[0][1], this.path[0][2] ];
+        var end = [ this.path[1][5], this.path[1][6] ];
+        var c1;
+        if( target.tagName == "svg" ) {
+            this.checkTarget(null);
+            end = [ moveEvent.offsetX, moveEvent.offsetY ];
+            // Within clamping range
+            if( this.canvasWidth - Math.abs(end[0] - start[0]) < 50) {
+                end[0] = this.canvasWidth - start[0];
+                var clampRow = this.findrow(end[1]);
+                if(clampRow) {
+                    c1 = end[1];
+                    end[1] = this.clamptorow(clampRow);
+                    this.checkTarget(clampRow);
+                }
+            }
+        }
+        // We're over a table row of the target table
+        if( $(target).parents('.displayTable')[0] == this.targetTable ) {
+            this.checkTarget(target);
+            end[0] = this.canvasWidth - start[0];
+            end[1] = this.clamptorow(target);
+            c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
+        }
+        // Over the bottom part of table
+        if( $(target).hasClass('.tableDiv') ) {
+            c1 = moveEvent.offsetY;
+        }
+        this.path = get_bezier_path(start, end, c1);
+        this.line.attr({'path': this.path});
+    }
+
+    this.mouseup = function( mouseUpEvent ) {
+        if (selectedTab == all_devices) on_link(mouseUpEvent);
+        else on_connect(mouseUpEvent);
+        $("*").off('.drawing').removeClass('incompatible');
+        this.line.remove();
+    }
+
+    this.checkTarget = function( mousedOverRow ) {
+        if(this.targetRow != mousedOverRow) {
+            this.targetRow = mousedOverRow
+            deselect_all();
+            select_tr(this.sourceRow);
+            if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
+                select_tr(this.targetRow);
+        }
+    }
+}
+
+function drawing_handlers()
+{
+    // Wait for a mousedown on either table
+    // Handler is attached to table, but 'this' is the table row
+    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
+
+        var sourceRow = this;
+        var curve = new drawing_curve(sourceRow);
+
+        // Cursor enters the canvas
+        $('svg').one('mouseenter.drawing', function() {
+
+            // Make sure only the proper row is selected
+            deselect_all();
+            select_tr(curve.sourceRow);
+
+            // Fade out incompatible signals
+            if( selectedTab != all_devices )
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable);
+
+            // Moving about the canvas
+            $('svg, .displayTable tr').on('mousemove.drawing', function(moveEvent) {
+                curve.update(moveEvent);
+            });
+        });
+
+        $(document).one('mouseup.drawing', function(mouseUpEvent) {
+            curve.mouseup(mouseUpEvent);
+        });
+
+    });
+}
+
 // Add handlers for drag/drop connections
 function add_drawing_handlers()
 {
@@ -1294,7 +1427,7 @@ function add_drawing_handlers()
         var rowIndex;   // The snapped to row
 
         // We'll need to know the width of the canvas, in px, as a number
-        var canvasWidth = $(this).css('width');  // Which returns "##px"
+        var canvasWidth = $('svg').css('width');  // Which returns "##px"
         canvasWidth = +canvasWidth.substring(0, canvasWidth.length - 2);  // Returning a ##
 
         // Do the same thing for the row height
@@ -1302,15 +1435,15 @@ function add_drawing_handlers()
         rowHeight = +rowHeight.substring(0, rowHeight.length - 2);
 
         // Are we on the left or the right table
-        var $targetTable;
+        var targetTable;
         var x0;
         var clampBoundary;
         if( $(this).parents().hasClass('leftTable') ) {
-            $targetTable = $('.displayTable.rightTable');
+            targetTable = $('.displayTable.rightTable')[0];
             x0 = 0; //Start the curve at the left
         }
         else {
-            $targetTable = $('.displayTable.leftTable');
+            targetTable = $('.displayTable.leftTable')[0];
             x0 = canvasWidth; // Start the curve at right
         }
 
@@ -1324,7 +1457,7 @@ function add_drawing_handlers()
             select_tr(row);
 
             if( selectedTab != all_devices )
-                fade_incompatible_signals(row, $targetTable);
+                fade_incompatible_signals(row, targetTable);
 
             //Create the line
             drawLine = svgArea.path().attr({'stroke-width': 2});
@@ -1343,16 +1476,16 @@ function add_drawing_handlers()
                     nearestRow = Math.round( y1/rowHeight ); // Which row are we nearest to?
 
                     // See if it's off the table
-                    if( nearestRow > $targetTable.find('tr').length - 1)
-                        nearestRow = $targetTable.find('tr').length - 1;
+                    if( nearestRow > $(targetTable).find('tr').length - 1)
+                        nearestRow = $(targetTable).find('tr').length - 1;
 
                     // See if it's compatible
-                    if( !$( $targetTable.find('tr')[nearestRow] ).hasClass("incompatible") ) { 
+                    if( !$( $(targetTable).find('tr')[nearestRow] ).hasClass("incompatible") ) { 
                         //Set y dimension to middle of nearest row
                         rowIndex = nearestRow;
                         deselect_all();
                         select_tr(row);
-                        select_tr( $targetTable.find('tr')[rowIndex] );   
+                        select_tr( $(targetTable).find('tr')[rowIndex] );   
                     }
 
                     y1 = (rowIndex + 0.5) * rowHeight;
@@ -1435,7 +1568,9 @@ function get_bezier_path(start, end, controlEnd)
     // y-coordinate of first control point
     path[1][2] = start[1];
     // y-coordinate of second control point
-    path[1][4] = controlEnd;
+    if(controlEnd)
+        path[1][4] = controlEnd;
+    else path[1][4] = end[1];
 
     // Finally, the end points
     path[1][5] = end[0];
@@ -1444,11 +1579,11 @@ function get_bezier_path(start, end, controlEnd)
     return path;
 }
 
-function fade_incompatible_signals(row, $targetTable)
+function fade_incompatible_signals(row, targetTable)
 {
     var sourceLength = $(row).children('.length').text();
     
-    $targetTable.find('tbody tr').each( function(index, element) {
+    $(targetTable).find('tbody tr').each( function(index, element) {
         var targetLength =  $(element).children('.length').text();
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
