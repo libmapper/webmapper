@@ -1009,7 +1009,6 @@ function main()
             add_extra_tools();
             add_UI_handlers();
             //add_drawing_handlers();
-            drawing_handlers();
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -1259,6 +1258,7 @@ function add_UI_handlers()
     $('body').on('click', function() {
         deselect_all();
     });
+
     $(document).keydown( function(e) {
         if (e.which == 67) { // connect on 'c'
             if (selectedTab == all_devices) 
@@ -1282,6 +1282,8 @@ function add_UI_handlers()
             select_all();
         }
     });
+
+    drawing_handlers();
 }
 
 function drawing_curve(sourceRow)
@@ -1308,8 +1310,6 @@ function drawing_curve(sourceRow)
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
-        else
-            return null;
     }
 
     // Our bezier curve points
@@ -1354,12 +1354,10 @@ function drawing_curve(sourceRow)
         if( $(target).parents('.displayTable')[0] == this.targetTable ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
-            end[1] = this.clamptorow(target);
+            if( !$(target).hasClass('incompatible') ) 
+                end[1] = this.clamptorow(target);
             c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
-        }
-        // Over the bottom part of table
-        if( $(target).hasClass('.tableDiv') ) {
-            c1 = moveEvent.offsetY;
+
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
@@ -1413,140 +1411,6 @@ function drawing_handlers()
             curve.mouseup(mouseUpEvent);
         });
 
-    });
-}
-
-// Add handlers for drag/drop connections
-function add_drawing_handlers()
-{
-    // Wait for a mousedown on either table
-    // Handler is attached to table, but 'this' is the table row
-    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
-
-        var row = this; // Store which row was clicked
-        var rowIndex;   // The snapped to row
-
-        // We'll need to know the width of the canvas, in px, as a number
-        var canvasWidth = $('svg').css('width');  // Which returns "##px"
-        canvasWidth = +canvasWidth.substring(0, canvasWidth.length - 2);  // Returning a ##
-
-        // Do the same thing for the row height
-        var rowHeight = $(row).css('height');
-        rowHeight = +rowHeight.substring(0, rowHeight.length - 2);
-
-        // Are we on the left or the right table
-        var targetTable;
-        var x0;
-        var clampBoundary;
-        if( $(this).parents().hasClass('leftTable') ) {
-            targetTable = $('.displayTable.rightTable')[0];
-            x0 = 0; //Start the curve at the left
-        }
-        else {
-            targetTable = $('.displayTable.leftTable')[0];
-            x0 = canvasWidth; // Start the curve at right
-        }
-
-        var y0 = ( $(row).index() + 1.5 ) * rowHeight;  // And middle of selected row
-
-        // Cursor enters the canvas
-        $('svg').one('mouseenter.drawing', function() {
-
-            // Make sure only the proper row is selected
-            deselect_all();
-            select_tr(row);
-
-            if( selectedTab != all_devices )
-                fade_incompatible_signals(row, targetTable);
-
-            //Create the line
-            drawLine = svgArea.path().attr({'stroke-width': 2});
-
-            $(this).on('mousemove.drawing', function(moveEvent) {
-                
-                var x1 = moveEvent.offsetX;
-                var y1 = moveEvent.offsetY;
-
-                // Clamp the edges
-                if( canvasWidth - Math.abs(x1 - x0) < 50 ) {
-
-                    x1 = canvasWidth - x0;
-
-                    var nearestRow = Math.round( y1/rowHeight );
-                    nearestRow = Math.round( y1/rowHeight ); // Which row are we nearest to?
-
-                    // See if it's off the table
-                    if( nearestRow > $(targetTable).find('tr').length - 1)
-                        nearestRow = $(targetTable).find('tr').length - 1;
-
-                    // See if it's compatible
-                    if( !$( $(targetTable).find('tr')[nearestRow] ).hasClass("incompatible") ) { 
-                        //Set y dimension to middle of nearest row
-                        rowIndex = nearestRow;
-                        deselect_all();
-                        select_tr(row);
-                        select_tr( $(targetTable).find('tr')[rowIndex] );   
-                    }
-
-                    y1 = (rowIndex + 0.5) * rowHeight;
-
-                    // Connect on mouseup
-                    $(this).off("mouseup.toConnect");
-                    $(this).one("mouseup.toConnect", function(e) {
-                        finish_drawing();
-                        e.stopPropagation();
-                        if (selectedTab == all_devices) 
-                            on_link(e);
-                        else
-                            on_connect(e);
-                    });
-                    
-                }
-                else {
-                    $(this).off("mouseup.toConnect");
-                    deselect_all();
-                    select_tr(row);
-                }
-                // Modify the path
-                var path = get_bezier_path( [x0, y0], [x1, y1], moveEvent.offsetY);
-                drawLine.attr({'path': path});
-            });
-
-            // Mouse has transited to next table
-            $('.displayTable').on('mouseenter.drawing', 'tr', function() {
-
-                // I should probably create a function to do this (or modify the ones in place)
-                deselect_all();
-                select_tr(row);
-                select_tr(this);
-
-                // The middle of landing row
-                var y1 = ( $(this).index() + 1.5 ) * rowHeight;
-
-                // Get an offset for pretty transition purposes, totally non-essential
-                var c1 = y1;
-                $('.displayTable').on('mousemove.drawing', function(e) {
-                    c1 = y1 + ( e.offsetY - rowHeight/2 ); 
-                    var path = get_bezier_path( [x0, y0], [canvasWidth - x0, y1], c1);
-                    drawLine.attr({'path': path});
-                });
-
-                $(this).one("mouseup.toConnect", function(e) {
-                    finish_drawing();
-                    e.stopPropagation();
-                    if (selectedTab == all_devices) 
-                        on_link(e);
-                    else
-                        on_connect(e);
-                });
-
-            });
-        });
-
-        // Drawing has finished without connecting
-        $(document).one('mouseup.drawing', function() {
-            finish_drawing();
-        });
     });
 }
 
