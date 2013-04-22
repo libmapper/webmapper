@@ -1310,12 +1310,13 @@ function add_UI_handlers()
             $('.tableDiv').off('mousemove');
             if(drawLine)
                 drawLine.remove();
-            drawLine = svgArea.path();
         });
     });
 }
 
 function draw_bezier_path(row, end, drawLine, width) {
+    // TODO: check if dragging from left or right
+    // TODO: only call on_link()/on_connect() once on mouseup
 
     var h = $(row).css('height'); // Returns '##px'
     h = +h.substring(0, h.length - 2); // Returns ##
@@ -1329,6 +1330,7 @@ function draw_bezier_path(row, end, drawLine, width) {
     path[1][4] = end[1];
     path[1][5] = end[0];
     path[1][6] = end[1];
+    index = 0;
 
     //Check to see if we've gotten close enough to the right table
     if( width - end[0] < 50) {
@@ -1341,19 +1343,17 @@ function draw_bezier_path(row, end, drawLine, width) {
             index = $('.rightTable').find('tr').length - 1;
 
         //Set y dimension to middle of nearest row
-        path[1][6] = (index + 0.5) * h;
-
+        path[1][4] = path[1][6] = (index + 0.5) * h;
 
         $(document).one('mouseup', function(e) {
             e.stopPropagation();
             if( ! $($('.rightTable').find('tr')[index]).hasClass('trsel') )
-                select_tr( $('.rightTable').find('tr')[index] )
+                select_tr( $('.rightTable').find('tr')[index] );
             if (selectedTab == all_devices) 
                 on_link(e);
             else
                 on_connect(e);
             drawLine.remove();
-            drawLine = svgArea.path();
         });
     }
 
