@@ -1388,10 +1388,11 @@ function drawing_handlers()
     $('.displayTable').on('mousedown', 'tr', function(tableClick) {
 
         var sourceRow = this;
-        var curve = new drawing_curve(sourceRow);
 
         // Cursor enters the canvas
         $('svg').one('mouseenter.drawing', function() {
+
+            var curve = new drawing_curve(sourceRow);
 
             // Make sure only the proper row is selected
             deselect_all();
@@ -1405,12 +1406,15 @@ function drawing_handlers()
             $('svg, .displayTable tr').on('mousemove.drawing', function(moveEvent) {
                 curve.update(moveEvent);
             });
+
+            $(document).one('mouseup.drawing', function(mouseUpEvent) {
+                curve.mouseup(mouseUpEvent);
+            });
         });
 
         $(document).one('mouseup.drawing', function(mouseUpEvent) {
-            curve.mouseup(mouseUpEvent);
+            $("*").off('.drawing').removeClass('incompatible');
         });
-
     });
 }
 
