@@ -559,8 +559,8 @@ function update_connection_properties()
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
         if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
         if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
-        if (c.clip_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
-        if (c.clip_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
+        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
+        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
     }
     else {
         clear_props();
@@ -693,14 +693,14 @@ function on_table_scroll()
 function apply_selected_pairs(f)
 {
     $('tr.trsel', leftTable).each(
-        function(i,e){
-            var left = e;
-            $('tr.trsel', rightTable).each(
-                function(i,e){
-                    var right = e;
-                    f(left, right);
-                });
-        });
+    function(i,e){
+        var left = e;
+        $('tr.trsel', rightTable).each(
+            function(i,e){
+                var right = e;
+                f(left, right);
+            });
+    });
 }
 
 function on_link(e)
@@ -1288,6 +1288,7 @@ function add_UI_handlers()
 
 function drawing_curve(sourceRow)
 {
+    var self = this;
     this.sourceRow = sourceRow;
     this.targetRow;
     // We'll need to know the width of the canvas, in px, as a number
@@ -1297,6 +1298,7 @@ function drawing_curve(sourceRow)
     var heightInPx = $(sourceRow).css('height');
     this.rowHeight = +heightInPx.substring(0, heightInPx.length - 2);
 
+    //
     this.clamptorow = function( row ) {
         var y = ( $(row).index() + 1.5 ) * this.rowHeight;
         return y;
@@ -1367,7 +1369,16 @@ function drawing_curve(sourceRow)
         if (selectedTab == all_devices) on_link(mouseUpEvent);
         else on_connect(mouseUpEvent);
         $("*").off('.drawing').removeClass('incompatible');
-        this.line.remove();
+        //So that the old line is only removed when the actual connection is made
+        command.register("new_link", function() {
+            self.line.remove();
+        });
+        command.register("new_connection", function() {
+            self.line.remove();
+        });
+        if( !this.targetRow ) {
+            this.line.remove();
+        }
     }
 
     this.checkTarget = function( mousedOverRow ) {
