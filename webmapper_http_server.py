@@ -274,6 +274,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             return int(self.headers['Sec-WebSocket-Version'])
 
+# There ought to be a more elegant way to do this
 def handler_page(out, args):
     print >>out, """<html>
 <head>
@@ -287,6 +288,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/viz/list.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
 <body>
