@@ -111,7 +111,7 @@ command = {
         command.ws = null;
 
         if (command.num_ws_tries == 10) {
-            websocketStatus.innerHTML = 'websocket: too many tries';
+            ///websocketStatus.innerHTML = 'websocket: too many tries';
             setTimeout(function(){
                     websocketStatus.innerHTML = '';
                 }, 10000);
@@ -135,7 +135,7 @@ command = {
         if (!command.ws) {
             if (console)
                 console.log("Couldn't create web socket.");
-            websocketStatus.innerHTML = 'websocket unavailable';
+            //websocketStatus.innerHTML = 'websocket unavailable';
             return;
         }
         command.ws.is_closed = false;
@@ -150,13 +150,13 @@ command = {
         }
         command.ws.onerror = function(e) {
             if (console) console.log('websocket error: '+e.data);
-            websocketStatus.innerHTML = 'websocket error: '+e.data;
+            //websocketStatus.innerHTML = 'websocket error: '+e.data;
         }
         command.ws.onclose = function(e) {
             if (console) console.log("websocket closed");
             command.ws.is_closed = true;
             command.ws.is_opened = false;
-            websocketStatus.innerHTML = 'websocket closed';
+            //websocketStatus.innerHTML = 'websocket closed';
         }
     }
 };
