@@ -3,12 +3,17 @@
 import json, re
 import mapper
 
+#for debugging
+import pdb
+
 def serialise(monitor, device):
     sources = {}
     destinations = {}
     connections = {}
+    new_connections = []
     next_src = 0
     next_dest = 0
+    next_connection = 0
     modeStr = {mapper.MO_BYPASS: 'bypass',
                mapper.MO_LINEAR: 'linear',
                mapper.MO_CALIBRATE: 'calibrate',
@@ -18,7 +23,22 @@ def serialise(monitor, device):
                mapper.CT_CLAMP: 'clamp',
                mapper.CT_FOLD: 'fold',
                mapper.CT_WRAP: 'wrap'}
+
     for c in monitor.db.connections_by_device_name(device):
+
+        this_connection = {
+          'src': [ c['src_name'] ],
+          'dest': [ c['dest_name'] ],
+          'mute': c['muted'],
+          'mode': c['mode'],
+          'range': c['range'],
+          'expression': c['expression'],
+          'bound_min': c['clip_min'],
+          'bound_max': c['clip_max'] 
+        }
+        new_connections.append(this_connection);
+
+        # does the following source already have something in the string?
         if not sources.has_key(c['src_name']):
             sources[c['src_name']] = {
                 'id': 's%d'%next_src,
@@ -26,6 +46,7 @@ def serialise(monitor, device):
                 'parameter': '/'+'/'.join(c['src_name'].split('/')[2:])
                 }
             next_src += 1
+        # does the following destination already have something in the string?
         if not destinations.has_key(c['dest_name']):
             destinations[c['dest_name']] = {
                 'id': 'd%s'%next_dest,
@@ -44,14 +65,15 @@ def serialise(monitor, device):
             'clipMax': clipStr[c['clip_max']],
             'muted': c['muted'],
             }
-    contents = {"mapping": {"fileversion": "dot-1",
-                            "sources": sources.values(),
-                            "destinations": destinations.values(),
-                            "connections": connections.values()}}
+    contents = {"fileversion": "2.0", "mapping": {
+                            "connections": new_connections
+                            }
+                }
     return json.dumps(contents, indent=4)
 
 def deserialise(monitor, mapping_json):
     js = json.loads(mapping_json)
+    pdb.set_trace();
 
     modeIdx = {'bypass': mapper.MO_BYPASS,
                'linear': mapper.MO_LINEAR,
