@@ -18,11 +18,11 @@ def serialise(monitor, device):
                mapper.MO_LINEAR: 'linear',
                mapper.MO_CALIBRATE: 'calibrate',
                mapper.MO_EXPRESSION: 'expression'}
-    clipStr = {mapper.CT_NONE: 'none',
-               mapper.CT_MUTE: 'mute',
-               mapper.CT_CLAMP: 'clamp',
-               mapper.CT_FOLD: 'fold',
-               mapper.CT_WRAP: 'wrap'}
+    boundStr = {mapper.BA_NONE: 'none',
+               mapper.BA_MUTE: 'mute',
+               mapper.BA_CLAMP: 'clamp',
+               mapper.BA_FOLD: 'fold',
+               mapper.BA_WRAP: 'wrap'}
 
     for c in monitor.db.connections_by_device_name(device):
 
@@ -61,8 +61,8 @@ def serialise(monitor, device):
             'expression': (c['expression'].
                            replace('x', sources[c['src_name']]['id']).
                            replace('y', destinations[c['dest_name']]['id'])),
-            'clipMin': clipStr[c['clip_min']],
-            'clipMax': clipStr[c['clip_max']],
+            'boundMin': boundStr[c['bound_min']],
+            'boundMax': boundStr[c['bound_max']],
             'muted': c['muted'],
             }
     contents = {"fileversion": "2.0", "mapping": {
@@ -79,11 +79,11 @@ def deserialise(monitor, mapping_json):
                'linear': mapper.MO_LINEAR,
                'calibrate': mapper.MO_CALIBRATE,
                'expression': mapper.MO_EXPRESSION}
-    clipIdx = {'none': mapper.CT_NONE,
-               'mute': mapper.CT_MUTE,
-               'clamp': mapper.CT_CLAMP,
-               'fold': mapper.CT_FOLD,
-               'wrap': mapper.CT_WRAP}
+    boundIdx = {'none': mapper.BA_NONE,
+               'mute': mapper.BA_MUTE,
+               'clamp': mapper.BA_CLAMP,
+               'fold': mapper.BA_FOLD,
+               'wrap': mapper.BA_WRAP}
 
     m = js['mapping']
     srcs = {}
@@ -138,8 +138,8 @@ def deserialise(monitor, mapping_json):
                  'range': map(lambda x: None if x=='-' else float(x),
                               c['range'].split()),
                  'expression': e,
-                 'clip_min': clipIdx[c['clipMin']],
-                 'clip_max': clipIdx[c['clipMax']],
+                 'bound_min': boundIdx[c['boundMin']],
+                 'bound_max': boundIdx[c['boundMax']],
                  'muted': c['muted']})
 
         # If connection already exists, use 'modify', otherwise 'connect'.

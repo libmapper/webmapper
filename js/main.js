@@ -559,8 +559,8 @@ function update_connection_properties()
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
         if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
         if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
-        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
-        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
+        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
+        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
     }
     else {
         clear_props();
@@ -670,7 +670,7 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
     var modecmd = connectionModeCommands[connectionModes[args['mode']]];
     args['mode'] = modecmd;
 
-    var c = ismax ? 'clip_max' : 'clip_min';
+    var c = ismax ? 'bound_max' : 'bound_min';
     args[c] = boundarymode;
 
     // send the command, should receive a /connection/modify message after.
