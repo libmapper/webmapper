@@ -1370,15 +1370,7 @@ function drawing_curve(sourceRow)
         else on_connect(mouseUpEvent);
         $("*").off('.drawing').removeClass('incompatible');
         //So that the old line is only removed when the actual connection is made
-        command.register("new_link", function() {
-            self.line.remove();
-        });
-        command.register("new_connection", function() {
-            self.line.remove();
-        });
-        if( !this.targetRow ) {
-            this.line.remove();
-        }
+        this.line.remove();
     }
 
     this.checkTarget = function( mousedOverRow ) {
