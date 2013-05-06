@@ -66,7 +66,7 @@ function table_updater(tab)
     this.$footer = $(tab).siblings('.status');
     //this.$filter = $('.leftSearch')[0].value;
     var tableBody = this.$table.children('tbody')[0];
-    tableBody.appendChild(document.createElement('tr'));
+    $(tableBody).append("<tr></tr>");
 
     this.addrow = function(row) {
         var tr = document.createElement('tr');
@@ -899,7 +899,7 @@ function list_view_start()
 {
 	add_display_tables();
     add_svg_area();
-    add_action_div();
+    //add_action_div();
     add_title_bar();
     add_tabs();
     //add_menu();
@@ -945,33 +945,16 @@ function listTable(parent, id)
             });
         });
     }
+
+    /* TODO
+    this.reposition
+    this.onclick
+    this.onscroll
+    */
 }
 
 function add_display_tables()
 {
-    /* Old style
-    var body = document.getElementsByTagName('body')[0];
-    var make = function(cls) {
-        var d = document.createElement('div');
-        d.className = "tableDiv "+cls;
-        d.onscroll = on_table_scroll;
-        var t = document.createElement('table');
-        t.border = 1;
-        t.className = "displayTable "+cls;
-        t.appendChild(document.createElement('thead'));
-        b = document.createElement('tbody');
-        t.appendChild(document.createElement('tbody'));
-        add_table_header(t);
-        d.appendChild(t);
-        add_status_footer(d);
-        body.insertBefore(d, body.firstChild);
-        $(t).tablesorter({widgets: ['zebra']});
-        return t;
-    }
-
-    leftTable = make('leftTable');
-    rightTable = make('rightTable');
-    */
 
     leftTable = new listTable('#container', 'leftTable');
     rightTable = new listTable('#container', 'rightTable');
@@ -981,56 +964,18 @@ function add_display_tables()
     rightTable.add();
 }
 
-//Add the header rows to the table
-function add_table_header(tab)
-{
-    var header = tab.firstChild;
-    var headtr = document.createElement('tr');
-    header.appendChild(headtr);
-    //var columnHeaders = ['Name', 'IP', 'Port'] //TODO change to reflect actual values
-    for (var i = 0; i < 4; i ++) {
-        var th = document.createElement('th');
-        //th.textContent = columnHeaders[i];
-        $(th).click(function(e) {
-            e.stopPropagation();
-            $(tab).on("sortEnd", function() {
-                update_arrows();
-            } );
-        });
-        headtr.appendChild(th);
-    }
-}
-
-//add the status bar that appears at the bottom of the tables
-function add_status_footer(d)
-{
-    var statusDiv = document.createElement('div');
-    d.appendChild(statusDiv);
-    statusDiv.className = "status";
-    //statusDiv.setAttribute("padding", "1px")
-    //statusDiv.textContent = "0 of 0 devices";
-}
 
 function add_svg_area()
 {
-    var body = document.getElementsByTagName('body')[0];
-    var svgDiv = document.createElement('div');
-    $(svgDiv).addClass('svgDiv');
-    $(svgDiv).css({
-        'position': 'absolute',
-        'background-color': 'white'
-    });
+    $('#container').append(
+        "<div class='svgDiv'>"+
+            "<div id='svgTop'></div>"+
+            "<div class='status'></div>"+
+        "</div>"
+    )
 
-    $(svgDiv).append("<div id='svgTop'></div>");
-    body.insertBefore(svgDiv, body.firstChild);
-
-    $(svgDiv).css('border', "solid 1px black");
-    $(svgArea).css('background', 'white');
-
-    svgArea = Raphael(svgDiv, '100%', '100%');
+    svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
     
-
-    add_status_footer(svgDiv);
 }
 
 function refresh_all()
@@ -1082,7 +1027,7 @@ function add_title_bar()
     $svgTitle.css('text-align','center');
 
     $titleSearchDiv.append($leftTitle, $leftSearch, $svgTitle, $rightTitle, $rightSearch);
-    $titleSearchDiv.insertAfter('.actionDiv');
+    $titleSearchDiv.insertBefore('#spacerTable');
 
     //Make sure that noting appears in front of the text inputs
     $('#titleSearchDiv input').css('z-index', '1')

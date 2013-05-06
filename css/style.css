@@ -306,6 +306,13 @@ thead {
   top: 0px;
 }
 
+/*TODO change classes to IDs for single objects*/
+.svgDiv {
+  position: absolute;
+  background-color: white;
+  border: 1px solid black;
+}
+
 .incompatible {
   opacity: 0.5;
 }

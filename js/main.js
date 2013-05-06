@@ -108,6 +108,7 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             add_container_elements();
+            list_view_start();
         },
         100);
 }
