@@ -107,8 +107,20 @@ function main()
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
+            add_container_elements();
         },
         100);
+}
+
+function add_container_elements()
+{
+    $('body').append(
+        "<ul class='topMenu'>"+
+            "<li><a href='/'>Load</a></li>"+
+            "<li><a>Save</a></li>"+
+        "</ul>"+
+        "<div id='container'></div>"
+    );
 }
 
 /* Kick things off. */

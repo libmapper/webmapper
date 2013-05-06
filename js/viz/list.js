@@ -902,7 +902,7 @@ function list_view_start()
     add_action_div();
     add_title_bar();
     add_tabs();
-    add_menu();
+    //add_menu();
     add_extra_tools();
     add_UI_handlers();
     select_tab(tabDevices);
@@ -914,9 +914,42 @@ function list_view_start()
     };
 }
 
+function listTable(parent, id)
+{
+    var self = this;
+    this.id = id;
+    this.parent = parent;
+    this.rowsel = [];
+
+    this.add = function() {
+        $(this.parent).append("<div class='tableDiv' id='"+this.id+"'></div>");
+        $("#"+this.id).append(
+            "<table class='displayTable'>"+
+                "<thead><tr></tr></thead>"+
+                "<tbody></tbody>"+
+            "<div class='status'></div>"
+        );
+        add_header();
+    }
+
+    function add_header() {
+
+        for (var i = 0; i < 4; i++) {
+            $('#'+self.id+' thead tr').append('<th></th>');
+        }
+        // TODO move these handlers to a handler function
+        $('#'+self.id).on('click', 'th', function(e) {
+            e.stopPropagation();
+            $('#'+self.id+" .displayTable").on('sortEnd', function() {
+                update_arrows();
+            });
+        });
+    }
+}
 
 function add_display_tables()
 {
+    /* Old style
     var body = document.getElementsByTagName('body')[0];
     var make = function(cls) {
         var d = document.createElement('div');
@@ -938,6 +971,14 @@ function add_display_tables()
 
     leftTable = make('leftTable');
     rightTable = make('rightTable');
+    */
+
+    leftTable = new listTable('#container', 'leftTable');
+    rightTable = new listTable('#container', 'rightTable');
+
+    //Maybe the functions themselves should be here
+    leftTable.add();
+    rightTable.add();
 }
 
 //Add the header rows to the table
