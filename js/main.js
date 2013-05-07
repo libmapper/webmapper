@@ -15,6 +15,21 @@ boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
 boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
+window.activeMode;
+
+function switch_mode(new_mode)
+{
+    $('#container').empty();
+    switch(new_mode)
+    {
+        case 'list':
+            list_view_start();
+            break;
+        default:
+            console.log(new_mode);
+    }
+    window.activeMode = new_mode;
+}
 
 /* The main program. */
 function main()
@@ -98,6 +113,12 @@ function main()
     //var body = document.getElementsByTagName('body')[0];
     //body.onclick = deselect_all;
 
+    //Create the page elements
+    add_container_elements();
+    add_signal_control_bar();
+    add_extra_tools();
+    switch_mode('list');
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
@@ -107,8 +128,9 @@ function main()
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            add_container_elements();
-            list_view_start();
+            //Total hack, but it'll stay here for now
+            //TODO figure out how to get this tab selected from within list
+            select_tab(tabDevices);
         },
         100);
 }
@@ -122,6 +144,77 @@ function add_container_elements()
         "</ul>"+
         "<div id='container'></div>"
     );
+}
+
+function add_signal_control_bar() //UI handlers are all commented out, this is gonna be a pain
+{
+    $('.topMenu').append("<div class='signalControlsDiv'></div>");
+
+    //Add the mode controls
+    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
+    for (m in connectionModesDisplayOrder) {
+        $('.modesDiv').append(
+            "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
+    }
+    /*
+    $('.mode').on("click", function(e) {
+        e.stopPropagation();
+        selected_connection_set_mode(e.currentTarget.innerHTML);
+    });*/
+    $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
+
+    //Add the range controls
+    $('.signalControlsDiv').append(
+        "<div class='rangesDiv'>"+
+            "<div class='range'>Source Range:</div>"+
+            "<div class='range'>Dest Range:</div>"+
+        "</div>");
+    $('.range').append("<input><input>");
+    $('.range').children('input').each( function(i) {
+        var minOrMax = 'Max'   // A variable storing minimum or maximum
+        var srcOrDest = 'Src'
+        if(i%2==0)  minOrMax = 'Min';
+        if(i>1)     srcOrDest = 'Dest';
+        $(this).attr({
+            'maxLength': 15,
+            "size": 5,
+            // Previously this was stored as 'rangeMin' or 'rangeMax'
+            'class': 'range',   
+            'id': 'range'+srcOrDest+minOrMax,
+            'index': i
+        })
+    });
+    /*
+    //The expression and range input handlers
+    $('.topMenu').on({
+        keydown: function(e) {
+            e.stopPropagation();
+            if(e.which == 13) //'enter' key
+                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
+        },
+        click: function(e) { e.stopPropagation(); },
+        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
+    }, 'input');*/
+}
+
+function add_extra_tools()
+{
+    $('.topMenu').append(
+        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+        "<input id='refresh' class='extratools' type='button'>"
+    );
+
+    $('#refresh').on('click', function(e) { refresh_all(); });
+}
+
+function refresh_all()
+{
+    devices = new Assoc();
+    signals = new Assoc();
+    links = new Assoc();
+    connections = new Assoc();
+    update_display();
+    command.send('refresh');
 }
 
 /* Kick things off. */

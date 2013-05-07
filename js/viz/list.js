@@ -902,9 +902,9 @@ function list_view_start()
     add_display_tables();
     add_svg_area();
     add_UI_handlers();
-    /*select_tab(tabDevices);
-    add_signal_control_bar();
-    position_dynamic_elements();
+    //select_tab(tabDevices);
+    //add_signal_control_bar();
+    /*position_dynamic_elements();
     window.onresize = function (e) {
         position_dynamic_elements();
         update_arrows();
@@ -1032,117 +1032,6 @@ function add_svg_area()
     svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
     
 }
-
-/*TODO this should be in main.js
-function add_extra_tools()
-{
-    var body = document.getElementsByTagName('body')[0];
-    var refresh = document.createElement('input');
-    websocketStatus = document.createElement('div');
-    websocketStatus.id = 'wsstatus';
-    websocketStatus.innerHTML = 'websocket uninitialized';
-    websocketStatus.style.bgcolor = 'white';
-    websocketStatus.className = 'extratools';
-    refresh.id = 'refresh';
-    refresh.className = 'extratools';
-    refresh.type = 'button';
-    refresh.onclick = refresh_all;
-    body.insertBefore(websocketStatus, body.firstChild);
-    body.insertBefore(refresh, websocketStatus);
-}
-//So should this
-function refresh_all()
-{
-    devices = new Assoc();
-    signals = new Assoc();
-    links = new Assoc();
-    connections = new Assoc();
-    update_display();
-    command.send('refresh');
-}*/
-
-/*
-function add_action_div()
-{
-    var body = document.getElementsByTagName('body')[0];
-    actionDiv = document.createElement('div');
-    body.insertBefore(actionDiv, body.firstChild);
-    $(actionDiv).addClass("actionDiv");
-}*/
-
-
-function add_signal_control_bar() //A jQuery copy of the below, more or less should go in main.js
-{
-    $('.topMenu').append("<div class='signalControlsDiv'></div>");
-
-    //Add the mode controls
-    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
-    for (m in connectionModesDisplayOrder) {
-        $('.modesDiv').append(
-            "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
-    }
-    $('.mode').on("click", function(e) {
-        e.stopPropagation();
-        selected_connection_set_mode(e.currentTarget.innerHTML);
-    });
-    $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
-
-    //Add the range controls
-    $('.signalControlsDiv').append(
-        "<div class='rangesDiv'>"+
-            "<div class='range'>Source Range:</div>"+
-            "<div class='range'>Dest Range:</div>"+
-        "</div>");
-    $('.range').append("<input><input>");
-    $('.range').children('input').each( function(i) {
-        var minOrMax = 'Max'   // A variable storing minimum or maximum
-        var srcOrDest = 'Src'
-        if(i%2==0)  minOrMax = 'Min';
-        if(i>1)     srcOrDest = 'Dest';
-        $(this).attr({
-            'maxLength': 15,
-            "size": 5,
-            // Previously this was stored as 'rangeMin' or 'rangeMax'
-            'class': 'range',   
-            'id': 'range'+srcOrDest+minOrMax,
-            'index': i
-        })
-    });
-
-    //The expression and range input handlers
-    $('.topMenu').on({
-        keydown: function(e) {
-            e.stopPropagation();
-            if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
-        },
-        click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
-    }, 'input');
-}
-/*NO LONGER NECESSARY
-function add_menu()
-{
-    var body = document.getElementsByTagName('body')[0];
-    menuList = document.createElement('ul');
-    menuList.className = "topMenu";
-    var menuLoadLi = document.createElement('li');
-    var menuLoad = document.createElement('a');
-    menuLoad.innerHTML = 'Load';
-    menuLoad.href = '/';
-    menuLoad.onclick = on_load;
-    menuLoadLi.appendChild(menuLoad);
-    menuList.appendChild(menuLoadLi);
-
-    var menuSaveLi = document.createElement('li');
-    menuSave = document.createElement('a');
-    menuSave.innerHTML = 'Save';
-    menuSaveLi.appendChild(menuSave);
-    menuList.appendChild(menuSaveLi);
-
-    body.insertBefore(menuList, body.firstChild);
-}*/
-
 
 function add_UI_handlers()
 {
