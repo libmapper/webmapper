@@ -313,7 +313,16 @@ thead {
   border: 1px solid black;
 }
 
+#svgTitle {
+  text-align: center;
+}
+
 .incompatible {
   opacity: 0.5;
+}
+
+/* Make sure inputs are not obscured*/
+#titleSearchDiv input{
+  z-index: 1;
 }
 

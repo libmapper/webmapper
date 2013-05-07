@@ -292,9 +292,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
-<body>
-<table id="spacerTable"><tr><td></td><td></td><td></td></tr></table>
-</body>
+<body></body>
 </html>"""
 
 def handler_wait_command(out, args):

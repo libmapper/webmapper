@@ -897,21 +897,72 @@ function update_save_location()
 
 function list_view_start()
 {
-	add_display_tables();
-    add_svg_area();
-    //add_action_div();
-    add_title_bar();
     add_tabs();
-    //add_menu();
-    add_extra_tools();
+    add_title_bar();
+    add_display_tables();
+    add_svg_area();
     add_UI_handlers();
-    select_tab(tabDevices);
+    /*select_tab(tabDevices);
     add_signal_control_bar();
     position_dynamic_elements();
     window.onresize = function (e) {
         position_dynamic_elements();
         update_arrows();
-    };
+    };*/
+}
+
+function add_tabs()
+{
+    $('#container').append(
+        "<ul class='topTabs'>"+
+            "<li id='allDevices'>"+all_devices+"</li>"+
+        "</ul>"
+    );
+    tabList = $('.topTabs')[0];
+    tabDevices = $('#allDevices')[0];
+
+    //TODO (UI) move these to the end
+    $('#allDevices').on('click', function(e) {
+        select_tab(tabDevices);
+        e.stopPropagation();
+    });
+
+    selectedTab = all_devices;
+
+    /*
+    var body = document.getElementsByTagName('body')[0];
+    tabList = document.createElement('ul');
+    tabList.className = "topTabs";
+    tabDevices = document.createElement('li');
+    tabDevices.innerHTML = all_devices;
+    tabDevices.className = "tabsel";
+    tabDevices.id = "allDevices";
+    tabDevices.onclick = function(e) { select_tab(tabDevices);
+                                       e.stopPropagation(); };
+    tabList.appendChild(tabDevices);
+    body.insertBefore(tabList, body.firstChild);
+    selectedTab = all_devices;
+    */
+}
+
+function add_title_bar()
+{
+    $('#container').append(
+        "<div id='titleSearchDiv'>"+
+            "<h2 id='leftTitle' class='searchBar'>Sources</h2></li>"+
+            "<input type='text' id='leftSearch' class='searchBar'></input></li>"+
+            "<h2 id='svgTitle' class='searchBar'>Links</h2></li>"+
+            "<h2 id='rightTitle' class='searchBar'>Destinations</h2></li>"+
+            "<input type='text' id='rightSearch' class='searchBar'></input></li>"+
+        "</div>"
+    );
+    var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
+
+    //TODO (UI) move these to the end
+    $('#leftSearch, #rightSearch').on('keyup', function(e) {
+        e.stopPropagation();
+        search_filter( $(this) );
+    });
 }
 
 function listTable(parent, id)
@@ -955,6 +1006,10 @@ function listTable(parent, id)
 
 function add_display_tables()
 {
+    //Make the spacer table, how the elements locate themselves on the page
+    $('#container').append(
+        "<table id='spacerTable'><tr><td></td><td></td><td></td></tr></table>"
+    );
 
     leftTable = new listTable('#container', 'leftTable');
     rightTable = new listTable('#container', 'rightTable');
@@ -972,12 +1027,30 @@ function add_svg_area()
             "<div id='svgTop'></div>"+
             "<div class='status'></div>"+
         "</div>"
-    )
+    );
 
     svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
     
 }
 
+/*TODO this should be in main.js
+function add_extra_tools()
+{
+    var body = document.getElementsByTagName('body')[0];
+    var refresh = document.createElement('input');
+    websocketStatus = document.createElement('div');
+    websocketStatus.id = 'wsstatus';
+    websocketStatus.innerHTML = 'websocket uninitialized';
+    websocketStatus.style.bgcolor = 'white';
+    websocketStatus.className = 'extratools';
+    refresh.id = 'refresh';
+    refresh.className = 'extratools';
+    refresh.type = 'button';
+    refresh.onclick = refresh_all;
+    body.insertBefore(websocketStatus, body.firstChild);
+    body.insertBefore(refresh, websocketStatus);
+}
+//So should this
 function refresh_all()
 {
     devices = new Assoc();
@@ -986,59 +1059,19 @@ function refresh_all()
     connections = new Assoc();
     update_display();
     command.send('refresh');
-}
+}*/
 
-function add_tabs()
-{
-    var body = document.getElementsByTagName('body')[0];
-    tabList = document.createElement('ul');
-    tabList.className = "topTabs";
-    tabDevices = document.createElement('li');
-    tabDevices.innerHTML = all_devices;
-    tabDevices.className = "tabsel";
-    tabDevices.id = "allDevices";
-    tabDevices.onclick = function(e) { select_tab(tabDevices);
-                                       e.stopPropagation(); };
-    tabList.appendChild(tabDevices);
-    body.insertBefore(tabList, body.firstChild);
-    selectedTab = all_devices;
-}
-
+/*
 function add_action_div()
 {
     var body = document.getElementsByTagName('body')[0];
     actionDiv = document.createElement('div');
     body.insertBefore(actionDiv, body.firstChild);
     $(actionDiv).addClass("actionDiv");
-}
+}*/
 
-function add_title_bar()
-{
 
-    var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
-
-    var $leftTitle = $('<h2 id="leftTitle" class="searchBar">Sources</h2></li>');
-    var $svgTitle = $('<h2 id="svgTitle" class="searchBar">Links</h2></li>');
-    var $rightTitle = $('<h2 id="rightTitle" class="searchBar">Destinations</h2></li>');
-
-    var $leftSearch = $('<input type="text" id="leftSearch" class="searchBar"></input></li>');
-    var $rightSearch = $('<input type="text" id="rightSearch" class="searchBar"></input></li>');
-
-    $svgTitle.css('text-align','center');
-
-    $titleSearchDiv.append($leftTitle, $leftSearch, $svgTitle, $rightTitle, $rightSearch);
-    $titleSearchDiv.insertBefore('#spacerTable');
-
-    //Make sure that noting appears in front of the text inputs
-    $('#titleSearchDiv input').css('z-index', '1')
-
-    $('#leftSearch, #rightSearch').on('keyup', function(e) {
-        e.stopPropagation();
-        search_filter( $(this) );
-    });
-}
-
-function add_signal_control_bar() //A jQuery copy of the below, more or less
+function add_signal_control_bar() //A jQuery copy of the below, more or less should go in main.js
 {
     $('.topMenu').append("<div class='signalControlsDiv'></div>");
 
@@ -1087,7 +1120,7 @@ function add_signal_control_bar() //A jQuery copy of the below, more or less
         blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
     }, 'input');
 }
-
+/*NO LONGER NECESSARY
 function add_menu()
 {
     var body = document.getElementsByTagName('body')[0];
@@ -1108,24 +1141,8 @@ function add_menu()
     menuList.appendChild(menuSaveLi);
 
     body.insertBefore(menuList, body.firstChild);
-}
+}*/
 
-function add_extra_tools()
-{
-    var body = document.getElementsByTagName('body')[0];
-    var refresh = document.createElement('input');
-    websocketStatus = document.createElement('div');
-    websocketStatus.id = 'wsstatus';
-    websocketStatus.innerHTML = 'websocket uninitialized';
-    websocketStatus.style.bgcolor = 'white';
-    websocketStatus.className = 'extratools';
-    refresh.id = 'refresh';
-    refresh.className = 'extratools';
-    refresh.type = 'button';
-    refresh.onclick = refresh_all;
-    body.insertBefore(websocketStatus, body.firstChild);
-    body.insertBefore(refresh, websocketStatus);
-}
 
 function add_UI_handlers()
 {
