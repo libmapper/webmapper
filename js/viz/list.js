@@ -15,6 +15,58 @@ menuList = null;
 menuSave = null;
 websocketStatus = null;
 
+//An object for the left and right tables, listing devices and signals
+function listTable1(id)
+{ 
+    this.id = id; //Something like "#leftTable"
+    this.$parent; //The area containing the table
+    this.$div; //The div containing the table (and status)
+    this.$table; //A jQuery object for the table itself
+    this.$headerRow; //The top row of the table within <thead>
+    this.$body; //The <tbody> element
+    var trs = []; //An array for the rows in <tbody>, this is changed before updating
+
+    // Should be passed a string selector for the parent, like "#container" or "div.displayArea td", etc.
+    this.create_within = function(parent) {
+        this.$parent = $(parent);
+        // Create the div containing the table
+        this.$parent.append("<div class='tableDiv' id='"+id+"'></div>");
+        this.$div = this.$parent.children('.tableDiv');
+
+        // Create the skeleton for the table within the div
+        $(this.$div).append(
+            "<table class='displayTable'>"+
+                "<thead><tr></tr></thead>"+
+                "<tbody></tbody>"+
+            "</table>"+
+            "<div class='status'></div>"
+        );
+        this.$table = this.$div.children('.displayTable');
+        this.$headerRow = $("#"+this.id+" .displayTable thead tr");
+        this.$body = $("#"+this.id+" .displayTable tbody");
+    }
+
+    // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
+    this.set_header = function(headerStrings)
+    {
+        this.$headerRow.empty();
+        for(var i in headerStrings)
+        {
+            this.$headerRow.append("<th>"+headerStrings[i]+"<th>");
+        }
+    }
+
+    // For when something changes on the network
+    this.update = function()
+    {
+        this.$body.empty();
+        for(var i in trs){
+            this.$body.append("<tr>"+trs[i]+"</tr>");
+        }
+    }
+
+}
+
 function update_display()
 {
     update_tabs();
@@ -25,7 +77,8 @@ function update_display()
 
     update_selection();
     update_arrows();
-    update_save_location();
+    //TODO make this work
+    //update_save_location();
     search_filter( $('#leftSearch') );
     search_filter( $('#rightSearch') );
 }
@@ -34,8 +87,8 @@ function update_devices()
 {
     var keys = devices.keys();
     var sigkeys = signals.keys();
-    var updaterLeft = new table_updater(leftTable);
-    var updaterRight = new table_updater(rightTable);
+    var updaterLeft = new table_updater(leftTable.table);
+    var updaterRight = new table_updater(rightTable.table);
 
     updaterLeft.setHeaders();
     updaterRight.setHeaders();
@@ -172,8 +225,8 @@ function update_tabs()
 function update_signals()
 {
     keys = signals.keys();
-    var updaterLeft = new table_updater(leftTable);
-    var updaterRight = new table_updater(rightTable);
+    var updaterLeft = new table_updater(leftTable.table);
+    var updaterRight = new table_updater(rightTable.table);
 
     updaterLeft.setHeaders();
     updaterRight.setHeaders();
@@ -778,7 +831,7 @@ function position_dynamic_elements()
         var h = $("#spacerTable").find("tr").find("td").map(
             function(){return fullOffset(this);});
 
-        $('.leftTable.tableDiv').css({
+        $('#leftTable.tableDiv').css({
             'left': h[0].left+"px",
             'width': h[0].width+'px'
         });
@@ -788,7 +841,7 @@ function position_dynamic_elements()
             'width': h[1].width+'px'
         });
 
-        $('.rightTable.tableDiv').css({
+        $('#rightTable.tableDiv').css({
             'left': h[2].left+"px",
             'width': h[2].width+'px'
         });
@@ -904,11 +957,8 @@ function list_view_start()
     add_UI_handlers();
     //select_tab(tabDevices);
     //add_signal_control_bar();
-    /*position_dynamic_elements();
-    window.onresize = function (e) {
-        position_dynamic_elements();
-        update_arrows();
-    };*/
+    //position_dynamic_elements();
+    
 }
 
 function add_tabs()
@@ -971,6 +1021,7 @@ function listTable(parent, id)
     this.id = id;
     this.parent = parent;
     this.rowsel = [];
+    this.table;
 
     this.add = function() {
         $(this.parent).append("<div class='tableDiv' id='"+this.id+"'></div>");
@@ -980,6 +1031,7 @@ function listTable(parent, id)
                 "<tbody></tbody>"+
             "<div class='status'></div>"
         );
+        this.table = $("#"+this.id+" .displayTable")[0];
         add_header();
     }
 

@@ -131,6 +131,10 @@ function main()
             //Total hack, but it'll stay here for now
             //TODO figure out how to get this tab selected from within list
             select_tab(tabDevices);
+            window.onresize = function (e) {
+                position_dynamic_elements();
+                update_arrows();
+            };
         },
         100);
 }
