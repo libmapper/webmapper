@@ -44,6 +44,7 @@ function listTable1(id)
         this.$table = this.$div.children('.displayTable');
         this.$headerRow = $("#"+this.id+" .displayTable thead tr");
         this.$body = $("#"+this.id+" .displayTable tbody");
+        this.$table.tablesorter({widgets: ['zebra']});
     }
 
     // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
@@ -123,15 +124,15 @@ function table_updater(tab)
 
     this.addrow = function(row) {
         var tr = document.createElement('tr');
-        $(tr).addClass('odd');  // Because tablesorter's zebra widget does not work when there is only 1 row
-        $(tr).on({
+        //$(tr).addClass('odd');  // Because tablesorter's zebra widget does not work when there is only 1 row
+        /*$(tr).on({
             mousedown: function(e) {
                 select_tr(this);
             },
             click: function(e) {
                 e.stopPropagation();
             }
-        });
+        });*/
         //tr.onclick = function(y) { return function(e) { select_tr(y);
         //                                                e.stopPropagation(); }; } (tr);
         for (col in row) {
@@ -268,8 +269,8 @@ function update_selection()
         }
     }
 
-    checksel(leftTable, 0);
-    checksel(rightTable, 1);
+    checksel(leftTable.table, 0);
+    checksel(rightTable.table, 1);
 }
 
 function cleanup_arrows()
@@ -295,11 +296,11 @@ function update_links()
     var keys = links.keys();
     for (var k in keys) {
         var l = links.get(keys[k]);
-        $('td:endswith('+l.src_name+')', leftTable).each(
+        $('td:endswith('+l.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
                 var leftsel = $(left).hasClass('trsel');
-                $('td:endswith('+l.dest_name+')', rightTable).each(
+                $('td:endswith('+l.dest_name+')', rightTable.table).each(
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
@@ -335,11 +336,11 @@ function update_connections()
     var keys = connections.keys();
     for (var k in keys) {
         var c = connections.get(keys[k]);
-        $('td:endswith('+c.src_name+')', leftTable).each(
+        $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
                 var leftsel = $(left).hasClass('trsel');
-                $('td:endswith('+c.dest_name+')', rightTable).each(
+                $('td:endswith('+c.dest_name+')', rightTable.table).each(
                     function(i,e){
                         var right = e.parentNode;
                         var rightsel = $(right).hasClass('trsel');
@@ -365,9 +366,9 @@ function search_filter($searchBox)
 
     //Is it the left box
     if( $searchBox.attr('id').search('left') == 0 ) {
-        var $tableBody = $(leftTable).children('tbody');
+        var $tableBody = $(leftTable.table).children('tbody');
     }
-    else var $tableBody = $(rightTable).children('tbody');
+    else var $tableBody = $(rightTable.table).children('tbody');
 
     var $trs = $tableBody.children('tr');
     var n_total = $trs.length;
@@ -512,7 +513,7 @@ function select_tr(tr)
     var name = tr.firstChild.innerHTML;
 
     //tr.parentNode = <body>, <body>.parentNode = <table>
-    var i = (t.parents('.displayTable')[0] == leftTable) ? 0 : (t.parents('.displayTable')[0] == rightTable) ? 1 : null;
+    var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
     if (i==null)
         return;
 
@@ -539,11 +540,11 @@ function select_tr(tr)
 
 function deselect_all()
 {
-    $('tr.trsel', leftTable).each(function(i,e){
+    $('tr.trsel', leftTable.table).each(function(i,e){
             selectLists[selectedTab][0].remove(e.firstChild.innerHTML);
             $(this).removeClass('trsel');
         });
-    $('tr.trsel', rightTable).each(function(i,e){
+    $('tr.trsel', rightTable.table).each(function(i,e){
             selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
             $(this).removeClass('trsel');
         });
@@ -614,8 +615,8 @@ function update_connection_properties_for(conn, conns)
 
 function get_selected(list)
 {
-    var L = $('.trsel', leftTable);
-    var R = $('.trsel', rightTable);
+    var L = $('.trsel', leftTable.table);
+    var R = $('.trsel', rightTable.table);
     var vals = [];
 
     L.map(function() {
@@ -726,10 +727,10 @@ function on_table_scroll()
 
 function apply_selected_pairs(f)
 {
-    $('tr.trsel', leftTable).each(
+    $('tr.trsel', leftTable.table).each(
     function(i,e){
         var left = e;
-        $('tr.trsel', rightTable).each(
+        $('tr.trsel', rightTable.table).each(
             function(i,e){
                 var right = e;
                 f(left, right);
@@ -1042,11 +1043,12 @@ function listTable(parent, id)
         }
         // TODO move these handlers to a handler function
         $('#'+self.id).on('click', 'th', function(e) {
-            e.stopPropagation();
+            //e.stopPropagation();
             $('#'+self.id+" .displayTable").on('sortEnd', function() {
                 update_arrows();
             });
         });
+        $(self.table).tablesorter({widgets: ['zebra']});
     }
 
     /* TODO
@@ -1089,6 +1091,12 @@ function add_UI_handlers()
 {
     $('body').on('click', function() {
         deselect_all();
+    });
+
+    $('.displayTable tbody').on('click', 'tr', function(e) {
+        select_tr(this);
+        console.log(this);
+        e.stopPropagation();
     });
 
     $(document).keydown( function(e) {
