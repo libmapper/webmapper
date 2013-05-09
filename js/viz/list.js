@@ -39,7 +39,6 @@ function listTable(id)
         this.table = $(this.div).children('.displayTable')[0];
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
         this.body = $("#"+this.id+" .displayTable tbody")[0];
-        //$(this.table).tablesorter({widgets: ['zebra']});
     }
 
     // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
@@ -125,17 +124,7 @@ function table_updater(tab)
 
     this.addrow = function(row) {
         var tr = document.createElement('tr');
-        //$(tr).addClass('odd');  // Because tablesorter's zebra widget does not work when there is only 1 row
-        /*$(tr).on({
-            mousedown: function(e) {
-                select_tr(this);
-            },
-            click: function(e) {
-                e.stopPropagation();
-            }
-        });*/
-        //tr.onclick = function(y) { return function(e) { select_tr(y);
-        //                                                e.stopPropagation(); }; } (tr);
+
         for (col in row) {
             var td = document.createElement('td');
             // The cell's corresponding header
@@ -513,7 +502,6 @@ function select_tr(tr)
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
-    //tr.parentNode = <body>, <body>.parentNode = <table>
     var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
     if (i==null)
         return;
@@ -842,20 +830,6 @@ function position_dynamic_elements()
             'left': h[2].left+"px",
             'width': h[2].width+'px'
         });
-        /*
-        svgDiv.offsetWidth =
-        //svgArea.offsetWidth = 
-        h[1].width;
-
-        //What are these for?
-        if (parseInt(leftTable.offsetWidth) < h[0].width) {
-            leftTable.style.width = h[0].width + "px";
-        }
-
-        if (parseInt(rightTable.offsetWidth) < h[2].width) {
-            rightTable.style.width = h[2].width + "px";
-        }
-        */
 
         //Position titles and search bars
         $('#leftTitle').css("left", h[0].left+10+"px");
@@ -879,8 +853,6 @@ function list_view_start()
     add_display_tables();
     add_svg_area();
     add_UI_handlers();
-    //select_tab(tabDevices);
-    //add_signal_control_bar();
     position_dynamic_elements();
     update_display();
 }
@@ -894,29 +866,8 @@ function add_tabs()
     );
     tabList = $('.topTabs')[0];
     tabDevices = $('#allDevices')[0];
-
-    //TODO (UI) move these to the end
-    $('#allDevices').on('click', function(e) {
-        select_tab(tabDevices);
-        e.stopPropagation();
-    });
-
+    
     selectedTab = all_devices;
-
-    /*
-    var body = document.getElementsByTagName('body')[0];
-    tabList = document.createElement('ul');
-    tabList.className = "topTabs";
-    tabDevices = document.createElement('li');
-    tabDevices.innerHTML = all_devices;
-    tabDevices.className = "tabsel";
-    tabDevices.id = "allDevices";
-    tabDevices.onclick = function(e) { select_tab(tabDevices);
-                                       e.stopPropagation(); };
-    tabList.appendChild(tabDevices);
-    body.insertBefore(tabList, body.firstChild);
-    selectedTab = all_devices;
-    */
 }
 
 function add_title_bar()
@@ -931,12 +882,6 @@ function add_title_bar()
         "</div>"
     );
     var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
-
-    //TODO (UI) move these to the end
-    $('#leftSearch, #rightSearch').on('keyup', function(e) {
-        e.stopPropagation();
-        search_filter( $(this) );
-    });
 }
 
 function add_display_tables()
@@ -1184,6 +1129,18 @@ function add_UI_handlers()
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             select_all();
         }
+    });
+
+    // The all devices tab
+    $('#allDevices').on('click', function(e) {
+        select_tab(tabDevices);
+        e.stopPropagation();
+    });
+
+    // Search function boxes
+    $('#leftSearch, #rightSearch').on('keyup', function(e) {
+        e.stopPropagation();
+        search_filter( $(this) );
     });
 
     drawing_handlers();
