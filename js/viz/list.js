@@ -15,6 +15,27 @@ deviceHeaders = ["device", "outputs", "IP", "port"];
 //TODO include min/max
 signalHeaders = ["name", "type", "length", "units"];
 
+function update_display()
+{
+    update_tabs();
+    if (selectedTab == all_devices) {
+        update_devices();
+        window.saveLocation = '';
+    }
+    else {
+        update_signals(selectedTab);
+        window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+    }
+
+    update_save_location();
+
+    update_selection();
+    update_arrows();
+
+    search_filter( $('#leftSearch') );
+    search_filter( $('#rightSearch') );
+}
+
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
 { 
@@ -81,33 +102,20 @@ function listTable(id)
         if(tableData[0])
             this.nCols = tableData[0].length;
         $(this.table).trigger('update');
+        // Just incase a device is added while search filter is occuring
+        search_filter( $('#leftSearch') );
+        search_filter( $('#rightSearch') );
     }
 
-    this.set_status = function(name) {
-        $(this.footer).text(this.nRows+" of "+this.nRows+" "+name);
+    this.set_status = function() {
+        var name; //Devices or signals
+        if( selectedTab == all_devices ) {
+            name = "devices";
+        }
+        else name = "signals";
+        $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
     }
 
-}
-
-function update_display()
-{
-    update_tabs();
-    if (selectedTab == all_devices) {
-        update_devices();
-        window.saveLocation = '';
-    }
-    else {
-        update_signals(selectedTab);
-        window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
-    }
-
-    update_save_location();
-
-    update_selection();
-    update_arrows();
-
-    search_filter( $('#leftSearch') );
-    search_filter( $('#rightSearch') );
 }
 
 function update_devices()
@@ -139,8 +147,8 @@ function update_devices()
         
     }
 
-    leftTable.set_status('devices');
-    rightTable.set_status('devices');
+    leftTable.set_status();
+    rightTable.set_status();
 
     //updaterLeft.updateStatusBar('devices');
     //updaterRight.updateStatusBar('devices');
@@ -154,6 +162,7 @@ function update_devices()
 
 /* Update a table with the rows and columns contained in text, add
  * rows one at a time and then apply. */
+ /* NOW OBSOLETE
 function table_updater(tab)
 {
     var trs = [];
@@ -224,35 +233,8 @@ function table_updater(tab)
         );
     }
 }
+*/
 
-function update_tabs()
-{
-    var t = tabDevices;
-    var keys = links.keys();
-    var srcs = {};
-    for (var l in keys)
-        srcs[links.get(keys[l]).src_name] = null;
-    for (var s in srcs) {
-        if (t.nextSibling)
-            t = t.nextSibling;
-        else {
-            var x = document.createElement('li');
-            x.onclick = function(y) {
-                return function(e) { select_tab(y);
-                                     e.stopPropagation(); };
-            } (x);
-            t.parentNode.appendChild(x);
-            t = x;
-        }
-        t.innerHTML = s;
-    }
-    if (t) t = t.nextSibling;
-    while (t) {
-        var u = t.nextSibling;
-        t.parentNode.removeChild(t);
-        t = u;
-    }
-}
 
 function update_signals()
 {
@@ -284,8 +266,8 @@ function update_signals()
         }
     }
 
-    leftTable.set_status('signals');
-    leftTable.set_status('signals');
+    leftTable.set_status();
+    leftTable.set_status();
 
     leftTable.update(leftBodyContent);
     rightTable.update(rightBodyContent);
@@ -295,6 +277,35 @@ function update_signals()
 //
 //    updaterLeft.apply();
 //    updaterRight.apply();
+}
+
+function update_tabs()
+{
+    var t = tabDevices;
+    var keys = links.keys();
+    var srcs = {};
+    for (var l in keys)
+        srcs[links.get(keys[l]).src_name] = null;
+    for (var s in srcs) {
+        if (t.nextSibling)
+            t = t.nextSibling;
+        else {
+            var x = document.createElement('li');
+            x.onclick = function(y) {
+                return function(e) { select_tab(y);
+                                     e.stopPropagation(); };
+            } (x);
+            t.parentNode.appendChild(x);
+            t = x;
+        }
+        t.innerHTML = s;
+    }
+    if (t) t = t.nextSibling;
+    while (t) {
+        var u = t.nextSibling;
+        t.parentNode.removeChild(t);
+        t = u;
+    }
 }
 
 function update_selection()
@@ -413,12 +424,12 @@ function search_filter($searchBox)
 
     //Is it the left box
     if( $searchBox.attr('id').search('left') == 0 ) {
-        var $tableBody = $(leftTable.table).children('tbody');
+        var targetTable = leftTable;
     }
-    else var $tableBody = $(rightTable.table).children('tbody');
+    else var targetTable = rightTable;
 
-    var $trs = $tableBody.children('tr');
-    var n_total = $trs.length;
+    var $trs = $(targetTable.tBody).children('tr');
+    var n_total = targetTable.nRows;
     var n_visible = 0;
 
     $trs.each( function(i, row) {
@@ -452,11 +463,14 @@ function search_filter($searchBox)
         }
     });
 
+    targetTable.nVisibleRows = n_visible;
+
     //Make sure the status display at the bottom has the proper numbers
-    update_status_bar($tableBody, n_visible, n_total);
+    targetTable.set_status();
+    //update_status_bar($(targetTable.tBody), n_visible, n_total);
     update_arrows();
 }
-
+/*No longer necessary
 function update_status_bar($tableBody, n_visible, n_total)
 {
     //Find the appropriate status bar
@@ -469,7 +483,7 @@ function update_status_bar($tableBody, n_visible, n_total)
     else name = "signals";
 
     $status.text(n_visible + " of " + n_total + " " + name);
-}
+}*/
 
 /* params are TR elements, one from each table */
 function create_arrow(left, right, sel)
@@ -580,7 +594,8 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
-    update_arrows();
+    //TODO find out if this is actually necessary
+    //update_arrows();
     update_connection_properties();
 }
 
