@@ -31,6 +31,16 @@ function switch_mode(new_mode)
     window.activeMode = new_mode;
 }
 
+function refresh_all()
+{
+    devices = new Assoc();
+    signals = new Assoc();
+    links = new Assoc();
+    connections = new Assoc();
+    update_display();
+    command.send('refresh');
+}
+
 /* The main program. */
 function main()
 {
@@ -131,6 +141,9 @@ function main()
             //Total hack, but it'll stay here for now
             //TODO figure out how to get this tab selected from within list
             select_tab(tabDevices);
+            //Naming collision between this and list, should figure it out
+            //(maybe add_UI_handlers can be a method of list)
+            add_handlers();
             window.onresize = function (e) {
                 position_dynamic_elements();
                 update_arrows();
@@ -143,14 +156,16 @@ function add_container_elements()
 {
     $('body').append(
         "<ul class='topMenu'>"+
-            "<li><a href='/'>Load</a></li>"+
-            "<li><a>Save</a></li>"+
+            "<div id='saveLoadDiv'>"+
+                "<li><a href='/'>Load</a></li>"+
+                "<li><a>Save</a></li>"+
+            "</div>"+
         "</ul>"+
         "<div id='container'></div>"
     );
 }
 
-function add_signal_control_bar() //UI handlers are all commented out, this is gonna be a pain
+function add_signal_control_bar() 
 {
     $('.topMenu').append("<div class='signalControlsDiv'></div>");
 
@@ -160,11 +175,7 @@ function add_signal_control_bar() //UI handlers are all commented out, this is g
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
     }
-    /*
-    $('.mode').on("click", function(e) {
-        e.stopPropagation();
-        selected_connection_set_mode(e.currentTarget.innerHTML);
-    });*/
+
     $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
 
     //Add the range controls
@@ -188,17 +199,6 @@ function add_signal_control_bar() //UI handlers are all commented out, this is g
             'index': i
         })
     });
-    /*
-    //The expression and range input handlers
-    $('.topMenu').on({
-        keydown: function(e) {
-            e.stopPropagation();
-            if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
-        },
-        click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
-    }, 'input');*/
 }
 
 function add_extra_tools()
@@ -211,15 +211,26 @@ function add_extra_tools()
     $('#refresh').on('click', function(e) { refresh_all(); });
 }
 
-function refresh_all()
+function add_handlers()
 {
-    devices = new Assoc();
-    signals = new Assoc();
-    links = new Assoc();
-    connections = new Assoc();
-    update_display();
-    command.send('refresh');
+    //The expression and range input handlers
+    $('.topMenu').on({
+        keydown: function(e) {
+            e.stopPropagation();
+            if(e.which == 13) //'enter' key
+                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
+        },
+        click: function(e) { e.stopPropagation(); },
+        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
+    }, 'input');
+
+    //For the mode buttons
+    $('.topMenu').on("click", '.mode', function(e) {
+        e.stopPropagation();
+        selected_connection_set_mode(e.currentTarget.innerHTML);
+    });
 }
+
 
 /* Kick things off. */
 window.onload = main;

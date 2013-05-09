@@ -852,6 +852,8 @@ function position_dynamic_elements()
         'top': (hT.top) + 'px'
     });
 
+    $('#container').css({'height': (document.body.clientHeight - hT.top + 64) + "px"});
+
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
     $('.displayTable').css('width','100%');
@@ -1166,15 +1168,7 @@ function drawing_curve(sourceRow)
         else on_connect(mouseUpEvent);
         $("*").off('.drawing').removeClass('incompatible');
         //So that the old line is only removed when the actual connection is made
-        command.register("new_link", function() {
-            self.line.remove();
-        });
-        command.register("new_connection", function() {
-            self.line.remove();
-        });
-        if( !this.targetRow ) {
-            this.line.remove();
-        }
+        self.line.remove();
     }
 
     this.checkTarget = function( mousedOverRow ) {

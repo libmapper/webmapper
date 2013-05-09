@@ -26,81 +26,36 @@ body {
 
 /* Used to position the tables and connection area. */
 #spacerTable {
+  float: left;
   width: 100%;
   height: 0px;
   visibility: hidden;
 }
 
-.tableDiv {
-  position: absolute;
-  overflow: auto;
-  top: 1in;
-  width: 3.18in;
-  height: 5in;
-  background: white;
-  border: solid 1px black;
-}
+/*Upper Tab Area */
+  .topTabs {
+    margin: 0px;
+    border-radius: 0px;
+    background: darkgrey;
+  }
 
-.tableDiv th {
-  font-weight: normal;
-  text-align: left;
-  padding-left: 5px;
-  border-top: 0px;
-  border-left: 0px;
-}
+  .topTabs li {
+    border-left: solid 1px black;
+    border-right: solid 1px black;
+    border-top: solid 1px black;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    padding: 2pt 10px 2pt 10px;
+    margin: 0px;
+    display: inline-block;
+    list-style: none;
+    cursor: pointer;
+  }
 
-.displayTable {
-  border-collapse: collapse;
-  width: 3in;
-  overflow: scroll;
-  border: solid 0px black;
-  font-size: 10pt;
-}
-
-.displayTable tr td {
-  margin: 3pt;
-  height: 13pt;
-  vertical-align: top;
-  border: solid 0px black;
-  padding-left: 5px;
-  cursor: default;
-}
-
-.displayTable tr.even {
-  background: #EDF5FF;
-}
-
-.leftTable {
-  left: 1in;
-  width: 1.4in;
-}
-
-.rightTable {
-  left: 7in;
-}
-
-.topTabs {
-  margin: 15pt 0px 0px 0px;
-  border-radius: 0px;
-  background: darkgrey;
-}
-
-.topTabs li {
-  border-left: solid 1px black;
-  border-right: solid 1px black;
-  border-top: solid 1px black;
-  border-top-right-radius: 5px;
-  border-top-left-radius: 5px;
-  padding: 2pt 10px 2pt 10px;
-  margin: 0px;
-  display: inline-block;
-  list-style: none;
-  cursor: pointer;
-}
-
-.tabsel {
-  background: lightgrey;
-}
+  .tabsel {
+    background: lightgrey;
+  }
+/****************/
 
 .topMenu {
   margin: 0px 0px 0px 0px;
@@ -108,10 +63,18 @@ body {
 }
 
 .topMenu li {
-  margin: 2pt 10px 2pt 10px;
+  margin: 2px;
   display: inline-block;
   list-style: none;
   cursor: pointer;
+}
+
+#saveLoadDiv {
+  display: inline-block;
+  background: lightgrey;
+  border: 1px solid black;
+  padding: 4px;
+  border-radius: 10px;
 }
 
 .topMenu li a {
@@ -129,62 +92,6 @@ body {
 
 .topMenu li a.disabled {
   color: gray;
-}
-
-.trsel.even{
-  background: #9CC2CF !important; /*Exactly 1 shade darker than lightblue*/
-}
-
-.trsel.odd{
-  background: lightblue !important;
-}
-
-.actionDiv ul {
-  clear: none;
-  display: inline-block;
-}
-
-.actionDiv {
-}
-
-.devActions {
-}
-
-.sigActions {
-}
-
-.signalControlsDiv {
-  display: inline-block;
-  margin-left: 20pt;
-}
-
-.signalControlsDiv div {
-  display: inline-block;
-}
-
-.modesDiv {
-  border: 1px solid black;
-  border-radius: 10px;
-  padding: 0 10px;
-  background-color: lightgrey;
-
-}
-
-.modesDiv div {
-  padding: 5pt;
-  cursor: pointer;
-}
-
-.modesel {
-  background: darkgrey;
-}
-
-div.range {
-  border: 1px solid black;
-  margin-left: 10px;
-  border-radius: 10px;
-  padding: 3px 3px;
-  background-color: lightgray;
 }
 
 .rangeSwitch {
@@ -266,37 +173,78 @@ div.range {
   padding-right: 5px;
 }
 
-thead {
-  background-color: lightgray;
-  border-bottom: 1px solid black;
-  cursor: pointer;
-}
+/* The table areas */
+  .tableDiv {
+    position: absolute;
+    overflow: auto;
+    top: 1in;
+    width: 3.18in;
+    height: 5in;
+    background: white;
+    border: solid 1px black;
+  }
 
-.status {
+  /* The table itself */
+    .displayTable {
+      border-collapse: collapse;
+      width: 3in;
+      overflow: scroll;
+      border: solid 0px black;
+      font-size: 10pt;
+    }
+
+      /* Rows and headers */
+      thead {
+        background-color: lightgray;
+        border-bottom: 1px solid black;
+        cursor: pointer;
+      }
+
+      .displayTable tr td {
+        margin: 3pt;
+        height: 13pt;
+        vertical-align: top;
+        border: solid 0px black;
+        padding-left: 5px;
+        cursor: default;
+      }
+
+      .displayTable tr.even {
+        background: #EDF5FF;
+      }
+
+      .trsel.even{
+        background: #9CC2CF !important; /*Exactly 1 shade darker than lightblue*/
+      }
+
+      .trsel.odd{
+        background: lightblue !important;
+      }
+      /*****************/
+    /****************/
+
+  .status {
+    position: absolute;
+    bottom: 0px;
+    height: 23px;
+    width: 100%;
+    background-color: lightgray;
+    border-top: 1px solid black;
+    padding-left: 10px;
+    padding-top: 3px;
+  }
+/****************/
+
+
+
+
+/*For the SVG area*/
+/*TODO change classes to IDs for single objects*/
+.svgDiv {
   position: absolute;
-  bottom: 0px;
-  height: 23px;
-  width: 100%;
-  background-color: lightgray;
-  border-top: 1px solid black;
-  padding-left: 10px;
-  padding-top: 3px;
+  background-color: white;
+  border: 1px solid black;
 }
-
-#spacerTable {
-  float: left;
-}
-
-.searchBar {
-  position: absolute;
-  margin: 0px;
-}
-
-#titleSearchDiv {
-  height: 40px;
-  margin-top: 10px;
-}
-
 #svgTop {
   width: 100%;
   height: 19px;
@@ -305,24 +253,73 @@ thead {
   position: absolute;
   top: 0px;
 }
-
-/*TODO change classes to IDs for single objects*/
-.svgDiv {
-  position: absolute;
-  background-color: white;
-  border: 1px solid black;
-}
-
-#svgTitle {
-  text-align: center;
-}
-
 .incompatible {
   opacity: 0.5;
 }
+/****************/
 
+
+/* Title and search bar */
 /* Make sure inputs are not obscured*/
 #titleSearchDiv input{
   z-index: 1;
+  margin-top: 16px;
+}
+#titleSearchDiv {
+  height: 50px;
+}
+#titleSearchDiv h2 {
+  margin-top: 11px;
+  font-weight: normal;
+}
+#svgTitle {
+  text-align: center;
+}
+.searchBar {
+  position: absolute;
+  margin: 0px;
+}
+div.range {
+  border: 1px solid black;
+  margin-left: 10px;
+  border-radius: 10px;
+  padding: 3px 3px;
+  background-color: lightgray;
+}
+.tableDiv th {
+  font-weight: normal;
+  text-align: left;
+  padding-left: 5px;
+  border-top: 0px;
+  border-left: 0px;
+}
+.signalControlsDiv {
+  display: inline-block;
+  margin-left: 20pt;
 }
 
+.signalControlsDiv div {
+  display: inline-block;
+}
+.modesDiv {
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 0 10px;
+  background-color: lightgrey;
+
+}
+.modesDiv div {
+  padding: 5pt;
+  cursor: pointer;
+}
+.modesel {
+  background: darkgrey;
+}
+/****************/
+
+/* The overall container of elements not in skeleton*/
+#container {
+  width: 100%;
+  background-color: lightgrey;
+  margin-top: 20px;
+}
