@@ -1102,9 +1102,9 @@ function drawing_curve(sourceRow)
 
     this.findrow = function ( y ) {
         var index = Math.round( y/this.rowHeight );
-        if( index > $(this.targetTable).find('tr').length - 1)
-            index = $(this.targetTable).find('tr').length - 1;
-        var row = $(this.targetTable).find('tr')[index];
+        if( index > $(this.targetTable).find('tr').length)
+            index = $(this.targetTable).find('tr').length;
+        var row = $(this.targetTable).find('tr')[index - 1];
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -1115,12 +1115,12 @@ function drawing_curve(sourceRow)
 
     // Are we aiming for the left or right table?
     this.targetTable;
-    if( $(this.sourceRow).parents().hasClass('leftTable') ) {
-        this.targetTable = $('.displayTable.rightTable')[0];
+    if( $(this.sourceRow).parents('.tableDiv').attr('id') == "leftTable" ) {
+        this.targetTable = $('#rightTable .displayTable tbody')[0];
         this.path[0][1] = 0; // Start the curve at left
     }
     else {
-        this.targetTable = $('.displayTable.leftTable')[0];
+        this.targetTable = $('#leftTable .displayTable tbody')[0];
         this.path[0][1] = this.canvasWidth; // Start the curve at right
     }
 
@@ -1149,7 +1149,7 @@ function drawing_curve(sourceRow)
             }
         }
         // We're over a table row of the target table
-        if( $(target).parents('.displayTable')[0] == this.targetTable ) {
+        if( $(target).parents('tbody')[0] == this.targetTable ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             if( !$(target).hasClass('incompatible') ) 
@@ -1210,7 +1210,7 @@ function drawing_handlers()
                 fade_incompatible_signals(curve.sourceRow, curve.targetTable);
 
             // Moving about the canvas
-            $('svg, .displayTable tr').on('mousemove.drawing', function(moveEvent) {
+            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
                 curve.update(moveEvent);
             });
 
@@ -1223,13 +1223,6 @@ function drawing_handlers()
             $("*").off('.drawing').removeClass('incompatible');
         });
     });
-}
-
-function finish_drawing() 
-{
-    $("*").off('.drawing').removeClass('incompatible');
-    if(drawLine)
-        drawLine.remove();
 }
 
 // Finds a bezier curve between two points
@@ -1278,7 +1271,6 @@ function add_UI_handlers()
 
     //For redrawing arrows upon table sort
     $('.displayTable thead').on('click', 'th', function(e) {
-        console.log(this);
         e.stopPropagation();
         $(this).parents(".displayTable").one('sortEnd', function() {
             update_arrows();
