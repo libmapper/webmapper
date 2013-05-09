@@ -67,15 +67,20 @@ function listTable(id)
 function update_display()
 {
     update_tabs();
-    if (selectedTab == all_devices)
+    if (selectedTab == all_devices) {
         update_devices();
-    else
+        window.saveLocation = '';
+    }
+    else {
         update_signals(selectedTab);
+        window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+    }
+
+    update_save_location();
 
     update_selection();
     update_arrows();
-    //TODO make this work
-    update_save_location();
+
     search_filter( $('#leftSearch') );
     search_filter( $('#rightSearch') );
 }
@@ -865,17 +870,6 @@ function position_dynamic_elements()
     update_tables();
 
 
-}
-
-function notify(msg)
-{
-    var li = document.createElement('li');
-    li.className = 'notification';
-    li.innerHTML = msg;
-    menuList.appendChild(li);
-    setTimeout(function(){
-        $(li).fadeOut('slow', function(){menuList.removeChild(li);});
-    }, 5000);
 }
 
 function list_view_start()

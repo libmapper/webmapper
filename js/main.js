@@ -17,8 +17,8 @@ boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 
 //A global variable storing which display mode is currently in use
 window.activeMode;
-window.menuSave = null;
-window.menuList = null;
+//Where the network will be saved
+window.saveLocation = '';
 
 function switch_mode(newMode)
 {
@@ -46,16 +46,12 @@ function refresh_all()
 
 function update_save_location()
 {
-    if (selectedTab==all_devices) {
-        //menuSave.href = '';
-        $(menuSave).addClass('disabled');
-        //menuSave.onclick=function(){return false;};
-    }
-    else {
-        //menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
-        $(menuSave).removeClass('disabled');
-        //menuSave.onclick=null;
-    }
+    if (selectedTab==all_devices) 
+        $('#saveButton').addClass('disabled');
+    else 
+        $('#saveButton').removeClass('disabled');
+
+    $('#saveButton').attr('href', window.saveLocation);
 }
 
 function on_load()
@@ -78,19 +74,19 @@ function on_load()
 
     var l = document.createElement('li');
     l.appendChild(form);
-    menuList.appendChild(l);
+    $('.topMenu').append(l);
 
     iframe.onload = function(){
         var t = $(iframe.contentDocument.body).text();
         if (t.search('Success:')==-1 && t.search('Error:')==-1)
             return;
         notify($(iframe.contentDocument.body).text());
-        menuList.removeChild(l);
+        $(l).remove();
         body.removeChild(iframe);
     };
 
     $('#cancel',form).click(function(){
-        menuList.removeChild(l);
+        $(l).remove();
         body.removeChild(iframe);
     });
 
@@ -104,6 +100,17 @@ function on_load()
         form.submit();
     };
     return false;
+}
+
+function notify(msg)
+{
+    var li = document.createElement('li');
+    li.className = 'notification';
+    li.innerHTML = msg;
+    $('.topMenu').append(li);
+    setTimeout(function(){
+        $(li).fadeOut('slow', function(){ $(li).remove();});
+    }, 5000);
 }
 
 /* The main program. */
@@ -222,8 +229,8 @@ function add_container_elements()
     $('body').append(
         "<ul class='topMenu'>"+
             "<div id='saveLoadDiv'>"+
-                "<li><a href='/'>Load</a></li>"+
-                "<li><a>Save</a></li>"+
+                "<li><a id='loadButton'>Load</a></li>"+
+                "<li><a id='saveButton'>Save</a></li>"+
             "</div>"+
             "<select id='modeSelection'>"+
                 "<option value='none'>None</option>"+
@@ -304,7 +311,17 @@ function add_handlers()
     $('#modeSelection').change( function(e) {
         var newMode = $('#modeSelection').val();
         switch_mode(newMode);
-    })
+    });
+
+    $('#saveButton').on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    $('#loadButton').click(function(e) {
+        e.stopPropagation();
+        console.log(e);
+        on_load();
+    });
 }
 
 
