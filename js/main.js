@@ -113,6 +113,164 @@ function notify(msg)
     }, 5000);
 }
 
+function update_connection_properties()
+{
+    if (selectedTab == all_devices)
+        return;
+
+    //var a = function(x) { return $(x,actionDiv); };
+
+    var clear_props = function() {
+        $(".mode").removeClass("modesel");
+        $("*").removeClass('waiting');
+        $(".topMenu input").val('')
+        //set_boundary(a(".boundary"), 0);
+    }
+
+    var conns = get_selected(connections);
+    if (conns.length > 1) {
+        // TODO
+        clear_props();
+    }
+    else if (conns.length == 1) {
+        var c = conns[0];
+        clear_props();
+        $(".mode"+connectionModes[c.mode]).addClass("modesel");
+        $(".expression").val(c.expression);
+        if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
+        if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
+        if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
+        if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
+        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
+        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
+    }
+    else {
+        clear_props();
+    }
+}
+
+function update_connection_properties_for(conn, conns)
+{
+    if (conns.length == 1) {
+        if (conns[0].src_name == conn.src_name
+            && conns[0].dest_name == conn.dest_name)
+        {
+            update_connection_properties();
+        }
+    }
+}
+
+function set_boundary(boundaryElement, value, ismax)
+{
+    for (i in boundaryIcons)
+        boundaryElement.removeClass(boundaryIcons[i]);
+
+    if (value == 3) { //'Fold' special case, icon depends on direction
+        if (ismax)
+            boundaryElement.addClass('boundaryDown');
+        else
+            boundaryElement.addClass('boundaryUp');
+    }
+    else if (value < 5) {
+        boundaryElement.addClass('boundary'+boundaryModes[value]);
+    }
+}
+
+function copy_selected_connection()
+{
+    var conns = get_selected(connections);
+    if (conns.length!=1) return;
+    var args = {};
+
+    // copy existing connection properties
+    for (var c in conns[0]) {
+        args[c] = conns[0][c];
+    }
+    return args;
+}
+
+function selected_connection_set_mode(modestring)
+{
+    var modecmd = connectionModeCommands[modestring];
+    if (!modecmd) return;
+
+    var args = copy_selected_connection();
+
+    // adjust the mode
+    args['mode'] = modecmd;
+
+    // send the command, should receive a /connection/modify message after.
+    command.send('set_connection', args);
+}
+
+function selected_connection_set_input(what,field,idx)
+{
+    var args = copy_selected_connection();
+
+    // TODO: this is a bit out of hand, need to simplify the mode
+    // strings and indexes.
+    var modecmd = connectionModeCommands[connectionModes[args['mode']]];
+    args['mode'] = modecmd;
+
+    // adjust the field
+    if (idx===undefined)
+        args[what] = field.value;
+    else
+        args[what][idx] = parseFloat(field.value);
+
+    // send the command, should receive a /connection/modify message after.
+    command.send('set_connection', args);
+
+    $(field).addClass('waiting');
+}
+
+function selected_connection_set_boundary(boundarymode, ismax, div)
+{
+    var args = copy_selected_connection();
+
+    // TODO: this is a bit out of hand, need to simplify the mode
+    // strings and indexes.
+    var modecmd = connectionModeCommands[connectionModes[args['mode']]];
+    args['mode'] = modecmd;
+
+    var c = ismax ? 'clip_max' : 'clip_min';
+    args[c] = boundarymode;
+
+    // send the command, should receive a /connection/modify message after.
+    command.send('set_connection', args);
+
+    // Do not set the background color, since background is used to
+    // display icon.  Enable this if a better style decision is made.
+    //$(div).addClass('waiting');
+}
+
+function on_boundary(e)
+{
+    for (var i in boundaryIcons) {
+        if ($(e.currentTarget).hasClass(boundaryIcons[i]))
+            break;
+    }
+    if (i >= boundaryIcons.length)
+        return;
+
+    var b = [0, 3, 3, 1, 2, 4][i];
+    b = b + 1;
+    if (b >= boundaryModes.length)
+        b = 0;
+
+    // Enable this to set the icon immediately. Currently disabled
+    // since the 'waiting' style is not used to indicate tentative
+    // settings for boundary modes.
+
+    // set_boundary($(e.currentTarget), b,
+    //              e.currentTarget.id=='boundaryMax');
+
+    selected_connection_set_boundary(b, e.currentTarget.id=='boundaryMax',
+                                     e.currentTarget);
+
+    e.stopPropagation();
+}
+
 /* The main program. */
 function main()
 {
