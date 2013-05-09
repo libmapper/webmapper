@@ -887,8 +887,8 @@ function list_view_start()
     add_UI_handlers();
     //select_tab(tabDevices);
     //add_signal_control_bar();
-    //position_dynamic_elements();
-    
+    position_dynamic_elements();
+    update_display();
 }
 
 function add_tabs()

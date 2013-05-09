@@ -17,33 +17,21 @@ boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 
 //A global variable storing which display mode is currently in use
 window.activeMode;
+window.menuSave = null;
+window.menuList = null;
 
-function update_save_location()
-{
-    if (selectedTab==all_devices) {
-        menuSave.href = '';
-        $(menuSave).addClass('disabled');
-        menuSave.onclick=function(){return false;};
-    }
-    else {
-        menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
-        $(menuSave).removeClass('disabled');
-        menuSave.onclick=null;
-    }
-}
-
-function switch_mode(new_mode)
+function switch_mode(newMode)
 {
     $('#container').empty();
-    switch(new_mode)
+    switch(newMode)
     {
         case 'list':
             list_view_start();
             break;
         default:
-            console.log(new_mode);
+            console.log(newMode);
     }
-    window.activeMode = new_mode;
+    window.activeMode = newMode;
 }
 
 function refresh_all()
@@ -54,6 +42,20 @@ function refresh_all()
     connections = new Assoc();
     update_display();
     command.send('refresh');
+}
+
+function update_save_location()
+{
+    if (selectedTab==all_devices) {
+        //menuSave.href = '';
+        $(menuSave).addClass('disabled');
+        //menuSave.onclick=function(){return false;};
+    }
+    else {
+        //menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
+        $(menuSave).removeClass('disabled');
+        //menuSave.onclick=null;
+    }
 }
 
 function on_load()
@@ -223,6 +225,11 @@ function add_container_elements()
                 "<li><a href='/'>Load</a></li>"+
                 "<li><a>Save</a></li>"+
             "</div>"+
+            "<select id='modeSelection'>"+
+                "<option value='none'>None</option>"+
+                "<option value='list' selected>List</option>"+
+                "<option value='grid'>Grid</option>"+
+            "</select>"+
         "</ul>"+
         "<div id='container'></div>"
     );
@@ -292,6 +299,12 @@ function add_handlers()
         e.stopPropagation();
         selected_connection_set_mode(e.currentTarget.innerHTML);
     });
+
+    //For the visualization mode selection menu
+    $('#modeSelection').change( function(e) {
+        var newMode = $('#modeSelection').val();
+        switch_mode(newMode);
+    })
 }
 
 
