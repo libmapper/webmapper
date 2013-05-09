@@ -7,45 +7,9 @@ leftTable = null;
 rightTable = null;
 svgArea = null;
 selectLists = {};
-actionDiv = null;
 devActions = null;
 sigActions = null;
 arrows = [];
-menuList = null;
-menuSave = null;
-websocketStatus = null;
-
-/* OLD
-function listTable(parent, id)
-{
-    var self = this;
-    this.id = id;
-    this.parent = parent;
-    this.rowsel = [];
-    this.table;
-
-    this.add = function() {
-        $(this.parent).append("<div class='tableDiv' id='"+this.id+"'></div>");
-        $("#"+this.id).append(
-            "<table class='displayTable'>"+
-                "<thead><tr></tr></thead>"+
-                "<tbody></tbody>"+
-            "<div class='status'></div>"
-        );
-        this.table = $("#"+this.id+" .displayTable")[0];
-        add_header();
-    }
-
-    function add_header() {
-
-        for (var i = 0; i < 4; i++) {
-            $('#'+self.id+' thead tr').append('<th></th>');
-        }
-        // TODO move these handlers to a handler function
-
-        //$(self.table).tablesorter({widgets: ['zebra']});
-    }
-}*/
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -89,6 +53,7 @@ function listTable(id)
     }
 
     // For when something changes on the network
+    // big TODO (make the tableupdater object obsolete)
     this.update = function()
     {
         $(this.body).empty();
@@ -110,7 +75,7 @@ function update_display()
     update_selection();
     update_arrows();
     //TODO make this work
-    //update_save_location();
+    update_save_location();
     search_filter( $('#leftSearch') );
     search_filter( $('#rightSearch') );
 }
@@ -836,13 +801,6 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
-
-function set_actions(a)
-{
-    $(actionDiv).empty();
-    actionDiv.appendChild(a);
-}
-
 function position_dynamic_elements()
 {
     var hT = fullOffset($("#spacerTable")[0]);
@@ -918,68 +876,6 @@ function notify(msg)
     setTimeout(function(){
         $(li).fadeOut('slow', function(){menuList.removeChild(li);});
     }, 5000);
-}
-
-function on_load()
-{
-    var body = document.getElementsByTagName('body')[0];
-    var iframe = document.createElement('iframe');
-    iframe.name = 'file_upload';
-    iframe.style.visibility = 'hidden';
-    body.appendChild(iframe);
-
-    var form = document.createElement('form');
-    form.innerHTML = '<input id="file" type="file"                   \
-                       name="mapping_json" size="40" accept="json">  \
-                      <input type="submit" style="display: none;">   \
-                      <input type="button" value="Cancel" id="cancel">';
-    form.method = 'POST';
-    form.enctype = 'multipart/form-data';
-    form.action = '/load';
-    form.target = 'file_upload';
-
-    var l = document.createElement('li');
-    l.appendChild(form);
-    menuList.appendChild(l);
-
-    iframe.onload = function(){
-        var t = $(iframe.contentDocument.body).text();
-        if (t.search('Success:')==-1 && t.search('Error:')==-1)
-            return;
-        notify($(iframe.contentDocument.body).text());
-        menuList.removeChild(l);
-        body.removeChild(iframe);
-    };
-
-    $('#cancel',form).click(function(){
-        menuList.removeChild(l);
-        body.removeChild(iframe);
-    });
-
-    form.firstChild.onchange = function(){
-        var fn = document.createElement('input');
-        fn.type = 'hidden';
-        fn.name = 'filename';
-        fn.value = form.firstChild.value;
-        console.log(form.firstChild.value);
-        form.appendChild(fn);
-        form.submit();
-    };
-    return false;
-}
-
-function update_save_location()
-{
-    if (selectedTab==all_devices) {
-        menuSave.href = '';
-        $(menuSave).addClass('disabled');
-        menuSave.onclick=function(){return false;};
-    }
-    else {
-        menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
-        $(menuSave).removeClass('disabled');
-        menuSave.onclick=null;
-    }
 }
 
 function list_view_start()

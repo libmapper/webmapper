@@ -15,7 +15,22 @@ boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
 boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
+//A global variable storing which display mode is currently in use
 window.activeMode;
+
+function update_save_location()
+{
+    if (selectedTab==all_devices) {
+        menuSave.href = '';
+        $(menuSave).addClass('disabled');
+        menuSave.onclick=function(){return false;};
+    }
+    else {
+        menuSave.href = '/save?dev='+encodeURIComponent(selectedTab);
+        $(menuSave).removeClass('disabled');
+        menuSave.onclick=null;
+    }
+}
 
 function switch_mode(new_mode)
 {
@@ -39,6 +54,54 @@ function refresh_all()
     connections = new Assoc();
     update_display();
     command.send('refresh');
+}
+
+function on_load()
+{
+    var body = document.getElementsByTagName('body')[0];
+    var iframe = document.createElement('iframe');
+    iframe.name = 'file_upload';
+    iframe.style.visibility = 'hidden';
+    body.appendChild(iframe);
+
+    var form = document.createElement('form');
+    form.innerHTML = '<input id="file" type="file"                   \
+                       name="mapping_json" size="40" accept="json">  \
+                      <input type="submit" style="display: none;">   \
+                      <input type="button" value="Cancel" id="cancel">';
+    form.method = 'POST';
+    form.enctype = 'multipart/form-data';
+    form.action = '/load';
+    form.target = 'file_upload';
+
+    var l = document.createElement('li');
+    l.appendChild(form);
+    menuList.appendChild(l);
+
+    iframe.onload = function(){
+        var t = $(iframe.contentDocument.body).text();
+        if (t.search('Success:')==-1 && t.search('Error:')==-1)
+            return;
+        notify($(iframe.contentDocument.body).text());
+        menuList.removeChild(l);
+        body.removeChild(iframe);
+    };
+
+    $('#cancel',form).click(function(){
+        menuList.removeChild(l);
+        body.removeChild(iframe);
+    });
+
+    form.firstChild.onchange = function(){
+        var fn = document.createElement('input');
+        fn.type = 'hidden';
+        fn.name = 'filename';
+        fn.value = form.firstChild.value;
+        console.log(form.firstChild.value);
+        form.appendChild(fn);
+        form.submit();
+    };
+    return false;
 }
 
 /* The main program. */
