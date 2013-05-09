@@ -11,6 +11,10 @@ devActions = null;
 sigActions = null;
 arrows = [];
 
+deviceHeaders = ["device", "outputs", "IP", "port"];
+//TODO include min/max
+signalHeaders = ["name", "type", "length", "units"];
+
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
 { 
@@ -19,7 +23,12 @@ function listTable(id)
     this.div; //The div node (and status)
     this.table; //The table node itself
     this.headerRow; //The top row node of the table within <thead>
-    this.body; //The <tbody> node
+    this.tBody; //The <tbody> node
+    this.footer; //The status bar at the bottom
+
+    this.nRows; //Number of rows (e.g. devices or signals) present
+    this.nVisibleRows; //Number of rows actually visible to the user
+    this.nCols; //Number of columns in table
 
     // Should be passed a the node for the parent
     this.create_within = function(parent) {
@@ -38,7 +47,8 @@ function listTable(id)
         );
         this.table = $(this.div).children('.displayTable')[0];
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
-        this.body = $("#"+this.id+" .displayTable tbody")[0];
+        this.tBody = $("#"+this.id+" .displayTable tbody")[0];
+        this.footer = $("#"+this.id+" .status")[0];
     }
 
     // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
@@ -49,16 +59,32 @@ function listTable(id)
         {
             $(this.headerRow).append("<th>"+headerStrings[i]+"</th>");
         }
+        this.nCols = headerStrings.length;
     }
 
     // For when something changes on the network
     // big TODO (make the tableupdater object obsolete)
-    this.update = function()
+    this.update = function(tableData)
     {
-        $(this.body).empty();
-        for(var i in trs){
-            this.$body.append("<tr>"+trs[i]+"</tr>");
+        $(this.tBody).empty();
+        for(var row in tableData) 
+        {
+            var newRow = "<tr>"
+            //$(this.tBody).append("<tr>");
+            for(var col in tableData[row]) {
+                //$(this.tBody).append("<td>"+tableData[row][col]+"</td>")
+                newRow += "<td>"+tableData[row][col]+"</td>";
+            }
+            $(this.tBody).append(newRow+"</tr>");
         }
+        this.nRows = tableData.length;
+        if(tableData[0])
+            this.nCols = tableData[0].length;
+        $(this.table).trigger('update');
+    }
+
+    this.set_status = function(name) {
+        $(this.footer).text(this.nRows+" of "+this.nRows+" "+name);
     }
 
 }
@@ -87,28 +113,43 @@ function update_display()
 function update_devices()
 {
     var keys = devices.keys();
-    var sigkeys = signals.keys();
-    var updaterLeft = new table_updater(leftTable.table);
-    var updaterRight = new table_updater(rightTable.table);
+    //var sigkeys = signals.keys();
+    //var updaterLeft = new table_updater(leftTable.table);
+    //var updaterRight = new table_updater(rightTable.table);
 
-    updaterLeft.setHeaders();
-    updaterRight.setHeaders();
+    var leftBodyContent = [];
+    var rightBodyContent = [];
+
+    //updaterLeft.setHeaders();
+    //updaterRight.setHeaders();
+
+    leftTable.set_headers(deviceHeaders);
+    rightTable.set_headers(deviceHeaders);    
     
     for (var d in keys) {
         var k = keys[d];
         var dev = devices.get(k);
 
-        if (dev.n_outputs)
-            updaterLeft.addrow([dev.name, dev.n_outputs, dev.host, dev.port]);
-        if (dev.n_inputs)
-            updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
+        if (dev.n_outputs){
+            //updaterLeft.addrow([dev.name, dev.n_outputs, dev.host, dev.port]);
+            leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
+        if (dev.n_inputs){
+            //updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
+            rightBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
+        
     }
 
-    updaterLeft.updateStatusBar('devices');
-    updaterRight.updateStatusBar('devices');
+    leftTable.set_status('devices');
+    rightTable.set_status('devices');
 
-    updaterLeft.apply();
-    updaterRight.apply();
+    //updaterLeft.updateStatusBar('devices');
+    //updaterRight.updateStatusBar('devices');
+
+    //updaterLeft.apply();
+    //updaterRight.apply();
+
+    leftTable.update(leftBodyContent);
+    rightTable.update(rightBodyContent);
 }
 
 /* Update a table with the rows and columns contained in text, add
@@ -215,29 +256,45 @@ function update_tabs()
 
 function update_signals()
 {
-    keys = signals.keys();
-    var updaterLeft = new table_updater(leftTable.table);
-    var updaterRight = new table_updater(rightTable.table);
+    var keys = signals.keys();
+    //var updaterLeft = new table_updater(leftTable.table);
+    //var updaterRight = new table_updater(rightTable.table);
 
-    updaterLeft.setHeaders();
-    updaterRight.setHeaders();
+    //updaterLeft.setHeaders();
+    //updaterRight.setHeaders();
+
+    leftTable.set_headers(signalHeaders);
+    rightTable.set_headers(signalHeaders);
+
+    var leftBodyContent = [];
+    var rightBodyContent = [];
     
     for (var s in keys) {
         var k = keys[s];
         var sig = signals.get(k);
         var lnk = links.get(selectedTab+'>'+sig.device_name);
 
-        if (sig.device_name == selectedTab && sig.direction == 1)
-            updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
-        if (sig.direction == 0 && lnk!=null)
-            updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+        if (sig.device_name == selectedTab && sig.direction == 1){
+            //updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+            leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+        }
+        if (sig.direction == 0 && lnk!=null){
+            //updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+            rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+        }
     }
 
-    updaterLeft.updateStatusBar('signals');
-    updaterRight.updateStatusBar('signals');
+    leftTable.set_status('signals');
+    leftTable.set_status('signals');
 
-    updaterLeft.apply();
-    updaterRight.apply();
+    leftTable.update(leftBodyContent);
+    rightTable.update(rightBodyContent);
+
+//    updaterLeft.updateStatusBar('signals');
+//    updaterRight.updateStatusBar('signals');
+//
+//    updaterLeft.apply();
+//    updaterRight.apply();
 }
 
 function update_selection()
