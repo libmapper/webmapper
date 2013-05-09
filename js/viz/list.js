@@ -15,52 +15,83 @@ menuList = null;
 menuSave = null;
 websocketStatus = null;
 
-//An object for the left and right tables, listing devices and signals
-function listTable1(id)
-{ 
-    this.id = id; //Something like "#leftTable"
-    this.$parent; //The area containing the table
-    this.$div; //The div containing the table (and status)
-    this.$table; //A jQuery object for the table itself
-    this.$headerRow; //The top row of the table within <thead>
-    this.$body; //The <tbody> element
-    var trs = []; //An array for the rows in <tbody>, this is changed before updating
+/* OLD
+function listTable(parent, id)
+{
+    var self = this;
+    this.id = id;
+    this.parent = parent;
+    this.rowsel = [];
+    this.table;
 
-    // Should be passed a string selector for the parent, like "#container" or "div.displayArea td", etc.
+    this.add = function() {
+        $(this.parent).append("<div class='tableDiv' id='"+this.id+"'></div>");
+        $("#"+this.id).append(
+            "<table class='displayTable'>"+
+                "<thead><tr></tr></thead>"+
+                "<tbody></tbody>"+
+            "<div class='status'></div>"
+        );
+        this.table = $("#"+this.id+" .displayTable")[0];
+        add_header();
+    }
+
+    function add_header() {
+
+        for (var i = 0; i < 4; i++) {
+            $('#'+self.id+' thead tr').append('<th></th>');
+        }
+        // TODO move these handlers to a handler function
+
+        //$(self.table).tablesorter({widgets: ['zebra']});
+    }
+}*/
+
+//An object for the left and right tables, listing devices and signals
+function listTable(id)
+{ 
+    this.id = id; //Something like "leftTable"
+    this.parent; //The node containing the table
+    this.div; //The div node (and status)
+    this.table; //The table node itself
+    this.headerRow; //The top row node of the table within <thead>
+    this.body; //The <tbody> node
+
+    // Should be passed a the node for the parent
     this.create_within = function(parent) {
-        this.$parent = $(parent);
+        this.parent = parent;
         // Create the div containing the table
-        this.$parent.append("<div class='tableDiv' id='"+id+"'></div>");
-        this.$div = this.$parent.children('.tableDiv');
+        $(this.parent).append("<div class='tableDiv' id='"+id+"'></div>");
+        this.div = $(this.parent).children("#"+this.id);
 
         // Create the skeleton for the table within the div
-        $(this.$div).append(
+        $(this.div).append(
             "<table class='displayTable'>"+
                 "<thead><tr></tr></thead>"+
                 "<tbody></tbody>"+
             "</table>"+
             "<div class='status'></div>"
         );
-        this.$table = this.$div.children('.displayTable');
-        this.$headerRow = $("#"+this.id+" .displayTable thead tr");
-        this.$body = $("#"+this.id+" .displayTable tbody");
-        this.$table.tablesorter({widgets: ['zebra']});
+        this.table = $(this.div).children('.displayTable')[0];
+        this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
+        this.body = $("#"+this.id+" .displayTable tbody")[0];
+        //$(this.table).tablesorter({widgets: ['zebra']});
     }
 
     // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
-    this.set_header = function(headerStrings)
+    this.set_headers = function(headerStrings)
     {
-        this.$headerRow.empty();
+        $(this.headerRow).empty();
         for(var i in headerStrings)
         {
-            this.$headerRow.append("<th>"+headerStrings[i]+"<th>");
+            $(this.headerRow).append("<th>"+headerStrings[i]+"</th>");
         }
     }
 
     // For when something changes on the network
     this.update = function()
     {
-        this.$body.empty();
+        $(this.body).empty();
         for(var i in trs){
             this.$body.append("<tr>"+trs[i]+"</tr>");
         }
@@ -1016,48 +1047,6 @@ function add_title_bar()
     });
 }
 
-function listTable(parent, id)
-{
-    var self = this;
-    this.id = id;
-    this.parent = parent;
-    this.rowsel = [];
-    this.table;
-
-    this.add = function() {
-        $(this.parent).append("<div class='tableDiv' id='"+this.id+"'></div>");
-        $("#"+this.id).append(
-            "<table class='displayTable'>"+
-                "<thead><tr></tr></thead>"+
-                "<tbody></tbody>"+
-            "<div class='status'></div>"
-        );
-        this.table = $("#"+this.id+" .displayTable")[0];
-        add_header();
-    }
-
-    function add_header() {
-
-        for (var i = 0; i < 4; i++) {
-            $('#'+self.id+' thead tr').append('<th></th>');
-        }
-        // TODO move these handlers to a handler function
-        $('#'+self.id).on('click', 'th', function(e) {
-            //e.stopPropagation();
-            $('#'+self.id+" .displayTable").on('sortEnd', function() {
-                update_arrows();
-            });
-        });
-        $(self.table).tablesorter({widgets: ['zebra']});
-    }
-
-    /* TODO
-    this.reposition
-    this.onclick
-    this.onscroll
-    */
-}
-
 function add_display_tables()
 {
     //Make the spacer table, how the elements locate themselves on the page
@@ -1065,12 +1054,18 @@ function add_display_tables()
         "<table id='spacerTable'><tr><td></td><td></td><td></td></tr></table>"
     );
 
-    leftTable = new listTable('#container', 'leftTable');
-    rightTable = new listTable('#container', 'rightTable');
+    leftTable = new listTable('leftTable');
+    rightTable = new listTable('rightTable');
 
-    //Maybe the functions themselves should be here
-    leftTable.add();
-    rightTable.add();
+    //Put the tables in the DOM
+    leftTable.create_within( $('#container')[0] );
+    rightTable.create_within( $('#container')[0] );
+
+    leftTable.set_headers(['device', 'outputs', 'IP', 'port']);
+    rightTable.set_headers(['device', 'input', 'IP', 'port']);
+
+    $(leftTable.table).tablesorter({widgets: ['zebra']});
+    $(rightTable.table).tablesorter({widgets: ['zebra']});
 }
 
 
@@ -1085,45 +1080,6 @@ function add_svg_area()
 
     svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
     
-}
-
-function add_UI_handlers()
-{
-    $('body').on('click', function() {
-        deselect_all();
-    });
-
-    $('.displayTable tbody').on('click', 'tr', function(e) {
-        select_tr(this);
-        console.log(this);
-        e.stopPropagation();
-    });
-
-    $(document).keydown( function(e) {
-        if (e.which == 67) { // connect on 'c'
-            if (selectedTab == all_devices) 
-                on_link(e);
-            else
-                on_connect(e);
-        }
-        else if (e.which == 8) { // disconnect on 'delete'
-            //Prevent the browser from going back a page
-            //but NOT if you're focus is an input and deleting text
-            if( !$(':focus').is('input') ) {
-                e.preventDefault();
-            }
-            if (selectedTab == all_devices) 
-                on_unlink(e);
-            else
-                on_disconnect(e);
-            deselect_all();
-        }
-        else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
-            select_all();
-        }
-    });
-
-    drawing_handlers();
 }
 
 function drawing_curve(sourceRow)
@@ -1307,4 +1263,52 @@ function fade_incompatible_signals(row, targetTable)
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
+}
+
+function add_UI_handlers()
+{
+    $('body').on('click', function() {
+        deselect_all();
+    });
+
+    $('.displayTable tbody').on({
+        mousedown: function(e) { select_tr(this); },
+        click: function(e) { e.stopPropagation(); }
+    }, 'tr');
+
+    //For redrawing arrows upon table sort
+    $('.displayTable thead').on('click', 'th', function(e) {
+        console.log(this);
+        e.stopPropagation();
+        $(this).parents(".displayTable").one('sortEnd', function() {
+            update_arrows();
+        });
+    });
+
+    // Various keyhandlers
+    $(document).keydown( function(e) {
+        if (e.which == 67) { // connect on 'c'
+            if (selectedTab == all_devices) 
+                on_link(e);
+            else
+                on_connect(e);
+        }
+        else if (e.which == 8) { // disconnect on 'delete'
+            //Prevent the browser from going back a page
+            //but NOT if you're focus is an input and deleting text
+            if( !$(':focus').is('input') ) {
+                e.preventDefault();
+            }
+            if (selectedTab == all_devices) 
+                on_unlink(e);
+            else
+                on_disconnect(e);
+            deselect_all();
+        }
+        else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
+            select_all();
+        }
+    });
+
+    drawing_handlers();
 }
