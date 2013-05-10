@@ -99,7 +99,8 @@ function listTable(id)
         $(this.tBody).empty();
         for(var row in tableData) 
         {
-            var newRow = "<tr>"
+            //If there is only one row, make it of odd class for styling
+            var newRow = "<tr class='odd'>"
             //$(this.tBody).append("<tr>");
             for(var col in tableData[row]) {
                 //$(this.tBody).append("<td>"+tableData[row][col]+"</td>")
@@ -136,9 +137,6 @@ function update_devices()
 
     var leftBodyContent = [];
     var rightBodyContent = [];
-
-    //updaterLeft.setHeaders();
-    //updaterRight.setHeaders();
 
     leftTable.set_headers(deviceHeaders);
     rightTable.set_headers(deviceHeaders);    
@@ -253,11 +251,7 @@ function update_signals()
 
     //updaterLeft.setHeaders();
     //updaterRight.setHeaders();
-
-    //TODO set headers upton tab switch, not updates
-    leftTable.set_headers(signalHeaders);
-    rightTable.set_headers(signalHeaders);
-
+    
     var leftBodyContent = [];
     var rightBodyContent = [];
     
@@ -553,6 +547,7 @@ function create_arrow(left, right, sel)
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
+            line.attr('stroke', 'red');
         }
         e.stopPropagation();
     });
@@ -567,10 +562,14 @@ function select_tab(tab)
     if (tab == tabDevices) {
         //set_actions(devActions);
         $('#svgTitle').text("Links");
+        leftTable.set_headers(deviceHeaders);
+        rightTable.set_headers(deviceHeaders);
     }
     else {
         //set_actions(sigActions);
         $('#svgTitle').text("Connections");
+        leftTable.set_headers(signalHeaders);
+        rightTable.set_headers(signalHeaders);
     }
 
     $('#leftSearch, #rightSearch').val('');
