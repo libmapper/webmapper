@@ -13,7 +13,7 @@ arrows = [];
 
 deviceHeaders = ["device", "outputs", "IP", "port"];
 //TODO include min/max
-signalHeaders = ["name", "type", "length", "units"];
+signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
 function update_display()
 {
@@ -70,17 +70,26 @@ function listTable(id)
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
         this.tBody = $("#"+this.id+" .displayTable tbody")[0];
         this.footer = $("#"+this.id+" .status")[0];
+
+        //Create the header elements
+        //This assumes that we will never need more than 20 columns
+        //Creating and distroying th elements themselves screws up tablesorter
+        for(var i=0; i<20; i++) {
+            $(this.headerRow).append("<th class='invisible'></th>");
+        }
     }
 
     // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
     this.set_headers = function(headerStrings)
     {
-        $(this.headerRow).empty();
-        for(var i in headerStrings)
-        {
-            $(this.headerRow).append("<th>"+headerStrings[i]+"</th>");
-        }
-        this.nCols = headerStrings.length;
+        this.nCols = headerStrings.length; 
+
+        $(this.headerRow).children('th').each(function(index) {
+            if(index < headerStrings.length)
+                $(this).text(headerStrings[index]).removeClass("invisible");
+            else
+                $(this).text("").addClass("invisible");
+        });
     }
 
     // For when something changes on the network
@@ -245,6 +254,7 @@ function update_signals()
     //updaterLeft.setHeaders();
     //updaterRight.setHeaders();
 
+    //TODO set headers upton tab switch, not updates
     leftTable.set_headers(signalHeaders);
     rightTable.set_headers(signalHeaders);
 
@@ -258,11 +268,11 @@ function update_signals()
 
         if (sig.device_name == selectedTab && sig.direction == 1){
             //updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
-            leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+            leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
         if (sig.direction == 0 && lnk!=null){
             //updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
-            rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
+            rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
     }
 

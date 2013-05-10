@@ -200,6 +200,10 @@ body {
         cursor: pointer;
       }
 
+      .displayTable thead tr th.invisible {
+        display: none;
+      }
+
       .displayTable tr td {
         margin: 3pt;
         height: 13pt;
