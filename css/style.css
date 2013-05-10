@@ -90,9 +90,9 @@ body {
   text-decoration: none;
 }
 
-.topMenu li a.disabled {
+/*.topMenu li a.disabled {
   color: gray;
-}
+}*/
 
 .rangeSwitch {
   width: 20px;
@@ -326,4 +326,9 @@ div.range {
   width: 100%;
   background-color: lightgrey;
   margin-top: 20px;
+}
+
+/* For disabled elements */
+.disabled {
+  opacity: 0.5 !important;
 }

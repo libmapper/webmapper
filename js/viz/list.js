@@ -565,12 +565,14 @@ function select_tab(tab)
         $('#svgTitle').text("Links");
         leftTable.set_headers(deviceHeaders);
         rightTable.set_headers(deviceHeaders);
+        $('.signalControlsDiv').addClass('disabled');
     }
     else {
         //set_actions(sigActions);
         $('#svgTitle').text("Connections");
         leftTable.set_headers(signalHeaders);
         rightTable.set_headers(signalHeaders);
+        $('.signalControlsDiv').removeClass('disabled');
     }
 
     $('#leftSearch, #rightSearch').val('');
@@ -606,6 +608,8 @@ function select_tr(tr)
 
     selectLists[selectedTab][i] = l;
     //TODO find out if this is actually necessary
+    // Yes it is, makes the arrows red, which seems like a lot of computation
+    // For just that effect, I'll explicitly make them red for now
     //update_arrows();
     update_connection_properties();
 }
@@ -631,6 +635,7 @@ function select_all()
     for(var i in arrows ) {
         //Test to see if those rows are already selected
         //(select_tr() just toggles selection)
+        arrows[i].attr('stroke', 'red');
         if( ! $(arrows[i].leftTr).hasClass('trsel') )
             select_tr(arrows[i].leftTr);
         if( ! $(arrows[i].rightTr).hasClass('trsel') )
