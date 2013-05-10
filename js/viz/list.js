@@ -536,6 +536,7 @@ function create_arrow(left, right, sel)
 
     arrows.push(line);
 
+    //TODO move this with all the other UI handlers
     $(line.border.node).on('click', function(e) {
         //So that the arrow is deselected if both rows are selected
         if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
@@ -1057,6 +1058,26 @@ function add_UI_handlers()
         }
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             select_all();
+        }
+        else if (e.which == 9 && e.ctrlKey == true) { // Tabbing like in google chrome 'ctrl-tab'
+            e.preventDefault();
+            var n_tabs = $(tabList).children().length;
+            var currentTabIndex = $('li.tabsel').index() + 1;
+            var nextTabIndex;
+            if (e.shiftKey == false) { //Tabbing forwards
+                if (currentTabIndex < n_tabs)
+                    nextTabIndex = currentTabIndex + 1
+                else // If we're at the last tab, select the first one
+                    nextTabIndex = 1;
+            }
+            else {  //Tabbing backwards
+                if (currentTabIndex == 1) // At the first tab, go to the last
+                    nextTabIndex = n_tabs;
+                else
+                    nextTabIndex = currentTabIndex - 1;
+            }
+            //select_tab( $(tabList).children(':nth-child('+nextTabIndex')') );
+            select_tab( $(tabList).children(':nth-child('+nextTabIndex+')')[0] );
         }
     });
 
