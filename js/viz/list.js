@@ -731,7 +731,7 @@ function on_disconnect(e)
 function position_dynamic_elements()
 {
     //Let's stop relying on this spacer table
-    var hT = fullOffset($("#spacerTable")[0]);
+    /*var hT = fullOffset($("#spacerTable")[0]);
 
 
     $('.svgDiv, .tableDiv').css({
@@ -777,7 +777,7 @@ function position_dynamic_elements()
             'left': h[2].left+"px",
             'width': h[2].width+'px'
         });
-        */
+        
 
         //Position titles and search bars
         $('#leftTitle').css("left", h[0].left+10+"px");
@@ -786,7 +786,7 @@ function position_dynamic_elements()
         $('#rightTitle').css("left", h[2].left+10+"px");
         $('#rightSearch').css("right", "20px");
     }
-    update_tables();
+    update_tables();*/
 
 
 }

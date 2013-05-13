@@ -59,8 +59,9 @@ body {
 /****************/
 
 .topMenu {
-  margin: 0px 0px 0px 0px;
-  padding: 0px 0px 0px 0px;
+  position: absolute;
+  padding: 0;
+  top: 0;
 }
 
 .topMenu li {
@@ -173,13 +174,14 @@ body {
   padding-left: 5px;
   padding-right: 5px;
 }
+  
 
 /* The table areas */
   .tableDiv {
     position: absolute;
     overflow: auto;
-    width: 3.18in;
-    height: 5in;
+    width: 40%;
+    height: calc(100% - 73px);
     background: white;
     border: solid 1px black;
   }
@@ -187,10 +189,13 @@ body {
   /* The table itself */
     .displayTable {
       border-collapse: collapse;
-      width: 3in;
+      width: 100%;
       overflow: scroll;
       border: solid 0px black;
       font-size: 10pt;
+    }
+    #rightTable {
+      left: 60%;
     }
 
       /* Rows and headers */
@@ -248,6 +253,9 @@ body {
   position: absolute;
   background-color: white;
   border: 1px solid black;
+  left: 40%;
+  height: calc(100% - 73px);
+  width: 20%;
 }
 #svgTop {
   width: 100%;
@@ -319,13 +327,31 @@ div.range {
 .modesel {
   background: darkgrey;
 }
+
+#leftTitle {
+  left: 10px;
+}
+#leftSearch {
+  right: 60%;
+}
+#svgTitle {
+  left: calc(50% - 25px);
+}
+#rightTitle {
+  left: 60%;
+}
+#rightSearch {
+  right: 10px;
+}
+
 /****************/
 
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
+  height: calc(100% - 60px);
   background-color: lightgrey;
-  margin-top: 20px;
+  margin-top: 60px;
   position: relative;
 }
 
