@@ -178,7 +178,6 @@ body {
   .tableDiv {
     position: absolute;
     overflow: auto;
-    top: 1in;
     width: 3.18in;
     height: 5in;
     background: white;
@@ -327,6 +326,7 @@ div.range {
   width: 100%;
   background-color: lightgrey;
   margin-top: 20px;
+  position: relative;
 }
 
 /* For disabled elements */

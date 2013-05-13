@@ -730,14 +730,18 @@ function on_disconnect(e)
 
 function position_dynamic_elements()
 {
+    //Let's stop relying on this spacer table
     var hT = fullOffset($("#spacerTable")[0]);
+
 
     $('.svgDiv, .tableDiv').css({
         'height': (document.body.clientHeight - hT.top - 10) + "px",
-        'top': (hT.top) + 'px'
     });
 
     $('#container').css({'height': (document.body.clientHeight - hT.top + 64) + "px"});
+    
+    var height = $('#container').height();
+    var width = $('#container').width() / 5;
 
     // Allow tables to collapse the columns naturally, and then we'll
     // expand to fill the space if necessary.
@@ -750,8 +754,17 @@ function position_dynamic_elements()
         var h = $("#spacerTable").find("tr").find("td").map(
             function(){return fullOffset(this);});
 
+        $('#leftTable.tableDiv, #rightTable.tableDiv').css('width', 2*width+'px');
+        $('.svgDiv').css({
+            'width': width+'px',
+            'left': 2*width+'px'
+        });
+        $('#rightTable.tableDiv').css('left', 3*width+'px');
+
+
+
+        /* with spacer table
         $('#leftTable.tableDiv').css({
-            'left': h[0].left+"px",
             'width': h[0].width+'px'
         });
 
@@ -764,6 +777,7 @@ function position_dynamic_elements()
             'left': h[2].left+"px",
             'width': h[2].width+'px'
         });
+        */
 
         //Position titles and search bars
         $('#leftTitle').css("left", h[0].left+10+"px");
@@ -771,10 +785,7 @@ function position_dynamic_elements()
         $('#svgTitle').width( $(window).width() );
         $('#rightTitle').css("left", h[2].left+10+"px");
         $('#rightSearch').css("right", "20px");
-
-        //Make sure status bars are proper width
     }
-    update_tables();
     update_tables();
 
 
