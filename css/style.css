@@ -16,6 +16,7 @@ input {
   -moz-user-select: text;
   -o-user-select: text;
   user-select: text;
+  border-radius: 5px;
 }
 
 body {
