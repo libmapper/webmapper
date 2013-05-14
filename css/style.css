@@ -233,14 +233,18 @@ body {
     /****************/
 
   .status {
-    position: absolute;
-    bottom: 0px;
+    position: fixed;
+    bottom: 17px;
     height: 23px;
-    width: 100%;
+    width: calc(40% - 8.2px);
     background-color: lightgray;
     border-top: 1px solid black;
     padding-left: 10px;
     padding-top: 3px;
+  }
+
+  .svgDiv .status {
+    width: calc(20% - 4.9px);
   }
 /****************/
 
