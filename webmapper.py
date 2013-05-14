@@ -6,7 +6,9 @@ import mapperstorage
 import sys, os, os.path, threading, json, re
 from random import randint
 
-os.chdir(os.path.dirname(__file__))
+dirname = os.path.dirname(__file__)
+if dirname:
+   os.chdir(os.path.dirname(__file__))
 
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
@@ -35,23 +37,29 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-monitor = mapper.monitor()
+monitor = mapper.monitor(enable_autorequest=0)
 
 def on_device(dev, action):
     if action == mapper.MDB_NEW:
         server.send_command("new_device", dev)
+    if action == mapper.MDB_MODIFY:
+        server.send_command("mod_device", dev)
     if action == mapper.MDB_REMOVE:
         server.send_command("del_device", dev)
 
 def on_signal(sig, action):
     if action == mapper.MDB_NEW:
         server.send_command("new_signal", sig)
+    if action == mapper.MDB_MODIFY:
+        server.send_command("mod_signal", sig)
     if action == mapper.MDB_REMOVE:
         server.send_command("del_signal", sig)
 
 def on_link(link, action):
     if action == mapper.MDB_NEW:
         server.send_command("new_link", link)
+    if action == mapper.MDB_MODIFY:
+        server.send_command("mod_link", link)
     if action == mapper.MDB_REMOVE:
         server.send_command("del_link", link)
 
@@ -74,7 +82,7 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    monitor = mapper.monitor()
+    monitor = mapper.monitor(enable_autorequest=0)
     init_monitor()
 
 def on_save(arg):
@@ -88,17 +96,50 @@ def on_load(mapping_json):
     mapperstorage.deserialise(monitor, mapping_json)
 
 def init_monitor():
-    monitor.request_devices()
     monitor.db.add_device_callback(on_device)
     monitor.db.add_signal_callback(on_signal)
     monitor.db.add_link_callback(on_link)
     monitor.db.add_connection_callback(on_connection)
+    monitor.request_devices()
+    monitor.request_links_by_src_device_name("/*")
 
 init_monitor()
 
 server.add_command_handler("all_devices",
                            lambda x: ("all_devices",
                                       list(monitor.db.all_devices())))
+
+def sync_device(name, is_src):
+    device = monitor.db.get_device_by_name(name)
+    if not device:
+        return
+    sigs_reported = 0
+    sigs_recorded = 0
+    if is_src:
+        sigs_reported = device["n_outputs"]
+        sigs_recorded = sum(1 for _ in monitor.db.outputs_by_device_name(name))
+    else:
+        sigs_reported = device["n_inputs"]
+        sigs_recorded = sum(1 for _ in monitor.db.inputs_by_device_name(name))
+    if sigs_reported != sigs_recorded:
+        if is_src:
+            monitor.request_output_signals_by_device_name(name)
+        else:
+            monitor.request_input_signals_by_device_name(name)
+    monitor.request_device_info(name)
+
+def select_tab(src_dev):
+    if src_dev == "All Devices":
+        monitor.request_devices()
+        monitor.request_links_by_src_device_name("/*")
+    else:
+        links = monitor.db.links_by_src_device_name(src_dev)
+        for i in links:
+            sync_device(i["dest_name"], 0)
+        sync_device(src_dev, 1)
+        monitor.request_connections_by_src_device_name(src_dev)
+
+server.add_command_handler("tab", lambda x: select_tab(x))
 
 server.add_command_handler("all_signals",
                            lambda x: ("all_signals",
@@ -135,7 +176,8 @@ server.add_command_handler("load", on_load)
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
 except:
-    port = randint(49152,65535)
+    #port = randint(49152,65535)
+    port = 50000
 
 on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:

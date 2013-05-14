@@ -274,6 +274,7 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             return int(self.headers['Sec-WebSocket-Version'])
 
+# There ought to be a more elegant way to do this
 def handler_page(out, args):
     print >>out, """<html>
 <head>
@@ -281,16 +282,17 @@ def handler_page(out, args):
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/raphael.js"></script>
+<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
+
+<script type="text/javascript" src="js/viz/list.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
-<body>
-<table id="spacerTable"><tr><td></td><td></td><td></td></tr></table>
-<div id="output"></div>
-</body>
+<body></body>
 </html>"""
 
 def handler_wait_command(out, args):

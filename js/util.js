@@ -67,6 +67,7 @@ function Assoc() {
     this.length = function() {
         return keys.length;
     }
+
 }
 
 /* Split a full signal name into device and signal parts. */
