@@ -834,9 +834,9 @@ function add_title_bar()
 function add_display_tables()
 {
     //Make the spacer table, how the elements locate themselves on the page
-    $('#container').append(
+    /*$('#container').append(
         "<table id='spacerTable'><tr><td></td><td></td><td></td></tr></table>"
-    );
+    );*/
 
     leftTable = new listTable('leftTable');
     rightTable = new listTable('rightTable');
@@ -1076,7 +1076,7 @@ function add_UI_handlers()
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             select_all();
         }
-        else if (e.which == 9 && e.ctrlKey == true) { // Tabbing like in google chrome 'ctrl-tab'
+        else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'ctrl-tab'
             e.preventDefault();
             var n_tabs = $(tabList).children().length;
             var currentTabIndex = $('li.tabsel').index() + 1;

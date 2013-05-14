@@ -13,5 +13,5 @@ Command keys:
 	'c' : Connect selected devices/signals
 	'delete': Delete selected links/connections
 	'cmd+a'	: Select all links/connections
-	'ctrl+tab' : Change tab to the right
-	'ctrl+shift+tab' : Change tab to the left
+	'alt+tab' : Change tab to the right
+	'alt+shift+tab' : Change tab to the left
