@@ -11,7 +11,8 @@ devActions = null;
 sigActions = null;
 arrows = [];
 
-deviceHeaders = ["device", "outputs", "IP", "port"];
+sourceDeviceHeaders = ["device", "outputs", "IP", "port"];
+destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
 //TODO include min/max
 signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
@@ -138,8 +139,8 @@ function update_devices()
     var leftBodyContent = [];
     var rightBodyContent = [];
 
-    leftTable.set_headers(deviceHeaders);
-    rightTable.set_headers(deviceHeaders);    
+    leftTable.set_headers(sourceDeviceHeaders);
+    rightTable.set_headers(destinationDeviceHeaders);    
     
     for (var d in keys) {
         var k = keys[d];
@@ -150,7 +151,7 @@ function update_devices()
             leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
         if (dev.n_inputs){
             //updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
-            rightBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
+            rightBodyContent.push([dev.name, dev.n_inputs, dev.host, dev.port]);}
         
     }
 
@@ -563,8 +564,8 @@ function select_tab(tab)
     if (tab == tabDevices) {
         //set_actions(devActions);
         $('#svgTitle').text("Links");
-        leftTable.set_headers(deviceHeaders);
-        rightTable.set_headers(deviceHeaders);
+        leftTable.set_headers(sourceDeviceHeaders);
+        rightTable.set_headers(destinationDeviceHeaders);
         $('.signalControlsDiv').addClass('disabled');
     }
     else {
