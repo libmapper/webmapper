@@ -64,13 +64,11 @@ function listTable(id)
             "<table class='displayTable'>"+
                 "<thead><tr></tr></thead>"+
                 "<tbody></tbody>"+
-            "</table>"+
-            "<div class='status'></div>"
+            "</table>"
         );
         this.table = $(this.div).children('.displayTable')[0];
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
         this.tBody = $("#"+this.id+" .displayTable tbody")[0];
-        this.footer = $("#"+this.id+" .status")[0];
 
         //Create the header elements
         //This assumes that we will never need more than 20 columns
@@ -272,7 +270,7 @@ function update_signals()
     }
 
     leftTable.set_status();
-    leftTable.set_status();
+    rightTable.set_status();
 
     leftTable.update(leftBodyContent);
     rightTable.update(rightBodyContent);
@@ -377,7 +375,7 @@ function update_links()
             });
     }
 
-    $('.svgDiv').children('.status').text(
+    $('.status.middle').text(
         n_visibleLinks + " of " + links.keys().length + " links"
     );
 
@@ -418,7 +416,7 @@ function update_connections()
             });
     }
 
-    $('.svgDiv').children('.status').text(
+    $('.status.middle').text(
         n_visibleConnections + " of " + n_connections + " connections"
     );
 }
@@ -476,20 +474,6 @@ function search_filter($searchBox)
     //update_status_bar($(targetTable.tBody), n_visible, n_total);
     update_arrows();
 }
-/*No longer necessary
-function update_status_bar($tableBody, n_visible, n_total)
-{
-    //Find the appropriate status bar
-    var $status = $tableBody.parents('.tableDiv').children('.status');
-
-    var name; //Devices or signals
-    if( selectedTab == all_devices ) {
-        name = "devices";
-    }
-    else name = "signals";
-
-    $status.text(n_visible + " of " + n_total + " " + name);
-}*/
 
 /* params are TR elements, one from each table */
 function create_arrow(left, right, sel)
@@ -798,10 +782,12 @@ function list_view_start()
     add_title_bar();
     add_display_tables();
     add_svg_area();
+    add_status_bar();
     add_UI_handlers();
     position_dynamic_elements();
     select_tab(tabDevices);
     update_display();
+
 }
 
 function add_tabs()
@@ -858,12 +844,27 @@ function add_svg_area()
     $('#container').append(
         "<div class='svgDiv'>"+
             "<div id='svgTop'></div>"+
-            "<div class='status'></div>"+
         "</div>"
     );
 
     svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
     
+}
+
+function add_status_bar()
+{
+    $('#container').append(
+        "<table id='statusBar'>"+
+            "<tr>"+
+                "<td class='status left'></td>"+
+                "<td class='status middle'></td>"+
+                "<td class='status right'></td>"+
+            "</tr>"+
+        "</table>"
+    );
+
+    leftTable.footer = $("#statusBar .left")[0];
+    rightTable.footer = $("#statusBar .right")[0];
 }
 
 function drawing_curve(sourceRow)
@@ -1108,6 +1109,10 @@ function add_UI_handlers()
     $('#leftSearch, #rightSearch').on('keyup', function(e) {
         e.stopPropagation();
         search_filter( $(this) );
+    });
+
+    $('.tableDiv').on('scroll', function(e) {
+        update_arrows();
     });
 
     drawing_handlers();

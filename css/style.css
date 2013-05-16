@@ -181,7 +181,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 73px);
+    height: calc(100% - 96px);
     background: white;
     border: solid 1px black;
   }
@@ -232,19 +232,24 @@ body {
       /*****************/
     /****************/
 
-  .status {
-    position: fixed;
-    bottom: 17px;
-    height: 23px;
-    width: calc(40% - 8.2px);
+  #statusBar {
+    position: absolute;
+    width: 100%;
     background-color: lightgray;
-    border-top: 1px solid black;
-    padding-left: 10px;
-    padding-top: 3px;
+    bottom: 0px;
+    border-collapse: collapse;
   }
 
-  .svgDiv .status {
-    width: calc(20% - 4.9px);
+  .status {
+    width: 40%;
+    background-color: lightgray;
+    padding-left: 10px;
+    padding-top: 3px;
+    border: 1px solid black;
+  }
+
+  .status.middle {
+    width: 20%;
   }
 /****************/
 
@@ -258,12 +263,12 @@ body {
   background-color: white;
   border: 1px solid black;
   left: 40%;
-  height: calc(100% - 73px);
+  height: calc(100% - 96px);
   width: 20%;
 }
 #svgTop {
   width: 100%;
-  height: 19px;
+  height: 18px;
   border-bottom: 1px solid black;
   background-color: lightgray;
   position: absolute;
