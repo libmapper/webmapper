@@ -350,9 +350,6 @@ function main()
         update_connection_properties_for(args, conns);
     });
 
-    //var body = document.getElementsByTagName('body')[0];
-    //body.onclick = deselect_all;
-
     //Create the page elements
     add_container_elements();
     add_signal_control_bar();
@@ -375,7 +372,6 @@ function main()
             //(maybe add_UI_handlers can be a method of list)
             add_handlers();
             window.onresize = function (e) {
-                position_dynamic_elements();
                 update_arrows();
             };
         },

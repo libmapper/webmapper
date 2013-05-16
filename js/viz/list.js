@@ -93,17 +93,15 @@ function listTable(id)
 
     // For when something changes on the network
     // big TODO (make the tableupdater object obsolete)
-    this.update = function(tableData)
+    this.update = function(tableData, headerStrings)
     {
         $(this.tBody).empty();
         for(var row in tableData) 
         {
             //If there is only one row, make it of odd class for styling
             var newRow = "<tr class='odd'>"
-            //$(this.tBody).append("<tr>");
             for(var col in tableData[row]) {
-                //$(this.tBody).append("<td>"+tableData[row][col]+"</td>")
-                newRow += "<td>"+tableData[row][col]+"</td>";
+                newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
             $(this.tBody).append(newRow+"</tr>");
         }
@@ -151,8 +149,8 @@ function update_devices()
     leftTable.set_status();
     rightTable.set_status();
 
-    leftTable.update(leftBodyContent);
-    rightTable.update(rightBodyContent);
+    leftTable.update(leftBodyContent, sourceDeviceHeaders);
+    rightTable.update(rightBodyContent, destinationDeviceHeaders);
 }
 
 
@@ -179,8 +177,8 @@ function update_signals()
     leftTable.set_status();
     rightTable.set_status();
 
-    leftTable.update(leftBodyContent);
-    rightTable.update(rightBodyContent);
+    leftTable.update(leftBodyContent, signalHeaders);
+    rightTable.update(rightBodyContent, signalHeaders);
 }
 
 function update_tabs()
@@ -463,7 +461,6 @@ function select_tab(tab)
 
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
-    position_dynamic_elements();
     update_display();
 }
 
@@ -622,7 +619,6 @@ function list_view_start()
     add_svg_area();
     add_status_bar();
     add_UI_handlers();
-    position_dynamic_elements();
     select_tab(tabDevices);
     update_display();
 
@@ -866,7 +862,7 @@ function fade_incompatible_signals(row, targetTable)
 {
     var sourceLength = $(row).children('.length').text();
     
-    $(targetTable).find('tbody tr').each( function(index, element) {
+    $(targetTable).children('tr').each( function(index, element) {
         var targetLength =  $(element).children('.length').text();
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
