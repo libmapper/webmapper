@@ -130,9 +130,6 @@ function listTable(id)
 function update_devices()
 {
     var keys = devices.keys();
-    //var sigkeys = signals.keys();
-    //var updaterLeft = new table_updater(leftTable.table);
-    //var updaterRight = new table_updater(rightTable.table);
 
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -145,10 +142,8 @@ function update_devices()
         var dev = devices.get(k);
 
         if (dev.n_outputs){
-            //updaterLeft.addrow([dev.name, dev.n_outputs, dev.host, dev.port]);
             leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
         if (dev.n_inputs){
-            //updaterRight.addrow([dev.name, dev.n_inputs, dev.host, dev.port]);
             rightBodyContent.push([dev.name, dev.n_inputs, dev.host, dev.port]);}
         
     }
@@ -156,100 +151,14 @@ function update_devices()
     leftTable.set_status();
     rightTable.set_status();
 
-    //updaterLeft.updateStatusBar('devices');
-    //updaterRight.updateStatusBar('devices');
-
-    //updaterLeft.apply();
-    //updaterRight.apply();
-
     leftTable.update(leftBodyContent);
     rightTable.update(rightBodyContent);
 }
-
-/* Update a table with the rows and columns contained in text, add
- * rows one at a time and then apply. */
- /* NOW OBSOLETE
-function table_updater(tab)
-{
-    var trs = [];
-    this.$table = $(tab);
-    this.$footer = $(tab).siblings('.status');
-    //this.$filter = $('.leftSearch')[0].value;
-    var tableBody = this.$table.children('tbody')[0];
-    $(tableBody).append("<tr></tr>");
-
-    this.addrow = function(row) {
-        var tr = document.createElement('tr');
-
-        for (col in row) {
-            var td = document.createElement('td');
-            // The cell's corresponding header
-            var tdHeader = this.$table.find('th')[col];
-            $(td).addClass( $(tdHeader).text() );
-
-            td.textContent = row[col];
-            tr.appendChild(td);
-        }
-        trs.push(tr);
-        
-    }
-    this.apply = function() {
-        //Add a child under the 'body' of the table
-        var tr = tableBody.firstChild;
-        var i = 0;
-        while (tr && i < trs.length) {
-            tableBody.insertBefore(trs[i], tr);
-            i++;
-            var t = tr;
-            tr = tr.nextSibling;
-            tableBody.removeChild(t);
-        }
-        while (i < trs.length)
-            tableBody.appendChild(trs[i++]);
-        while (tr) {
-            var t = tr;
-            tr = tr.nextSibling;
-            tableBody.removeChild(t);
-        }
-        this.$table.trigger('update'); //Update tablesorter with new data
-    }
-
-    this.setHeaders = function() {
-        //Set the text of the table headers
-        //Check to see if we are signals or devices
-        if(selectedTab == all_devices) {
-            var columnHeaders = ['device', 'outputs', 'IP', 'port']; //TODO change to reflect actual values
-            if(this.$table.hasClass('rightTable')) { columnHeaders[1] = 'inputs'; }
-        }
-        else {
-            var columnHeaders = ['name', 'type', 'length', 'units']; //TODO change to reflect actual values
-        }
-        var ths = $('th', $(tableBody).parent('table') );
-        //var ths = this.$table.find('th');
-        for(var i in ths){
-            ths[i].textContent = columnHeaders[i];
-        }
-    }
-
-    this.updateStatusBar = function(name) {
-        //set the text of the bars at the bottom of each table
-        var total = trs.length;
-        this.$footer.text(
-            trs.length + " of " +total+ " " +name
-        );
-    }
-}
-*/
 
 
 function update_signals()
 {
     var keys = signals.keys();
-    //var updaterLeft = new table_updater(leftTable.table);
-    //var updaterRight = new table_updater(rightTable.table);
-
-    //updaterLeft.setHeaders();
-    //updaterRight.setHeaders();
     
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -260,11 +169,9 @@ function update_signals()
         var lnk = links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1){
-            //updaterLeft.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
             leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
         if (sig.direction == 0 && lnk!=null){
-            //updaterRight.addrow([sig.device_name+sig.name, sig.type, sig.length, sig.unit]);
             rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
     }
@@ -274,12 +181,6 @@ function update_signals()
 
     leftTable.update(leftBodyContent);
     rightTable.update(rightBodyContent);
-
-//    updaterLeft.updateStatusBar('signals');
-//    updaterRight.updateStatusBar('signals');
-//
-//    updaterLeft.apply();
-//    updaterRight.apply();
 }
 
 function update_tabs()
@@ -711,69 +612,6 @@ function on_disconnect(e)
     }
     apply_selected_pairs(do_disconnect);
     e.stopPropagation();
-}
-
-function position_dynamic_elements()
-{
-    //Let's stop relying on this spacer table
-    /*var hT = fullOffset($("#spacerTable")[0]);
-
-
-    $('.svgDiv, .tableDiv').css({
-        'height': (document.body.clientHeight - hT.top - 10) + "px",
-    });
-
-    $('#container').css({'height': (document.body.clientHeight - hT.top + 64) + "px"});
-    
-    var height = $('#container').height();
-    var width = $('#container').width() / 5;
-
-    // Allow tables to collapse the columns naturally, and then we'll
-    // expand to fill the space if necessary.
-    $('.displayTable').css('width','100%');
-
-    // Need to run this twice, since movement of the table causes
-    // appearance or disappearance of scroll bars, which changes the
-    // layout.
-    var update_tables = function() {
-        var h = $("#spacerTable").find("tr").find("td").map(
-            function(){return fullOffset(this);});
-
-        $('#leftTable.tableDiv, #rightTable.tableDiv').css('width', 2*width+'px');
-        $('.svgDiv').css({
-            'width': width+'px',
-            'left': 2*width+'px'
-        });
-        $('#rightTable.tableDiv').css('left', 3*width+'px');
-
-
-
-        /* with spacer table
-        $('#leftTable.tableDiv').css({
-            'width': h[0].width+'px'
-        });
-
-        $('.svgDiv').css({
-            'left': h[1].left+'px',
-            'width': h[1].width+'px'
-        });
-
-        $('#rightTable.tableDiv').css({
-            'left': h[2].left+"px",
-            'width': h[2].width+'px'
-        });
-        
-
-        //Position titles and search bars
-        $('#leftTitle').css("left", h[0].left+10+"px");
-        $('#leftSearch').css("left", h[1].left-124+"px");
-        $('#svgTitle').width( $(window).width() );
-        $('#rightTitle').css("left", h[2].left+10+"px");
-        $('#rightSearch').css("right", "20px");
-    }
-    update_tables();*/
-
-
 }
 
 function list_view_start()
