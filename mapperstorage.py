@@ -25,7 +25,7 @@ def serialise(monitor, device):
                mapper.BA_WRAP: 'wrap'}
 
     for c in monitor.db.connections_by_device_name(device):
-
+      
         this_connection = {
           'src': [ c['src_name'] ],
           'dest': [ c['dest_name'] ],
@@ -33,8 +33,8 @@ def serialise(monitor, device):
           'mode': c['mode'],
           'range': c['range'],
           'expression': c['expression'],
-          'bound_min': c['clip_min'],
-          'bound_max': c['clip_max'] 
+          'bound_min': c['bound_min'],
+          'bound_max': c['bound_max'] 
         }
         new_connections.append(this_connection);
 
@@ -65,15 +65,22 @@ def serialise(monitor, device):
             'boundMax': boundStr[c['bound_max']],
             'muted': c['muted'],
             }
+    
     contents = {"fileversion": "2.0", "mapping": {
                             "connections": new_connections
                             }
                 }
+    """
+    contents = {"mapping": {"fileversion": "dot-1",
+                                "sources": sources.values(),
+                                "destinations": destinations.values(),
+                                "connections": connections.values()}}"""
+
     return json.dumps(contents, indent=4)
 
 def deserialise(monitor, mapping_json):
     js = json.loads(mapping_json)
-    pdb.set_trace();
+    #pdb.set_trace();
 
     modeIdx = {'bypass': mapper.MO_BYPASS,
                'linear': mapper.MO_LINEAR,
