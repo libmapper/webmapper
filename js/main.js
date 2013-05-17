@@ -115,8 +115,9 @@ function notify(msg)
 
 function update_connection_properties()
 {
+    /*
     if (selectedTab == all_devices)
-        return;
+        return;*/
 
     //var a = function(x) { return $(x,actionDiv); };
 
@@ -285,10 +286,8 @@ function main()
     });
     command.register("del_device", function(cmd, args) {
         devices.remove(args.name);
-        if (selectedTab==args.name)
-            select_tab(tabDevices);
-        else
-            update_display();
+        //TODO Set tab within list
+        update_display();
     });
 
     command.register("all_signals", function(cmd, args) {
