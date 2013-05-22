@@ -30,14 +30,18 @@ def serialise(monitor, device):
           'src': [ c['src_name'] ],
           'dest': [ c['dest_name'] ],
           'mute': c['muted'],
-          'mode': c['mode'],
+          'mode': modeStr[c['mode']],
           'range': c['range'],
           'expression': c['expression'],
-          'bound_min': c['bound_min'],
-          'bound_max': c['bound_max'] 
+          'bound_min': boundStr[c['bound_min']],
+          'bound_max': boundStr[c['bound_max']] 
         }
+        # To get proper expression nomenclature
+        # dest[0] = src[0] NOT y = x
+        this_connection['expression'] = this_connection['expression'].replace('y', 'dest[0]').replace('x', 'src[0]')
         new_connections.append(this_connection);
 
+        """
         # does the following source already have something in the string?
         if not sources.has_key(c['src_name']):
             sources[c['src_name']] = {
@@ -64,7 +68,7 @@ def serialise(monitor, device):
             'boundMin': boundStr[c['bound_min']],
             'boundMax': boundStr[c['bound_max']],
             'muted': c['muted'],
-            }
+            }"""
     
     contents = {"fileversion": "2.0", "mapping": {
                             "connections": new_connections
@@ -80,7 +84,13 @@ def serialise(monitor, device):
 
 def deserialise(monitor, mapping_json):
     js = json.loads(mapping_json)
-    #pdb.set_trace();
+
+    #The version we're currently working with
+    version = '';
+    if 'fileversion' in js:
+      version = js['fileversion']
+    elif 'fileversion' in  js['mapping']:
+      version = js['mapping']['fileversion']
 
     modeIdx = {'bypass': mapper.MO_BYPASS,
                'linear': mapper.MO_LINEAR,
@@ -93,6 +103,15 @@ def deserialise(monitor, mapping_json):
                'wrap': mapper.BA_WRAP}
 
     m = js['mapping']
+
+    # This is a version 2.0 save file
+    if version == '2.0':
+      print version
+
+    # This is a version 1 save file
+    if version == 'dot-1':
+      print version
+
     srcs = {}
     dests = {}
     for s in m['sources']:
@@ -123,6 +142,7 @@ def deserialise(monitor, mapping_json):
         if not monitor.db.link_by_src_dest_names(srcdev, destdev):
             monitor.link(srcdev, destdev)
 
+        # The expression itself
         e = (c['expression'].replace(link[0]['id'], 'x')
                             .replace(link[1]['id'], 'y'))
 
