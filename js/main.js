@@ -46,16 +46,22 @@ function refresh_all()
 
 function update_save_location()
 {
-    if (selectedTab==all_devices) 
-        $('#saveButton').addClass('disabled');
+    if (selectedTab==all_devices) {
+        $('#saveButton, #loadButton').addClass('disabled');
+    }
     else 
-        $('#saveButton').removeClass('disabled');
+        $('#saveButton, #loadButton').removeClass('disabled');
 
     $('#saveButton').attr('href', window.saveLocation);
 }
 
 function on_load()
 {
+    //A quick fix for now to get #container out of the way of the load dialogs
+    $('#container').css({
+        'height': 'calc(100% - 85px)',
+        'margin-top': '85px'
+    });
     var body = document.getElementsByTagName('body')[0];
     var iframe = document.createElement('iframe');
     iframe.name = 'file_upload';
@@ -111,6 +117,12 @@ function notify(msg)
     setTimeout(function(){
         $(li).fadeOut('slow', function(){ $(li).remove();});
     }, 5000);
+    setTimeout(function(){
+        $('#container').css({
+            'height': 'calc(100% - 60px)',
+            'margin-top': '60px'
+        });
+    }, 6000);
 }
 
 function update_connection_properties()
@@ -473,8 +485,8 @@ function add_handlers()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        console.log(e);
-        on_load();
+        if (selectedTab != all_devices)
+            on_load();
     });
 }
 
