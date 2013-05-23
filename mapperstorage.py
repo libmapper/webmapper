@@ -106,79 +106,104 @@ def deserialise(monitor, mapping_json):
 
     # This is a version 2.0 save file
     if version == '2.0':
-      print version
+        for c in m['connections']:
+            #The name of the source signal (assuming 1 to 1 for now)
+            srcsig = str(c['src'][0])
+            #And the destination
+            destsig = str(c['dest'][0])
+
+            # The expression, agian we're simply replacing based on an assumption of 1 to 1 connections
+            e = (c['expression'].replace('src[0]', 'x')
+                                .replace('dest[0]', 'y'))
+
+            args = (srcsig,
+                    destsig,
+                    {'mode': modeIdx[c['mode']],
+                     'range': c['range'],
+                     'expression': e,
+                     'bound_min': boundIdx[c['bound_min']],
+                     'bound_max': boundIdx[c['bound_max']],
+                     'muted': c['mute']})
+
+            # Should only 'modify' if connection already exists
+            # However, without explicit access to devices, this is not trivial
+            monitor.connect(*args)
 
     # This is a version 1 save file
+    # As of now, version 1 explicitly save devices
+    # So it can create links, whereas v2.0 cannot
     if version == 'dot-1':
-      print version
+        srcs = {}
+        dests = {}
+        for s in m['sources']:
+            srcs[s['id']] = s
+        for d in m['destinations']:
+            dests[d['id']] = d
+        for c in m['connections']:
+            s = [srcs[s] for s in srcs.keys()
+                 if (s in re.findall('(s\\d+)', c['expression']))]
+            d = [dests[d] for d in dests.keys()
+                 if (d in re.findall('(d\\d+)', c['expression']))]
+            links = [(x,y) for x in s for y in d]
+            if len(links)>1:
+                print 'Error, multiple links specified for connection', c
+                continue
+            if len(links)<1:
+                # If not enough sources or destinations are specified in the
+                # expression string, ignore this connection.
+                # This can happen e.g. if expression is a constant: "d1=1"
+                continue
 
-    srcs = {}
-    dests = {}
-    for s in m['sources']:
-        srcs[s['id']] = s
-    for d in m['destinations']:
-        dests[d['id']] = d
-    for c in m['connections']:
-        s = [srcs[s] for s in srcs.keys()
-             if (s in re.findall('(s\\d+)', c['expression']))]
-        d = [dests[d] for d in dests.keys()
-             if (d in re.findall('(d\\d+)', c['expression']))]
-        links = [(x,y) for x in s for y in d]
-        if len(links)>1:
-            print 'Error, multiple links specified for connection', c
-            continue
-        if len(links)<1:
-            # If not enough sources or destinations are specified in the
-            # expression string, ignore this connection.
-            # This can happen e.g. if expression is a constant: "d1=1"
-            continue
+            link = links[0]
 
-        link = links[0]
+            srcdev = str('/'+link[0]['device'])
+            destdev = str('/'+link[1]['device'])
 
-        srcdev = str('/'+link[0]['device'])
-        destdev = str('/'+link[1]['device'])
+            # Only make a link if it doesn't already exist.
+            if not monitor.db.link_by_src_dest_names(srcdev, destdev):
+                monitor.link(srcdev, destdev)
 
-        # Only make a link if it doesn't already exist.
-        if not monitor.db.link_by_src_dest_names(srcdev, destdev):
-            monitor.link(srcdev, destdev)
+            # The expression itself
+            e = (c['expression'].replace(link[0]['id'], 'x')
+                                .replace(link[1]['id'], 'y'))
 
-        # The expression itself
-        e = (c['expression'].replace(link[0]['id'], 'x')
-                            .replace(link[1]['id'], 'y'))
-
-        # Range may have integers, floats, or '-' strings. When
-        # converting to a list of floats, pass through anything that
-        # doesn't parse as a float or int.
-        rng = []
-        for r in c['range'].split():
-            try:
-                rng.append(int(r))
-            except:
+            # Range may have integers, floats, or '-' strings. When
+            # converting to a list of floats, pass through anything that
+            # doesn't parse as a float or int.
+            rng = []
+            for r in c['range'].split():
                 try:
-                    rng.append(float(r))
+                    rng.append(int(r))
                 except:
-                    rng.append(r)
+                    try:
+                        rng.append(float(r))
+                    except:
+                        rng.append(r)
 
-        args = (srcdev + str(link[0]['parameter']),
-                destdev + str(link[1]['parameter']),
-                {'mode': modeIdx[c['scaling']],
-                 'range': map(lambda x: None if x=='-' else float(x),
-                              c['range'].split()),
-                 'expression': e,
-                 'bound_min': boundIdx[c['boundMin']],
-                 'bound_max': boundIdx[c['boundMax']],
-                 'muted': c['muted']})
+            srcsig = srcdev + str(link[0]['parameter'])
+            destsig = destdev + str(link[1]['parameter'])
 
-        # If connection already exists, use 'modify', otherwise 'connect'.
-        cs = list(monitor.db.connections_by_device_and_signal_names(
-                str(link[0]['device']), str(link[0]['parameter']),
-                str(link[1]['device']), str(link[1]['parameter'])))
-        if len(cs)>0:
-            args[2]['src_name'] = args[0]
-            args[2]['dest_name'] = args[1]
-            monitor.modify(args[2])
-        else:
-            monitor.connect(*args)
+        
+            args = (srcdev + str(link[0]['parameter']),
+                    destdev + str(link[1]['parameter']),
+                    {'mode': modeIdx[c['scaling']],
+                     'range': map(lambda x: None if x=='-' else float(x),
+                                  c['range'].split()),
+                     'expression': e,
+                     'bound_min': boundIdx[c['boundMin']],
+                     'bound_max': boundIdx[c['boundMax']],
+                     'muted': c['muted']})
+
+            # If connection already exists, use 'modify', otherwise 'connect'.
+            cs = list(monitor.db.connections_by_device_and_signal_names(
+                    str(link[0]['device']), str(link[0]['parameter']),
+                    str(link[1]['device']), str(link[1]['parameter'])))
+            if len(cs)>0:
+                args[2]['src_name'] = args[0]
+                args[2]['dest_name'] = args[1]
+                monitor.modify(args[2])
+            else:
+                monitor.connect(*args)
 
         # TODO: Strictly speaking we should wait until links are
         # acknowledged before continuing with a connection.  An
