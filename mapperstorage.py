@@ -113,8 +113,8 @@ def deserialise(monitor, mapping_json):
             destsig = str(c['dest'][0])
 
             # The expression, agian we're simply replacing based on an assumption of 1 to 1 connections
-            e = (c['expression'].replace('src[0]', 'x')
-                                .replace('dest[0]', 'y'))
+            e = str(c['expression'].replace('src[0]', 'x')
+                                   .replace('dest[0]', 'y'))
 
             args = (srcsig,
                     destsig,
@@ -164,8 +164,8 @@ def deserialise(monitor, mapping_json):
                 monitor.link(srcdev, destdev)
 
             # The expression itself
-            e = (c['expression'].replace(link[0]['id'], 'x')
-                                .replace(link[1]['id'], 'y'))
+            e = str(c['expression'].replace(link[0]['id'], 'x')
+                                   .replace(link[1]['id'], 'y'))
 
             # Range may have integers, floats, or '-' strings. When
             # converting to a list of floats, pass through anything that
