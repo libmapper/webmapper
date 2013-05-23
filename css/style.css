@@ -362,6 +362,12 @@ div.range {
   position: relative;
 }
 
+/* Quick fix to get #container out of the way for loading form*/
+#container.onLoad {
+  height: calc(100% - 85px);
+  margin-top: 85px;
+}
+
 /* For disabled elements */
 .disabled {
   opacity: 0.5 !important;

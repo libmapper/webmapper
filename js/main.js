@@ -58,10 +58,7 @@ function update_save_location()
 function on_load()
 {
     //A quick fix for now to get #container out of the way of the load dialogs
-    $('#container').css({
-        'height': 'calc(100% - 85px)',
-        'margin-top': '85px'
-    });
+    $('#container').addClass('onLoad');
     var body = document.getElementsByTagName('body')[0];
     var iframe = document.createElement('iframe');
     iframe.name = 'file_upload';
@@ -93,6 +90,7 @@ function on_load()
 
     $('#cancel',form).click(function(){
         $(l).remove();
+        $('#container').removeClass('onLoad');
         body.removeChild(iframe);
     });
 
@@ -118,10 +116,7 @@ function notify(msg)
         $(li).fadeOut('slow', function(){ $(li).remove();});
     }, 5000);
     setTimeout(function(){
-        $('#container').css({
-            'height': 'calc(100% - 60px)',
-            'margin-top': '60px'
-        });
+        $('#container').removeClass('onLoad');
     }, 6000);
 }
 
