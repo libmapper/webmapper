@@ -134,7 +134,7 @@ function update_connection_properties()
         //set_boundary(a(".boundary"), 0);
     }
 
-    var conns = get_selected(connections);
+    var conns = view.get_selected(connections);
     if (conns.length > 1) {
         // TODO
         clear_props();
@@ -185,7 +185,7 @@ function set_boundary(boundaryElement, value, ismax)
 
 function copy_selected_connection()
 {
-    var conns = get_selected(connections);
+    var conns = view.get_selected(connections);
     if (conns.length!=1) return;
     var args = {};
 
@@ -339,20 +339,20 @@ function main()
         view.update_display();
         for (d in args)
             update_connection_properties_for(args[d],
-                                             get_selected(connections));
+                                             view.get_selected(connections));
     });
     command.register("new_connection", function(cmd, args) {
         connections.add(args.src_name+'>'+args.dest_name, args);
         view.update_display();
-        update_connection_properties_for(args, get_selected(connections));
+        update_connection_properties_for(args, view.get_selected(connections));
     });
     command.register("mod_connection", function(cmd, args) {
         connections.add(args.src_name+'>'+args.dest_name, args);
         view.update_display();
-        update_connection_properties_for(args, get_selected(connections));
+        update_connection_properties_for(args, view.get_selected(connections));
     });
     command.register("del_connection", function(cmd, args) {
-        var conns = get_selected(connections);
+        var conns = view.get_selected(connections);
         connections.remove(args.src_name+'>'+args.dest_name);
         view.update_display();
         update_connection_properties_for(args, conns);
@@ -373,14 +373,11 @@ function main()
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            //Total hack, but it'll stay here for now
-            //TODO figure out how to get this tab selected from within list
-            select_tab(tabDevices);
             //Naming collision between this and list, should figure it out
             //(maybe add_UI_handlers can be a method of list)
             add_handlers();
             window.onresize = function (e) {
-                update_arrows();
+                view.on_resize();
             };
         },
         100);

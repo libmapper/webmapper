@@ -1,3 +1,7 @@
+//An object for the overall display
+function listView()
+{
+
 var svgns = 'http://www.w3.org/2000/svg';
 
 tabList = null;
@@ -16,9 +20,6 @@ destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
 //TODO include min/max
 signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
-//An object for the overall display
-function listView()
-{
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
 
@@ -28,9 +29,9 @@ function listView()
         add_display_tables();
         add_svg_area();
         add_status_bar();
-        add_UI_handlers();
-        //select_tab(tabDevices);
-        //this.update_display();
+        this.add_handlers();
+        select_tab(tabDevices);
+        this.update_display();
     }
 
     this.update_display = function() {
@@ -52,7 +53,30 @@ function listView()
         search_filter( $('#leftSearch') );
         search_filter( $('#rightSearch') );
     }
-}
+
+    this.get_selected = function(list)
+    {
+        var L = $('.trsel', leftTable.table);
+        var R = $('.trsel', rightTable.table);
+        var vals = [];
+
+        L.map(function() {
+                var left = this;
+                R.map(function() {
+                        var right = this;
+                        var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+                        var v = list.get(key);
+                        if (v)
+                            vals.push(v);
+                    });
+            });
+        return vals;
+    }
+
+    this.on_resize = function() 
+    {
+        update_arrows();
+    }
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -537,29 +561,6 @@ function select_all()
     }
 }
 
-function get_selected(list)
-{
-    var L = $('.trsel', leftTable.table);
-    var R = $('.trsel', rightTable.table);
-    var vals = [];
-
-    L.map(function() {
-            var left = this;
-            R.map(function() {
-                    var right = this;
-                    var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
-                    var v = list.get(key);
-                    if (v)
-                        vals.push(v);
-                });
-        });
-    return vals;
-}
-
-
-
-
-
 function on_table_scroll()
 {
     if (selectedTab == all_devices)
@@ -891,7 +892,7 @@ function toggle_unconnected()
     //search_filter( $('#rightSearch') );
 }
 
-function add_UI_handlers()
+this.add_handlers = function()
 {
     $('body').on('click', function() {
         deselect_all();
@@ -977,4 +978,6 @@ function add_UI_handlers()
     })
 
     drawing_handlers();
+}
+
 }
