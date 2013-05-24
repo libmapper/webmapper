@@ -16,7 +16,7 @@ boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
 //A global variable storing which display mode is currently in use
-window.activeMode;
+window.view;
 //Where the network will be saved
 window.saveLocation = '';
 
@@ -26,12 +26,12 @@ function switch_mode(newMode)
     switch(newMode)
     {
         case 'list':
-            list_view_start();
+            view = new listView();
             break;
         default:
             console.log(newMode);
     }
-    window.activeMode = newMode;
+    view.init();
 }
 
 function refresh_all()
@@ -281,7 +281,6 @@ function on_boundary(e)
 /* The main program. */
 function main()
 {
-    view = new listView();
 
     command.register("all_devices", function(cmd, args) {
         for (d in args)
@@ -363,12 +362,12 @@ function main()
     add_container_elements();
     add_signal_control_bar();
     add_extra_tools();
-    switch_mode('list');
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
+            switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');

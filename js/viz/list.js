@@ -19,7 +19,19 @@ signalHeaders = ["name", "type", "length", "units", "min", "max"];
 //An object for the overall display
 function listView()
 {
+    this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
+
+    this.init = function() {
+        add_tabs();
+        add_title_bar();
+        add_display_tables();
+        add_svg_area();
+        add_status_bar();
+        add_UI_handlers();
+        //select_tab(tabDevices);
+        //this.update_display();
+    }
 
     this.update_display = function() {
         update_tabs();
@@ -608,19 +620,6 @@ function on_disconnect(e)
     }
     apply_selected_pairs(do_disconnect);
     e.stopPropagation();
-}
-
-function list_view_start()
-{
-    add_tabs();
-    add_title_bar();
-    add_display_tables();
-    add_svg_area();
-    add_status_bar();
-    add_UI_handlers();
-    select_tab(tabDevices);
-    view.update_display();
-
 }
 
 function add_tabs()
