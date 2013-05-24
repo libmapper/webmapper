@@ -88,9 +88,9 @@ def deserialise(monitor, mapping_json):
     #The version we're currently working with
     version = '';
     if 'fileversion' in js:
-      version = js['fileversion']
+        version = js['fileversion']
     elif 'fileversion' in  js['mapping']:
-      version = js['mapping']['fileversion']
+        version = js['mapping']['fileversion']
 
     modeIdx = {'bypass': mapper.MO_BYPASS,
                'linear': mapper.MO_LINEAR,
@@ -107,6 +107,17 @@ def deserialise(monitor, mapping_json):
     # This is a version 2.0 save file
     if version == '2.0':
         for c in m['connections']:
+            # First, make certain to create necessary links
+            # Since we're accomodating many-to-many connections, etc.
+            # sources and destinations are lists, devices are split from the second '/' character
+            srcdevs = [str('/'+s.split('/')[1]) for s in c['src']]
+            destdevs = [str('/'+s.split('/')[1]) for s in c['dest']]
+            links = [( str(x), str(y) ) for x in srcdevs for y in destdevs]
+            for l in links:
+                # Only make a link if it does not already exist
+                if not monitor.db.link_by_src_dest_names(l[0], l[1]):
+                    monitor.link(l[0], l[1])
+
             #The name of the source signal (assuming 1 to 1 for now)
             srcsig = str(c['src'][0])
             #And the destination
@@ -125,9 +136,17 @@ def deserialise(monitor, mapping_json):
                      'bound_max': boundIdx[c['bound_max']],
                      'muted': c['mute']})
 
-            # Should only 'modify' if connection already exists
-            # However, without explicit access to devices, this is not trivial
-            monitor.connect(*args)
+            # If connection already exists, use 'modify', otherwise 'connect'.
+            # Assumes 1 to 1, again
+            cs = list(monitor.db.connections_by_device_and_signal_names(
+                srcdevs[0], str(srcsig.split('/')[2]),
+                destdevs[0], str(destsig.split('/')[2]) ))
+            if len(cs) > 0:
+                args[2]['src_name'] = args[0]
+                args[2]['dest_name'] = args[1]
+                monitor.modify(args[2])
+            else:
+                monitor.connect(*args)
 
     # This is a version 1 save file
     # As of now, version 1 explicitly save devices
