@@ -352,13 +352,6 @@ function search_filter($searchBox)
             if(found == true) {
                 $(row).show();
                 n_visible++;
-                if( n_visible % 2 == 0 ) {
-                    // for getting the zebra stripe effect
-                    $(row).addClass('even');
-                }
-                else {
-                    $(row).removeClass('even');
-                }
             }
             else {
                 $(row).hide();   
@@ -370,6 +363,7 @@ function search_filter($searchBox)
 
     //Make sure the status display at the bottom has the proper numbers
     targetTable.set_status();
+    $(targetTable.table).trigger('update');
     //update_status_bar($(targetTable.tBody), n_visible, n_total);
     update_arrows();
 }
@@ -869,6 +863,19 @@ function fade_incompatible_signals(row, targetTable)
     }); 
 }
 
+// A function to hide/show unconnected links/signals
+function toggle_unconnected()
+{
+    $('.displayTable tbody tr').hide();
+    for (var i in arrows) {
+        $(arrows[i].leftTr).show();
+        $(arrows[i].rightTr).show();
+    }
+    $(rightTable.table).trigger('update');
+    $(leftTable.table).trigger('update');
+    update_arrows();
+}
+
 function add_UI_handlers()
 {
     $('body').on('click', function() {
@@ -948,6 +955,11 @@ function add_UI_handlers()
     $('.tableDiv').on('scroll', function(e) {
         update_arrows();
     });
+
+    $('#svgTop').on('click', function(e) {
+        e.stopPropagation();
+        toggle_unconnected();
+    })
 
     drawing_handlers();
 }
