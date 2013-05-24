@@ -205,6 +205,14 @@ body {
         cursor: pointer;
       }
 
+      .tableDiv th, #svgTop {
+        font-weight: normal;
+        text-align: left;
+        padding-left: 5px;
+        border-top: 0px;
+        border-left: 0px;
+      }
+
       .displayTable thead tr th.invisible {
         display: none;
       }
@@ -258,25 +266,27 @@ body {
 
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
-.svgDiv {
-  position: absolute;
-  background-color: white;
-  border: 1px solid black;
-  left: 40%;
-  height: calc(100% - 96px);
-  width: 20%;
-}
-#svgTop {
-  width: 100%;
-  height: 18px;
-  border-bottom: 1px solid black;
-  background-color: lightgray;
-  position: absolute;
-  top: 0px;
-}
-.incompatible {
-  opacity: 0.5;
-}
+  .svgDiv {
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    left: 40%;
+    height: calc(100% - 96px);
+    width: 20%;
+  }
+  #svgTop {
+    width: 100%;
+    height: 18px;
+    border-bottom: 1px solid black;
+    background-color: lightgray;
+    position: absolute;
+    top: 0px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .incompatible {
+    opacity: 0.5;
+  }
 /****************/
 
 
@@ -308,13 +318,9 @@ div.range {
   padding: 3px 3px;
   background-color: lightgray;
 }
-.tableDiv th {
-  font-weight: normal;
-  text-align: left;
-  padding-left: 5px;
-  border-top: 0px;
-  border-left: 0px;
-}
+
+
+
 .signalControlsDiv {
   display: inline-block;
   margin-left: 20pt;

@@ -16,25 +16,30 @@ destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
 //TODO include min/max
 signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
-function update_display()
+//An object for the overall display
+function listView()
 {
-    update_tabs();
-    if (selectedTab == all_devices) {
-        update_devices();
-        window.saveLocation = '';
+    this.unconnectedVisible = true // Are unconnected devices/signals visible?
+
+    this.update_display = function() {
+        update_tabs();
+        if (selectedTab == all_devices) {
+            update_devices();
+            window.saveLocation = '';
+        }
+        else {
+            update_signals(selectedTab);
+            window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+        }
+
+        update_save_location();
+
+        update_selection();
+        update_arrows();
+
+        search_filter( $('#leftSearch') );
+        search_filter( $('#rightSearch') );
     }
-    else {
-        update_signals(selectedTab);
-        window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
-    }
-
-    update_save_location();
-
-    update_selection();
-    update_arrows();
-
-    search_filter( $('#leftSearch') );
-    search_filter( $('#rightSearch') );
 }
 
 //An object for the left and right tables, listing devices and signals
@@ -455,7 +460,7 @@ function select_tab(tab)
 
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
-    update_display();
+    view.update_display();
 }
 
 function select_tr(tr)
@@ -614,7 +619,7 @@ function list_view_start()
     add_status_bar();
     add_UI_handlers();
     select_tab(tabDevices);
-    update_display();
+    view.update_display();
 
 }
 
@@ -671,7 +676,7 @@ function add_svg_area()
 {
     $('#container').append(
         "<div class='svgDiv'>"+
-            "<div id='svgTop'></div>"+
+            "<div id='svgTop'>hide unconnected</div>"+
         "</div>"
     );
 
@@ -863,17 +868,28 @@ function fade_incompatible_signals(row, targetTable)
     }); 
 }
 
-// A function to hide/show unconnected links/signals
+// A function to hide/show unconnected devices/signals
 function toggle_unconnected()
 {
-    $('.displayTable tbody tr').hide();
-    for (var i in arrows) {
-        $(arrows[i].leftTr).show();
-        $(arrows[i].rightTr).show();
+    if ( view.unconnectedVisible == true ) {
+        $('.displayTable tbody tr').hide();
+        for (var i in arrows) {
+            $(arrows[i].leftTr).show();
+            $(arrows[i].rightTr).show();
+        }
+        view.unconnectedVisible = false;
+        $('#svgTop').text('show unconnected');
+    }
+    else {
+        $('.displayTable tbody tr').show();
+        view.unconnectedVisible = true;
+        $('#svgTop').text('hide unconnected');
     }
     $(rightTable.table).trigger('update');
     $(leftTable.table).trigger('update');
     update_arrows();
+    //search_filter( $('#leftSearch') );
+    //search_filter( $('#rightSearch') );
 }
 
 function add_UI_handlers()
