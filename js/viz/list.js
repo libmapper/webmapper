@@ -34,6 +34,9 @@ function listView()
 
         search_filter( $('#leftSearch') );
         search_filter( $('#rightSearch') );
+
+        //Because svg keeps getting nudged left for some reason
+        $('svg').css('left', '0px');
     }
 
     this.get_selected = function(list)
@@ -461,14 +464,12 @@ function create_arrow(left, right, sel)
         if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
             select_tr(left);
             select_tr(right);
-            line.attr('stroke', 'black');
         }
         else {
             if( ! $(left).hasClass('trsel') )
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
-            line.attr('stroke', 'red');
         }
         e.stopPropagation();
     });
@@ -526,10 +527,7 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
-    //TODO find out if this is actually necessary
-    // Yes it is, makes the arrows red, which seems like a lot of computation
-    // For just that effect, I'll explicitly make them red for now
-    //update_arrows();
+    update_arrows();
     update_connection_properties();
 }
 
