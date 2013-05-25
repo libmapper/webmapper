@@ -1,24 +1,27 @@
-devices = new Assoc();
-signals = new Assoc();
-links = new Assoc();
-connections = new Assoc();
+"use strict";
 
-all_devices = 'All Devices';
+var devices = new Assoc();
+var signals = new Assoc();
+var links = new Assoc();
+var connections = new Assoc();
 
-connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
-connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
-connectionModeCommands = {"Byp": 'bypass',
+var all_devices = 'All Devices';
+
+var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
+var connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+var connectionModeCommands = {"Byp": 'bypass',
                           "Line": 'linear',
                           "Calib": 'calibrate',
                           "Expr": 'expression'};
-boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
-boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
+var boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
+var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
 //A global variable storing which display mode is currently in use
-window.view;
+var view;
 //Where the network will be saved
-window.saveLocation = '';
+var saveLocation = '';
+var selectedTab;
 
 function switch_mode(newMode)
 {
@@ -169,7 +172,7 @@ function update_connection_properties_for(conn, conns)
 
 function set_boundary(boundaryElement, value, ismax)
 {
-    for (i in boundaryIcons)
+    for (var i in boundaryIcons)
         boundaryElement.removeClass(boundaryIcons[i]);
 
     if (value == 3) { //'Fold' special case, icon depends on direction
@@ -283,7 +286,7 @@ function main()
 {
 
     command.register("all_devices", function(cmd, args) {
-        for (d in args)
+        for (var d in args)
             devices.add(args[d].name, args[d]);
         view.update_display();
     });
@@ -300,7 +303,7 @@ function main()
     });
 
     command.register("all_signals", function(cmd, args) {
-        for (d in args)
+        for (var d in args)
             signals.add(args[d].device_name+args[d].name
                         +'/_dir_'+args[d].direction,
                         args[d]);
@@ -318,7 +321,7 @@ function main()
     });
 
     command.register("all_links", function(cmd, args) {
-        for (l in args)
+        for (var l in args)
             links.add(args[l].src_name+'>'+args[l].dest_name,
                       args[l]);
         view.update_display();
@@ -333,7 +336,7 @@ function main()
     });
 
     command.register("all_connections", function(cmd, args) {
-        for (d in args)
+        for (var d in args)
             connections.add(args[d].src_name+'>'+args[d].dest_name,
                             args[d]);
         view.update_display();
@@ -407,7 +410,7 @@ function add_signal_control_bar()
 
     //Add the mode controls
     $('.signalControlsDiv').append("<div class='modesDiv'></div>");
-    for (m in connectionModesDisplayOrder) {
+    for (var m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
     }

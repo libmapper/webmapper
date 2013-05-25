@@ -1,3 +1,4 @@
+"use strict";
 
 /* Make an asynchronous HTTP request to the browser. */
 function http_request(path, args, ok_responder, error_responder) {
@@ -8,9 +9,9 @@ function http_request(path, args, ok_responder, error_responder) {
     else if (error_responder)
       error_responder(this.responseText);
   }
-  a='';
-  n=0;
-  for (i in args) {
+  var a='';
+  var n=0;
+  for (var i in args) {
     if (n==0)
       a+='?';
     else
@@ -60,7 +61,7 @@ function Assoc() {
     },
     this.keys = function() {
         var keys = [];
-        for (k in this.contents)
+        for (var k in this.contents)
             keys.push(k);
         return keys;
     }

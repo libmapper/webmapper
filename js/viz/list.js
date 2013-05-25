@@ -1,25 +1,7 @@
 //An object for the overall display
 function listView()
 {
-
-var svgns = 'http://www.w3.org/2000/svg';
-
-tabList = null;
-tabDevices = null;
-selectedTab = null;
-leftTable = null;
-rightTable = null;
-svgArea = null;
-selectLists = {};
-devActions = null;
-sigActions = null;
-arrows = [];
-
-sourceDeviceHeaders = ["device", "outputs", "IP", "port"];
-destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
-//TODO include min/max
-signalHeaders = ["name", "type", "length", "units", "min", "max"];
-
+    "use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
 
@@ -77,6 +59,24 @@ signalHeaders = ["name", "type", "length", "units", "min", "max"];
     {
         update_arrows();
     }
+
+var svgns = 'http://www.w3.org/2000/svg';
+
+var tabList = null;
+var tabDevices = null;
+var selectedTab = null;
+var leftTable = null;
+var rightTable = null;
+var svgArea = null;
+var selectLists = {};
+var devActions = null;
+var sigActions = null;
+var arrows = [];
+
+var sourceDeviceHeaders = ["device", "outputs", "IP", "port"];
+var destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
+//TODO include min/max
+var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -253,7 +253,7 @@ function update_tabs()
 
 function update_selection()
 {
-    l = selectLists[selectedTab];
+    var l = selectLists[selectedTab];
     if (!l) return;
 
     function checksel(table, i) {
@@ -276,7 +276,7 @@ function update_selection()
 
 function cleanup_arrows()
 {
-    for (a in arrows) {
+    for (var a in arrows) {
         arrows[a].border.remove();
         arrows[a].remove();
     }
@@ -934,7 +934,7 @@ this.add_handlers = function()
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             select_all();
         }
-        else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'ctrl-tab'
+        else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'
             e.preventDefault();
             var n_tabs = $(tabList).children().length;
             var currentTabIndex = $('li.tabsel').index() + 1;
