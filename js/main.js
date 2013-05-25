@@ -43,7 +43,7 @@ function refresh_all()
     signals = new Assoc();
     links = new Assoc();
     connections = new Assoc();
-    update_display();
+    view.update_display();
     command.send('refresh');
 }
 
@@ -379,8 +379,10 @@ function main()
             //Naming collision between this and list, should figure it out
             //(maybe add_UI_handlers can be a method of list)
             add_handlers();
+            $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
             window.onresize = function (e) {
                 view.on_resize();
+                $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
             };
         },
         100);
@@ -406,10 +408,8 @@ function add_container_elements()
 
 function add_signal_control_bar() 
 {
-    $('.topMenu').append("<div class='signalControlsDiv'></div>");
-
     //Add the mode controls
-    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
+    $('.topMenu').append("<div class='modesDiv'></div>");
     for (var m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
@@ -418,11 +418,9 @@ function add_signal_control_bar()
     $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
 
     //Add the range controls
-    $('.signalControlsDiv').append(
-        "<div class='rangesDiv'>"+
-            "<div class='range'>Source Range:</div>"+
-            "<div class='range'>Dest Range:</div>"+
-        "</div>");
+    $('.topMenu').append(
+        "<div id='srcRange' class='range'>Source Range:</div>"+
+        "<div id='destRange' class='range'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
         var minOrMax = 'Max'   // A variable storing minimum or maximum
@@ -443,8 +441,10 @@ function add_signal_control_bar()
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-        "<input id='refresh' class='extratools' type='button'>"
+        "<div id='extratoolsDiv'>"+
+            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+            "<input id='refresh' class='extratools' type='button'>"+
+        "</div>"
     );
 
     $('#refresh').on('click', function(e) { refresh_all(); });
