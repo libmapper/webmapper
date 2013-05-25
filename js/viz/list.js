@@ -461,6 +461,7 @@ function create_arrow(left, right, sel)
         if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
             select_tr(left);
             select_tr(right);
+            line.attr('stroke', 'black');
         }
         else {
             if( ! $(left).hasClass('trsel') )
@@ -720,9 +721,9 @@ function drawing_curve(sourceRow)
 
     this.findrow = function ( y ) {
         var index = Math.round( y/this.rowHeight );
-        if( index > $(this.targetTable).find('tr').length)
-            index = $(this.targetTable).find('tr').length;
-        var row = $(this.targetTable).find('tr')[index - 1];
+        if( index > this.targetTable.nVisibleRows)
+            index = this.targetTable.nVisibleRows;
+        var row = $(this.targetTable.tBody).find('tr')[index - 1];
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -734,11 +735,11 @@ function drawing_curve(sourceRow)
     // Are we aiming for the left or right table?
     this.targetTable;
     if( $(this.sourceRow).parents('.tableDiv').attr('id') == "leftTable" ) {
-        this.targetTable = $('#rightTable .displayTable tbody')[0];
+        this.targetTable = rightTable;
         this.path[0][1] = 0; // Start the curve at left
     }
     else {
-        this.targetTable = $('#leftTable .displayTable tbody')[0];
+        this.targetTable = leftTable;
         this.path[0][1] = this.canvasWidth; // Start the curve at right
     }
 
@@ -753,7 +754,6 @@ function drawing_curve(sourceRow)
         var end = [ this.path[1][5], this.path[1][6] ];
         var c1;
         if( target.tagName == "svg" ) {
-            this.checkTarget(null);
             end = [ moveEvent.offsetX, moveEvent.offsetY ];
             // Within clamping range
             if( this.canvasWidth - Math.abs(end[0] - start[0]) < 50) {
@@ -765,9 +765,11 @@ function drawing_curve(sourceRow)
                     this.checkTarget(clampRow);
                 }
             }
+            else
+                this.checkTarget(null);
         }
         // We're over a table row of the target table
-        if( $(target).parents('tbody')[0] == this.targetTable ) {
+        if( $(target).parents('tbody')[0] == this.targetTable.tBody ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             if( !$(target).hasClass('incompatible') ) 
@@ -817,7 +819,7 @@ function drawing_handlers()
 
             // Fade out incompatible signals
             if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable);
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tBody);
 
             // Moving about the canvas
             $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
@@ -857,11 +859,11 @@ function get_bezier_path(start, end, controlEnd)
     return path;
 }
 
-function fade_incompatible_signals(row, targetTable)
+function fade_incompatible_signals(row, targetTableBody)
 {
     var sourceLength = $(row).children('.length').text();
     
-    $(targetTable).children('tr').each( function(index, element) {
+    $(targetTableBody).children('tr').each( function(index, element) {
         var targetLength =  $(element).children('.length').text();
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
