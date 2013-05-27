@@ -1,7 +1,16 @@
-devices = new Assoc();
-signals = new Assoc();
-links = new Assoc();
-connections = new Assoc();
+function LibMapperModel ()
+{
+	this.devices = new Assoc();
+	this.signals = new Assoc();
+	this.links = new Assoc();
+	this.connections = new Assoc();
+};
+
+LibMapperModel.prototype = {
+		
+};
+
+var model = new LibMapperModel();
 
 all_devices = 'All Devices';
 
@@ -16,7 +25,7 @@ boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
 //A global variable storing which display mode is currently in use
-window.activeMode;
+window.view;
 //Where the network will be saved
 window.saveLocation = '';
 
@@ -26,36 +35,43 @@ function switch_mode(newMode)
     switch(newMode)
     {
         case 'list':
-            list_view_start();
+            view = new listView(model);
+            view.init();
             break;
+        case 'grid':
+        	view = new GridView(document.getElementById('container'), model);
+        	//view.update_display();
+        	break;
         default:
             console.log(newMode);
     }
-    window.activeMode = newMode;
 }
 
 function refresh_all()
 {
-    devices = new Assoc();
-    signals = new Assoc();
-    links = new Assoc();
-    connections = new Assoc();
+    model.devices = new Assoc();
+    model.signals = new Assoc();
+    model.links = new Assoc();
+    model.connections = new Assoc();
     update_display();
     command.send('refresh');
 }
 
 function update_save_location()
 {
-    if (selectedTab==all_devices) 
-        $('#saveButton').addClass('disabled');
+    if (selectedTab==all_devices) {
+        $('#saveButton, #loadButton').addClass('disabled');
+    }
     else 
-        $('#saveButton').removeClass('disabled');
+        $('#saveButton, #loadButton').removeClass('disabled');
 
     $('#saveButton').attr('href', window.saveLocation);
 }
 
 function on_load()
 {
+    //A quick fix for now to get #container out of the way of the load dialogs
+    $('#container').addClass('onLoad');
     var body = document.getElementsByTagName('body')[0];
     var iframe = document.createElement('iframe');
     iframe.name = 'file_upload';
@@ -87,6 +103,7 @@ function on_load()
 
     $('#cancel',form).click(function(){
         $(l).remove();
+        $('#container').removeClass('onLoad');
         body.removeChild(iframe);
     });
 
@@ -111,6 +128,9 @@ function notify(msg)
     setTimeout(function(){
         $(li).fadeOut('slow', function(){ $(li).remove();});
     }, 5000);
+    setTimeout(function(){
+        $('#container').removeClass('onLoad');
+    }, 6000);
 }
 
 function update_connection_properties()
@@ -127,7 +147,7 @@ function update_connection_properties()
         //set_boundary(a(".boundary"), 0);
     }
 
-    var conns = get_selected(connections);
+    var conns = view.get_selected(model.connections);
     if (conns.length > 1) {
         // TODO
         clear_props();
@@ -178,7 +198,7 @@ function set_boundary(boundaryElement, value, ismax)
 
 function copy_selected_connection()
 {
-    var conns = get_selected(connections);
+    var conns = view.get_selected(model.connections);
     if (conns.length!=1) return;
     var args = {};
 
@@ -274,109 +294,104 @@ function on_boundary(e)
 /* The main program. */
 function main()
 {
+
     command.register("all_devices", function(cmd, args) {
         for (d in args)
-            devices.add(args[d].name, args[d]);
-        update_display();
+            model.devices.add(args[d].name, args[d]);
+        view.update_display();
     });
     command.register("new_device", function(cmd, args) {
-        devices.add(args.name, args);
-        update_display();
+        model.devices.add(args.name, args);
+        view.update_display();
     });
     command.register("del_device", function(cmd, args) {
-        devices.remove(args.name);
+        model.devices.remove(args.name);
         if (selectedTab==args.name)
             select_tab(tabDevices);
         else
-            update_display();
+            view.update_display();
     });
 
     command.register("all_signals", function(cmd, args) {
         for (d in args)
-            signals.add(args[d].device_name+args[d].name
+            model.signals.add(args[d].device_name+args[d].name
                         +'/_dir_'+args[d].direction,
                         args[d]);
-        update_display();
+        view.update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        signals.add(args.device_name+args.name
+        model.signals.add(args.device_name+args.name
                     +'/_dir_'+args.direction, args);
-        update_display();
+        view.update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        signals.remove(args.device_name+args.name
+        model.signals.remove(args.device_name+args.name
                        +'/_dir_'+args.direction);
-        update_display();
+        view.update_display();
     });
 
     command.register("all_links", function(cmd, args) {
         for (l in args)
-            links.add(args[l].src_name+'>'+args[l].dest_name,
+            model.links.add(args[l].src_name+'>'+args[l].dest_name,
                       args[l]);
-        update_display();
+        view.update_display();
     });
     command.register("new_link", function(cmd, args) {
-        links.add(args.src_name+'>'+args.dest_name, args);
-        update_display();
+        model.links.add(args.src_name+'>'+args.dest_name, args);
+        view.update_display();
     });
     command.register("del_link", function(cmd, args) {
-        links.remove(args.src_name+'>'+args.dest_name);
-        update_display();
+        model.links.remove(args.src_name+'>'+args.dest_name);
+        view.update_display();
     });
 
     command.register("all_connections", function(cmd, args) {
         for (d in args)
-            connections.add(args[d].src_name+'>'+args[d].dest_name,
+            model.connections.add(args[d].src_name+'>'+args[d].dest_name,
                             args[d]);
-        update_display();
+        view.update_display();
         for (d in args)
             update_connection_properties_for(args[d],
-                                             get_selected(connections));
+                                             view.get_selected(model.connections));
     });
     command.register("new_connection", function(cmd, args) {
-        connections.add(args.src_name+'>'+args.dest_name, args);
-        update_display();
-        update_connection_properties_for(args, get_selected(connections));
+        model.connections.add(args.src_name+'>'+args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected(model.connections));
     });
     command.register("mod_connection", function(cmd, args) {
-        connections.add(args.src_name+'>'+args.dest_name, args);
-        update_display();
-        update_connection_properties_for(args, get_selected(connections));
+        model.connections.add(args.src_name+'>'+args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected(model.connections));
     });
     command.register("del_connection", function(cmd, args) {
-        var conns = get_selected(connections);
-        connections.remove(args.src_name+'>'+args.dest_name);
-        update_display();
+        var conns = view.get_selected(model.connections);
+        model.connections.remove(args.src_name+'>'+args.dest_name);
+        view.update_display();
         update_connection_properties_for(args, conns);
     });
-
-    //var body = document.getElementsByTagName('body')[0];
-    //body.onclick = deselect_all;
 
     //Create the page elements
     add_container_elements();
     add_signal_control_bar();
     add_extra_tools();
-    switch_mode('list');
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
+            switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            //Total hack, but it'll stay here for now
-            //TODO figure out how to get this tab selected from within list
-            select_tab(tabDevices);
             //Naming collision between this and list, should figure it out
             //(maybe add_UI_handlers can be a method of list)
             add_handlers();
             window.onresize = function (e) {
-                position_dynamic_elements();
-                update_arrows();
+            	if(typeof view.on_resize == 'function')
+            		view.on_resize();
             };
         },
         100);
@@ -477,8 +492,8 @@ function add_handlers()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        console.log(e);
-        on_load();
+        if (selectedTab != all_devices)
+            on_load();
     });
 }
 

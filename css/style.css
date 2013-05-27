@@ -16,6 +16,7 @@ input {
   -moz-user-select: text;
   -o-user-select: text;
   user-select: text;
+  border-radius: 5px;
 }
 
 body {
@@ -58,8 +59,9 @@ body {
 /****************/
 
 .topMenu {
-  margin: 0px 0px 0px 0px;
-  padding: 0px 0px 0px 0px;
+  position: absolute;
+  padding: 0;
+  top: 0;
 }
 
 .topMenu li {
@@ -172,14 +174,14 @@ body {
   padding-left: 5px;
   padding-right: 5px;
 }
+  
 
 /* The table areas */
   .tableDiv {
     position: absolute;
     overflow: auto;
-    top: 1in;
-    width: 3.18in;
-    height: 5in;
+    width: 40%;
+    height: calc(100% - 96px);
     background: white;
     border: solid 1px black;
   }
@@ -187,10 +189,13 @@ body {
   /* The table itself */
     .displayTable {
       border-collapse: collapse;
-      width: 3in;
+      width: 100%;
       overflow: scroll;
       border: solid 0px black;
       font-size: 10pt;
+    }
+    #rightTable {
+      left: 60%;
     }
 
       /* Rows and headers */
@@ -198,6 +203,14 @@ body {
         background-color: lightgray;
         border-bottom: 1px solid black;
         cursor: pointer;
+      }
+
+      .tableDiv th, #svgTop {
+        font-weight: normal;
+        text-align: left;
+        padding-left: 5px;
+        border-top: 0px;
+        border-left: 0px;
       }
 
       .displayTable thead tr th.invisible {
@@ -227,15 +240,24 @@ body {
       /*****************/
     /****************/
 
-  .status {
+  #statusBar {
     position: absolute;
-    bottom: 0px;
-    height: 23px;
     width: 100%;
     background-color: lightgray;
-    border-top: 1px solid black;
+    bottom: 0px;
+    border-collapse: collapse;
+  }
+
+  .status {
+    width: 40%;
+    background-color: lightgray;
     padding-left: 10px;
     padding-top: 3px;
+    border: 1px solid black;
+  }
+
+  .status.middle {
+    width: 20%;
   }
 /****************/
 
@@ -244,22 +266,27 @@ body {
 
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
-.svgDiv {
-  position: absolute;
-  background-color: white;
-  border: 1px solid black;
-}
-#svgTop {
-  width: 100%;
-  height: 19px;
-  border-bottom: 1px solid black;
-  background-color: lightgray;
-  position: absolute;
-  top: 0px;
-}
-.incompatible {
-  opacity: 0.5;
-}
+  .svgDiv {
+    position: absolute;
+    background-color: white;
+    border: 1px solid black;
+    left: 40%;
+    height: calc(100% - 96px);
+    width: 20%;
+  }
+  #svgTop {
+    width: 100%;
+    height: 18px;
+    border-bottom: 1px solid black;
+    background-color: lightgray;
+    position: absolute;
+    top: 0px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .incompatible {
+    opacity: 0.5;
+  }
 /****************/
 
 
@@ -277,6 +304,7 @@ body {
   font-weight: normal;
 }
 #svgTitle {
+  width: 100%;
   text-align: center;
 }
 .searchBar {
@@ -290,13 +318,9 @@ div.range {
   padding: 3px 3px;
   background-color: lightgray;
 }
-.tableDiv th {
-  font-weight: normal;
-  text-align: left;
-  padding-left: 5px;
-  border-top: 0px;
-  border-left: 0px;
-}
+
+
+
 .signalControlsDiv {
   display: inline-block;
   margin-left: 20pt;
@@ -319,13 +343,35 @@ div.range {
 .modesel {
   background: darkgrey;
 }
+
+#leftTitle {
+  left: 10px;
+}
+#leftSearch {
+  right: 60%;
+}
+#rightTitle {
+  left: 60%;
+}
+#rightSearch {
+  right: 10px;
+}
+
 /****************/
 
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
+  height: calc(100% - 60px);
   background-color: lightgrey;
-  margin-top: 20px;
+  margin-top: 60px;
+  position: relative;
+}
+
+/* Quick fix to get #container out of the way for loading form*/
+#container.onLoad {
+  height: calc(100% - 85px);
+  margin-top: 85px;
 }
 
 /* For disabled elements */

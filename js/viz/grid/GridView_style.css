@@ -1,0 +1,95 @@
+@CHARSET "UTF-8";
+
+
+#view{float: left;}
+#devGrid{position: relative; float: left; background: #fff;}
+#sigGrid{position: relative; float: left; background: #fff;}
+
+[id*='hZoomSlider'] {margin-left: 29px; height: 18px }
+[id*='hZoomSlider'] .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+
+[id*='vZoomSlider'] {width: 18px;}
+[id*='vZoomSlider'] .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+
+[id*='hZoomSlider'] .ui-widget-header, [id*='vZoomSlider'] .ui-widget-header  {background: darkgray;}
+[id*='hZoomSlider-'] .ui-state-focus, [id*='vZoomSlider'] .ui-state-focus{background: #f6f6f6; border: 1px solid #cccccc;}
+[id*='hZoomSlider-'] .ui-state-focus.ui-state-hover, [id*='vZoomSlider'] .ui-state-focus.ui-state-hover{background: #fdf5ee; border: 1px solid #fcbc09;}
+
+.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr { border-radius: 0;}
+
+
+
+a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -moz-use-text-color; outline-style: none; outline-width: medium; }
+a:hover { color: #036; }
+
+.cell_up{
+	fill: #DDDDDD;
+	
+}
+
+.cell_over{
+	fill: #0076b0;
+	
+}
+.row_over{
+	fill: #AAAAAA;
+}
+
+.cell_selected{
+	stroke-width:2;
+	stroke: #000000;
+}
+.cell_connected{
+	fill: #5cb267;
+	animation-name: connected;
+	animation-duration: 300ms;
+	animation-timing-function: linear;
+	animation-delay: 0s; 
+	animation-iteration-count: 1;
+	
+	/* Safari and Chrome: */
+	-webkit-animation-name: connected;
+	-webkit-animation-duration: 300ms;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-delay: 0s;
+	-webkit-animation-iteration-count: 1;
+}
+
+@keyframes connected
+{
+	0%  {fill:#EEEEEE;}
+	100%  {fill:#5cb267;}
+}
+
+@-webkit-keyframes connected /* Safari and Chrome */
+{
+	0%  {fill:#EEEEEE;}
+	100%  {fill:#5cb267;}
+}
+
+.label{
+	font-size: 14px;
+	fill: #3e3e3e;
+}
+.label_over{
+	font-size: 14px;
+	font-weight: bold;		
+}
+
+
+.pen{
+	stroke: #00FF00;
+	stroke-width: 2; 
+	stroke:rgb(0,0,255);
+	stroke-dasharray: "1,0,5,0";	
+}
+
+
+#hScroll{
+	background-color: #444444;
+}
+#hScrollButton{
+	fill: #EEEEEE;
+}
+	
+	
