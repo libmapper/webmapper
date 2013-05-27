@@ -4,6 +4,7 @@ function listView()
     "use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
+    this.focusedDevices = [] // An array containing devices seen in the display
 
     this.init = function() {
         add_tabs();
@@ -17,6 +18,11 @@ function listView()
     }
 
     this.update_display = function() {
+
+        // Removes 'invisible' classes which can muddle with display updating
+        $('tr.invisible').removeClass('invisible');
+        update_arrows();
+
         update_tabs();
         if (selectedTab == all_devices) {
             update_devices();
@@ -29,10 +35,12 @@ function listView()
 
         update_save_location();
 
-        reset_view();
-
         update_selection();
-        update_arrows();
+        
+        filter_view();
+
+        //Because svg keeps getting nudged left for some reason
+        $('svg').css('left', '0px');
     }
 
     this.get_selected = function(list)
@@ -85,7 +93,7 @@ function listTable(id)
     this.div; //The div node (and status)
     this.table; //The table node itself
     this.headerRow; //The top row node of the table within <thead>
-    this.tBody; //The <tbody> node
+    this.tbody; //The <tbody> node
     this.footer; //The status bar at the bottom
 
     this.nRows; //Number of rows (e.g. devices or signals) present
@@ -108,7 +116,7 @@ function listTable(id)
         );
         this.table = $(this.div).children('.displayTable')[0];
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
-        this.tBody = $("#"+this.id+" .displayTable tbody")[0];
+        this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
         //Create the header elements
         //This assumes that we will never need more than 20 columns
@@ -135,7 +143,7 @@ function listTable(id)
     // big TODO (make the tableupdater object obsolete)
     this.update = function(tableData, headerStrings)
     {
-        $(this.tBody).empty();
+        $(this.tbody).empty();
         for(var row in tableData) 
         {
             //If there is only one row, make it of odd class for styling
@@ -143,15 +151,12 @@ function listTable(id)
             for(var col in tableData[row]) {
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
-            $(this.tBody).append(newRow+"</tr>");
+            $(this.tbody).append(newRow+"</tr>");
         }
         this.nRows = tableData.length;
         if(tableData[0])
             this.nCols = tableData[0].length;
         $(this.table).trigger('update');
-        // Just incase a device is added while search filter is occuring
-        search_filter( $('#leftSearch') );
-        search_filter( $('#rightSearch') );
     }
 
     this.set_status = function() {
@@ -160,24 +165,10 @@ function listTable(id)
             name = "devices";
         }
         else name = "signals";
-        this.nVisibleRows = $(this.tBody).children('tr').length - $(this.tBody).children('tr.invisible').length;
+        this.nVisibleRows = $(this.tbody).children('tr').length - $(this.tbody).children('tr.invisible').length;
         $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
     }
 
-}
-
-function reset_view()
-{
-    // Reset the search text to nil
-    $('input.searchBar').val('');
-    if (view.unconnectedVisible == false) 
-        toggle_unconnected();
-
-    search_filter( $('#leftSearch') );
-    search_filter( $('#rightSearch') );
-
-    //Because svg keeps getting nudged left for some reason
-    $('svg').css('left', '0px');
 }
 
 function update_devices()
@@ -375,46 +366,68 @@ function update_connections()
     );
 }
 
-//A function to filter tables by text in boxes
-function search_filter($searchBox)
+//A function for filtering out unconnected signals
+//Or signals that do not match the search string
+function filter_view()
 {
-    var filterText = $searchBox.val();
+    //Since updating arrows re-creates arrows, it's necessary to make sure they're current
+    //before filtering based on them. Also we need to make certain we're working with all
+    //of the data if we're doing something like deleting search text with arrows hidden
+    $('tr.invisible').removeClass('invisible');
+    update_arrows();
 
-    //Is it the left box
-    if( $searchBox.attr('id').search('left') == 0 ) {
-        var targetTable = leftTable;
-    }
-    else var targetTable = rightTable;
+    $('.displayTable tbody tr').each( function(i, row) {
+        if( (view.unconnectedVisible || is_connected(this) ) && filter_match(this) ) 
+            $(this).removeClass('invisible');
+        else
+            $(this).addClass('invisible');
+    });
 
-    var $trs = $(targetTable.tBody).children('tr');
+    update_arrows();
+    $(leftTable.table).trigger('update');
+    $(rightTable.table).trigger('update');
 
-    $trs.each( function(i, row) {
-        var cells = $(row).find('td');
-        if(cells.length > 0)
-        {
-            var found = false;
-            cells.each( function(j, td) 
-            {
-                var regExp = new RegExp(filterText, 'i');
-                if(regExp.test( $(td).text() ))
-                {
-                    found = true;
-                    return false;
-                }
-            });
-            if(found == true) {
-                $(row).removeClass('searchInvisible');
-            }
-            else {
-                $(row).addClass('searchInvisible');
-            }
+    rightTable.set_status();
+    leftTable.set_status();
+}
+
+function filter_match(row)
+{
+    // The text in the search box
+    var filterText;
+    //Test to see if the row is on the left or right table
+    if( $(row).parents('.tableDiv').is('#leftTable') ) 
+        filterText = $('#leftSearch').val();
+    else if ( $(row).parents('.tableDiv').is('#rightTable') )
+        filterText = $('#rightSearch').val();
+    else
+        console.log("Error, "+row+" belongs to neither table");
+
+    var found = false;
+    // Iterate over every cell of the row
+    $(row).children('td').each( function(i, cell) {
+        var regExp = new RegExp(filterText, 'i');
+        // Is the search string found?
+        if( regExp.test($(cell).text()) ) { 
+            found = true;
         }
     });
 
-    //Make sure the status display at the bottom has the proper numbers
-    targetTable.set_status();
-    $(targetTable.table).trigger('update');
-    update_arrows();
+    if(found)
+        return true
+    else
+        return false;
+}
+
+// Returns whether a row has a connection
+function is_connected(row) 
+{
+    for( var i in arrows ) {
+        if( arrows[i].leftTr == row || arrows[i].rightTr == row ) 
+            return true;
+    }
+
+    return false;
 }
 
 /* params are TR elements, one from each table */
@@ -726,7 +739,7 @@ function drawing_curve(sourceRow)
         var index = Math.round( y/this.rowHeight );
         if( index > this.targetTable.nVisibleRows)
             index = this.targetTable.nVisibleRows;
-        var row = $(this.targetTable.tBody).find('tr')[index - 1];
+        var row = $(this.targetTable.tbody).find('tr')[index - 1];
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -772,7 +785,7 @@ function drawing_curve(sourceRow)
                 this.checkTarget(null);
         }
         // We're over a table row of the target table
-        if( $(target).parents('tbody')[0] == this.targetTable.tBody ) {
+        if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             if( !$(target).hasClass('incompatible') ) 
@@ -822,7 +835,7 @@ function drawing_handlers()
 
             // Fade out incompatible signals
             if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tBody);
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
 
             // Moving about the canvas
             $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
@@ -871,32 +884,6 @@ function fade_incompatible_signals(row, targetTableBody)
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
-}
-
-// A function to hide/show unconnected devices/signals
-function toggle_unconnected()
-{
-    if ( view.unconnectedVisible == true ) {
-        $('.displayTable tbody tr').addClass('invisible');
-        for (var i in arrows) {
-            $(arrows[i].leftTr).removeClass('invisible');
-            $(arrows[i].rightTr).removeClass('invisible');
-        }
-        view.unconnectedVisible = false;
-        $('#svgTop').text('show unconnected');
-    }
-    else {
-        $('.displayTable tbody tr').removeClass('invisible');
-        view.unconnectedVisible = true;
-        $('#svgTop').text('hide unconnected');
-    }
-
-    leftTable.set_status();
-    rightTable.set_status();
-
-    $(rightTable.table).trigger('update');
-    $(leftTable.table).trigger('update');
-    update_arrows();
 }
 
 this.add_handlers = function()
@@ -972,7 +959,7 @@ this.add_handlers = function()
     // Search function boxes
     $('#leftSearch, #rightSearch').on('keyup', function(e) {
         e.stopPropagation();
-        search_filter( $(this) );
+        filter_view();
     });
 
     $('.tableDiv').on('scroll', function(e) {
@@ -981,8 +968,20 @@ this.add_handlers = function()
 
     $('#svgTop').on('click', function(e) {
         e.stopPropagation();
-        toggle_unconnected();
-    })
+        if( view.unconnectedVisible == true ) {
+            view.unconnectedVisible = false;
+            $('#svgTop').text('show unconnected');
+        }
+        else {
+            view.unconnectedVisible = true;
+            $('#svgTop').text('hide unconnected');
+        }
+        filter_view();
+    });
+
+    $('.status.left').on('click', function(e) {
+
+    });
 
     drawing_handlers();
 }
