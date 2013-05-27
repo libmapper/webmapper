@@ -235,10 +235,14 @@ GridView.prototype = {
 		var srcSigs = new Array();
 		var dstSigs = new Array();
 		
-		// for each device, get its signals
-		for (var j=0; j< this.model.signals.length; j++)
-		{
-			var sig = this.model.signals[j];
+		
+		var keys = this.model.signals.keys();
+	    for (var s in keys) {
+	        var k = keys[s];
+	        var sig = this.model.signals.get(k);
+	        
+	        //var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
+
 			for (var i=0; i<this.includedSrcs.length; i++){
 				if(sig.device_name == this.includedSrcs[i])
 					srcSigs.push(sig);
@@ -247,8 +251,7 @@ GridView.prototype = {
 				if(sig.device_name == this.includedDsts[i])
 					dstSigs.push(sig);
 			}
-			
-		}	
+	    }
 		this.sigGrid.updateDisplay(srcSigs, dstSigs, this.model.connections);
 	}
 	
@@ -257,4 +260,16 @@ GridView.prototype = {
 	
 };
 
+function arrPushIfUnique(item, arr){
+	if(arrIsUnique(item, arr))
+		arr.push(item);
+}
+
+function arrIsUnique(item, arr){
+	for(var i=0; i<arr.length; i++){
+		if(arr[i] == item)
+			return false;
+	}	
+	return true;
+}
 

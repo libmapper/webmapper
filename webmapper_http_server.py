@@ -281,14 +281,10 @@ def handler_page(out, args):
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
-<!--
+<!-- JQuery -->
 <script type="text/javascript" src="js/jquery.min.js"></script>
--->
-
-<script type="text/javascript" src="js/viz/grid/jquery-1.9.0.js"></script>
+<!-- JQuery UI-->
 <script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script>
-
-
 
 
 <script type="text/javascript" src="js/raphael.js"></script>
@@ -302,12 +298,18 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/viz/grid.js"></script>
 <script type="text/javascript" src="js/viz/grid/SvgGrid.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
+<link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
+
 
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 </head>
 <body></body>
 </html>"""
+
+
+
+
 
 def handler_wait_command(out, args):
     i=0

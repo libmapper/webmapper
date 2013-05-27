@@ -40,7 +40,7 @@ function switch_mode(newMode)
             break;
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
-        	//view.update_display();
+        	view.update_display();
         	break;
         default:
             console.log(newMode);
