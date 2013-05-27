@@ -29,14 +29,10 @@ function listView()
 
         update_save_location();
 
+        reset_view();
+
         update_selection();
         update_arrows();
-
-        search_filter( $('#leftSearch') );
-        search_filter( $('#rightSearch') );
-
-        //Because svg keeps getting nudged left for some reason
-        $('svg').css('left', '0px');
     }
 
     this.get_selected = function(list)
@@ -164,9 +160,24 @@ function listTable(id)
             name = "devices";
         }
         else name = "signals";
+        this.nVisibleRows = $(this.tBody).children('tr').length - $(this.tBody).children('tr.invisible').length;
         $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
     }
 
+}
+
+function reset_view()
+{
+    // Reset the search text to nil
+    $('input.searchBar').val('');
+    if (view.unconnectedVisible == false) 
+        toggle_unconnected();
+
+    search_filter( $('#leftSearch') );
+    search_filter( $('#rightSearch') );
+
+    //Because svg keeps getting nudged left for some reason
+    $('svg').css('left', '0px');
 }
 
 function update_devices()
@@ -376,8 +387,6 @@ function search_filter($searchBox)
     else var targetTable = rightTable;
 
     var $trs = $(targetTable.tBody).children('tr');
-    var n_total = targetTable.nRows;
-    var n_visible = 0;
 
     $trs.each( function(i, row) {
         var cells = $(row).find('td');
@@ -394,21 +403,17 @@ function search_filter($searchBox)
                 }
             });
             if(found == true) {
-                $(row).show();
-                n_visible++;
+                $(row).removeClass('searchInvisible');
             }
             else {
-                $(row).hide();   
+                $(row).addClass('searchInvisible');
             }
         }
     });
 
-    targetTable.nVisibleRows = n_visible;
-
     //Make sure the status display at the bottom has the proper numbers
     targetTable.set_status();
     $(targetTable.table).trigger('update');
-    //update_status_bar($(targetTable.tBody), n_visible, n_total);
     update_arrows();
 }
 
@@ -872,24 +877,26 @@ function fade_incompatible_signals(row, targetTableBody)
 function toggle_unconnected()
 {
     if ( view.unconnectedVisible == true ) {
-        $('.displayTable tbody tr').hide();
+        $('.displayTable tbody tr').addClass('invisible');
         for (var i in arrows) {
-            $(arrows[i].leftTr).show();
-            $(arrows[i].rightTr).show();
+            $(arrows[i].leftTr).removeClass('invisible');
+            $(arrows[i].rightTr).removeClass('invisible');
         }
         view.unconnectedVisible = false;
         $('#svgTop').text('show unconnected');
     }
     else {
-        $('.displayTable tbody tr').show();
+        $('.displayTable tbody tr').removeClass('invisible');
         view.unconnectedVisible = true;
         $('#svgTop').text('hide unconnected');
     }
+
+    leftTable.set_status();
+    rightTable.set_status();
+
     $(rightTable.table).trigger('update');
     $(leftTable.table).trigger('update');
     update_arrows();
-    //search_filter( $('#leftSearch') );
-    //search_filter( $('#rightSearch') );
 }
 
 this.add_handlers = function()

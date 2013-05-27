@@ -263,7 +263,7 @@ body {
         border-left: 0px;
       }
 
-      .displayTable thead tr th.invisible {
+      .invisible {
         display: none;
       }
 
