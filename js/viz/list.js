@@ -2,6 +2,25 @@
 var timesUpDisCalled = 0;
 function listView()
 {
+
+    var svgns = 'http://www.w3.org/2000/svg';
+
+    var tabList = null;
+    var tabDevices = null;
+    var selectedTab = null;
+    var leftTable = null;
+    var rightTable = null;
+    var svgArea = null;
+    var selectLists = {};
+    var devActions = null;
+    var sigActions = null;
+    var arrows = [];
+
+    var sourceDeviceHeaders = ["name", "outputs", "IP", "port"];
+    var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
+    //TODO include min/max
+    var signalHeaders = ["name", "type", "length", "units", "min", "max"];
+    
     //"use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
@@ -18,18 +37,16 @@ function listView()
         this.update_display();
     }
 
-    var callable = true;
-    var time = 100;
-    var myTimeout;
-
+    var updateCallable = true;
+    var updateTimeout;
     this.update_display = function() {
 
-        if (callable == false) {
-            clearTimeout(myTimeout);
+        if (updateCallable == false) {
+            clearTimeout(updateTimeout);
         }
 
-        callable = false;
-        myTimeout = setTimeout(function() {
+        updateCallable = false;
+        updateTimeout = setTimeout(function() {
             
             timesUpDisCalled++;
             console.log(timesUpDisCalled + " started");
@@ -58,9 +75,9 @@ function listView()
             $('svg').css('left', '0px');
 
             console.log(timesUpDisCalled + " finished");
-            callable = true;
+            updateCallable = true;
 
-        }, time);
+        }, 100);
 
 
     }
@@ -89,23 +106,7 @@ function listView()
         update_arrows();
     }
 
-var svgns = 'http://www.w3.org/2000/svg';
 
-var tabList = null;
-var tabDevices = null;
-var selectedTab = null;
-var leftTable = null;
-var rightTable = null;
-var svgArea = null;
-var selectLists = {};
-var devActions = null;
-var sigActions = null;
-var arrows = [];
-
-var sourceDeviceHeaders = ["device", "outputs", "IP", "port"];
-var destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
-//TODO include min/max
-var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -348,16 +349,25 @@ function update_links()
 
 }
 
-//Because this is a heavy function, I want to keep track of when and how many times it's being called
-//var times_arrows_redrawn = 0
+//Because this is a heavy function, I want to prevent it from being called too rapidly
+//(it is also never necessary to do so)
+//It is currently called with a delay of 10ms, if it is called again within that delay
+//The first call is forgotten.
+var arrowTimeout;
+var arrowCallable = true;
 function update_arrows()
 {
-    if (selectedTab == all_devices)
-        update_links();
-    else
-        update_connections();
-    //times_arrows_redrawn++;
-    //console.log(times_arrows_redrawn);
+    if (arrowCallable == false) {
+        clearTimeout(arrowTimeout);
+    }
+    arrowCallable = false;
+    arrowTimeout = setTimeout( function() {
+        if (selectedTab == all_devices)
+            update_links();
+        else
+            update_connections();
+        arrowCallable = true;
+    }, 0);
 }
 
 function update_connections()
@@ -445,11 +455,30 @@ function filter_match(row)
         return false;
 }
 
-// Returns whether a row has a connection
+// Returns whether a row has a connection, have to do it based on monitor.connections
+// not arrows themselves
 function is_connected(row) 
 {
-    for( var i in arrows ) {
-        if( arrows[i].leftTr == row || arrows[i].rightTr == row ) 
+    // What is the name of the signal/link?
+    var name = $(row).children('.name').text();
+    var linkConList = [];   // A list of all links or connections in 'devA>devB' form
+    var srcNames = [];      // All source names as strings
+    var destNames = [];     // All dest names as strings
+
+    if ( selectedTab == all_devices ) {
+        linkConList = links.keys();
+    }
+    else linkConList = connections.keys();
+
+    for (var i in linkConList) {
+        var sd = linkConList[i].split('>');
+        srcNames[i] = sd[0];
+        destNames[i] = sd[1];
+    }
+
+    for( var i in srcNames ) {
+        //Does the name match a string in the connections/links?
+        if( srcNames[i] == name || destNames[i] == name ) 
             return true;
     }
 
@@ -514,6 +543,7 @@ function create_arrow(left, right, sel)
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
+            line.attr('stroke','red');
         }
         e.stopPropagation();
     });
@@ -530,16 +560,18 @@ function select_tab(tab)
         $('#svgTitle').text("Links");
         leftTable.set_headers(sourceDeviceHeaders);
         rightTable.set_headers(destinationDeviceHeaders);
-        $('.signalControlsDiv').addClass('disabled');
+        $('.topMenu>div:not(#extratoolsDiv)').addClass('disabled');
     }
     else {
         //set_actions(sigActions);
         $('#svgTitle').text("Connections");
         leftTable.set_headers(signalHeaders);
         rightTable.set_headers(signalHeaders);
-        $('.signalControlsDiv').removeClass('disabled');
+        $('.topMenu>div:not(#extratoolsDiv)').removeClass('disabled');
     }
 
+    view.unconnectedVisible = true;
+    $('svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
     view.update_display();
@@ -571,7 +603,7 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
-    update_arrows();
+    //update_arrows();
     update_connection_properties();
 }
 
@@ -924,7 +956,7 @@ this.add_handlers = function()
     });
 
     $('.displayTable tbody').on({
-        mousedown: function(e) { select_tr(this); },
+        mousedown: function(e) { select_tr(this); update_arrows(); },
         click: function(e) { e.stopPropagation(); }
     }, 'tr');
 
