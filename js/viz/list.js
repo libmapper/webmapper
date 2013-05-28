@@ -1,6 +1,4 @@
 //An object for the overall display
-var timesUpDisCalled = 0;
-var timesUpArrowsCalled = 0;
 function listView()
 {
 
@@ -49,9 +47,6 @@ function listView()
         updateCallable = false;
         updateTimeout = setTimeout(function() {
             
-            timesUpDisCalled++;
-            //console.log(timesUpDisCalled + " started");
-
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
             update_arrows();
@@ -75,7 +70,6 @@ function listView()
             //Because svg keeps getting nudged left for some reason
             $('svg').css('left', '0px');
 
-            //console.log(timesUpDisCalled + " finished");
             updateCallable = true;
 
         }, 34);
@@ -366,9 +360,6 @@ function update_arrows()
     arrowCallable = false;
     arrowTimeout = setTimeout( function() {
 
-        timesUpArrowsCalled++;
-        console.log(timesUpArrowsCalled);
-
         if (selectedTab == all_devices)
             update_links();
         else
@@ -413,12 +404,6 @@ function update_connections()
 //Or signals that do not match the search string
 function filter_view()
 {
-    //Since updating arrows re-creates arrows, it's necessary to make sure they're current
-    //before filtering based on them. Also we need to make certain we're working with all
-    //of the data if we're doing something like deleting search text with arrows hidden
-    //$('tr.invisible').removeClass('invisible');
-    //update_arrows();
-
     $('.displayTable tbody tr').each( function(i, row) {
         if( (view.unconnectedVisible || is_connected(this) ) && filter_match(this) ) 
             $(this).removeClass('invisible');
