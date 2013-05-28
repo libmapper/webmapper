@@ -286,18 +286,18 @@ function main()
 {
 
     command.register("all_devices", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         for (var d in args)
             devices.add(args[d].name, args[d]);
         view.update_display();
     });
     command.register("new_device", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         devices.add(args.name, args);
         view.update_display();
     });
     command.register("del_device", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         devices.remove(args.name);
         if (selectedTab==args.name)
             select_tab(tabDevices);
@@ -306,7 +306,7 @@ function main()
     });
 
     command.register("all_signals", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         for (var d in args)
             signals.add(args[d].device_name+args[d].name
                         +'/_dir_'+args[d].direction,
@@ -314,38 +314,38 @@ function main()
         view.update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         signals.add(args.device_name+args.name
                     +'/_dir_'+args.direction, args);
         view.update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         signals.remove(args.device_name+args.name
                        +'/_dir_'+args.direction);
         view.update_display();
     });
 
     command.register("all_links", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         for (var l in args)
             links.add(args[l].src_name+'>'+args[l].dest_name,
                       args[l]);
         view.update_display();
     });
     command.register("new_link", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         links.add(args.src_name+'>'+args.dest_name, args);
         view.update_display();
     });
     command.register("del_link", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         links.remove(args.src_name+'>'+args.dest_name);
         view.update_display();
     });
 
     command.register("all_connections", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         for (var d in args)
             connections.add(args[d].src_name+'>'+args[d].dest_name,
                             args[d]);
@@ -355,19 +355,19 @@ function main()
                                              view.get_selected(connections));
     });
     command.register("new_connection", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         connections.add(args.src_name+'>'+args.dest_name, args);
         view.update_display();
         update_connection_properties_for(args, view.get_selected(connections));
     });
     command.register("mod_connection", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         connections.add(args.src_name+'>'+args.dest_name, args);
         view.update_display();
         update_connection_properties_for(args, view.get_selected(connections));
     });
     command.register("del_connection", function(cmd, args) {
-        console.log(cmd);
+        //console.log(cmd);
         var conns = view.get_selected(connections);
         connections.remove(args.src_name+'>'+args.dest_name);
         view.update_display();
