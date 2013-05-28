@@ -53,7 +53,7 @@ function refresh_all()
     model.signals = new Assoc();
     model.links = new Assoc();
     model.connections = new Assoc();
-    update_display();
+    view.update_display();
     command.send('refresh');
 }
 
@@ -135,26 +135,19 @@ function notify(msg)
 
 function update_connection_properties()
 {
-    if (selectedTab == all_devices)
-        return;
-
+	// clear the properties in the top menu 
     //var a = function(x) { return $(x,actionDiv); };
+	$(".mode").removeClass("modesel");
+	$("*").removeClass('waiting');
+	$(".topMenu input").val('');
+    //set_boundary(a(".boundary"), 0);
 
-    var clear_props = function() {
-        $(".mode").removeClass("modesel");
-        $("*").removeClass('waiting');
-        $(".topMenu input").val('')
-        //set_boundary(a(".boundary"), 0);
-    }
-
+	// get the selected connection from the view
     var conns = view.get_selected(model.connections);
-    if (conns.length > 1) {
-        // TODO
-        clear_props();
-    }
-    else if (conns.length == 1) {
+
+	// if there is one connection selected, display its properties on top
+    if (conns.length == 1) {
         var c = conns[0];
-        clear_props();
         $(".mode"+connectionModes[c.mode]).addClass("modesel");
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
@@ -163,9 +156,6 @@ function update_connection_properties()
         if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
         if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
         if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
-    }
-    else {
-        clear_props();
     }
 }
 
@@ -306,10 +296,7 @@ function main()
     });
     command.register("del_device", function(cmd, args) {
         model.devices.remove(args.name);
-        if (selectedTab==args.name)
-            select_tab(tabDevices);
-        else
-            view.update_display();
+        view.update_display();
     });
 
     command.register("all_signals", function(cmd, args) {
@@ -461,6 +448,9 @@ function add_extra_tools()
     $('#refresh').on('click', function(e) { refresh_all(); });
 }
 
+/**
+ * handlers for items in the top menu 
+ */
 function add_handlers()
 {
     //The expression and range input handlers
@@ -492,8 +482,7 @@ function add_handlers()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        if (selectedTab != all_devices)
-            on_load();
+        on_load();
     });
 }
 

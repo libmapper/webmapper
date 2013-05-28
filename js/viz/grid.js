@@ -68,6 +68,8 @@ GridView.prototype = {
 			if(_self.devGrid.selectedCell)
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
+				//FIX!
+				command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
 				_self.update_display();
 		});
 		div.appendChild(btn);
@@ -79,6 +81,8 @@ GridView.prototype = {
 			if(_self.devGrid.selectedCell)
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
+				//FIX
+				command.send('tab', "mischkabibble");
 				_self.update_display();
 		});
 		div.appendChild(btn);
