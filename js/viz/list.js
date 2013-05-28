@@ -1,7 +1,8 @@
 //An object for the overall display
+var timesUpDisCalled = 0;
 function listView()
 {
-    "use strict";
+    //"use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
     this.focusedDevices = [] // An array containing devices seen in the display
@@ -17,30 +18,51 @@ function listView()
         this.update_display();
     }
 
+    var callable = true;
+    var time = 100;
+    var myTimeout;
+
     this.update_display = function() {
 
-        // Removes 'invisible' classes which can muddle with display updating
-        $('tr.invisible').removeClass('invisible');
-        update_arrows();
-
-        update_tabs();
-        if (selectedTab == all_devices) {
-            update_devices();
-            window.saveLocation = '';
-        }
-        else {
-            update_signals(selectedTab);
-            window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+        if (callable == false) {
+            clearTimeout(myTimeout);
         }
 
-        update_save_location();
+        callable = false;
+        myTimeout = setTimeout(function() {
+            
+            timesUpDisCalled++;
+            console.log(timesUpDisCalled + " started");
 
-        update_selection();
-        
-        filter_view();
+            // Removes 'invisible' classes which can muddle with display updating
+            $('tr.invisible').removeClass('invisible');
+            update_arrows();
 
-        //Because svg keeps getting nudged left for some reason
-        $('svg').css('left', '0px');
+            update_tabs();
+            if (selectedTab == all_devices) {
+                update_devices();
+                window.saveLocation = '';
+            }
+            else {
+                update_signals(selectedTab);
+                window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+            }
+
+            update_save_location();
+
+            update_selection();
+            
+            filter_view();
+
+            //Because svg keeps getting nudged left for some reason
+            $('svg').css('left', '0px');
+
+            console.log(timesUpDisCalled + " finished");
+            callable = true;
+
+        }, time);
+
+
     }
 
     this.get_selected = function(list)
@@ -326,12 +348,16 @@ function update_links()
 
 }
 
+//Because this is a heavy function, I want to keep track of when and how many times it's being called
+//var times_arrows_redrawn = 0
 function update_arrows()
 {
     if (selectedTab == all_devices)
         update_links();
     else
         update_connections();
+    //times_arrows_redrawn++;
+    //console.log(times_arrows_redrawn);
 }
 
 function update_connections()
@@ -547,6 +573,11 @@ function select_tr(tr)
     selectLists[selectedTab][i] = l;
     update_arrows();
     update_connection_properties();
+}
+
+function select_arrow(arrow)
+{
+
 }
 
 function deselect_all()
@@ -807,9 +838,9 @@ function drawing_curve(sourceRow)
 
     this.checkTarget = function( mousedOverRow ) {
         if(this.targetRow != mousedOverRow) {
-            this.targetRow = mousedOverRow
-            deselect_all();
-            select_tr(this.sourceRow);
+            if(this.targetRow != null)
+                select_tr(this.targetRow);
+            this.targetRow = mousedOverRow;
             if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
                 select_tr(this.targetRow);
         }
