@@ -449,6 +449,10 @@ function add_signal_control_bar()
             'index': i
         })
     });
+
+    $("<input id='boundaryMin' class='boundary' type='button'></input>").insertBefore('#rangeDestMin');
+    $("<input id='boundaryMax' class='boundary' type='button'></input>").insertAfter('#rangeDestMax');
+
 }
 
 function add_extra_tools()
