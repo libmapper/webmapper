@@ -1,5 +1,6 @@
 //An object for the overall display
 var timesUpDisCalled = 0;
+var timesUpArrowsCalled = 0;
 function listView()
 {
 
@@ -20,7 +21,7 @@ function listView()
     var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
     //TODO include min/max
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
-    
+
     //"use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
@@ -49,7 +50,7 @@ function listView()
         updateTimeout = setTimeout(function() {
             
             timesUpDisCalled++;
-            console.log(timesUpDisCalled + " started");
+            //console.log(timesUpDisCalled + " started");
 
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
@@ -74,10 +75,10 @@ function listView()
             //Because svg keeps getting nudged left for some reason
             $('svg').css('left', '0px');
 
-            console.log(timesUpDisCalled + " finished");
+            //console.log(timesUpDisCalled + " finished");
             updateCallable = true;
 
-        }, 100);
+        }, 34);
 
 
     }
@@ -351,23 +352,29 @@ function update_links()
 
 //Because this is a heavy function, I want to prevent it from being called too rapidly
 //(it is also never necessary to do so)
-//It is currently called with a delay of 10ms, if it is called again within that delay
+//It is currently called with a delay of 34ms, if it is called again within that delay
 //The first call is forgotten.
 var arrowTimeout;
 var arrowCallable = true;
+
 function update_arrows()
 {
     if (arrowCallable == false) {
         clearTimeout(arrowTimeout);
     }
+
     arrowCallable = false;
     arrowTimeout = setTimeout( function() {
+
+        timesUpArrowsCalled++;
+        console.log(timesUpArrowsCalled);
+
         if (selectedTab == all_devices)
             update_links();
         else
             update_connections();
         arrowCallable = true;
-    }, 0);
+    }, 34);
 }
 
 function update_connections()
@@ -409,8 +416,8 @@ function filter_view()
     //Since updating arrows re-creates arrows, it's necessary to make sure they're current
     //before filtering based on them. Also we need to make certain we're working with all
     //of the data if we're doing something like deleting search text with arrows hidden
-    $('tr.invisible').removeClass('invisible');
-    update_arrows();
+    //$('tr.invisible').removeClass('invisible');
+    //update_arrows();
 
     $('.displayTable tbody tr').each( function(i, row) {
         if( (view.unconnectedVisible || is_connected(this) ) && filter_match(this) ) 
