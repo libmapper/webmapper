@@ -175,6 +175,13 @@ function set_boundary(boundaryElement, value, ismax)
     for (var i in boundaryIcons)
         boundaryElement.removeClass(boundaryIcons[i]);
 
+    if (value == 0) {//'None' special case, icon depends on direction
+        if (ismax)
+            boundaryElement.addClass('boundaryUp');
+        else
+            boundaryElement.addClass('boundaryDown');
+    }
+
     if (value == 3) { //'Fold' special case, icon depends on direction
         if (ismax)
             boundaryElement.addClass('boundaryDown');
