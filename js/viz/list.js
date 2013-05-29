@@ -569,6 +569,8 @@ function select_tab(tab)
 
 function select_tr(tr)
 {
+    if(!tr) return;
+
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
@@ -825,13 +827,15 @@ function drawing_curve(sourceRow)
             end = [ moveEvent.offsetX, moveEvent.offsetY ];
             // Within clamping range
             if( this.canvasWidth - Math.abs(end[0] - start[0]) < 50) {
-                end[0] = this.canvasWidth - start[0];
                 var clampRow = this.findrow(end[1]);
                 if(clampRow) {
+                    end[0] = this.canvasWidth - start[0];
                     c1 = end[1];
                     end[1] = this.clamptorow(clampRow);
                     this.checkTarget(clampRow);
                 }
+                else
+                    this.checkTarget(null);
             }
             else
                 this.checkTarget(null);
@@ -840,8 +844,7 @@ function drawing_curve(sourceRow)
         if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
-            if( !$(target).hasClass('incompatible') ) 
-                end[1] = this.clamptorow(target);
+            end[1] = this.clamptorow(target);
             c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
 
         }
@@ -858,10 +861,15 @@ function drawing_curve(sourceRow)
     }
 
     this.checkTarget = function( mousedOverRow ) {
-        if(this.targetRow != mousedOverRow) {
-            if(this.targetRow != null)
+        if(this.targetRow != mousedOverRow ) {
+            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible'));
                 select_tr(this.targetRow);
-            this.targetRow = mousedOverRow;
+
+            if( !$(mousedOverRow).hasClass('incompatible') )
+                this.targetRow = mousedOverRow;
+            else
+                this.targetRow = null;
+
             if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
                 select_tr(this.targetRow);
         }
