@@ -548,18 +548,16 @@ function select_tab(tab)
     $(tab).addClass("tabsel");
 
     if (tab == tabDevices) {
-        //set_actions(devActions);
         $('#svgTitle').text("Links");
         leftTable.set_headers(sourceDeviceHeaders);
         rightTable.set_headers(destinationDeviceHeaders);
-        $('.topMenu>div:not(#extratoolsDiv)').addClass('disabled');
+        $('#saveLoadDiv').addClass('disabled');
     }
     else {
-        //set_actions(sigActions);
         $('#svgTitle').text("Connections");
         leftTable.set_headers(signalHeaders);
         rightTable.set_headers(signalHeaders);
-        $('.topMenu>div:not(#extratoolsDiv)').removeClass('disabled');
+        $('#saveLoadDiv').removeClass('disabled');
     }
 
     view.unconnectedVisible = true;
@@ -595,7 +593,6 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
-    //update_arrows();
     update_connection_properties();
 }
 

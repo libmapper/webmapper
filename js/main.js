@@ -133,6 +133,7 @@ function update_connection_properties()
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.signalControl').addClass('disabled');
     }
 
     var conns = view.get_selected(connections);
@@ -143,6 +144,7 @@ function update_connection_properties()
     else if (conns.length == 1) {
         var c = conns[0];
         clear_props();
+        $('.signalControl').removeClass('disabled');
         $(".mode"+connectionModes[c.mode]).addClass("modesel");
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
@@ -222,6 +224,8 @@ function selected_connection_set_input(what,field,idx)
 {
     var args = copy_selected_connection();
 
+    if( !args ) return;
+
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
     var modecmd = connectionModeCommands[connectionModes[args['mode']]];
@@ -242,6 +246,8 @@ function selected_connection_set_input(what,field,idx)
 function selected_connection_set_boundary(boundarymode, ismax, div)
 {
     var args = copy_selected_connection();
+
+    if( !args ) return;
 
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
@@ -427,7 +433,7 @@ function add_container_elements()
 function add_signal_control_bar() 
 {
     //Add the mode controls
-    $('.topMenu').append("<div class='modesDiv'></div>");
+    $('.topMenu').append("<div class='modesDiv signalControl disabled'></div>");
     for (var m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
@@ -437,8 +443,8 @@ function add_signal_control_bar()
 
     //Add the range controls
     $('.topMenu').append(
-        "<div id='srcRange' class='range'>Source Range:</div>"+
-        "<div id='destRange' class='range'>Dest Range:</div>");
+        "<div id='srcRange' class='range signalControl disabled'>Source Range:</div>"+
+        "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
         var minOrMax = 'Max'   // A variable storing minimum or maximum
