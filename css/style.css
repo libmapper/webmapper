@@ -115,37 +115,40 @@ body {
       cursor: pointer;
     }
 
-    .boundary {
-      width: 24px;
-      height: 24px;
-      background: url(/images/boundary_icons.png);
-      background-repeat: no-repeat;
-      cursor: pointer;
-    }
-
-    .boundaryNone {
-      background-position: 0px 0px;
-    }
-
-    .boundaryUp {
-      background-position: -24px 0px;
-    }
-
-    .boundaryDown {
-      background-position: -48px 0px;
-    }
-
-    .boundaryMute {
-      background-position: -72px 0px;
-    }
-
-    .boundaryClamp {
-      background-position: -96px 0px;
-    }
-
-    .boundaryWrap {
-      background-position: -120px 0px;
-    }
+    /* Just the bounary icons */
+        .boundary {
+          width: 24px;
+          height: 24px;
+          background: url(/images/boundary_icons.png);
+          background-repeat: no-repeat;
+          cursor: pointer;
+          border: none;
+          margin-top: -5px;
+          position: relative;
+          top: 4px;
+        }
+        #boundaryMin {
+            margin-left: 5px;
+        }
+        .boundaryNone {
+          background-position: 0px 0px;
+        }
+        .boundaryUp {
+          background-position: -24px 0px;
+        }
+        .boundaryDown {
+          background-position: -48px 0px;
+        }
+        .boundaryMute {
+          background-position: -72px 0px;
+        }
+        .boundaryClamp {
+          background-position: -96px 0px;
+        }
+        .boundaryWrap {
+          background-position: -120px 0px;
+        }
+    /****************/
 
     .waiting {
       background: #EEEEEE;

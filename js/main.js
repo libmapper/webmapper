@@ -128,13 +128,11 @@ function update_connection_properties()
     if (selectedTab == all_devices)
         return;
 
-    //var a = function(x) { return $(x,actionDiv); };
-
     var clear_props = function() {
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
-        $(".topMenu input").val('')
-        //set_boundary(a(".boundary"), 0);
+        $(".topMenu input").val('');
+        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
     }
 
     var conns = view.get_selected(connections);
