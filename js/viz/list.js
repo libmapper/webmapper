@@ -331,7 +331,7 @@ function update_links()
                         var rightsel = $(right).hasClass('trsel');
                         //Make sure that the row is not hidden
                         if( $(left).css('display') != "none" && $(right).css('display') != "none" ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel, 0);
                             n_visibleLinks++;
                         }
                     });
@@ -377,6 +377,7 @@ function update_connections()
     var keys = connections.keys();
     for (var k in keys) {
         var c = connections.get(keys[k]);
+        var muted = c.muted;
         $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -387,7 +388,7 @@ function update_connections()
                         var rightsel = $(right).hasClass('trsel');
                         //Are these rows being displayed?
                         if( $(left).css('display') != 'none' && $(right).css('display') != 'none' ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel, muted);
                             n_visibleConnections++;
                         }
                         n_connections++;
@@ -478,19 +479,9 @@ function is_connected(row)
 }
 
 /* params are TR elements, one from each table */
-function create_arrow(left, right, sel)
+function create_arrow(left, right, sel, muted)
 {
     var line = svgArea.path();
-    if (sel)
-        line.attr({"stroke": "red"});
-    else
-        line.attr({"stroke": "black"});
-    line.attr({
-        "fill": "none",
-        "stroke-width": 2,
-        "cursor": "pointer"
-    });
-
     
     line.border = svgArea.path();
     line.border.attr({
@@ -516,6 +507,19 @@ function create_arrow(left, right, sel)
 
     line.attr({"path": path});
     line.border.attr({"path": path});
+
+    if (sel)
+        line.attr({"stroke": "red"});
+    else
+        line.attr({"stroke": "black"});
+    if (muted)
+        line.node.setAttribute("stroke-dasharray", 4);
+
+    line.attr({
+        "fill": "none",
+        "stroke-width": 2,
+        "cursor": "pointer"
+    });
 
     // So that the arrow remembers which rows it is attached to
     line.rightTr = right;
