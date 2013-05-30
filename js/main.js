@@ -292,6 +292,19 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
+function on_mute(conns)
+{
+    for ( var i in conns ) {
+        var args = conns[i]
+        if ( args.muted == 0 ) {
+            args.muted = 1;
+        }
+        else 
+            args.muted = 0;
+        command.send('set_connection', args);
+    }
+}
+
 /* The main program. */
 function main()
 {
@@ -515,6 +528,14 @@ function add_handlers()
 
     $('.boundary').on('click', function(e) {
         on_boundary(e);
+    });
+
+    $(document).keydown( function(e) {
+        if( e.which == 77 ) { // mute on 'm'
+            var conns = view.get_selected(connections);
+            if ( conns ) 
+                on_mute(conns);
+        }
     });
 
 }
