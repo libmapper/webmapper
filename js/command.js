@@ -91,6 +91,8 @@ var command = {
     /* Send a message. */
     send: function (cmd, args)
     {
+        console.log("Command.send: "+cmd+" args = ");
+        console.log(args);
         if (command.ws && command.ws.is_opened)
         {
             command.ws.send(JSON.stringify({'cmd': cmd,
