@@ -1,15 +1,3 @@
-function LibMapperModel ()
-{
-	this.devices = new Assoc();
-	this.signals = new Assoc();
-	this.links = new Assoc();
-	this.connections = new Assoc();
-};
-
-LibMapperModel.prototype = {
-		
-};
-
 var model = new LibMapperModel();
 
 all_devices = 'All Devices';
@@ -143,7 +131,9 @@ function update_connection_properties()
     //set_boundary(a(".boundary"), 0);
 
 	// get the selected connection from the view
-    var conns = view.get_selected(model.connections);
+	var conns = [];
+	if(typeof view.get_selected == 'function')
+		conns = view.get_selected(model.connections);
 
 	// if there is one connection selected, display its properties on top
     if (conns.length == 1) {
