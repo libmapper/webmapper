@@ -2,8 +2,8 @@
 
 
 #view{float: left;}
-#devGrid{position: relative; float: left; background: #fff;}
-#sigGrid{position: relative; float: left; background: #fff;}
+#devGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
+#sigGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
 
 [id*='hZoomSlider'] {margin-left: 29px; height: 18px }
 [id*='hZoomSlider'] .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}

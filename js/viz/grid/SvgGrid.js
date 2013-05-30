@@ -14,7 +14,7 @@ function SvgGrid(container, model, gridIndex){
 	this.svgNS = "http://www.w3.org/2000/svg";
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 
-	this._container = $(container);
+	this._container = container;
 	this.cells = new Array();
 
 	this.svgDim = [400, 400];								// x-y dimensions of the svg canvas
@@ -46,8 +46,6 @@ function SvgGrid(container, model, gridIndex){
 	this.gridIndex = gridIndex;
 
 	this.init(container);
-	this.initHorizontalZoomSlider($("#hZoomSlider" + this.gridIndex));
-	this.initVerticalZoomSlider($("#vZoomSlider" + this.gridIndex));
 	
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs
@@ -59,6 +57,8 @@ SvgGrid.prototype = {
 		
 		init : function (container) 
 		{ 
+			$(container).empty();
+			
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 			
@@ -148,6 +148,8 @@ SvgGrid.prototype = {
 			
 			container.appendChild(this.svgColLabels);
 			
+			this.initHorizontalZoomSlider($("#hZoomSlider" + this.gridIndex));
+			this.initVerticalZoomSlider($("#vZoomSlider" + this.gridIndex));
 		},
 
 		initHorizontalZoomSlider : function ()
@@ -460,7 +462,7 @@ SvgGrid.prototype = {
 		},
 		
 		makeActiveGrid : function(){
-			this._container.trigger("makeActiveGrid", this.gridIndex);
+			$(this._container).trigger("makeActiveGrid", this.gridIndex);
 		},
 		
 		keyboardHandler: function (e)
@@ -603,10 +605,22 @@ SvgGrid.prototype = {
 		
 		updateDisplay : function (colsArray, rowsArray, connectionsArray){
 			
+			
 			// reset everything in old view
+			/*
 			$('#svgGrid' + this.gridIndex).empty();
 			$('#svgRows' + this.gridIndex).empty();
 			$('#svgCols' + this.gridIndex).empty();
+			*/
+			
+			// set the dimension variables
+			this.contentDim[0] = this.colsArray*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.rowsArray*(this.cellDim[1]+this.cellMargin);
+			
+			this.svgDim[0] = this.contentDim[0];
+			
+			this.init(this._container);
+			
 			this.cells = new Array();
 			this.nCellIds = 0;
 			this.nRows = 0;
@@ -648,9 +662,7 @@ SvgGrid.prototype = {
 				this.nRows++;
 			}
 			
-			// set the dimension variables
-			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
+			
 			
 			// create the cells
 			for(var i=0; i<this.nRows; i++){
@@ -734,7 +746,7 @@ SvgGrid.prototype = {
 			if(this.selectedCell == null)	
 				return;
 
-			this._container.trigger("toggle", this.selectedCell);
+			$(this._container).trigger("toggle", this.selectedCell);
 		}
 		
 		
