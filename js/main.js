@@ -492,8 +492,6 @@ function add_extra_tools()
             "<input id='refresh' class='extratools' type='button'>"+
         "</div>"
     );
-
-    $('#refresh').on('click', function(e) { refresh_all(); });
 }
 
 function add_handlers()
@@ -541,6 +539,10 @@ function add_handlers()
             if ( conns ) 
                 on_mute(conns);
         }
+    });
+
+    $('#refresh').on('click', function(e) { 
+        refresh_all(); 
     });
 
 }
