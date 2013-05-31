@@ -1,7 +1,9 @@
 @CHARSET "UTF-8";
 
 
-#view{float: left;}
+#gridWrapper{margin: 0 auto;}
+#view{}
+
 #devGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
 #sigGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
 

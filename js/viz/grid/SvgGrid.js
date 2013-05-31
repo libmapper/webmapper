@@ -28,8 +28,8 @@ function SvgGrid(container, model, gridIndex){
 	
 	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
 	this.vboxPos = [0, 0];									// vbox x-y position
-	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
-	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
+//	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
+//	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
 	
 	this.cellDim = [32, 32];								// cell width-height dimensions
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
@@ -45,7 +45,7 @@ function SvgGrid(container, model, gridIndex){
 	
 	this.gridIndex = gridIndex;
 
-	this.init(container);
+	this.init();
 	
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs
@@ -55,9 +55,30 @@ function SvgGrid(container, model, gridIndex){
 
 SvgGrid.prototype = {
 		
-		init : function (container) 
+		init : function () 
 		{ 
-			$(container).empty();
+			$(this._container).empty();
+			// reset everything in old view
+			/*
+			$('#svgGrid' + this.gridIndex).empty();
+			$('#svgRows' + this.gridIndex).empty();
+			$('#svgCols' + this.gridIndex).empty();
+			*/
+			
+			
+			// set the dimension variables
+			this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+			
+			if(this.contentDim[0] == 0) this.contentDim[0] = this.cellDim[0] + this.cellMargin;
+			if(this.contentDim[1] == 0) this.contentDim[1] = this.cellDim[1] + this.cellMargin;
+			
+			this.svgDim[0] = this.contentDim[0];
+			this.svgDim[1] = this.contentDim[1];
+
+			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
+			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
+			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
 			
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
@@ -93,13 +114,13 @@ SvgGrid.prototype = {
 			});
 			div.appendChild(btn);
 			
-			container.appendChild(div);
+			this._container.appendChild(div);
 			
 			//horizontal scrollbar 
 			div = document.createElement("div");
 			div.setAttribute("id", "hZoomSlider" + this.gridIndex);
 			div.setAttribute("style", "position: relative; margin-top: 10px; clear:both;");
-			container.appendChild(div);
+			this._container.appendChild(div);
 			
 			// a wrapper div to hold vscroll, grid + row labels
 			var wrapper1 = document.createElement("div");
@@ -134,7 +155,7 @@ SvgGrid.prototype = {
 			this.svgRowLabels.setAttribute("preserveAspectRatio", "none");
 			wrapper1.appendChild(this.svgRowLabels);
 			
-			container.appendChild(wrapper1);
+			this._container.appendChild(wrapper1);
 			
 			// svg column labels
 			this.svgColLabels = document.createElementNS(this.svgNS, "svg");
@@ -146,7 +167,7 @@ SvgGrid.prototype = {
 			this.svgColLabels.setAttribute("style", "float: left; clear:both; margin-left:30px;");
 			this.svgColLabels.setAttribute("preserveAspectRatio", "none");
 			
-			container.appendChild(this.svgColLabels);
+			this._container.appendChild(this.svgColLabels);
 			
 			this.initHorizontalZoomSlider($("#hZoomSlider" + this.gridIndex));
 			this.initVerticalZoomSlider($("#vZoomSlider" + this.gridIndex));
@@ -605,21 +626,10 @@ SvgGrid.prototype = {
 		
 		updateDisplay : function (colsArray, rowsArray, connectionsArray){
 			
+			this.colsArray = colsArray;
+			this.rowsArray = rowsArray;
 			
-			// reset everything in old view
-			/*
-			$('#svgGrid' + this.gridIndex).empty();
-			$('#svgRows' + this.gridIndex).empty();
-			$('#svgCols' + this.gridIndex).empty();
-			*/
-			
-			// set the dimension variables
-			this.contentDim[0] = this.colsArray*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.rowsArray*(this.cellDim[1]+this.cellMargin);
-			
-			this.svgDim[0] = this.contentDim[0];
-			
-			this.init(this._container);
+			this.init();
 			
 			this.cells = new Array();
 			this.nCellIds = 0;

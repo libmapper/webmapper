@@ -44,18 +44,10 @@ GridView.prototype = {
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
 		
-		// devices Grid (gridIndex=0)
-		div = document.createElement("div");
-		div.setAttribute("id", "devGrid");
-		container.appendChild(div);
-		this.devGrid = new SvgGrid(document.getElementById("devGrid"), model, 0);
+		var wrapper = document.createElement("div");
+		wrapper.setAttribute("id", "gridWrapper");
+		container.appendChild(wrapper);
 		
-		// Signals Grid (gridIndex=1)
-		div = document.createElement("div");
-		div.setAttribute("id", "sigGrid");
-		container.appendChild(div);
-		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), model, 1);
-			
 		// button bar
 		div = document.createElement("div");
 		div.setAttribute("id", "actionBar");
@@ -69,7 +61,7 @@ GridView.prototype = {
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
 				//FIX!
-				command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
+				//command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
 				_self.update_display();
 		});
 		div.appendChild(btn);
@@ -82,12 +74,56 @@ GridView.prototype = {
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
 				//FIX
-				command.send('tab', "mischkabibble");
+				//command.send('tab', "mischkabibble");
 				_self.update_display();
 		});
 		div.appendChild(btn);
-		container.appendChild(div);
+
+		// View Buttons
+		btn = document.createElement("button");
+		btn.innerHTML = "1";
+		btn.addEventListener("click", function(evt){
+			$('#devGrid').show(1000);
+			$('#sigGrid').hide(1000);
+		});
+		div.appendChild(btn);
+		btn = document.createElement("button");
+		btn.innerHTML = "2";
+		btn.addEventListener("click", function(evt){
+			$('#devGrid').hide(1000);
+			$('#sigGrid').show(1000);
+		});
+		div.appendChild(btn);
+		btn = document.createElement("button");
+		btn.innerHTML = "3";
+		btn.addEventListener("click", function(evt){
+			$('#devGrid').show(1000);
+			$('#sigGrid').show(1000);
+		});
+		div.appendChild(btn);
+			
+		
+		wrapper.appendChild(div);
 		// END button bar
+		
+		
+		
+		
+		// devices Grid (gridIndex=0)
+		div = document.createElement("div");
+		div.setAttribute("id", "devGrid");
+		wrapper.appendChild(div);
+		this.devGrid = new SvgGrid(document.getElementById("devGrid"), model, 0);
+		
+		// Signals Grid (gridIndex=1)
+		div = document.createElement("div");
+		div.setAttribute("id", "sigGrid");
+		wrapper.appendChild(div);
+		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), model, 1);
+			
+		
+		$("#gridWrapper").width($("#devGrid").width() + $("#sigGrid").width() + 1);
+		
 		
 		$("#devGrid").on("toggle", function(e, cell){
 			_self.toggleLink(e, cell);
@@ -196,6 +232,15 @@ GridView.prototype = {
 		
 		this.updateDevicesGrid();
 		this.updateSignalsGrid();
+		
+		var w = $(window).width();
+		var w1 = $("#devGrid").width();
+		var w2 = $("#sigGrid").width()
+		
+		if(w1+w2 >= w)
+			$("#gridWrapper").width( w );
+		else
+			$("#gridWrapper").width( w1 + w2 + 1);
 	},
 	
 	updateDevicesGrid : function(){
