@@ -13,6 +13,8 @@ function GridView(container, model)
 	this.devGrid;
 	this.sigGrid;
 	
+	this.viewMode = 0;
+	
 	this.includedSrcs = new Array();
 	this.includedDsts = new Array();
 	
@@ -83,31 +85,24 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "1";
 		btn.addEventListener("click", function(evt){
-			$('#devGrid').show(1000);
-			$('#sigGrid').hide(1000);
+			_self.switchView(1);
 		});
 		div.appendChild(btn);
+		
 		btn = document.createElement("button");
 		btn.innerHTML = "2";
 		btn.addEventListener("click", function(evt){
-			$('#devGrid').hide(1000);
-			$('#sigGrid').show(1000);
+			_self.switchView(2);
 		});
 		div.appendChild(btn);
 		btn = document.createElement("button");
 		btn.innerHTML = "3";
 		btn.addEventListener("click", function(evt){
-			$('#devGrid').show(1000);
-			$('#sigGrid').show(1000);
+			_self.switchView(3);
 		});
 		div.appendChild(btn);
-			
-		
 		wrapper.appendChild(div);
 		// END button bar
-		
-		
-		
 		
 		// devices Grid (gridIndex=0)
 		div = document.createElement("div");
@@ -137,6 +132,28 @@ GridView.prototype = {
 		$("#sigGrid").on("makeActiveGrid", function(e, gridIndex){
 			_self.setActiveGrid(gridIndex);
 		});
+		
+		this.switchView(1);	
+	},
+	
+	switchView : function(mode){
+		this.viewMode = mode;
+		var len = 1000;
+		switch (mode) 
+		{
+		case 1:
+			$('#devGrid').show(len);
+			$('#sigGrid').hide(len);
+			break;
+		case 2:
+			$('#devGrid').hide(len);
+			$('#sigGrid').show(len);
+			break;
+		case 3:
+			$('#devGrid').show(len);
+			$('#sigGrid').show(len);
+			break;
+		}
 	},
 	
 	setActiveGrid : function(gridIndex){
@@ -235,12 +252,12 @@ GridView.prototype = {
 		
 		var w = $(window).width();
 		var w1 = $("#devGrid").width();
-		var w2 = $("#sigGrid").width()
+		var w2 = $("#sigGrid").width();
 		
-		if(w1+w2 >= w)
-			$("#gridWrapper").width( w );
-		else
-			$("#gridWrapper").width( w1 + w2 + 1);
+		if (this.viewMode == 1)
+		{
+			$("#gridWrapper").width( w1 + 1);
+		}
 	},
 	
 	updateDevicesGrid : function(){

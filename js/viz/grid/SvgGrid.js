@@ -18,7 +18,9 @@ function SvgGrid(container, model, gridIndex){
 	this.cells = new Array();
 
 	this.svgDim = [400, 400];								// x-y dimensions of the svg canvas
-	this.colLabelsH = 200;
+	this.svgMinDim = [33, 33];								
+	this.svgMaxDim = [600, 800];								
+	this.colLabelsH = 100;
 	this.rowLabelsW = 200;
 	
 	this.zoomIncrement = 50;							
@@ -27,6 +29,7 @@ function SvgGrid(container, model, gridIndex){
 	this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
 	
 	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
+	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
 	this.vboxPos = [0, 0];									// vbox x-y position
 //	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
 //	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
@@ -72,13 +75,27 @@ SvgGrid.prototype = {
 			
 			if(this.contentDim[0] == 0) this.contentDim[0] = this.cellDim[0] + this.cellMargin;
 			if(this.contentDim[1] == 0) this.contentDim[1] = this.cellDim[1] + this.cellMargin;
-			
+
 			this.svgDim[0] = this.contentDim[0];
 			this.svgDim[1] = this.contentDim[1];
 
+			//check available real estate
+			this.svgMaxDim[0] = $(window).width() - this.rowLabelsW - 50;
+			this.svgMaxDim[1] = $(window).height() - this.colLabelsH - 50 - 100; //100 should be dynamic for control bar
+
+			// ensure less than max dimensions of window
+			this.svgDim[0] = Math.min(this.svgDim[0], this.svgMaxDim[0]);
+			this.svgDim[1] = Math.min(this.svgDim[1], this.svgMaxDim[1]);
+
+			// ensure more than min dimension
+			this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
+			this.svgDim[1] = Math.max(this.svgDim[1], this.svgMinDim[1]);
+			
 			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
 			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
 			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
+			
+			$(this._container).width(this.svgDim[0] + this.rowLabelsW + 30);	// set so row labels stick to grid
 			
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
@@ -702,23 +719,17 @@ SvgGrid.prototype = {
 			
 			
 			// set the zoom level
-			if(this.contentDim[0] == 0 || this.contentDim[1] == 0)
-			{
-			
-			}
-			
 			// keeping cells as squares
-			else if(this.contentDim[0] >= this.contentDim[1])
-			{
-				this.vboxDim[0] = this.contentDim[0];
-				this.vboxDim[1] = this.vboxDim[0]/this.aspect;
-			}else if(this.contentDim[1] >= this.contentDim[0]) {
-				this.vboxDim[1] = this.contentDim[1];
-				this.vboxDim[0] = this.vboxDim[1]*this.aspect;				
-			}
 			
-//			this.vboxDim[0] = this.contentDim[0];
-//			this.vboxDim[1] = this.contentDim[1];	
+			this.vboxDim[0] = this.svgDim[0];
+			this.vboxDim[1] = this.vboxDim[0]/this.aspect;
+			
+		
+		
+//		else if(this.contentDim[1] >= this.contentDim[0]) {
+//				this.vboxDim[1] = this.contentDim[1];
+//				this.vboxDim[0] = this.vboxDim[1]*this.aspect;				
+			
 
 			this.updateViewBoxes();
 			this.updateZoomBars();
@@ -726,6 +737,7 @@ SvgGrid.prototype = {
 			
 			
 			// create the links
+			
 			for (var i=0; i< connectionsArray.length; i++)
 			{
 				var s = connectionsArray[i].src_name;

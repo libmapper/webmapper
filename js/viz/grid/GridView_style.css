@@ -7,11 +7,24 @@
 #devGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
 #sigGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
 
-[id*='hZoomSlider'] {margin-left: 29px; height: 18px }
-[id*='hZoomSlider'] .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
 
+
+#hZoomSlider0 {margin-left: 29px; height: 18px }
+#hZoomSlider0 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+#hZoomSlider1 {margin-left: 29px; height: 18px }
+#hZoomSlider1 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+
+#vZoomSlider0 {width: 18px;}
+#vZoomSlider0 .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+#vZoomSlider1 {width: 18px;}
+#vZoomSlider1 .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+
+/*
+[id^='hZoomSlider'] {margin-left: 29px; height: 18px;  }
+[id^='hZoomSlider'] .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
 [id*='vZoomSlider'] {width: 18px;}
 [id*='vZoomSlider'] .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+*/
 
 [id*='hZoomSlider'] .ui-widget-header, [id*='vZoomSlider'] .ui-widget-header  {background: darkgray;}
 [id*='hZoomSlider-'] .ui-state-focus, [id*='vZoomSlider'] .ui-state-focus{background: #f6f6f6; border: 1px solid #cccccc;}
