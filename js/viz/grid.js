@@ -60,11 +60,13 @@ GridView.prototype = {
 		btn.innerHTML = "ADD";
 		btn.addEventListener("click", function(evt){
 			if(_self.devGrid.selectedCell)
+			{
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
 				//FIX!
-				command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
+				_self._container.trigger("tab", _self.devGrid.selectedCell.getAttribute("data-src"));
 				_self.update_display();
+			}
 		});
 		div.appendChild(btn);
 			
@@ -73,11 +75,20 @@ GridView.prototype = {
 		btn.innerHTML = "REM";
 		btn.addEventListener("click", function(evt){
 			if(_self.devGrid.selectedCell)
-				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
-				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
-				//FIX
-				command.send('tab', "mischkabibble");
+			{
+				var ind;
+				ind = _self.includedSrcs.indexOf(_self.devGrid.selectedCell.getAttribute("data-src"));
+				if(ind>=0) 
+					_self.includedSrcs.splice(ind);
+				ind = _self.includedDsts.indexOf(_self.devGrid.selectedCell.getAttribute("data-dst")); 
+				if(ind>=0) 
+					_self.includedDsts.splice(ind);
+				
+				//FIX: need a command to remove signals from the model
+				//command.send('tab', "mischkabibble");
 				_self.update_display();
+				
+			}
 		});
 		div.appendChild(btn);
 
@@ -120,12 +131,23 @@ GridView.prototype = {
 		$("#gridWrapper").width($("#devGrid").width() + $("#sigGrid").width() + 1);
 		
 		
-		$("#devGrid").on("toggle", function(e, cell){
-			_self.toggleLink(e, cell);
+		$("#devGrid").on("link", function(e, cell){
+			_self.link(e, cell);
 		});
-		$("#sigGrid").on("toggle", function(e, cell){
-			_self.toggleConnection(e, cell);
+		$("#devGrid").on("unlink", function(e, cell){
+			_self.unlink(e, cell);
 		});
+		
+		$("#sigGrid").on("connect", function(e, cell){
+			_self.connect(e, cell);
+		});
+		$("#sigGrid").on("disconnect", function(e, cell){
+			_self.disconnect(e, cell);
+		});
+		
+		
+		
+		
 		$("#devGrid").on("makeActiveGrid", function(e, gridIndex){
 			_self.setActiveGrid(gridIndex);
 		});
@@ -133,7 +155,7 @@ GridView.prototype = {
 			_self.setActiveGrid(gridIndex);
 		});
 		
-		this.switchView(1);	
+		this.switchView(3);	
 	},
 	
 	switchView : function(mode){
@@ -158,6 +180,31 @@ GridView.prototype = {
 	
 	setActiveGrid : function(gridIndex){
 		this.activeGridIndex = gridIndex;
+	},
+	
+	connect : function (e, cell)
+	{
+		var selectedSrc = cell.getAttribute("data-src");
+		var selectedDst = cell.getAttribute("data-dst");
+		this._container.trigger("connect", [selectedSrc, selectedDst]);	// trigger connect event
+	},
+	disconnect : function (e, cell)
+	{
+		var selectedSrc = cell.getAttribute("data-src");
+		var selectedDst = cell.getAttribute("data-dst");
+		this._container.trigger("disconnect", [selectedSrc, selectedDst]);	// trigger disconnect event
+	},
+	link : function (e, cell)
+	{
+		var selectedSrc = cell.getAttribute("data-src");
+		var selectedDst = cell.getAttribute("data-dst");
+		this._container.trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
+	},
+	unlink : function (e, cell)
+	{
+		var selectedSrc = cell.getAttribute("data-src");
+		var selectedDst = cell.getAttribute("data-dst");
+		this._container.trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
 	},
 	
 	toggleLink : function (e, cell)
@@ -247,17 +294,15 @@ GridView.prototype = {
 	
 	update_display : function (){
 		
-		this.updateDevicesGrid();
-		this.updateSignalsGrid();
-		
 		var w = $(window).width();
 		var w1 = $("#devGrid").width();
 		var w2 = $("#sigGrid").width();
 		
-		if (this.viewMode == 1)
-		{
-			$("#gridWrapper").width( w1 + 1);
-		}
+		$("#gridWrapper").width( w - 100 );
+
+		this.updateDevicesGrid();
+		this.updateSignalsGrid();
+		
 	},
 	
 	get_selected_connection: function(list){
@@ -269,6 +314,7 @@ GridView.prototype = {
 		//divide devices into sources and destinations
 		var srcDevs = new Array();
 		var dstDevs = new Array();
+		var links = new Array();
 		
 		/*
 		for (var i=0; i< this.model.devices.length; i++)
@@ -280,6 +326,8 @@ GridView.prototype = {
 				dstDevs.push(dev);
 		}
 		*/
+		
+		// add devices
 		
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
@@ -293,8 +341,18 @@ GridView.prototype = {
 				dstDevs.push(dev);
 		        
 		}
-		 
-		this.devGrid.updateDisplay(srcDevs, dstDevs, this.model.links);
+		
+		// add links
+		
+		var l = this.model.links.keys();
+		for (var i=0; i<l.length; i++)			
+		{
+			var src = this.model.links.get(l[i]).src_name;
+			var dst = this.model.links.get(l[i]).dest_name;
+			links.push([src,dst]);
+		}
+		
+		this.devGrid.updateDisplay(srcDevs, dstDevs, links);
 		
 		
 	},
@@ -304,7 +362,7 @@ GridView.prototype = {
 		// show signals for included srcs/destinations
 		var srcSigs = new Array();
 		var dstSigs = new Array();
-		
+		var connections = new Array();
 		
 		var keys = this.model.signals.keys();
 	    for (var s in keys) {
@@ -322,7 +380,19 @@ GridView.prototype = {
 					dstSigs.push(sig);
 			}
 	    }
-		this.sigGrid.updateDisplay(srcSigs, dstSigs, this.model.connections);
+	    
+	    // add connections
+		
+		var c = this.model.connections.keys();
+		for (var i=0; i<c.length; i++)			
+		{
+			var con = this.model.connections.get(c[i]);
+			var src = this.model.connections.get(c[i]).src_name;
+			var dst = this.model.connections.get(c[i]).dest_name;
+			connections.push([src,dst]);
+		}
+	    
+		this.sigGrid.updateDisplay(srcSigs, dstSigs, connections);
 	}
 	
 	// show the connections

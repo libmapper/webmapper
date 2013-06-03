@@ -37,29 +37,22 @@ function main()
         model.devices.remove(args.name);
         view.update_display();
     });
-
     command.register("all_signals", function(cmd, args) {
         for (d in args)
-            model.signals.add(args[d].device_name+args[d].name
-                        +'/_dir_'+args[d].direction,
-                        args[d]);
+            model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
         view.update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device_name+args.name
-                    +'/_dir_'+args.direction, args);
+        model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
         view.update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device_name+args.name
-                       +'/_dir_'+args.direction);
+        model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
         view.update_display();
     });
-
     command.register("all_links", function(cmd, args) {
         for (l in args)
-            model.links.add(args[l].src_name+'>'+args[l].dest_name,
-                      args[l]);
+            model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
         view.update_display();
     });
     command.register("new_link", function(cmd, args) {
@@ -67,26 +60,24 @@ function main()
         view.update_display();
     });
     command.register("del_link", function(cmd, args) {
-        model.links.remove(args.src_name+'>'+args.dest_name);
+        model.links.remove(args.src_name+'>' + args.dest_name);
         view.update_display();
     });
 
     command.register("all_connections", function(cmd, args) {
         for (d in args)
-            model.connections.add(args[d].src_name+'>'+args[d].dest_name,
-                            args[d]);
+            model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
         view.update_display();
         for (d in args)
-            update_connection_properties_for(args[d],
-                                             view.get_selected_connection(model.connections));
+            update_connection_properties_for(args[d], view.get_selected_connection(model.connections));
     });
     command.register("new_connection", function(cmd, args) {
-        model.connections.add(args.src_name+'>'+args.dest_name, args);
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
         view.update_display();
         update_connection_properties_for(args, view.get_selected_connection(model.connections));
     });
     command.register("mod_connection", function(cmd, args) {
-        model.connections.add(args.src_name+'>'+args.dest_name, args);
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
         view.update_display();
         update_connection_properties_for(args, view.get_selected_connection(model.connections));
     });
@@ -102,6 +93,26 @@ function main()
     add_signal_control_bar();
     add_extra_tools();
 
+    
+    // actions from VIEW
+
+    $("#container").on("tab", function(e, selectedTab){
+    	command.send('tab', selectedTab);
+    });
+    $("#container").on("link", function(e, src, dst){
+    	command.send('link', [src, dst]);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+    	command.send('unlink', [src, dst]);
+    });
+    $("#container").on("connect", function(e, src, dst){
+    	command.send('connect', [src, dst]);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+    	command.send('disconnect', [src, dst]);
+    });
+    
+    
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(

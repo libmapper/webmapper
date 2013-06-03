@@ -125,9 +125,18 @@ SvgGrid.prototype = {
 				
 			//toggle connection button
 			btn = document.createElement("button");
-			btn.innerHTML = "Toggle";
+			btn.innerHTML = "Connect";
 			btn.addEventListener("click", function(evt){
-				_self.toggleConnection();
+				//_self.toggleConnection();
+				_self.connect()
+			});
+			div.appendChild(btn);
+			
+			btn = document.createElement("button");
+			btn.innerHTML = "Disconnect";
+			btn.addEventListener("click", function(evt){
+				//_self.toggleConnection();
+				_self.disconnect()
 			});
 			div.appendChild(btn);
 			
@@ -657,16 +666,17 @@ SvgGrid.prototype = {
 			for (var index=0; index< colsArray.length; index++)
 			{
 				var dev = colsArray[index];
-
+				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
+				
 				var label = document.createElementNS(this.svgNS,"text");
 				label.setAttribute("id", "colLabel" + this.nCols  );
-				label.appendChild(document.createTextNode(dev.name));	
+				label.appendChild(document.createTextNode(fullName)); //signals have also a device name, important for matching connections	
 				this.svgColLabels.appendChild(label);
 				var halign = (label.getBBox().height)/4 ;		//for centered alignment. *getBBox() only works if used after adding to DOM
 				var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin)+(this.cellDim[0]/2)-halign);			// I don't know why +4 
 				var yPos = this.labelMargin;
 				label.setAttribute("class", "label");
-				label.setAttribute("data-src", dev.name);
+				label.setAttribute("data-src", fullName);
 				label.setAttribute("data-col", this.nCols);
 				label.setAttribute("transform","translate(" + xPos + "," + yPos + ")rotate(90)");
 				this.nCols++;
@@ -676,12 +686,14 @@ SvgGrid.prototype = {
 			for (var index=0; index< rowsArray.length; index++)
 			{	
 				var dev = rowsArray[index];
+				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
+				
 				var label = document.createElementNS(this.svgNS,"text");
-				label.appendChild(document.createTextNode(dev.name));	
+				label.appendChild(document.createTextNode(fullName));	
 				this.svgRowLabels.appendChild(label);
 				label.setAttribute("id", "rowLabel" + this.nRows);
 				label.setAttribute("x", this.labelMargin);
-				label.setAttribute("data-dst", dev.name);
+				label.setAttribute("data-dst", fullName);
 				label.setAttribute("data-row", this.nRows);
 				label.setAttribute("class","label");
 				var valign = label.getBBox().height/2 + 2;		//BBox only works if used after adding to DOM
@@ -740,8 +752,9 @@ SvgGrid.prototype = {
 			
 			for (var i=0; i< connectionsArray.length; i++)
 			{
-				var s = connectionsArray[i].src_name;
-				var d = connectionsArray[i].dest_name;
+				var conn = connectionsArray[i]
+				var s = conn[0];	// source
+				var d = conn[1];	// destination
 				
 				for (var j=0; j<this.cells.length; j++)
 				{
@@ -769,7 +782,16 @@ SvgGrid.prototype = {
 				return;
 
 			$(this._container).trigger("toggle", this.selectedCell);
+		},
+		connect : function()
+		{
+			$(this._container).trigger("connect", this.selectedCell);
+		},
+		disconnect : function()
+		{
+			$(this._container).trigger("disconnect", this.selectedCell);
 		}
+		
 		
 		
 		
