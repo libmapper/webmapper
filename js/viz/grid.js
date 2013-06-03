@@ -63,7 +63,7 @@ GridView.prototype = {
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
 				//FIX!
-				//command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
+				command.send('tab', _self.devGrid.selectedCell.getAttribute("data-src"));
 				_self.update_display();
 		});
 		div.appendChild(btn);
@@ -76,7 +76,7 @@ GridView.prototype = {
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
 				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
 				//FIX
-				//command.send('tab', "mischkabibble");
+				command.send('tab', "mischkabibble");
 				_self.update_display();
 		});
 		div.appendChild(btn);
@@ -258,6 +258,10 @@ GridView.prototype = {
 		{
 			$("#gridWrapper").width( w1 + 1);
 		}
+	},
+	
+	get_selected_connection: function(list){
+		return [];
 	},
 	
 	updateDevicesGrid : function(){

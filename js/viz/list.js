@@ -56,7 +56,7 @@ signalHeaders = ["name", "type", "length", "units", "min", "max"];
         search_filter( $('#rightSearch') );
     }
 
-    this.get_selected = function(list)
+    this.get_selected_connection = function(list)
     {
         var L = $('.trsel', leftTable.table);
         var R = $('.trsel', rightTable.table);
