@@ -131,10 +131,10 @@ GridView.prototype = {
 		$("#gridWrapper").width($("#devGrid").width() + $("#sigGrid").width() + 1);
 		
 		
-		$("#devGrid").on("link", function(e, cell){
+		$("#devGrid").on("connect", function(e, cell){
 			_self.link(e, cell);
 		});
-		$("#devGrid").on("unlink", function(e, cell){
+		$("#devGrid").on("disconnect", function(e, cell){
 			_self.unlink(e, cell);
 		});
 		

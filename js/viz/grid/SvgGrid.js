@@ -136,7 +136,7 @@ SvgGrid.prototype = {
 			btn.innerHTML = "Disconnect";
 			btn.addEventListener("click", function(evt){
 				//_self.toggleConnection();
-				_self.disconnect()
+				_self.disconnect();
 			});
 			div.appendChild(btn);
 			
