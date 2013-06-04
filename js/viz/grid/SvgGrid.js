@@ -352,7 +352,6 @@ SvgGrid.prototype = {
 				// set the clicked cell as selected
 				_self.selectedCell = cell;
 				_self.selectedCell.classList.add('cell_selected');
-				$(this._container).trigger("updateConnectionProperties");
 			}
 			else if(cell.id != _self.selectedCell.id)	
 			{	
@@ -361,7 +360,6 @@ SvgGrid.prototype = {
 				// set the clicked cell as selected
 				_self.selectedCell = cell;
 				_self.selectedCell.classList.add('cell_selected');
-				$(this._container).trigger("updateConnectionProperties");
 			}	
 			else	// already selected, so deselect
 			{
@@ -370,6 +368,7 @@ SvgGrid.prototype = {
 				_self.selectedCell = null;
 			}
 			
+			$(this._container).trigger("updateConnectionProperties");
 			
 			// load cell details into info PANE
 			//

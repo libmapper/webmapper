@@ -331,7 +331,8 @@ GridView.prototype = {
 			var selectedDst = selectedCell.getAttribute("data-dst");
 			var key = selectedSrc + ">" + selectedDst;
 			var v = list.get(key);
-			vals.push(v);
+			if(v)
+				vals.push(v);
 		}	
 		return vals;
 	},
