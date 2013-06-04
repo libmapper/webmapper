@@ -24,6 +24,11 @@ window.onload = main;
 function main()
 {
 
+    //Create the page elements
+    add_container_elements();
+    add_signal_control_bar();
+    add_extra_tools();
+
     command.register("all_devices", function(cmd, args) {
         for (d in args)
             model.devices.add(args[d].name, args[d]);
@@ -87,12 +92,6 @@ function main()
         view.update_display();
         update_connection_properties_for(args, conns);
     });
-
-    //Create the page elements
-    add_container_elements();
-    add_signal_control_bar();
-    add_extra_tools();
-
     
     // actions from VIEW
 

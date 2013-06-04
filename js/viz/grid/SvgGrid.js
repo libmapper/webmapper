@@ -752,7 +752,7 @@ SvgGrid.prototype = {
 			
 			for (var i=0; i< connectionsArray.length; i++)
 			{
-				var conn = connectionsArray[i]
+				var conn = connectionsArray[i];
 				var s = conn[0];	// source
 				var d = conn[1];	// destination
 				

@@ -132,16 +132,20 @@ GridView.prototype = {
 		
 		
 		$("#devGrid").on("connect", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.link(e, cell);
 		});
 		$("#devGrid").on("disconnect", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.unlink(e, cell);
 		});
 		
 		$("#sigGrid").on("connect", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.connect(e, cell);
 		});
 		$("#sigGrid").on("disconnect", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.disconnect(e, cell);
 		});
 		
@@ -149,9 +153,11 @@ GridView.prototype = {
 		
 		
 		$("#devGrid").on("makeActiveGrid", function(e, gridIndex){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.setActiveGrid(gridIndex);
 		});
 		$("#sigGrid").on("makeActiveGrid", function(e, gridIndex){
+			e.stopPropagation();	//prevents bubbling to main.js
 			_self.setActiveGrid(gridIndex);
 		});
 		
