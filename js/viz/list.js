@@ -79,7 +79,7 @@ var svgns = 'http://www.w3.org/2000/svg';
 
     }
 
-    this.get_selected_connection = function(list)
+    this.get_selected_connections = function(list)
     {
         var L = $('.trsel', leftTable.table);
         var R = $('.trsel', rightTable.table);
@@ -378,7 +378,7 @@ function update_connections()
 
     var keys = this.model.connections.keys();
     for (var k in keys) {
-        var c = connections.get(keys[k]);
+        var c = model.connections.get(keys[k]);
         var muted = c.muted;
         $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
@@ -461,9 +461,9 @@ function is_connected(row)
     var destNames = [];     // All dest names as strings
 
     if ( selectedTab == all_devices ) {
-        linkConList = links.keys();
+        linkConList = model.links.keys();
     }
-    else linkConList = connections.keys();
+    else linkConList = model.connections.keys();
 
     for (var i in linkConList) {
         var sd = linkConList[i].split('>');

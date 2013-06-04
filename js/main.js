@@ -1,11 +1,6 @@
 "use strict";
 var model = new LibMapperModel();
 
-var devices = new Assoc();
-var signals = new Assoc();
-var links = new Assoc();
-var connections = new Assoc();
-
 var all_devices = 'All Devices';
 
 var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
@@ -26,120 +21,6 @@ var selectedTab;
 window.saveLocation = '';
 /* Kick things off. */
 window.onload = main;
-
-
-/* The main program. */
-function main()
-{
-
-    //Create the page elements
-    add_container_elements();
-    add_signal_control_bar();
-    add_extra_tools();
-
-    command.register("all_devices", function(cmd, args) {
-        for (d in args)
-            model.devices.add(args[d].name, args[d]);
-        view.update_display();
-    });
-    command.register("new_device", function(cmd, args) {
-        model.devices.add(args.name, args);
-        view.update_display();
-    });
-    command.register("del_device", function(cmd, args) {
-        model.devices.remove(args.name);
-        view.update_display();
-    });
-    command.register("all_signals", function(cmd, args) {
-        for (d in args)
-            model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
-        view.update_display();
-    });
-    command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
-        view.update_display();
-    });
-    command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
-        view.update_display();
-    });
-    command.register("all_links", function(cmd, args) {
-        for (l in args)
-            model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
-        view.update_display();
-    });
-    command.register("new_link", function(cmd, args) {
-        model.links.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
-    });
-    command.register("del_link", function(cmd, args) {
-        model.links.remove(args.src_name+'>' + args.dest_name);
-        view.update_display();
-    });
-
-    command.register("all_connections", function(cmd, args) {
-        for (d in args)
-            model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
-        view.update_display();
-        for (d in args)
-            update_connection_properties_for(args[d], view.get_selected_connection(model.connections));
-    });
-    command.register("new_connection", function(cmd, args) {
-        model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
-        update_connection_properties_for(args, view.get_selected_connection(model.connections));
-    });
-    command.register("mod_connection", function(cmd, args) {
-        model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
-        update_connection_properties_for(args, view.get_selected_connection(model.connections));
-    });
-    command.register("del_connection", function(cmd, args) {
-        var conns = view.get_selected_connection(model.connections);
-        model.connections.remove(args.src_name+'>'+args.dest_name);
-        view.update_display();
-        update_connection_properties_for(args, conns);
-    });
-    
-    // actions from VIEW
-
-    $("#container").on("tab", function(e, selectedTab){
-    	command.send('tab', selectedTab);
-    });
-    $("#container").on("link", function(e, src, dst){
-    	command.send('link', [src, dst]);
-    });
-    $("#container").on("unlink", function(e, src, dst){
-    	command.send('unlink', [src, dst]);
-    });
-    $("#container").on("connect", function(e, src, dst){
-    	command.send('connect', [src, dst]);
-    });
-    $("#container").on("disconnect", function(e, src, dst){
-    	command.send('disconnect', [src, dst]);
-    });
-    
-    
-    // Delay starting polling, because it results in a spinning wait
-    // cursor in the browser.
-    setTimeout(
-        function(){
-            switch_mode('list');
-            command.start();
-            command.send('all_devices');
-            command.send('all_signals');
-            command.send('all_links');
-            command.send('all_connections');
-            //Naming collision between this and list, should figure it out
-            //(maybe add_UI_handlers can be a method of list)
-            add_handlers();
-            window.onresize = function (e) {
-            	if(typeof view.on_resize == 'function')
-            		view.on_resize();
-            };
-        },
-        100);
-}
 
 function switch_mode(newMode)
 {
@@ -258,7 +139,12 @@ function update_connection_properties()
         $('.signalControl').addClass('disabled');
     }
 
+    var conns = view.get_selected_connections(model.connections);
 	// if there is one connection selected, display its properties on top
+    if (conns.length > 1) {
+        // Figure out what the heck to do for multiple connections
+        clear_props();
+    }
     if (conns.length == 1) {
         var c = conns[0];
         clear_props();
@@ -271,6 +157,9 @@ function update_connection_properties()
         if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
         if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
         if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
+    }
+    else {
+        clear_props();
     }
 }
 
@@ -310,7 +199,7 @@ function set_boundary(boundaryElement, value, ismax)
 
 function copy_selected_connection()
 {
-    var conns = view.get_selected_connection(model.connections);
+    var conns = view.get_selected_connections(model.connections);
     if (conns.length!=1) return;
     var args = {};
 
@@ -405,6 +294,138 @@ function on_boundary(e)
                                      e.currentTarget);
 
     e.stopPropagation();
+}
+
+function on_mute(conns)
+{
+    for ( var i in conns ) {
+        var args = conns[i]
+        if ( args.muted == 0 ) {
+            args.muted = 1;
+        }
+        else 
+            args.muted = 0;
+
+        // TODO: why modes aren't just stored as their strings, I don't know
+        var modecmd = connectionModeCommands[connectionModes[args['mode']]];
+        args['mode'] = modecmd;
+
+        command.send('set_connection', args);
+    }
+}
+
+/* The main program. */
+function main()
+{
+
+    //Create the page elements
+    add_container_elements();
+    add_signal_control_bar();
+    add_extra_tools();
+
+    command.register("all_devices", function(cmd, args) {
+        for (var d in args)
+            model.devices.add(args[d].name, args[d]);
+        view.update_display();
+    });
+    command.register("new_device", function(cmd, args) {
+        model.devices.add(args.name, args);
+        view.update_display();
+    });
+    command.register("del_device", function(cmd, args) {
+        model.devices.remove(args.name);
+        view.update_display();
+    });
+    command.register("all_signals", function(cmd, args) {
+        for (var d in args)
+            model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
+        view.update_display();
+    });
+    command.register("new_signal", function(cmd, args) {
+        model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
+        view.update_display();
+    });
+    command.register("del_signal", function(cmd, args) {
+        model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
+        view.update_display();
+    });
+    command.register("all_links", function(cmd, args) {
+        for (var l in args)
+            model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
+        view.update_display();
+    });
+    command.register("new_link", function(cmd, args) {
+        model.links.add(args.src_name+'>'+args.dest_name, args);
+        view.update_display();
+    });
+    command.register("del_link", function(cmd, args) {
+        model.links.remove(args.src_name+'>' + args.dest_name);
+        view.update_display();
+    });
+
+    command.register("all_connections", function(cmd, args) {
+        for (var d in args)
+            model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
+        view.update_display();
+        for (var d in args)
+            update_connection_properties_for(args[d], view.get_selected_connections(model.connections));
+    });
+    command.register("new_connection", function(cmd, args) {
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected_connections(model.connections));
+    });
+    command.register("mod_connection", function(cmd, args) {
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected_connections(model.connections));
+    });
+    command.register("del_connection", function(cmd, args) {
+        var conns = view.get_selected_connections(model.connections);
+        model.connections.remove(args.src_name+'>'+args.dest_name);
+        view.update_display();
+        update_connection_properties_for(args, conns);
+    });
+    
+    // actions from VIEW
+
+    $("#container").on("tab", function(e, selectedTab){
+        command.send('tab', selectedTab);
+    });
+    $("#container").on("link", function(e, src, dst){
+        command.send('link', [src, dst]);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+        command.send('unlink', [src, dst]);
+    });
+    $("#container").on("connect", function(e, src, dst){
+        command.send('connect', [src, dst]);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+        command.send('disconnect', [src, dst]);
+    });
+    
+    
+    // Delay starting polling, because it results in a spinning wait
+    // cursor in the browser.
+    setTimeout(
+        function(){
+            switch_mode('list');
+            command.start();
+            command.send('all_devices');
+            command.send('all_signals');
+            command.send('all_links');
+            command.send('all_connections');
+            //Naming collision between this and list, should figure it out
+            //(maybe add_UI_handlers can be a method of list)
+            add_handlers();
+            $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+            window.onresize = function (e) {
+                $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+                view.on_resize();
+            };
+        },
+        100);
 }
 
 function add_container_elements()
@@ -514,7 +535,7 @@ function add_handlers()
 
     $(document).keydown( function(e) {
         if( e.which == 77 ) { // mute on 'm'
-            var conns = view.get_selected(connections);
+            var conns = view.get_selected_connections(model.connections);
             if ( conns ) 
                 on_mute(conns);
         }
