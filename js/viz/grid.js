@@ -149,6 +149,15 @@ GridView.prototype = {
 			_self.disconnect(e, cell);
 		});
 		
+		$("#devGrid").on("updateConnectionProperties", function(e){
+			e.stopPropagation();	//prevents bubbling to main.js
+			// only sig grid needs this function
+		});
+		$("#sigGrid").on("updateConnectionProperties", function(e){
+			e.stopPropagation();	//prevents bubbling to main.js
+			update_connection_properties();
+		});
+		
 		
 		
 		
@@ -312,7 +321,19 @@ GridView.prototype = {
 	},
 	
 	get_selected_connection: function(list){
-		return [];
+		
+		var vals =[];
+		
+		var selectedCell = this.sigGrid.getSelectedCell();
+		if(selectedCell)
+		{
+			var selectedSrc = selectedCell.getAttribute("data-src");
+			var selectedDst = selectedCell.getAttribute("data-dst");
+			var key = selectedSrc + ">" + selectedDst;
+			var v = list.get(key);
+			vals.push(v);
+		}	
+		return vals;
 	},
 	
 	updateDevicesGrid : function(){
