@@ -1,8 +1,9 @@
+"use strict";
 
 /* An object to provide command services by sending asynchronous
  * requests to the server.  It maintains a given number of connections
  * at all times. */
-command = {
+var command = {
     requests: new Bucket(),
     num_requests: 5,
     request_id: 0,
@@ -20,7 +21,7 @@ command = {
         command.maintain_requests();
         if (msg['cmd']) {
             var hs = command.handlers[msg['cmd']];
-            if (hs) for (h in hs)
+            if (hs) for (var h in hs)
                         hs[h](msg['cmd'], msg['args']);
         }
     },
@@ -90,6 +91,8 @@ command = {
     /* Send a message. */
     send: function (cmd, args)
     {
+        //console.log("Command: "+cmd+"\nArgs: ");
+        //console.log(args);
         if (command.ws && command.ws.is_opened)
         {
             command.ws.send(JSON.stringify({'cmd': cmd,

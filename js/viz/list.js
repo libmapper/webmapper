@@ -6,24 +6,26 @@ function listView(model)
 	
 var svgns = 'http://www.w3.org/2000/svg';
 
-tabList = null;
-tabDevices = null;
-selectedTab = null;
-leftTable = null;
-rightTable = null;
-svgArea = null;
-selectLists = {};
-devActions = null;
-sigActions = null;
-arrows = [];
+    var tabList = null;
+    var tabDevices = null;
+    var selectedTab = null;
+    var leftTable = null;
+    var rightTable = null;
+    var svgArea = null;
+    var selectLists = {};
+    var devActions = null;
+    var sigActions = null;
+    var arrows = [];
 
-sourceDeviceHeaders = ["device", "outputs", "IP", "port"];
-destinationDeviceHeaders = ["device", "inputs", "IP", "port"];
-//TODO include min/max
-signalHeaders = ["name", "type", "length", "units", "min", "max"];
+    var sourceDeviceHeaders = ["name", "outputs", "IP", "port"];
+    var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
+    //TODO include min/max
+    var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
+    //"use strict";
     this.type = 'list';
     this.unconnectedVisible = true // Are unconnected devices/signals visible?
+    this.focusedDevices = [] // An array containing devices seen in the display
 
     this.init = function() {
         add_tabs();
@@ -36,24 +38,45 @@ signalHeaders = ["name", "type", "length", "units", "min", "max"];
         this.update_display();
     }
 
+    var updateCallable = true;
+    var updateTimeout;
     this.update_display = function() {
-        update_tabs();
-        if (selectedTab == all_devices) {
-            update_devices();
-            window.saveLocation = '';
-        }
-        else {
-            update_signals(selectedTab);
-            window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+
+        if (updateCallable == false) {
+            clearTimeout(updateTimeout);
         }
 
-        update_save_location();
+        updateCallable = false;
+        updateTimeout = setTimeout(function() {
+            
+            // Removes 'invisible' classes which can muddle with display updating
+            $('tr.invisible').removeClass('invisible');
+            update_arrows();
 
-        update_selection();
-        update_arrows();
+            update_tabs();
+            if (selectedTab == all_devices) {
+                update_devices();
+                window.saveLocation = '';
+            }
+            else {
+                update_signals(selectedTab);
+                window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
+            }
 
-        search_filter( $('#leftSearch') );
-        search_filter( $('#rightSearch') );
+            update_save_location();
+
+            update_selection();
+            
+            filter_view();
+
+            //Because svg keeps getting nudged left for some reason
+            $('svg').css('left', '0px');
+
+            updateCallable = true;
+
+        }, 34);
+
+
     }
 
     this.get_selected_connection = function(list)
@@ -80,6 +103,8 @@ signalHeaders = ["name", "type", "length", "units", "min", "max"];
         update_arrows();
     }
 
+
+
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
 { 
@@ -88,7 +113,7 @@ function listTable(id)
     this.div; //The div node (and status)
     this.table; //The table node itself
     this.headerRow; //The top row node of the table within <thead>
-    this.tBody; //The <tbody> node
+    this.tbody; //The <tbody> node
     this.footer; //The status bar at the bottom
 
     this.nRows; //Number of rows (e.g. devices or signals) present
@@ -111,7 +136,7 @@ function listTable(id)
         );
         this.table = $(this.div).children('.displayTable')[0];
         this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
-        this.tBody = $("#"+this.id+" .displayTable tbody")[0];
+        this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
         //Create the header elements
         //This assumes that we will never need more than 20 columns
@@ -138,7 +163,7 @@ function listTable(id)
     // big TODO (make the tableupdater object obsolete)
     this.update = function(tableData, headerStrings)
     {
-        $(this.tBody).empty();
+        $(this.tbody).empty();
         for(var row in tableData) 
         {
             //If there is only one row, make it of odd class for styling
@@ -146,15 +171,12 @@ function listTable(id)
             for(var col in tableData[row]) {
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
-            $(this.tBody).append(newRow+"</tr>");
+            $(this.tbody).append(newRow+"</tr>");
         }
         this.nRows = tableData.length;
         if(tableData[0])
             this.nCols = tableData[0].length;
         $(this.table).trigger('update');
-        // Just incase a device is added while search filter is occuring
-        search_filter( $('#leftSearch') );
-        search_filter( $('#rightSearch') );
     }
 
     this.set_status = function() {
@@ -163,6 +185,7 @@ function listTable(id)
             name = "devices";
         }
         else name = "signals";
+        this.nVisibleRows = $(this.tbody).children('tr').length - $(this.tbody).children('tr.invisible').length;
         $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
     }
 
@@ -255,7 +278,7 @@ function update_tabs()
 
 function update_selection()
 {
-    l = selectLists[selectedTab];
+    var l = selectLists[selectedTab];
     if (!l) return;
 
     function checksel(table, i) {
@@ -278,7 +301,7 @@ function update_selection()
 
 function cleanup_arrows()
 {
-    for (a in arrows) {
+    for (var a in arrows) {
         arrows[a].border.remove();
         arrows[a].remove();
     }
@@ -310,7 +333,7 @@ function update_links()
                         var rightsel = $(right).hasClass('trsel');
                         //Make sure that the row is not hidden
                         if( $(left).css('display') != "none" && $(right).css('display') != "none" ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel, 0);
                             n_visibleLinks++;
                         }
                     });
@@ -323,12 +346,28 @@ function update_links()
 
 }
 
+//Because this is a heavy function, I want to prevent it from being called too rapidly
+//(it is also never necessary to do so)
+//It is currently called with a delay of 34ms, if it is called again within that delay
+//The first call is forgotten.
+var arrowTimeout;
+var arrowCallable = true;
+
 function update_arrows()
 {
-    if (selectedTab == all_devices)
-        update_links();
-    else
-        update_connections();
+    if (arrowCallable == false) {
+        clearTimeout(arrowTimeout);
+    }
+
+    arrowCallable = false;
+    arrowTimeout = setTimeout( function() {
+
+        if (selectedTab == all_devices)
+            update_links();
+        else
+            update_connections();
+        arrowCallable = true;
+    }, 34);
 }
 
 function update_connections()
@@ -339,7 +378,8 @@ function update_connections()
 
     var keys = this.model.connections.keys();
     for (var k in keys) {
-        var c = this.model.connections.get(keys[k]);
+        var c = connections.get(keys[k]);
+        var muted = c.muted;
         $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -350,7 +390,7 @@ function update_connections()
                         var rightsel = $(right).hasClass('trsel');
                         //Are these rows being displayed?
                         if( $(left).css('display') != 'none' && $(right).css('display') != 'none' ) {
-                            create_arrow(left, right, leftsel && rightsel);
+                            create_arrow(left, right, leftsel && rightsel, muted);
                             n_visibleConnections++;
                         }
                         n_connections++;
@@ -363,68 +403,87 @@ function update_connections()
     );
 }
 
-//A function to filter tables by text in boxes
-function search_filter($searchBox)
+//A function for filtering out unconnected signals
+//Or signals that do not match the search string
+function filter_view()
 {
-    var filterText = $searchBox.val();
+    $('.displayTable tbody tr').each( function(i, row) {
+        if( (view.unconnectedVisible || is_connected(this) ) && filter_match(this) ) 
+            $(this).removeClass('invisible');
+        else
+            $(this).addClass('invisible');
+    });
 
-    //Is it the left box
-    if( $searchBox.attr('id').search('left') == 0 ) {
-        var targetTable = leftTable;
-    }
-    else var targetTable = rightTable;
+    update_arrows();
+    $(leftTable.table).trigger('update');
+    $(rightTable.table).trigger('update');
 
-    var $trs = $(targetTable.tBody).children('tr');
-    var n_total = targetTable.nRows;
-    var n_visible = 0;
+    rightTable.set_status();
+    leftTable.set_status();
+}
 
-    $trs.each( function(i, row) {
-        var cells = $(row).find('td');
-        if(cells.length > 0)
-        {
-            var found = false;
-            cells.each( function(j, td) 
-            {
-                var regExp = new RegExp(filterText, 'i');
-                if(regExp.test( $(td).text() ))
-                {
-                    found = true;
-                    return false;
-                }
-            });
-            if(found == true) {
-                $(row).show();
-                n_visible++;
-            }
-            else {
-                $(row).hide();   
-            }
+function filter_match(row)
+{
+    // The text in the search box
+    var filterText;
+    //Test to see if the row is on the left or right table
+    if( $(row).parents('.tableDiv').is('#leftTable') ) 
+        filterText = $('#leftSearch').val();
+    else if ( $(row).parents('.tableDiv').is('#rightTable') )
+        filterText = $('#rightSearch').val();
+    else
+        console.log("Error, "+row+" belongs to neither table");
+
+    var found = false;
+    // Iterate over every cell of the row
+    $(row).children('td').each( function(i, cell) {
+        var regExp = new RegExp(filterText, 'i');
+        // Is the search string found?
+        if( regExp.test($(cell).text()) ) { 
+            found = true;
         }
     });
 
-    targetTable.nVisibleRows = n_visible;
+    if(found)
+        return true
+    else
+        return false;
+}
 
-    //Make sure the status display at the bottom has the proper numbers
-    targetTable.set_status();
-    $(targetTable.table).trigger('update');
-    //update_status_bar($(targetTable.tBody), n_visible, n_total);
-    update_arrows();
+// Returns whether a row has a connection, have to do it based on monitor.connections
+// not arrows themselves
+function is_connected(row) 
+{
+    // What is the name of the signal/link?
+    var name = $(row).children('.name').text();
+    var linkConList = [];   // A list of all links or connections in 'devA>devB' form
+    var srcNames = [];      // All source names as strings
+    var destNames = [];     // All dest names as strings
+
+    if ( selectedTab == all_devices ) {
+        linkConList = links.keys();
+    }
+    else linkConList = connections.keys();
+
+    for (var i in linkConList) {
+        var sd = linkConList[i].split('>');
+        srcNames[i] = sd[0];
+        destNames[i] = sd[1];
+    }
+
+    for( var i in srcNames ) {
+        //Does the name match a string in the connections/links?
+        if( srcNames[i] == name || destNames[i] == name ) 
+            return true;
+    }
+
+    return false;
 }
 
 /* params are TR elements, one from each table */
-function create_arrow(left, right, sel)
+function create_arrow(left, right, sel, muted)
 {
     var line = svgArea.path();
-    if (sel)
-        line.attr({"stroke": "red"});
-    else
-        line.attr({"stroke": "black"});
-    line.attr({
-        "fill": "none",
-        "stroke-width": 2,
-        "cursor": "pointer"
-    });
-
     
     line.border = svgArea.path();
     line.border.attr({
@@ -451,6 +510,19 @@ function create_arrow(left, right, sel)
     line.attr({"path": path});
     line.border.attr({"path": path});
 
+    if (sel)
+        line.attr({"stroke": "red"});
+    else
+        line.attr({"stroke": "black"});
+    if (muted)
+        line.node.setAttribute("stroke-dasharray", 4);
+
+    line.attr({
+        "fill": "none",
+        "stroke-width": 2,
+        "cursor": "pointer"
+    });
+
     // So that the arrow remembers which rows it is attached to
     line.rightTr = right;
     line.leftTr = left;
@@ -469,7 +541,7 @@ function create_arrow(left, right, sel)
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
-            line.attr('stroke', 'red');
+            line.attr('stroke','red');
         }
         e.stopPropagation();
     });
@@ -482,20 +554,20 @@ function select_tab(tab)
     $(tab).addClass("tabsel");
 
     if (tab == tabDevices) {
-        //set_actions(devActions);
         $('#svgTitle').text("Links");
         leftTable.set_headers(sourceDeviceHeaders);
         rightTable.set_headers(destinationDeviceHeaders);
-        $('.signalControlsDiv').addClass('disabled');
+        $('#saveLoadDiv').addClass('disabled');
     }
     else {
-        //set_actions(sigActions);
         $('#svgTitle').text("Connections");
         leftTable.set_headers(signalHeaders);
         rightTable.set_headers(signalHeaders);
-        $('.signalControlsDiv').removeClass('disabled');
+        $('#saveLoadDiv').removeClass('disabled');
     }
 
+    view.unconnectedVisible = true;
+    $('svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
     view.update_display();
@@ -503,6 +575,8 @@ function select_tab(tab)
 
 function select_tr(tr)
 {
+    if(!tr) return;
+
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
@@ -527,11 +601,12 @@ function select_tr(tr)
     }
 
     selectLists[selectedTab][i] = l;
-    //TODO find out if this is actually necessary
-    // Yes it is, makes the arrows red, which seems like a lot of computation
-    // For just that effect, I'll explicitly make them red for now
-    //update_arrows();
     update_connection_properties();
+}
+
+function select_arrow(arrow)
+{
+
 }
 
 function deselect_all()
@@ -722,9 +797,9 @@ function drawing_curve(sourceRow)
 
     this.findrow = function ( y ) {
         var index = Math.round( y/this.rowHeight );
-        if( index > $(this.targetTable).find('tr').length)
-            index = $(this.targetTable).find('tr').length;
-        var row = $(this.targetTable).find('tr')[index - 1];
+        if( index > this.targetTable.nVisibleRows)
+            index = this.targetTable.nVisibleRows;
+        var row = $(this.targetTable.tbody).find('tr')[index - 1];
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -736,11 +811,11 @@ function drawing_curve(sourceRow)
     // Are we aiming for the left or right table?
     this.targetTable;
     if( $(this.sourceRow).parents('.tableDiv').attr('id') == "leftTable" ) {
-        this.targetTable = $('#rightTable .displayTable tbody')[0];
+        this.targetTable = rightTable;
         this.path[0][1] = 0; // Start the curve at left
     }
     else {
-        this.targetTable = $('#leftTable .displayTable tbody')[0];
+        this.targetTable = leftTable;
         this.path[0][1] = this.canvasWidth; // Start the curve at right
     }
 
@@ -755,25 +830,27 @@ function drawing_curve(sourceRow)
         var end = [ this.path[1][5], this.path[1][6] ];
         var c1;
         if( target.tagName == "svg" ) {
-            this.checkTarget(null);
             end = [ moveEvent.offsetX, moveEvent.offsetY ];
             // Within clamping range
             if( this.canvasWidth - Math.abs(end[0] - start[0]) < 50) {
-                end[0] = this.canvasWidth - start[0];
                 var clampRow = this.findrow(end[1]);
                 if(clampRow) {
+                    end[0] = this.canvasWidth - start[0];
                     c1 = end[1];
                     end[1] = this.clamptorow(clampRow);
                     this.checkTarget(clampRow);
                 }
+                else
+                    this.checkTarget(null);
             }
+            else
+                this.checkTarget(null);
         }
         // We're over a table row of the target table
-        if( $(target).parents('tbody')[0] == this.targetTable ) {
+        if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
-            if( !$(target).hasClass('incompatible') ) 
-                end[1] = this.clamptorow(target);
+            end[1] = this.clamptorow(target);
             c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
 
         }
@@ -790,10 +867,15 @@ function drawing_curve(sourceRow)
     }
 
     this.checkTarget = function( mousedOverRow ) {
-        if(this.targetRow != mousedOverRow) {
-            this.targetRow = mousedOverRow
-            deselect_all();
-            select_tr(this.sourceRow);
+        if(this.targetRow != mousedOverRow ) {
+            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible'));
+                select_tr(this.targetRow);
+
+            if( !$(mousedOverRow).hasClass('incompatible') )
+                this.targetRow = mousedOverRow;
+            else
+                this.targetRow = null;
+
             if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
                 select_tr(this.targetRow);
         }
@@ -819,7 +901,7 @@ function drawing_handlers()
 
             // Fade out incompatible signals
             if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable);
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
 
             // Moving about the canvas
             $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
@@ -859,39 +941,15 @@ function get_bezier_path(start, end, controlEnd)
     return path;
 }
 
-function fade_incompatible_signals(row, targetTable)
+function fade_incompatible_signals(row, targetTableBody)
 {
     var sourceLength = $(row).children('.length').text();
     
-    $(targetTable).children('tr').each( function(index, element) {
+    $(targetTableBody).children('tr').each( function(index, element) {
         var targetLength =  $(element).children('.length').text();
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
-}
-
-// A function to hide/show unconnected devices/signals
-function toggle_unconnected()
-{
-    if ( view.unconnectedVisible == true ) {
-        $('.displayTable tbody tr').hide();
-        for (var i in arrows) {
-            $(arrows[i].leftTr).show();
-            $(arrows[i].rightTr).show();
-        }
-        view.unconnectedVisible = false;
-        $('#svgTop').text('show unconnected');
-    }
-    else {
-        $('.displayTable tbody tr').show();
-        view.unconnectedVisible = true;
-        $('#svgTop').text('hide unconnected');
-    }
-    $(rightTable.table).trigger('update');
-    $(leftTable.table).trigger('update');
-    update_arrows();
-    //search_filter( $('#leftSearch') );
-    //search_filter( $('#rightSearch') );
 }
 
 this.add_handlers = function()
@@ -901,7 +959,7 @@ this.add_handlers = function()
     });
 
     $('.displayTable tbody').on({
-        mousedown: function(e) { select_tr(this); },
+        mousedown: function(e) { select_tr(this); update_arrows(); },
         click: function(e) { e.stopPropagation(); }
     }, 'tr');
 
@@ -936,7 +994,7 @@ this.add_handlers = function()
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
             select_all();
         }
-        else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'ctrl-tab'
+        else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'
             e.preventDefault();
             var n_tabs = $(tabList).children().length;
             var currentTabIndex = $('li.tabsel').index() + 1;
@@ -967,7 +1025,7 @@ this.add_handlers = function()
     // Search function boxes
     $('#leftSearch, #rightSearch').on('keyup', function(e) {
         e.stopPropagation();
-        search_filter( $(this) );
+        filter_view();
     });
 
     $('.tableDiv').on('scroll', function(e) {
@@ -976,8 +1034,20 @@ this.add_handlers = function()
 
     $('#svgTop').on('click', function(e) {
         e.stopPropagation();
-        toggle_unconnected();
-    })
+        if( view.unconnectedVisible == true ) {
+            view.unconnectedVisible = false;
+            $('#svgTop').text('show unconnected');
+        }
+        else {
+            view.unconnectedVisible = true;
+            $('#svgTop').text('hide unconnected');
+        }
+        filter_view();
+    });
+
+    $('.status.left').on('click', function(e) {
+
+    });
 
     drawing_handlers();
 }

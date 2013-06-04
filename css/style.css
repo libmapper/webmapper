@@ -23,6 +23,7 @@ body {
   font-family: sans, helv, helvetica, Arial;
   font-size: 11pt;
   background: pink;
+  margin-top: 3px;
 }
 
 /* Used to position the tables and connection area. */
@@ -58,112 +59,159 @@ body {
   }
 /****************/
 
-.topMenu {
-  position: absolute;
-  padding: 0;
-  top: 0;
-}
+/*The top menu*/
+    .topMenu {
+      padding: 0;
+      top: 0;
+      margin-bottom: 5px;
+    }
 
-.topMenu li {
-  margin: 2px;
-  display: inline-block;
-  list-style: none;
-  cursor: pointer;
-}
+    .topMenu>div {
+      display: inline-block;
+      margin-top: 5px;
+    }
 
-#saveLoadDiv {
-  display: inline-block;
-  background: lightgrey;
-  border: 1px solid black;
-  padding: 4px;
-  border-radius: 10px;
-}
+    .topMenu li {
+      margin: 2px;
+      display: inline-block;
+      list-style: none;
+      cursor: pointer;
+    }
 
-.topMenu li a {
-  color: black;
-  text-decoration: none;
-}
+    form {
+      margin-bottom: 0px;
+    }
 
-.topMenu li a:hover {
-  text-decoration: underline;
-}
+    #saveLoadDiv {
+      display: inline-block;
+      background: lightgrey;
+      border: 1px solid black;
+      padding: 4px;
+      border-radius: 10px;
+    }
 
-.topMenu li a.disabled:hover {
-  text-decoration: none;
-}
+    .topMenu li a {
+      color: black;
+      text-decoration: none;
+    }
 
-/*.topMenu li a.disabled {
-  color: gray;
-}*/
+    .topMenu li a:hover {
+      text-decoration: underline;
+    }
 
-.rangeSwitch {
-  width: 20px;
-  height: 20px;
-  background: url(/images/range_switch.png);
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
+    .topMenu li a.disabled:hover {
+      text-decoration: none;
+    }
 
-.boundary {
-  width: 24px;
-  height: 24px;
-  background: url(/images/boundary_icons.png);
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
+    /*.topMenu li a.disabled {
+      color: gray;
+    }*/
 
-.boundaryNone {
-  background-position: 0px 0px;
-}
+    .rangeSwitch {
+      width: 20px;
+      height: 20px;
+      background: url(/images/range_switch.png);
+      background-repeat: no-repeat;
+      cursor: pointer;
+    }
 
-.boundaryUp {
-  background-position: -24px 0px;
-}
+    /* Just the bounary icons */
+        .boundary {
+          width: 24px;
+          height: 24px;
+          background: url(/images/boundary_icons.png);
+          background-repeat: no-repeat;
+          cursor: pointer;
+          border: none;
+          margin-top: -5px;
+          position: relative;
+          top: 4px;
+        }
+        #boundaryMin {
+            margin-left: 5px;
+        }
+        .boundaryNone {
+          background-position: 0px 0px;
+        }
+        .boundaryUp {
+          background-position: -24px 0px;
+        }
+        .boundaryDown {
+          background-position: -48px 0px;
+        }
+        .boundaryMute {
+          background-position: -72px 0px;
+        }
+        .boundaryClamp {
+          background-position: -96px 0px;
+        }
+        .boundaryWrap {
+          background-position: -120px 0px;
+        }
+    /****************/
 
-.boundaryDown {
-  background-position: -48px 0px;
-}
+    .waiting {
+      background: #EEEEEE;
+    }
 
-.boundaryMute {
-  background-position: -72px 0px;
-}
+    .extratools {
+      float: right;
+    }
 
-.boundaryClamp {
-  background-position: -96px 0px;
-}
+    #extratoolsDiv {
+      position: absolute;
+      right: 0px;
+    }
 
-.boundaryWrap {
-  background-position: -120px 0px;
-}
+    #refresh {
+      background:url(/images/refresh.png) no-repeat;
+      cursor: pointer;
+      border: solid 1px darkgray;
+      border-radius: 5px;
+      margin: 0px;
+      padding: 0px;
+      width: 24px;
+      height: 24px;
+    }
 
-.waiting {
-  background: #EEEEEE;
-}
+    #wsstatus {
+      margin: 0px;
+      padding: 0px;
+      padding-right: 10px;
+      padding-top: 5px;
+      height: 24px;
+      font-size: 8pt;
+      color: gray;
+    }
+    .signalControl {
+      z-index: 1;
+      position: relative;
+    }
+  
+    .modesDiv {
+      border: 1px solid black;
+      border-radius: 10px;
+      padding: 0 10px;
+      background-color: lightgrey;
 
-.extratools {
-  float: right;
-}
+    }
+    .modesDiv div {
+      padding: 5pt;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .modesel {
+      background: darkgrey;
+    }
 
-#refresh {
-  background:url(/images/refresh.png) no-repeat;
-  cursor: pointer;
-  border: solid 1px darkgray;
-  border-radius: 5px;
-  margin: 0px;
-  padding: 0px;
-  width: 24px;
-  height: 24px;
-}
-
-#wsstatus {
-  margin: 0px;
-  padding: 0px;
-  padding-right: 10px;
-  padding-top: 5px;
-  height: 24px;
-  font-size: 8pt;
-  color: gray;
-}
+    div.range {
+    border: 1px solid black;
+    margin-left: 10px;
+    border-radius: 10px;
+    padding: 3px 3px;
+    background-color: lightgray;
+    }
+/****************/
 
 .notification {
   font-style: italic;
@@ -189,7 +237,7 @@ body {
   /* The table itself */
     .displayTable {
       border-collapse: collapse;
-      width: 100%;
+      width: 100.1%; /*Slightly more than 100%, cause 100% doesn't quite fill the frame for some reason*/
       overflow: scroll;
       border: solid 0px black;
       font-size: 10pt;
@@ -213,7 +261,7 @@ body {
         border-left: 0px;
       }
 
-      .displayTable thead tr th.invisible {
+      .invisible {
         display: none;
       }
 
@@ -292,89 +340,56 @@ body {
 
 /* Title and search bar */
 /* Make sure inputs are not obscured*/
-#titleSearchDiv input{
-  z-index: 1;
-  margin-top: 16px;
-}
-#titleSearchDiv {
-  height: 50px;
-}
-#titleSearchDiv h2 {
-  margin-top: 11px;
-  font-weight: normal;
-}
-#svgTitle {
-  width: 100%;
-  text-align: center;
-}
-.searchBar {
-  position: absolute;
-  margin: 0px;
-}
-div.range {
-  border: 1px solid black;
-  margin-left: 10px;
-  border-radius: 10px;
-  padding: 3px 3px;
-  background-color: lightgray;
-}
-
-
-
-.signalControlsDiv {
-  display: inline-block;
-  margin-left: 20pt;
-}
-
-.signalControlsDiv div {
-  display: inline-block;
-}
-.modesDiv {
-  border: 1px solid black;
-  border-radius: 10px;
-  padding: 0 10px;
-  background-color: lightgrey;
-
-}
-.modesDiv div {
-  padding: 5pt;
-  cursor: pointer;
-}
-.modesel {
-  background: darkgrey;
-}
-
-#leftTitle {
-  left: 10px;
-}
-#leftSearch {
-  right: 60%;
-}
-#rightTitle {
-  left: 60%;
-}
-#rightSearch {
-  right: 10px;
-}
-
+    #titleSearchDiv input{
+      z-index: 1;
+      margin-top: 16px;
+    }
+    #titleSearchDiv {
+      height: 50px;
+    }
+    #titleSearchDiv h2 {
+      margin-top: 11px;
+      font-weight: normal;
+    }
+    #svgTitle {
+      width: 100%;
+      text-align: center;
+    }
+    .searchBar {
+      position: absolute;
+      margin: 0px;
+    }
+    #leftTitle {
+      left: 10px;
+    }
+    #leftSearch {
+      right: 60%;
+    }
+    #rightTitle {
+      left: 60%;
+    }
+    #rightSearch {
+      right: 10px;
+    }
 /****************/
 
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
-  height: calc(100% - 60px);
   background-color: lightgrey;
-  margin-top: 60px;
+  float: left;
   position: relative;
+  min-width: 700px;
 }
 
-/* Quick fix to get #container out of the way for loading form*/
+/* Quick fix to get #container out of the way for loading form
 #container.onLoad {
   height: calc(100% - 85px);
   margin-top: 85px;
-}
+}*/
 
 /* For disabled elements */
 .disabled {
   opacity: 0.5 !important;
+  pointer-events: none;
 }

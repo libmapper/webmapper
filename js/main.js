@@ -1,20 +1,28 @@
+"use strict";
 var model = new LibMapperModel();
 
-all_devices = 'All Devices';
+var devices = new Assoc();
+var signals = new Assoc();
+var links = new Assoc();
+var connections = new Assoc();
 
-connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
-connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
-connectionModeCommands = {"Byp": 'bypass',
+var all_devices = 'All Devices';
+
+var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
+var connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+var connectionModeCommands = {"Byp": 'bypass',
                           "Line": 'linear',
                           "Calib": 'calibrate',
                           "Expr": 'expression'};
-boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
-boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
+var boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
+var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
 //A global variable storing which display mode is currently in use
-window.view;
+var view;
 //Where the network will be saved
+var saveLocation = '';
+var selectedTab;
 window.saveLocation = '';
 /* Kick things off. */
 window.onload = main;
@@ -239,29 +247,30 @@ function notify(msg)
 
 function update_connection_properties()
 {
-	// clear the properties in the top menu 
-    //var a = function(x) { return $(x,actionDiv); };
-	$(".mode").removeClass("modesel");
-	$("*").removeClass('waiting');
-	$(".topMenu input").val('');
-    //set_boundary(a(".boundary"), 0);
+    if (selectedTab == all_devices)
+        return;
 
-	// get the selected connection from the view
-	var conns = [];
-	if(typeof view.get_selected_connection == 'function')
-		conns = view.get_selected_connection(model.connections);
+    var clear_props = function() {
+        $(".mode").removeClass("modesel");
+        $("*").removeClass('waiting');
+        $(".topMenu input").val('');
+        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.signalControl').addClass('disabled');
+    }
 
 	// if there is one connection selected, display its properties on top
     if (conns.length == 1) {
         var c = conns[0];
+        clear_props();
+        $('.signalControl').removeClass('disabled');
         $(".mode"+connectionModes[c.mode]).addClass("modesel");
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
         if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
         if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
-        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.clip_min,0);};
-        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.clip_max,1);};
+        if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
+        if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
     }
 }
 
@@ -278,8 +287,15 @@ function update_connection_properties_for(conn, conns)
 
 function set_boundary(boundaryElement, value, ismax)
 {
-    for (i in boundaryIcons)
+    for (var i in boundaryIcons)
         boundaryElement.removeClass(boundaryIcons[i]);
+
+    if (value == 0) {//'None' special case, icon depends on direction
+        if (ismax)
+            boundaryElement.addClass('boundaryUp');
+        else
+            boundaryElement.addClass('boundaryDown');
+    }
 
     if (value == 3) { //'Fold' special case, icon depends on direction
         if (ismax)
@@ -323,6 +339,8 @@ function selected_connection_set_input(what,field,idx)
 {
     var args = copy_selected_connection();
 
+    if( !args ) return;
+
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
     var modecmd = connectionModeCommands[connectionModes[args['mode']]];
@@ -344,12 +362,14 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
 {
     var args = copy_selected_connection();
 
+    if( !args ) return;
+
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
     var modecmd = connectionModeCommands[connectionModes[args['mode']]];
     args['mode'] = modecmd;
 
-    var c = ismax ? 'clip_max' : 'clip_min';
+    var c = ismax ? 'bound_max' : 'bound_min';
     args[c] = boundarymode;
 
     // send the command, should receive a /connection/modify message after.
@@ -407,11 +427,9 @@ function add_container_elements()
 
 function add_signal_control_bar() 
 {
-    $('.topMenu').append("<div class='signalControlsDiv'></div>");
-
     //Add the mode controls
-    $('.signalControlsDiv').append("<div class='modesDiv'></div>");
-    for (m in connectionModesDisplayOrder) {
+    $('.topMenu').append("<div class='modesDiv signalControl disabled'></div>");
+    for (var m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
     }
@@ -419,11 +437,9 @@ function add_signal_control_bar()
     $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
 
     //Add the range controls
-    $('.signalControlsDiv').append(
-        "<div class='rangesDiv'>"+
-            "<div class='range'>Source Range:</div>"+
-            "<div class='range'>Dest Range:</div>"+
-        "</div>");
+    $('.topMenu').append(
+        "<div id='srcRange' class='range signalControl disabled'>Source Range:</div>"+
+        "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
         var minOrMax = 'Max'   // A variable storing minimum or maximum
@@ -439,16 +455,20 @@ function add_signal_control_bar()
             'index': i
         })
     });
+
+    $("<input id='boundaryMin' class='boundary' type='button'></input>").insertBefore('#rangeDestMin');
+    $("<input id='boundaryMax' class='boundary' type='button'></input>").insertAfter('#rangeDestMax');
+
 }
 
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-        "<input id='refresh' class='extratools' type='button'>"
+        "<div id='extratoolsDiv'>"+
+            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+            "<input id='refresh' class='extratools' type='button'>"+
+        "</div>"
     );
-
-    $('#refresh').on('click', function(e) { refresh_all(); });
 }
 
 /**
@@ -487,6 +507,23 @@ function add_handlers()
         e.stopPropagation();
         on_load();
     });
+
+    $('.boundary').on('click', function(e) {
+        on_boundary(e);
+    });
+
+    $(document).keydown( function(e) {
+        if( e.which == 77 ) { // mute on 'm'
+            var conns = view.get_selected(connections);
+            if ( conns ) 
+                on_mute(conns);
+        }
+    });
+
+    $('#refresh').on('click', function(e) { 
+        refresh_all(); 
+    });
+
 }
 
 
