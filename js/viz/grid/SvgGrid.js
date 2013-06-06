@@ -39,7 +39,7 @@ function SvgGrid(container, model, gridIndex){
 	this.cellMargin = 1;									// margin between cells
 	this.labelMargin = 5;									// offset for source signal labels
 	
-	this.selectedCell = null; 					// hold a reference to the selected cell
+	this.selectedCell = []; 					// holds a reference to the selected cells
 	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
 
 	this.nRows = 0;											// number of rows in grid (destination signals)
@@ -347,25 +347,41 @@ SvgGrid.prototype = {
 			
 			var cell = evt.target;
 		
-			if(_self.selectedCell == null)
+			
+			// if COMMAND key is pressed, user is adding to selection
+			
+			if(evt.metaKey)	// COMMAND key on MAC, CONTROL key on PC
 			{
-				// set the clicked cell as selected
-				_self.selectedCell = cell;
-				_self.selectedCell.classList.add('cell_selected');
+				if(_self.selectedCells_getCellIndex(cell) == -1)	// not already selected
+					_self.selectedCells_addCell(cell);
+				else
+					_self.selectedCells_removeCell(cell);
+					
 			}
-			else if(cell.id != _self.selectedCell.id)	
-			{	
-				// clear last selected cell
-				_self.selectedCell.classList.remove('cell_selected');
-				// set the clicked cell as selected
-				_self.selectedCell = cell;
-				_self.selectedCell.classList.add('cell_selected');
-			}	
-			else	// already selected, so deselect
+			
+			// if COMMAND is not pressed, then user is selecting a single cell
+			
+			else
 			{
-				//removeCellClass("cell_selected", cell);
-				_self.selectedCell.classList.remove('cell_selected');
-				_self.selectedCell = null;
+				if(_self.selectedCell.length == 0)		// case: no selected cell
+				{
+					_self.selectedCells_addCell(cell);
+				}
+				else if(_self.selectedCell.length == 1)		// case: one selected cell
+				{
+					if(_self.selectedCells_getCellIndex(cell) == -1)	// not already selected, so select
+					{
+						_self.selectedCells_clearAll();
+						_self.selectedCells_addCell(cell);
+					}
+					else									// already selected, so remove
+						_self.selectedCells_clearAll();					
+				}
+				else	// case: more than one selected cell
+				{
+					_self.selectedCells_clearAll();
+					_self.selectedCells_addCell(cell);
+				}
 			}
 			
 			$(this._container).trigger("updateConnectionProperties");
@@ -375,6 +391,39 @@ SvgGrid.prototype = {
 			// ...
 		
 		},
+		
+		/**
+		 * Handlers for manipulating the array of selected cells
+		 */
+		selectedCells_addCell : function(cell){
+			cell.classList.add('cell_selected');			
+			this.selectedCell.push(cell);
+		},
+		selectedCells_removeCell : function(cell){
+			var index = this.selectedCells_getCellIndex(cell);
+			if(index > -1){
+				cell.classList.remove('cell_selected');
+				this.selectedCell.splice(index, 1);				
+			}
+		},
+		selectedCells_getCellIndex : function (cell){
+			var index = -1;
+			for(var i=0; i<this.selectedCell.length; i++)
+			{
+				if (this.selectedCell[i].id == cell.id){
+					index = i;
+					break;
+				}
+			}
+			return index;
+			//return this.selectedCell.indexOf(cell);	// not sure but might be dangerous 
+		},
+		selectedCells_clearAll : function (){
+			for(var i=0; i<this.selectedCell.length; i++)
+				this.selectedCell[i].classList.remove('cell_selected');
+			this.selectedCell.length=0;	//clears the array
+		},
+		
 		
 		nextCellId : function (){
 			return "cell" + this.gridIndex + "_" + this.nCellIds++;
@@ -515,6 +564,8 @@ SvgGrid.prototype = {
 		
 		keyboardHandler: function (e)
 		{
+			/*
+			 
 			if(this.nCols == 0 || this.nRows == 0)
 				return;
 		
@@ -629,6 +680,7 @@ SvgGrid.prototype = {
 					this.updateZoomBars();
 				}
 			}
+			*/
 		},
 		
 		updateViewBoxes : function()
@@ -719,11 +771,22 @@ SvgGrid.prototype = {
 					// but it seems that all the attributes are still stored in the this.selectedCell
 					// so I check if the created cell has the same src/dst and the reset the selected cell
 					// should be fixed by storing srn/dst identifiers instead of reference to the actual cell
-					if(this.selectedCell && this.selectedCell.getAttribute("data-src") == src && this.selectedCell.getAttribute("data-dst") == dst)
+					var newCells = [];
+					if(this.selectedCell.length > 0)
 					{
-						this.selectedCell = cell;
-						this.selectedCell.classList.add('cell_selected');
+						for (var i=0; i< this.selectedCell.length; i++)
+						{
+							var c = this.selectedCell[i];
+							if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
+							{
+								this.selectedCell.classList.add('cell_selected');
+								newCells.push(c);
+							}
+						
+						}
 					}
+					this.selectedCell = newCells;
+					
 					this.svg.appendChild(cell);
 				}
 			}
@@ -779,22 +842,39 @@ SvgGrid.prototype = {
 		
 		toggleConnection : function()
 		{
-			if(this.selectedCell == null)	
+			if(this.selectedCell.length == 0)	
 				return;
-
-			$(this._container).trigger("toggle", this.selectedCell);
+			
+			for (var i=0; i<this.selectedCell.length; i++)
+			{
+				var cell = this.selectedCell[i];
+				$(this._container).trigger("toggle", cell);
+			}
 		},
 		connect : function()
 		{
-			$(this._container).trigger("connect", this.selectedCell);
+			if(this.selectedCell.length == 0)	
+				return;
+			
+			for (var i=0; i<this.selectedCell.length; i++)
+			{
+				var cell = this.selectedCell[i];
+				$(this._container).trigger("connect", cell);
+			}
 		},
 		disconnect : function()
 		{
-			$(this._container).trigger("disconnect", this.selectedCell);
+			if(this.selectedCell.length == 0)	
+				return;
+			
+			for (var i=0; i<this.selectedCell.length; i++)
+			{
+				var cell = this.selectedCell[i];
+				$(this._container).trigger("disconnect", cell);
+			}
 		},
-		getSelectedCell : function()
+		getSelectedCells : function()
 		{
-			if(this.selectedCell)
 				return this.selectedCell;
 		}
 		

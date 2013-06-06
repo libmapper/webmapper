@@ -324,11 +324,13 @@ GridView.prototype = {
 		
 		var vals =[];
 		
-		var selectedCell = this.sigGrid.getSelectedCell();
-		if(selectedCell)
+		var selectedCells = this.sigGrid.getSelectedCells();
+
+		for (var i=0; i<selectedCells.length; i++)
 		{
-			var selectedSrc = selectedCell.getAttribute("data-src");
-			var selectedDst = selectedCell.getAttribute("data-dst");
+			var cell = this.selectedCells[i];
+			var selectedSrc = cell.getAttribute("data-src");
+			var selectedDst = cell.getAttribute("data-dst");
 			var key = selectedSrc + ">" + selectedDst;
 			var v = list.get(key);
 			if(v)
