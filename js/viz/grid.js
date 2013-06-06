@@ -212,15 +212,17 @@ GridView.prototype = {
 	
 	connect : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("connect", [selectedSrc, selectedDst]);	// trigger connect event
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
+		if(this.model.isConnected(src, dst) == false)
+			this._container.trigger("connect", [src, dst]);	// trigger connect event
 	},
 	disconnect : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("disconnect", [selectedSrc, selectedDst]);	// trigger disconnect event
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
+		if(this.model.isConnected(src, dst) == true)
+			this._container.trigger("disconnect", [src, dst]);	// trigger disconnect event
 	},
 	link : function (e, cell)
 	{
@@ -342,12 +344,10 @@ GridView.prototype = {
 		for (var i=0; i<selectedCells.length; i++)
 		{
 			var cell = selectedCells[i];
-			var selectedSrc = cell.getAttribute("data-src");
-			var selectedDst = cell.getAttribute("data-dst");
-			var key = selectedSrc + ">" + selectedDst;
-			var v = list.get(key);
-			if(v)
-				vals.push(v);
+			var src = cell.getAttribute("data-src");
+			var dst = cell.getAttribute("data-dst");
+			if(this.model.isConnected(src, dst))
+				vals.push(this.model.getConnection(src, dst));
 		}	
 		return vals;
 	},

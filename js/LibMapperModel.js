@@ -8,4 +8,16 @@ function LibMapperModel ()
 
 LibMapperModel.prototype = {
 		
+		isConnected : function (src, dst)
+		{
+			var conn = this.getConnection(src, dst);
+			if(conn)
+				return true;
+			return false;
+		},
+		getConnection : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			return this.connections.get(key);
+		}
 };

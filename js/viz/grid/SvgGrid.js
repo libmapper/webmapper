@@ -757,6 +757,9 @@ SvgGrid.prototype = {
 			
 			
 			// create the cells
+
+			var newSelected = [];
+			
 			for(var i=0; i<this.nRows; i++){
 				for(var j=0; j<this.nCols; j++)
 				{
@@ -766,30 +769,34 @@ SvgGrid.prototype = {
 					var dst = rowLabel.getAttribute("data-dst");
 					var cell = this.createCell(i, j, src, dst);
 					
-					// check if it was the selected cell
-					// FIX: This is dangerous. The selected cell is pointing to a DOM element that was removed with empty 
+					
+					// set the selected cells
+					// FIX: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
 					// but it seems that all the attributes are still stored in the this.selectedCells
 					// so I check if the created cell has the same src/dst and the reset the selected cell
 					// should be fixed by storing srn/dst identifiers instead of reference to the actual cell
-					var newCells = [];
-					if(this.selectedCells.length > 0)
+					for (var k=0; k<this.selectedCells.length; k++)
 					{
-						for (var i=0; i< this.selectedCells.length; i++)
+						var c = this.selectedCells[k];
+						if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
 						{
-							var c = this.selectedCells[i];
-							if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
-							{
-								c.classList.add('cell_selected');
-								newCells.push(c);
-							}
-						
+							newSelected.push(cell);
 						}
 					}
-					this.selectedCells = newCells;
+					
+					
+					
 					
 					this.svg.appendChild(cell);
 				}
 			}
+			
+			//FIX
+			this.selectedCells = newSelected;
+			for (var k=0; k<this.selectedCells.length; k++)
+				this.selectedCells[k].classList.add('cell_selected');
+
+			
 		
 			// update values for the zoom-slider bars
 			
