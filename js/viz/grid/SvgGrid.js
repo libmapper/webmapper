@@ -348,7 +348,7 @@ SvgGrid.prototype = {
 			var cell = evt.target;
 		
 			
-			// if COMMAND key is pressed, user is adding to selection
+			// if COMMAND key is pressed, user is adding/removing to selection
 			
 			if(evt.metaKey)	// COMMAND key on MAC, CONTROL key on PC
 			{
