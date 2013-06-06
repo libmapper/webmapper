@@ -123,20 +123,25 @@ SvgGrid.prototype = {
 			});
 			div.appendChild(btn);
 				
-			//toggle connection button
+			//connection buttons
 			btn = document.createElement("button");
 			btn.innerHTML = "Connect";
 			btn.addEventListener("click", function(evt){
-				//_self.toggleConnection();
-				_self.connect()
+				_self.connect();
 			});
 			div.appendChild(btn);
 			
 			btn = document.createElement("button");
 			btn.innerHTML = "Disconnect";
 			btn.addEventListener("click", function(evt){
-				//_self.toggleConnection();
 				_self.disconnect();
+			});
+			div.appendChild(btn);
+			
+			btn = document.createElement("button");
+			btn.innerHTML = "Toggle";
+			btn.addEventListener("click", function(evt){
+				_self.toggleConnection();
 			});
 			div.appendChild(btn);
 			
@@ -254,7 +259,6 @@ SvgGrid.prototype = {
 			cell.setAttribute("data-col", col);
 			cell.setAttribute("data-src", src);
 			cell.setAttribute("data-dst", dst);
-			
 			cell.setAttribute("x",col*(this.cellDim[0]+this.cellMargin));
 			cell.setAttribute("y",row*(this.cellDim[1]+this.cellMargin));
 			cell.setAttribute("rx", this.cellRoundedCorner);
@@ -564,7 +568,6 @@ SvgGrid.prototype = {
 		
 		keyboardHandler: function (e)
 		{
-			/*
 			 
 			if(this.nCols == 0 || this.nRows == 0)
 				return;
@@ -572,7 +575,7 @@ SvgGrid.prototype = {
 			// enter or space to toggle a connection
 			if(e.keyCode == 13 || e.keyCode == 32)	
 			{
-				if(this.selectedCells != null)
+				if(this.selectedCells.length > 0)
 					this.toggleConnection();
 			}	
 			
@@ -587,17 +590,20 @@ SvgGrid.prototype = {
 			// movement arrows to move the selected cell
 			else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)	
 			{
-				if(this.selectedCells != null)	// cases where there is a previously selected cell
+				if(this.selectedCells.length > 0)	// only move the selected cell if there was a previously selected cell
 				{
 					var m = 1;	// cell jump size
 					if (e.shiftKey === true)
 						m=3;					// if shift key is pressed, increase the jump size;
 					
-					// get position of the currently selected cell 
-					var currentPos = [parseInt(this.selectedCells.getAttribute('data-row')), parseInt(this.selectedCells.getAttribute('data-col'))];
+					// get position of the currently selected cell
+					var lastSelected = this.selectedCells[this.selectedCells.length-1];
+					var currentPos = [parseInt(lastSelected.getAttribute('data-row')), parseInt(lastSelected.getAttribute('data-col'))];
 
-					// update style to unselect the current selected cell
-					this.selectedCells.classList.remove('cell_selected');
+					// clear all selected cells when arrows are pressed
+					this.selectedCells_clearAll();
+					
+
 					
 					// set position of the new selected cell
 					var newPos = [currentPos[0], currentPos[1]];		// [row, col]... I know very confusing with X/Y coordinates
@@ -632,23 +638,21 @@ SvgGrid.prototype = {
 						newPos[1] = this.nCols-1;
 					
 					// set the new selected cell based on the arrow key movement
-					this.selectedCells = this.getCellByPos(newPos[0], newPos[1]);
-
-					// style the new cell as selected
-					this.selectedCells.classList.add('cell_selected');
+					var newCell = this.getCellByPos(newPos[0], newPos[1]);
+					this.selectedCells_addCell(newCell);
 					
 					// calculate if new selected cell is visible or if it is out of view
 					// if out of view then move the viewbox
-					var row = this.selectedCells.getAttribute("data-row");
-					var col = this.selectedCells.getAttribute("data-col");
+					var row = newCell.getAttribute("data-row");
+					var col = newCell.getAttribute("data-col");
 					var cellW = this.cellDim[0]+this.cellMargin;
 					var cellH = this.cellDim[1]+this.cellMargin;
 					var pos = [cellW*col, cellH*row];
 					
 					var dim; 	// helper for code re-useability, set in switch statement following (0=left/right=x, 1=up/down=y)
-					if(e.keyCode == 37 || e.keyCode == 39)
+					if(e.keyCode == 37 || e.keyCode == 39)	// left or right
 						dim = 0;
-					else if(e.keyCode == 38 || e.keyCode == 40)
+					else if(e.keyCode == 38 || e.keyCode == 40)	// up or down
 						dim = 1;
 					
 					switch(e.keyCode)	
@@ -680,7 +684,6 @@ SvgGrid.prototype = {
 					this.updateZoomBars();
 				}
 			}
-			*/
 		},
 		
 		updateViewBoxes : function()
@@ -720,7 +723,6 @@ SvgGrid.prototype = {
 			{
 				var dev = colsArray[index];
 				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
-				
 				var label = document.createElementNS(this.svgNS,"text");
 				label.setAttribute("id", "colLabel" + this.nCols  );
 				label.appendChild(document.createTextNode(fullName)); //signals have also a device name, important for matching connections	
@@ -732,6 +734,11 @@ SvgGrid.prototype = {
 				label.setAttribute("data-src", fullName);
 				label.setAttribute("data-col", this.nCols);
 				label.setAttribute("transform","translate(" + xPos + "," + yPos + ")rotate(90)");
+				
+				if(dev.direction)
+					label.setAttribute("data-direction", '/_dir_'+dev.direction );
+					
+				
 				this.nCols++;
 			}
 			
@@ -740,7 +747,6 @@ SvgGrid.prototype = {
 			{	
 				var dev = rowsArray[index];
 				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
-				
 				var label = document.createElementNS(this.svgNS,"text");
 				label.appendChild(document.createTextNode(fullName));	
 				this.svgRowLabels.appendChild(label);
@@ -751,6 +757,10 @@ SvgGrid.prototype = {
 				label.setAttribute("class","label");
 				var valign = label.getBBox().height/2 + 2;		//BBox only works if used after adding to DOM
 				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin)+(this.cellDim[1]-valign));	// set after added so BBox method
+
+				if(dev.direction)
+					label.setAttribute("data-direction", '/_dir_'+dev.direction );
+				
 				this.nRows++;
 			}
 			
@@ -769,7 +779,6 @@ SvgGrid.prototype = {
 					var dst = rowLabel.getAttribute("data-dst");
 					var cell = this.createCell(i, j, src, dst);
 					
-					
 					// set the selected cells
 					// FIX: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
 					// but it seems that all the attributes are still stored in the this.selectedCells
@@ -783,10 +792,6 @@ SvgGrid.prototype = {
 							newSelected.push(cell);
 						}
 					}
-					
-					
-					
-					
 					this.svg.appendChild(cell);
 				}
 			}
@@ -796,6 +801,26 @@ SvgGrid.prototype = {
 			for (var k=0; k<this.selectedCells.length; k++)
 				this.selectedCells[k].classList.add('cell_selected');
 
+
+			// set style of cells if the mouse is over a cell
+			//style the cell
+			/*
+			if(this.mousedOverCell != null)	//style when mouse is over the toggled cell's row/col
+			{	
+				var mouseRow = this.mousedOverCell.getAttribute("data-row");
+				var mouseCol = this.mousedOverCell.getAttribute("data-col");
+				var selectedRow = cell.getAttribute("data-row");
+				var selectedCol = cell.getAttribute("data-col");
+				
+				if(mouseRow == selectedRow || mouseCol == selectedCol)
+					cell.setAttribute("class", "row_over cell_selected");
+				else	
+					cell.setAttribute("class", "cell_up cell_selected");
+			}
+			else	// style when no cell is moused over 
+				cell.setAttribute("class", "cell_up cell_selected");
+				*/
+			
 			
 		
 			// update values for the zoom-slider bars
@@ -855,7 +880,7 @@ SvgGrid.prototype = {
 			for (var i=0; i<this.selectedCells.length; i++)
 			{
 				var cell = this.selectedCells[i];
-				$(this._container).trigger("toggle", cell);
+				$(this._container).trigger("toggleConnection", cell);
 			}
 		},
 		connect : function()

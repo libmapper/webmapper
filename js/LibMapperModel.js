@@ -19,5 +19,17 @@ LibMapperModel.prototype = {
 		{
 			var key = src + ">" + dst;
 			return this.connections.get(key);
+		},
+		isLinked : function (src, dst)
+		{
+			var link = this.getLink(src, dst);
+			if(link)
+				return true;
+			return false;
+		},
+		getLink : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			return this.links.get(key);
 		}
 };

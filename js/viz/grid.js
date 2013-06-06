@@ -152,6 +152,11 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.unlink(e, cell);
 		});
+		$("#devGrid").on("toggleConnection", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.toggleLink(e, cell);
+		});
+
 		
 		$("#sigGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -161,6 +166,13 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.disconnect(e, cell);
 		});
+		$("#sigGrid").on("toggleConnection", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.toggleConnection(e, cell);
+		});
+
+		
+		
 		
 		$("#devGrid").on("updateConnectionProperties", function(e){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -228,88 +240,39 @@ GridView.prototype = {
 	{
 		var selectedSrc = cell.getAttribute("data-src");
 		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
+		if(this.model.isLinked(src, dst) == false)
+			this._container.trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
 	},
 	unlink : function (e, cell)
 	{
 		var selectedSrc = cell.getAttribute("data-src");
 		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
+		if(this.model.isLinked(src, dst) == true)
+			this._container.trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
 	},
 	
 	toggleLink : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		
 		// toggle the connection
-		
-		if(this.model.isLinked(selectedSrc, selectedDst) == false) // not already a connection, create the new connection
-		{
-			this._container.trigger("createLink", [selectedSrc, selectedDst]);	// trigger create connection event
-		}
+		if(this.model.isLinked(src, dst)) // already connected, so disconnect
+			this._container.trigger("unlink", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-		{
-			// trigger remove connection event
-			this._container.trigger("removeLink", [selectedSrc, selectedDst]);
-			
-			//style the cell
-			/*
-			if(this.mousedOverCell != null)	//style when mouse is over the toggled cell's row/col
-			{	
-				var mouseRow = this.mousedOverCell.getAttribute("data-row");
-				var mouseCol = this.mousedOverCell.getAttribute("data-col");
-				var selectedRow = cell.getAttribute("data-row");
-				var selectedCol = cell.getAttribute("data-col");
-				
-				if(mouseRow == selectedRow || mouseCol == selectedCol)
-					cell.setAttribute("class", "row_over cell_selected");
-				else	
-					cell.setAttribute("class", "cell_up cell_selected");
-			}
-			else	// style when no cell is moused over 
-				cell.setAttribute("class", "cell_up cell_selected");
-				*/
-		}
-		
+			this._container.trigger("link", [src, dst]);	// trigger connect event
 	},
 	
 	toggleConnection : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		
 		// toggle the connection
-		
-		if(this.model.isConnected(selectedSrc, selectedDst) == false) // not already a connection, create the new connection
-		{
-			// trigger create connection event
-			this._container.trigger("createConnection", [selectedSrc, selectedDst]);
-			// style appropriately for GUI
-			cell.setAttribute("class", "cell_connected cell_selected");		
-		}
+		if(this.model.isConnected(src, dst)) // already connected, so disconnect
+			this._container.trigger("disconnect", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-		{
-			// trigger remove connection event
-			this._container.trigger("removeConnection", [selectedSrc, selectedDst]);
-			
-			//style the cell
-			
-			if(this.mousedOverCell != null)	//style when mouse is over the toggled cell's row/col
-			{	
-				var mouseRow = this.mousedOverCell.getAttribute("data-row");
-				var mouseCol = this.mousedOverCell.getAttribute("data-col");
-				var selectedRow = cell.getAttribute("data-row");
-				var selectedCol = cell.getAttribute("data-col");
-				
-				if(mouseRow == selectedRow || mouseCol == selectedCol)
-					cell.setAttribute("class", "row_over cell_selected");
-				else	
-					cell.setAttribute("class", "cell_up cell_selected");
-			}
-			else	// style when no cell is moused over 
-				cell.setAttribute("class", "cell_up cell_selected");
-		}
+			this._container.trigger("connect", [src, dst]);	// trigger connect event
 	},
 	
 	
@@ -436,9 +399,14 @@ GridView.prototype = {
 		}
 	    
 		this.sigGrid.updateDisplay(srcSigs, dstSigs, connections);
+	},
+	
+	on_resize : function ()
+	{
+		
 	}
 	
-	// show the connections
+
 	
 	
 };
