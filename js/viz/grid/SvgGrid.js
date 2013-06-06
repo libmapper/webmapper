@@ -39,7 +39,7 @@ function SvgGrid(container, model, gridIndex){
 	this.cellMargin = 1;									// margin between cells
 	this.labelMargin = 5;									// offset for source signal labels
 	
-	this.selectedCell = []; 					// holds a reference to the selected cells
+	this.selectedCells = []; 					// holds a reference to the selected cells
 	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
 
 	this.nRows = 0;											// number of rows in grid (destination signals)
@@ -363,11 +363,11 @@ SvgGrid.prototype = {
 			
 			else
 			{
-				if(_self.selectedCell.length == 0)		// case: no selected cell
+				if(_self.selectedCells.length == 0)		// case: no selected cell
 				{
 					_self.selectedCells_addCell(cell);
 				}
-				else if(_self.selectedCell.length == 1)		// case: one selected cell
+				else if(_self.selectedCells.length == 1)		// case: one selected cell
 				{
 					if(_self.selectedCells_getCellIndex(cell) == -1)	// not already selected, so select
 					{
@@ -397,31 +397,31 @@ SvgGrid.prototype = {
 		 */
 		selectedCells_addCell : function(cell){
 			cell.classList.add('cell_selected');			
-			this.selectedCell.push(cell);
+			this.selectedCells.push(cell);
 		},
 		selectedCells_removeCell : function(cell){
 			var index = this.selectedCells_getCellIndex(cell);
 			if(index > -1){
 				cell.classList.remove('cell_selected');
-				this.selectedCell.splice(index, 1);				
+				this.selectedCells.splice(index, 1);				
 			}
 		},
 		selectedCells_getCellIndex : function (cell){
 			var index = -1;
-			for(var i=0; i<this.selectedCell.length; i++)
+			for(var i=0; i<this.selectedCells.length; i++)
 			{
-				if (this.selectedCell[i].id == cell.id){
+				if (this.selectedCells[i].id == cell.id){
 					index = i;
 					break;
 				}
 			}
 			return index;
-			//return this.selectedCell.indexOf(cell);	// not sure but might be dangerous 
+			//return this.selectedCells.indexOf(cell);	// not sure but might be dangerous 
 		},
 		selectedCells_clearAll : function (){
-			for(var i=0; i<this.selectedCell.length; i++)
-				this.selectedCell[i].classList.remove('cell_selected');
-			this.selectedCell.length=0;	//clears the array
+			for(var i=0; i<this.selectedCells.length; i++)
+				this.selectedCells[i].classList.remove('cell_selected');
+			this.selectedCells.length=0;	//clears the array
 		},
 		
 		
@@ -572,7 +572,7 @@ SvgGrid.prototype = {
 			// enter or space to toggle a connection
 			if(e.keyCode == 13 || e.keyCode == 32)	
 			{
-				if(this.selectedCell != null)
+				if(this.selectedCells != null)
 					this.toggleConnection();
 			}	
 			
@@ -587,17 +587,17 @@ SvgGrid.prototype = {
 			// movement arrows to move the selected cell
 			else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)	
 			{
-				if(this.selectedCell != null)	// cases where there is a previously selected cell
+				if(this.selectedCells != null)	// cases where there is a previously selected cell
 				{
 					var m = 1;	// cell jump size
 					if (e.shiftKey === true)
 						m=3;					// if shift key is pressed, increase the jump size;
 					
 					// get position of the currently selected cell 
-					var currentPos = [parseInt(this.selectedCell.getAttribute('data-row')), parseInt(this.selectedCell.getAttribute('data-col'))];
+					var currentPos = [parseInt(this.selectedCells.getAttribute('data-row')), parseInt(this.selectedCells.getAttribute('data-col'))];
 
 					// update style to unselect the current selected cell
-					this.selectedCell.classList.remove('cell_selected');
+					this.selectedCells.classList.remove('cell_selected');
 					
 					// set position of the new selected cell
 					var newPos = [currentPos[0], currentPos[1]];		// [row, col]... I know very confusing with X/Y coordinates
@@ -632,15 +632,15 @@ SvgGrid.prototype = {
 						newPos[1] = this.nCols-1;
 					
 					// set the new selected cell based on the arrow key movement
-					this.selectedCell = this.getCellByPos(newPos[0], newPos[1]);
+					this.selectedCells = this.getCellByPos(newPos[0], newPos[1]);
 
 					// style the new cell as selected
-					this.selectedCell.classList.add('cell_selected');
+					this.selectedCells.classList.add('cell_selected');
 					
 					// calculate if new selected cell is visible or if it is out of view
 					// if out of view then move the viewbox
-					var row = this.selectedCell.getAttribute("data-row");
-					var col = this.selectedCell.getAttribute("data-col");
+					var row = this.selectedCells.getAttribute("data-row");
+					var col = this.selectedCells.getAttribute("data-col");
 					var cellW = this.cellDim[0]+this.cellMargin;
 					var cellH = this.cellDim[1]+this.cellMargin;
 					var pos = [cellW*col, cellH*row];
@@ -710,7 +710,7 @@ SvgGrid.prototype = {
 			
 			this.init();
 			
-			this.cells = new Array();
+			this.cells.length = 0;
 			this.nCellIds = 0;
 			this.nRows = 0;
 			this.nCols = 0;
@@ -768,24 +768,24 @@ SvgGrid.prototype = {
 					
 					// check if it was the selected cell
 					// FIX: This is dangerous. The selected cell is pointing to a DOM element that was removed with empty 
-					// but it seems that all the attributes are still stored in the this.selectedCell
+					// but it seems that all the attributes are still stored in the this.selectedCells
 					// so I check if the created cell has the same src/dst and the reset the selected cell
 					// should be fixed by storing srn/dst identifiers instead of reference to the actual cell
 					var newCells = [];
-					if(this.selectedCell.length > 0)
+					if(this.selectedCells.length > 0)
 					{
-						for (var i=0; i< this.selectedCell.length; i++)
+						for (var i=0; i< this.selectedCells.length; i++)
 						{
-							var c = this.selectedCell[i];
+							var c = this.selectedCells[i];
 							if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
 							{
-								this.selectedCell.classList.add('cell_selected');
+								c.classList.add('cell_selected');
 								newCells.push(c);
 							}
 						
 						}
 					}
-					this.selectedCell = newCells;
+					this.selectedCells = newCells;
 					
 					this.svg.appendChild(cell);
 				}
@@ -842,40 +842,40 @@ SvgGrid.prototype = {
 		
 		toggleConnection : function()
 		{
-			if(this.selectedCell.length == 0)	
+			if(this.selectedCells.length == 0)	
 				return;
 			
-			for (var i=0; i<this.selectedCell.length; i++)
+			for (var i=0; i<this.selectedCells.length; i++)
 			{
-				var cell = this.selectedCell[i];
+				var cell = this.selectedCells[i];
 				$(this._container).trigger("toggle", cell);
 			}
 		},
 		connect : function()
 		{
-			if(this.selectedCell.length == 0)	
+			if(this.selectedCells.length == 0)	
 				return;
 			
-			for (var i=0; i<this.selectedCell.length; i++)
+			for (var i=0; i<this.selectedCells.length; i++)
 			{
-				var cell = this.selectedCell[i];
+				var cell = this.selectedCells[i];
 				$(this._container).trigger("connect", cell);
 			}
 		},
 		disconnect : function()
 		{
-			if(this.selectedCell.length == 0)	
+			if(this.selectedCells.length == 0)	
 				return;
 			
-			for (var i=0; i<this.selectedCell.length; i++)
+			for (var i=0; i<this.selectedCells.length; i++)
 			{
-				var cell = this.selectedCell[i];
+				var cell = this.selectedCells[i];
 				$(this._container).trigger("disconnect", cell);
 			}
 		},
 		getSelectedCells : function()
 		{
-				return this.selectedCell;
+				return this.selectedCells;
 		}
 		
 		

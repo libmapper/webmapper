@@ -59,12 +59,19 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "ADD";
 		btn.addEventListener("click", function(evt){
-			if(_self.devGrid.selectedCell)
+			if(_self.devGrid.selectedCells.length > 0)
 			{
-				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-src"), _self.includedSrcs);
-				arrPushIfUnique(_self.devGrid.selectedCell.getAttribute("data-dst"), _self.includedDsts);
-				//FIX!
-				_self._container.trigger("tab", _self.devGrid.selectedCell.getAttribute("data-src"));
+				for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+				{
+					var cell = _self.devGrid.selectedCells[i];
+					cellSrc = cell.getAttribute("data-src");
+					cellDst = cell.getAttribute("data-dst");
+					
+					arrPushIfUnique(cellSrc, _self.includedSrcs);
+					arrPushIfUnique(cellDst, _self.includedDsts);
+					//FIX!
+					_self._container.trigger("tab", cellSrc);
+				}	
 				_self.update_display();
 			}
 		});
@@ -74,20 +81,26 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "REM";
 		btn.addEventListener("click", function(evt){
-			if(_self.devGrid.selectedCell)
+			if(_self.devGrid.selectedCells.length > 0)
 			{
-				var ind;
-				ind = _self.includedSrcs.indexOf(_self.devGrid.selectedCell.getAttribute("data-src"));
-				if(ind>=0) 
-					_self.includedSrcs.splice(ind);
-				ind = _self.includedDsts.indexOf(_self.devGrid.selectedCell.getAttribute("data-dst")); 
-				if(ind>=0) 
-					_self.includedDsts.splice(ind);
-				
-				//FIX: need a command to remove signals from the model
-				//command.send('tab', "mischkabibble");
+				for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+				{
+					var cell = _self.devGrid.selectedCells[i];
+					cellSrc = cell.getAttribute("data-src");
+					cellDst = cell.getAttribute("data-dst");
+					
+					var ind;
+					ind = _self.includedSrcs.indexOf(cellSrc);
+					if(ind>=0) 
+						_self.includedSrcs.splice(ind);
+					ind = _self.includedDsts.indexOf(cellDst); 
+					if(ind>=0) 
+						_self.includedDsts.splice(ind);
+					
+					//FIX: need a command to remove signals from the model
+					//command.send('tab', "mischkabibble");
+				}	
 				_self.update_display();
-				
 			}
 		});
 		div.appendChild(btn);
@@ -328,7 +341,7 @@ GridView.prototype = {
 
 		for (var i=0; i<selectedCells.length; i++)
 		{
-			var cell = this.selectedCells[i];
+			var cell = selectedCells[i];
 			var selectedSrc = cell.getAttribute("data-src");
 			var selectedDst = cell.getAttribute("data-dst");
 			var key = selectedSrc + ">" + selectedDst;
