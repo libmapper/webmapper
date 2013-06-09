@@ -6,7 +6,7 @@ function GridView(container, model)
 {
 
 	var _self = this;
-	this._container = $(container);
+	this._container = container;
 	this.model = model;
 
 	this.activeGridIndex = 0;
@@ -18,7 +18,7 @@ function GridView(container, model)
 	this.includedSrcs = new Array();
 	this.includedDsts = new Array();
 	
-	this.init(container, model);
+	this.init();
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
@@ -41,19 +41,21 @@ function GridView(container, model)
 
 GridView.prototype = {
 		
-	init : function (container, model) 
+	init : function () 
 	{ 
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
 		
+		$(this._container).empty();
+		
 		var wrapper = document.createElement("div");
 		wrapper.setAttribute("id", "gridWrapper");
-		container.appendChild(wrapper);
+		this._container.appendChild(wrapper);
 		
 		// button bar
 		div = document.createElement("div");
 		div.setAttribute("id", "actionBar");
-		div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px; width: 200px;");
+		div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px;");
 		
 		// add device button
 		btn = document.createElement("button");
@@ -70,7 +72,7 @@ GridView.prototype = {
 					arrPushIfUnique(cellSrc, _self.includedSrcs);
 					arrPushIfUnique(cellDst, _self.includedDsts);
 					//FIX!
-					_self._container.trigger("tab", cellSrc);
+					$(_self._container).trigger("tab", cellSrc);
 				}	
 				_self.update_display();
 			}
@@ -132,17 +134,23 @@ GridView.prototype = {
 		div = document.createElement("div");
 		div.setAttribute("id", "devGrid");
 		wrapper.appendChild(div);
-		this.devGrid = new SvgGrid(document.getElementById("devGrid"), model, 0);
 		
 		// Signals Grid (gridIndex=1)
 		div = document.createElement("div");
 		div.setAttribute("id", "sigGrid");
 		wrapper.appendChild(div);
-		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), model, 1);
-			
 		
-		$("#gridWrapper").width($("#devGrid").width() + $("#sigGrid").width() + 1);
+		this.calculateSizes();	// to set width/height of divs before initializing the grids
+		var w = $(this._container).width() / 2 -8;
+		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		
+		document.getElementById("devGrid").style.width = w + "px";
+		document.getElementById("devGrid").style.height = h + "px";
+		document.getElementById("sigGrid").style.width = w + "px";
+		document.getElementById("sigGrid").style.height = h + "px";	
+		
+		this.devGrid = new SvgGrid(document.getElementById("devGrid"), this.model, 0);
+		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), this.model, 1);
 		
 		$("#devGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -227,28 +235,28 @@ GridView.prototype = {
 		var src = cell.getAttribute("data-src");
 		var dst = cell.getAttribute("data-dst");
 		if(this.model.isConnected(src, dst) == false)
-			this._container.trigger("connect", [src, dst]);	// trigger connect event
+			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
 	},
 	disconnect : function (e, cell)
 	{
 		var src = cell.getAttribute("data-src");
 		var dst = cell.getAttribute("data-dst");
 		if(this.model.isConnected(src, dst) == true)
-			this._container.trigger("disconnect", [src, dst]);	// trigger disconnect event
+			$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 	},
 	link : function (e, cell)
 	{
 		var selectedSrc = cell.getAttribute("data-src");
 		var selectedDst = cell.getAttribute("data-dst");
 		if(this.model.isLinked(src, dst) == false)
-			this._container.trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
+			$(this._container).trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
 	},
 	unlink : function (e, cell)
 	{
 		var selectedSrc = cell.getAttribute("data-src");
 		var selectedDst = cell.getAttribute("data-dst");
 		if(this.model.isLinked(src, dst) == true)
-			this._container.trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
+			$(this._container).trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
 	},
 	
 	toggleLink : function (e, cell)
@@ -258,9 +266,9 @@ GridView.prototype = {
 		
 		// toggle the connection
 		if(this.model.isLinked(src, dst)) // already connected, so disconnect
-			this._container.trigger("unlink", [src, dst]);	// trigger connect event
+			$(this._container).trigger("unlink", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-			this._container.trigger("link", [src, dst]);	// trigger connect event
+			$(this._container).trigger("link", [src, dst]);	// trigger connect event
 	},
 	
 	toggleConnection : function (e, cell)
@@ -270,9 +278,9 @@ GridView.prototype = {
 		
 		// toggle the connection
 		if(this.model.isConnected(src, dst)) // already connected, so disconnect
-			this._container.trigger("disconnect", [src, dst]);	// trigger connect event
+			$(this._container).trigger("disconnect", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-			this._container.trigger("connect", [src, dst]);	// trigger connect event
+			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
 	},
 	
 	
@@ -285,17 +293,10 @@ GridView.prototype = {
 			
 	},
 	
-	update_display : function (){
-		
-		var w = $(window).width();
-		var w1 = $("#devGrid").width();
-		var w2 = $("#sigGrid").width();
-		
-		$("#gridWrapper").width( w - 100 );
-
+	update_display : function ()
+	{
 		this.updateDevicesGrid();
-		this.updateSignalsGrid();
-		
+		this.updateSignalsGrid();		
 	},
 	
 	get_selected_connections: function(list){
@@ -403,12 +404,20 @@ GridView.prototype = {
 	
 	on_resize : function ()
 	{
+		this.init();
+		this.update_display();
+	},
+	
+	calculateSizes : function ()
+	{
+		var w = $(this._container).width() / 2 -8;
+		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		
+		document.getElementById("devGrid").style.width = w + "px";
+		document.getElementById("devGrid").style.height = h + "px";
+		document.getElementById("sigGrid").style.width = w + "px";
+		document.getElementById("sigGrid").style.height = h + "px";
 	}
-	
-
-	
-	
 };
 
 function arrPushIfUnique(item, arr){

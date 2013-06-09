@@ -1,43 +1,50 @@
 function SvgGrid(container, model, gridIndex){
 	
-	this.model = model;
-	
-	this.rowsArray = new Array();
-	this.colsArray = new Array();
-
-//	this.dataArray = dataArray;
-//	this.connectionsArray = connectionsArray;
-	
-	this.svg;
-	this.svgRowLabels;
-	this.svgColLabels;	// holding <SVG> elements for easy reference 
 	this.svgNS = "http://www.w3.org/2000/svg";
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 
+	this.model = model;
+	this.gridIndex = gridIndex;
 	this._container = container;
+	
+	this.svg;			// holding <SVG> elements for easy reference
+	this.svgRowLabels;
+	this.svgColLabels;	 
 	this.cells = new Array();
 
-	this.svgDim = [400, 400];								// x-y dimensions of the svg canvas
-	this.svgMinDim = [33, 33];								
-	this.svgMaxDim = [600, 800];								
-	this.colLabelsH = 100;
-	this.rowLabelsW = 200;
+	this.rowsArray = new Array();
+	this.colsArray = new Array();
+
+	this.rowLabelsW = 300;
+	this.colLabelsH = 300;
+	this.scrollBarDim = [30,30];
+	var w = $(container).width();
+	var h = $(container).height() - 50;
+	this.svgDim = [w - this.rowLabelsW - this.scrollBarDim[0], h - this.colLabelsH - this.scrollBarDim[1]];								// x-y dimensions of the svg canvas
+	this.svgMinDim = [33, 33];	
+
+	// ensure SVG Canvas has min dimensions
+	this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
+	this.svgDim[1] = Math.max(this.svgDim[1], this.svgMinDim[1]);
 	
-	this.zoomIncrement = 50;							
+	
+	this.vboxPos = [0, 0];									// vbox x-y position
+	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
+	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
+//	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
+//	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
+	//this.svgMaxDim = [600, 800];	
+
+	
 	this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
 	this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
 	this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
-	
-	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
-	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
-	this.vboxPos = [0, 0];									// vbox x-y position
-//	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
-//	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
 	
 	this.cellDim = [32, 32];								// cell width-height dimensions
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
 	this.cellMargin = 1;									// margin between cells
 	this.labelMargin = 5;									// offset for source signal labels
+	this.zoomIncrement = 50;							
 	
 	this.selectedCells = []; 					// holds a reference to the selected cells
 	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
@@ -46,8 +53,6 @@ function SvgGrid(container, model, gridIndex){
 	this.nCols = 0;											// number of columns in grid (source signals)
 	this.contentDim = [0, 0];								// width-height dimension of full content
 	
-	this.gridIndex = gridIndex;
-
 	this.init();
 	
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
@@ -61,20 +66,10 @@ SvgGrid.prototype = {
 		init : function () 
 		{ 
 			$(this._container).empty();
-			// reset everything in old view
-			/*
-			$('#svgGrid' + this.gridIndex).empty();
-			$('#svgRows' + this.gridIndex).empty();
-			$('#svgCols' + this.gridIndex).empty();
-			*/
-			
 			
 			// set the dimension variables
-			this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
-			
-			if(this.contentDim[0] == 0) this.contentDim[0] = this.cellDim[0] + this.cellMargin;
-			if(this.contentDim[1] == 0) this.contentDim[1] = this.cellDim[1] + this.cellMargin;
+			/*
+			 
 
 			this.svgDim[0] = this.contentDim[0];
 			this.svgDim[1] = this.contentDim[1];
@@ -87,23 +82,21 @@ SvgGrid.prototype = {
 			this.svgDim[0] = Math.min(this.svgDim[0], this.svgMaxDim[0]);
 			this.svgDim[1] = Math.min(this.svgDim[1], this.svgMaxDim[1]);
 
-			// ensure more than min dimension
-			this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
-			this.svgDim[1] = Math.max(this.svgDim[1], this.svgMinDim[1]);
-			
 			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
 			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
 			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
 			
 			$(this._container).width(this.svgDim[0] + this.rowLabelsW + 30);	// set so row labels stick to grid
 			
+			 */
+
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 			
 			// button bar
 			div = document.createElement("div");
 			div.setAttribute("id", "buttonBar");
-			div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px; width: 200px;");
+			div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px;");
 			
 			var btn;
 			
@@ -212,7 +205,7 @@ SvgGrid.prototype = {
 				range: true,
 				min: 0,
 				max: 100,
-				values: [ 0, 100 ],
+				values: [ 0, 50 ],
 				start: function( event, ui ){
 					_self.sliderClicked(event, ui, _self);
 				},
@@ -698,20 +691,35 @@ SvgGrid.prototype = {
 		 */
 		updateZoomBars : function ()
 		{
-			$("#hZoomSlider" + this.gridIndex).slider("option", "min", 0);
-			$("#hZoomSlider" + this.gridIndex).slider("option", "max", this.contentDim[0]);
-			$("#hZoomSlider" + this.gridIndex).slider( "option", "values", [ this.vboxPos[0], this.vboxPos[0]+this.vboxDim[0]]);
-			$("#vZoomSlider" + this.gridIndex).slider("option", "min", 0);
-			$("#vZoomSlider" + this.gridIndex).slider("option", "max", this.contentDim[1]);
-			$("#vZoomSlider" + this.gridIndex).slider( "option", "values", [this.contentDim[1]-(this.vboxPos[1]+this.vboxDim[1]), this.contentDim[1]-this.vboxPos[1]]);
+			if (this.contentDim[0] == 0)
+				$("#hZoomSlider" + this.gridIndex).slider( "disable" );
+			else{
+				$("#hZoomSlider" + this.gridIndex).slider( "enable" );
+				$("#hZoomSlider" + this.gridIndex).slider("option", "min", 0);
+				$("#hZoomSlider" + this.gridIndex).slider("option", "max", this.contentDim[0]);
+				$("#hZoomSlider" + this.gridIndex).slider( "option", "values", [ this.vboxPos[0], this.vboxPos[0]+this.vboxDim[0]]);
+			}
+			
+			if (this.contentDim[1] == 0)
+				$("#vZoomSlider" + this.gridIndex).slider( "disable" );
+			else{
+				$("#vZoomSlider" + this.gridIndex).slider( "enable" );
+				$("#vZoomSlider" + this.gridIndex).slider("option", "min", 0);
+				$("#vZoomSlider" + this.gridIndex).slider("option", "max", this.contentDim[1]);
+				$("#vZoomSlider" + this.gridIndex).slider( "option", "values", [this.contentDim[1]-(this.vboxPos[1]+this.vboxDim[1]), this.contentDim[1]-this.vboxPos[1]]);
+			}
 		},
 		
 		updateDisplay : function (colsArray, rowsArray, connectionsArray){
 			
+			$('#svgGrid' + this.gridIndex).empty();
+			$('#svgRows' + this.gridIndex).empty();
+			$('#svgCols' + this.gridIndex).empty();
+			
 			this.colsArray = colsArray;
 			this.rowsArray = rowsArray;
 			
-			this.init();
+			//this.init();
 			
 			this.cells.length = 0;
 			this.nCellIds = 0;
@@ -832,7 +840,14 @@ SvgGrid.prototype = {
 			this.vboxDim[0] = this.svgDim[0];
 			this.vboxDim[1] = this.vboxDim[0]/this.aspect;
 			
+
+			
+			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
 		
+
+			
+			
 		
 //		else if(this.contentDim[1] >= this.contentDim[0]) {
 //				this.vboxDim[1] = this.contentDim[1];
