@@ -68,9 +68,10 @@ GridView.prototype = {
 					var cell = _self.devGrid.selectedCells[i];
 					cellSrc = cell.getAttribute("data-src");
 					cellDst = cell.getAttribute("data-dst");
-					
-					arrPushIfUnique(cellSrc, _self.includedSrcs);
-					arrPushIfUnique(cellDst, _self.includedDsts);
+					if(model.isLinked(cellSrc, cellDst)){
+						arrPushIfUnique(cellSrc, _self.includedSrcs);
+						arrPushIfUnique(cellDst, _self.includedDsts);
+					}
 					//FIX!
 					$(_self._container).trigger("tab", cellSrc);
 				}	
@@ -246,17 +247,17 @@ GridView.prototype = {
 	},
 	link : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		if(this.model.isLinked(src, dst) == false)
-			$(this._container).trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
+			$(this._container).trigger("link", [src, dst]);	// trigger connect event
 	},
 	unlink : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		if(this.model.isLinked(src, dst) == true)
-			$(this._container).trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
+			$(this._container).trigger("unlink", [src, dst]);	// trigger disconnect event
 	},
 	
 	toggleLink : function (e, cell)
@@ -410,7 +411,7 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = $(this._container).width() / 2 -8;
+		var w = Math.floor($(this._container).width()/2) - 8;
 		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		
 		document.getElementById("devGrid").style.width = w + "px";
