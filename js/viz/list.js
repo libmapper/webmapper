@@ -602,11 +602,6 @@ function select_tr(tr)
     update_connection_properties();
 }
 
-function select_arrow(arrow)
-{
-
-}
-
 function deselect_all()
 {
     $('tr.trsel', leftTable.table).each(function(i,e){
@@ -783,21 +778,19 @@ function drawing_curve(sourceRow)
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
-    // Do the same thing for the row height
-    var heightInPx = $(sourceRow).css('height');
-    this.rowHeight = +heightInPx.substring(0, heightInPx.length - 2);
-
-    //
+    
     this.clamptorow = function( row ) {
-        var y = ( $(row).index() + 1.5 ) * this.rowHeight;
+        var svgPos = fullOffset($('.svgDiv')[0]);
+        var rowPos = fullOffset(row);
+        var y = rowPos.top + rowPos.height/2 - svgPos.top;
         return y;
     }
 
     this.findrow = function ( y ) {
-        var index = Math.round( y/this.rowHeight );
-        if( index > this.targetTable.nVisibleRows)
-            index = this.targetTable.nVisibleRows;
-        var row = $(this.targetTable.tbody).find('tr')[index - 1];
+        var svgTop = $('.svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
+        var ttleft = $(this.targetTable.tbody).offset().left; // Left edge of the target table
+        var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
+        var row = $(td).parents('tr')[0]; 
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -846,11 +839,12 @@ function drawing_curve(sourceRow)
         }
         // We're over a table row of the target table
         if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
+            var rowHeightPx = $(target).css('height');
+            var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             end[1] = this.clamptorow(target);
-            c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
-
+            c1 = end[1] + moveEvent.offsetY - rowHeight/2;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
