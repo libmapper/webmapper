@@ -4,21 +4,20 @@
 
 function GridView(container, model)
 {
-
 	var _self = this;
-	this._container = $(container);
+	this._container = container;
 	this.model = model;
 
 	this.activeGridIndex = 0;
 	this.devGrid;
 	this.sigGrid;
 	
-	this.viewMode = 0;
+	this.viewMode = 3;
 	
 	this.includedSrcs = new Array();
 	this.includedDsts = new Array();
 	
-	this.init(container, model);
+	this.init();
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
@@ -41,19 +40,21 @@ function GridView(container, model)
 
 GridView.prototype = {
 		
-	init : function (container, model) 
+	init : function () 
 	{ 
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
 		
+		$(this._container).empty();
+		
 		var wrapper = document.createElement("div");
 		wrapper.setAttribute("id", "gridWrapper");
-		container.appendChild(wrapper);
+		this._container.appendChild(wrapper);
 		
 		// button bar
 		div = document.createElement("div");
 		div.setAttribute("id", "actionBar");
-		div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px; width: 200px;");
+		div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px;");
 		
 		// add device button
 		btn = document.createElement("button");
@@ -66,11 +67,12 @@ GridView.prototype = {
 					var cell = _self.devGrid.selectedCells[i];
 					cellSrc = cell.getAttribute("data-src");
 					cellDst = cell.getAttribute("data-dst");
-					
-					arrPushIfUnique(cellSrc, _self.includedSrcs);
-					arrPushIfUnique(cellDst, _self.includedDsts);
+					if(model.isLinked(cellSrc, cellDst)){
+						arrPushIfUnique(cellSrc, _self.includedSrcs);
+						arrPushIfUnique(cellDst, _self.includedDsts);
+					}
 					//FIX!
-					_self._container.trigger("tab", cellSrc);
+					$(_self._container).trigger("tab", cellSrc);
 				}	
 				_self.update_display();
 			}
@@ -107,20 +109,20 @@ GridView.prototype = {
 
 		// View Buttons
 		btn = document.createElement("button");
-		btn.innerHTML = "1";
+		btn.innerHTML = "Devices View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(1);
 		});
 		div.appendChild(btn);
 		
 		btn = document.createElement("button");
-		btn.innerHTML = "2";
+		btn.innerHTML = "Signals View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(2);
 		});
 		div.appendChild(btn);
 		btn = document.createElement("button");
-		btn.innerHTML = "3";
+		btn.innerHTML = "Split View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(3);
 		});
@@ -132,17 +134,16 @@ GridView.prototype = {
 		div = document.createElement("div");
 		div.setAttribute("id", "devGrid");
 		wrapper.appendChild(div);
-		this.devGrid = new SvgGrid(document.getElementById("devGrid"), model, 0);
 		
 		// Signals Grid (gridIndex=1)
 		div = document.createElement("div");
 		div.setAttribute("id", "sigGrid");
 		wrapper.appendChild(div);
-		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), model, 1);
-			
 		
-		$("#gridWrapper").width($("#devGrid").width() + $("#sigGrid").width() + 1);
+		this.calculateSizes();	// to set width/height of divs before initializing the grids
 		
+		this.devGrid = new SvgGrid(document.getElementById("devGrid"), this.model, 0);
+		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), this.model, 1);
 		
 		$("#devGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -152,6 +153,11 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.unlink(e, cell);
 		});
+		$("#devGrid").on("toggleConnection", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.toggleLink(e, cell);
+		});
+
 		
 		$("#sigGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -161,6 +167,11 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.disconnect(e, cell);
 		});
+		$("#sigGrid").on("toggleConnection", function(e, cell){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.toggleConnection(e, cell);
+		});
+
 		
 		$("#devGrid").on("updateConnectionProperties", function(e){
 			e.stopPropagation();	//prevents bubbling to main.js
@@ -172,8 +183,6 @@ GridView.prototype = {
 		});
 		
 		
-		
-		
 		$("#devGrid").on("makeActiveGrid", function(e, gridIndex){
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.setActiveGrid(gridIndex);
@@ -183,25 +192,31 @@ GridView.prototype = {
 			_self.setActiveGrid(gridIndex);
 		});
 		
-		this.switchView(3);	
 	},
 	
-	switchView : function(mode){
+	switchView : function(mode)
+	{
+		if(mode == this.viewMode)
+			return;
+		
+		var len = 200;		// length of the animation in ms
 		this.viewMode = mode;
-		var len = 1000;
+
+		this.on_resize();
+		
 		switch (mode) 
 		{
 		case 1:
-			$('#devGrid').show(len);
-			$('#sigGrid').hide(len);
+			$('#devGrid').show();
+			$('#sigGrid').hide();
 			break;
 		case 2:
-			$('#devGrid').hide(len);
-			$('#sigGrid').show(len);
+			$('#devGrid').hide();
+			$('#sigGrid').show();
 			break;
 		case 3:
-			$('#devGrid').show(len);
-			$('#sigGrid').show(len);
+			$('#devGrid').show();
+			$('#sigGrid').show();
 			break;
 		}
 	},
@@ -215,101 +230,52 @@ GridView.prototype = {
 		var src = cell.getAttribute("data-src");
 		var dst = cell.getAttribute("data-dst");
 		if(this.model.isConnected(src, dst) == false)
-			this._container.trigger("connect", [src, dst]);	// trigger connect event
+			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
 	},
 	disconnect : function (e, cell)
 	{
 		var src = cell.getAttribute("data-src");
 		var dst = cell.getAttribute("data-dst");
 		if(this.model.isConnected(src, dst) == true)
-			this._container.trigger("disconnect", [src, dst]);	// trigger disconnect event
+			$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 	},
 	link : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("link", [selectedSrc, selectedDst]);	// trigger connect event
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
+		if(this.model.isLinked(src, dst) == false)
+			$(this._container).trigger("link", [src, dst]);	// trigger connect event
 	},
 	unlink : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
-		this._container.trigger("unlink", [selectedSrc, selectedDst]);	// trigger disconnect event
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
+		if(this.model.isLinked(src, dst) == true)
+			$(this._container).trigger("unlink", [src, dst]);	// trigger disconnect event
 	},
 	
 	toggleLink : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		
 		// toggle the connection
-		
-		if(this.model.isLinked(selectedSrc, selectedDst) == false) // not already a connection, create the new connection
-		{
-			this._container.trigger("createLink", [selectedSrc, selectedDst]);	// trigger create connection event
-		}
+		if(this.model.isLinked(src, dst)) // already connected, so disconnect
+			$(this._container).trigger("unlink", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-		{
-			// trigger remove connection event
-			this._container.trigger("removeLink", [selectedSrc, selectedDst]);
-			
-			//style the cell
-			/*
-			if(this.mousedOverCell != null)	//style when mouse is over the toggled cell's row/col
-			{	
-				var mouseRow = this.mousedOverCell.getAttribute("data-row");
-				var mouseCol = this.mousedOverCell.getAttribute("data-col");
-				var selectedRow = cell.getAttribute("data-row");
-				var selectedCol = cell.getAttribute("data-col");
-				
-				if(mouseRow == selectedRow || mouseCol == selectedCol)
-					cell.setAttribute("class", "row_over cell_selected");
-				else	
-					cell.setAttribute("class", "cell_up cell_selected");
-			}
-			else	// style when no cell is moused over 
-				cell.setAttribute("class", "cell_up cell_selected");
-				*/
-		}
-		
+			$(this._container).trigger("link", [src, dst]);	// trigger connect event
 	},
 	
 	toggleConnection : function (e, cell)
 	{
-		var selectedSrc = cell.getAttribute("data-src");
-		var selectedDst = cell.getAttribute("data-dst");
+		var src = cell.getAttribute("data-src");
+		var dst = cell.getAttribute("data-dst");
 		
 		// toggle the connection
-		
-		if(this.model.isConnected(selectedSrc, selectedDst) == false) // not already a connection, create the new connection
-		{
-			// trigger create connection event
-			this._container.trigger("createConnection", [selectedSrc, selectedDst]);
-			// style appropriately for GUI
-			cell.setAttribute("class", "cell_connected cell_selected");		
-		}
+		if(this.model.isConnected(src, dst)) // already connected, so disconnect
+			$(this._container).trigger("disconnect", [src, dst]);	// trigger connect event
 		else	// is already a connection, so remove it
-		{
-			// trigger remove connection event
-			this._container.trigger("removeConnection", [selectedSrc, selectedDst]);
-			
-			//style the cell
-			
-			if(this.mousedOverCell != null)	//style when mouse is over the toggled cell's row/col
-			{	
-				var mouseRow = this.mousedOverCell.getAttribute("data-row");
-				var mouseCol = this.mousedOverCell.getAttribute("data-col");
-				var selectedRow = cell.getAttribute("data-row");
-				var selectedCol = cell.getAttribute("data-col");
-				
-				if(mouseRow == selectedRow || mouseCol == selectedCol)
-					cell.setAttribute("class", "row_over cell_selected");
-				else	
-					cell.setAttribute("class", "cell_up cell_selected");
-			}
-			else	// style when no cell is moused over 
-				cell.setAttribute("class", "cell_up cell_selected");
-		}
+			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
 	},
 	
 	
@@ -320,19 +286,6 @@ GridView.prototype = {
 		else if(this.activeGridIndex == 1)
 			this.sigGrid.keyboardHandler(e);
 			
-	},
-	
-	update_display : function (){
-		
-		var w = $(window).width();
-		var w1 = $("#devGrid").width();
-		var w2 = $("#sigGrid").width();
-		
-		$("#gridWrapper").width( w - 100 );
-
-		this.updateDevicesGrid();
-		this.updateSignalsGrid();
-		
 	},
 	
 	get_selected_connections: function(list){
@@ -352,25 +305,17 @@ GridView.prototype = {
 		return vals;
 	},
 	
+	update_display : function ()
+	{
+		this.updateDevicesGrid();
+		this.updateSignalsGrid();		
+	},
+	
 	updateDevicesGrid : function(){
 
 		//divide devices into sources and destinations
 		var srcDevs = new Array();
 		var dstDevs = new Array();
-		var links = new Array();
-		
-		/*
-		for (var i=0; i< this.model.devices.length; i++)
-		{
-			var dev = this.model.devices[i];
-			if(dev.n_outputs>0)		//create new COL Label
-				srcDevs.push(dev);
-			if(dev.n_inputs>0)
-				dstDevs.push(dev);
-		}
-		*/
-		
-		// add devices
 		
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
@@ -382,11 +327,11 @@ GridView.prototype = {
 				srcDevs.push(dev);
 			if (dev.n_inputs)
 				dstDevs.push(dev);
-		        
 		}
 		
 		// add links
 		
+		var links = new Array();
 		var l = this.model.links.keys();
 		for (var i=0; i<l.length; i++)			
 		{
@@ -395,8 +340,8 @@ GridView.prototype = {
 			links.push([src,dst]);
 		}
 		
-		this.devGrid.updateDisplay(srcDevs, dstDevs, links);
-		
+		this.devGrid.updateDisplayData(srcDevs, dstDevs, links);
+		this.devGrid.refresh();
 		
 	},
 	
@@ -435,12 +380,29 @@ GridView.prototype = {
 			connections.push([src,dst]);
 		}
 	    
-		this.sigGrid.updateDisplay(srcSigs, dstSigs, connections);
+		this.sigGrid.updateDisplayData(srcSigs, dstSigs, connections);
+		this.sigGrid.refresh();
+	},
+	
+	on_resize : function ()
+	{
+		this.init();
+		this.update_display();
+	},
+	
+	calculateSizes : function ()
+	{
+		var w = $(this._container).width() - 8;
+		if(this.viewMode == 3)
+			w = Math.floor($(this._container).width()/2) - 8;
+		
+		var h = $(this._container).height() - $("#actionBar").height() - 2;
+		
+		document.getElementById("devGrid").style.width = w + "px";
+		document.getElementById("devGrid").style.height = h + "px";
+		document.getElementById("sigGrid").style.width = w + "px";
+		document.getElementById("sigGrid").style.height = h + "px";
 	}
-	
-	// show the connections
-	
-	
 };
 
 function arrPushIfUnique(item, arr){

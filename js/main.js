@@ -137,7 +137,7 @@ function update_connection_properties()
         $(".topMenu input").val('');
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').addClass('disabled');
-    }
+    };
 
     var conns = view.get_selected_connections(model.connections);
 	// if there is one connection selected, display its properties on top
@@ -299,7 +299,7 @@ function on_boundary(e)
 function on_mute(conns)
 {
     for ( var i in conns ) {
-        var args = conns[i]
+        var args = conns[i];
         if ( args.muted == 0 ) {
             args.muted = 1;
         }
@@ -405,12 +405,17 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
+    $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    window.onresize = function (e) {
+    	$('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    	view.on_resize();
+    };
     
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
-            switch_mode('list');
+        	switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
@@ -419,11 +424,6 @@ function main()
             //Naming collision between this and list, should figure it out
             //(maybe add_UI_handlers can be a method of list)
             add_handlers();
-            $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
-            window.onresize = function (e) {
-                $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
-                view.on_resize();
-            };
         },
         100);
 }

@@ -83,11 +83,9 @@ a:hover { color: #036; }
 }
 
 .label{
-	font-size: 14px;
 	fill: #3e3e3e;
 }
 .label_over{
-	font-size: 14px;
 	font-weight: bold;		
 }
 
