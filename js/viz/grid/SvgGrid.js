@@ -19,15 +19,14 @@ function SvgGrid(container, model, gridIndex){
 	this.rowLabelsW = 300;
 	this.colLabelsH = 300;
 	this.scrollBarDim = [30,30];
-	var w = $(container).width();
-	var h = $(container).height() - 50;
-	this.svgDim = [w - this.rowLabelsW - this.scrollBarDim[0], h - this.colLabelsH - this.scrollBarDim[1]];								// x-y dimensions of the svg canvas
 	this.svgMinDim = [33, 33];	
-
-	// ensure SVG Canvas has min dimensions
-	this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
-	this.svgDim[1] = Math.max(this.svgDim[1], this.svgMinDim[1]);
 	
+	
+	this.svgDim = []; 	// x-y dimensions of the svg canvas
+	this.aspect;		// aspect ratio of SVG viewbox (for zooming)
+	this.aspectCol;		// aspect ratio of col viewbox (for zooming)
+	this.aspectRow;		// aspect ratio of row viewbox (for zooming)
+	this.initDimensions(container);
 	
 	this.vboxPos = [0, 0];									// vbox x-y position
 	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
@@ -35,11 +34,6 @@ function SvgGrid(container, model, gridIndex){
 //	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
 //	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
 	//this.svgMaxDim = [600, 800];	
-
-	
-	this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
-	this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
-	this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
 	
 	this.cellDim = [32, 32];								// cell width-height dimensions
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
@@ -65,6 +59,20 @@ function SvgGrid(container, model, gridIndex){
 
 SvgGrid.prototype = {
 		
+		initDimensions : function (container)
+		{
+			var w = $(container).width();
+			var h = $(container).height() - 50;
+			this.svgDim = [w - this.rowLabelsW - this.scrollBarDim[0], h - this.colLabelsH - this.scrollBarDim[1]];								// x-y dimensions of the svg canvas
+		
+			// ensure SVG Canvas has min dimensions
+			this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
+			this.svgDim[1] = Math.max(this.svgDim[1], this.svgMinDim[1]);
+		
+			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
+			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
+			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
+		},
 		init : function () 
 		{ 
 			$(this._container).empty();

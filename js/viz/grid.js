@@ -12,7 +12,7 @@ function GridView(container, model)
 	this.devGrid;
 	this.sigGrid;
 	
-	this.viewMode = 0;
+	this.viewMode = 3;
 	
 	this.includedSrcs = new Array();
 	this.includedDsts = new Array();
@@ -109,20 +109,20 @@ GridView.prototype = {
 
 		// View Buttons
 		btn = document.createElement("button");
-		btn.innerHTML = "1";
+		btn.innerHTML = "Devices View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(1);
 		});
 		div.appendChild(btn);
 		
 		btn = document.createElement("button");
-		btn.innerHTML = "2";
+		btn.innerHTML = "Signals View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(2);
 		});
 		div.appendChild(btn);
 		btn = document.createElement("button");
-		btn.innerHTML = "3";
+		btn.innerHTML = "Split View";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(3);
 		});
@@ -141,13 +141,6 @@ GridView.prototype = {
 		wrapper.appendChild(div);
 		
 		this.calculateSizes();	// to set width/height of divs before initializing the grids
-		var w = $(this._container).width() / 2 -8;
-		var h = $(this._container).height() - $("#actionBar").height() - 2;
-		
-		document.getElementById("devGrid").style.width = w + "px";
-		document.getElementById("devGrid").style.height = h + "px";
-		document.getElementById("sigGrid").style.width = w + "px";
-		document.getElementById("sigGrid").style.height = h + "px";	
 		
 		this.devGrid = new SvgGrid(document.getElementById("devGrid"), this.model, 0);
 		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), this.model, 1);
@@ -180,8 +173,6 @@ GridView.prototype = {
 		});
 
 		
-		
-		
 		$("#devGrid").on("updateConnectionProperties", function(e){
 			e.stopPropagation();	//prevents bubbling to main.js
 			// only sig grid needs this function
@@ -190,8 +181,6 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			update_connection_properties();
 		});
-		
-		
 		
 		
 		$("#devGrid").on("makeActiveGrid", function(e, gridIndex){
@@ -203,25 +192,31 @@ GridView.prototype = {
 			_self.setActiveGrid(gridIndex);
 		});
 		
-		this.switchView(3);	
 	},
 	
-	switchView : function(mode){
+	switchView : function(mode)
+	{
+		if(mode == this.viewMode)
+			return;
+		
+		var len = 200;		// length of the animation in ms
 		this.viewMode = mode;
-		var len = 1000;
+
+		this.on_resize();
+		
 		switch (mode) 
 		{
 		case 1:
-			$('#devGrid').show(len);
-			$('#sigGrid').hide(len);
+			$('#devGrid').show();
+			$('#sigGrid').hide();
 			break;
 		case 2:
-			$('#devGrid').hide(len);
-			$('#sigGrid').show(len);
+			$('#devGrid').hide();
+			$('#sigGrid').show();
 			break;
 		case 3:
-			$('#devGrid').show(len);
-			$('#sigGrid').show(len);
+			$('#devGrid').show();
+			$('#sigGrid').show();
 			break;
 		}
 	},
@@ -397,7 +392,10 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = Math.floor($(this._container).width()/2) - 8;
+		var w = $(this._container).width() - 8;
+		if(this.viewMode == 3)
+			w = Math.floor($(this._container).width()/2) - 8;
+		
 		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		
 		document.getElementById("devGrid").style.width = w + "px";
