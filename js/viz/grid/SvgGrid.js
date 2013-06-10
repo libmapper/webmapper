@@ -481,29 +481,41 @@ SvgGrid.prototype = {
 					return false;
 				else
 				{
-					
-					
-					//set the new dimensions of vbox and reposition it
-					_self.vboxDim[ind] = w;		// clicked dimension size
-					_self.vboxDim[1-ind] = (ind==0)? w/_self.aspect: w*_self.aspect;	// other dimension's size based on aspect ratio
-					_self.vboxPos[ind] = (ind==0)? ui.values[0] : _self.contentDim[ind]-ui.values[1];	// set the vbox position based on value of first handle (reversed for Y)
-					
-					//if other dimension gets out of range, must adjust the vbox's position appropriately
-					if(_self.vboxPos[1-ind]+_self.vboxDim[1-ind] > _self.contentDim[1-ind])
-					{	 
-						if(_self.vboxPos[1-ind] <= 0)	// when other dimension is at max, keep the view box at 0
-							_self.vboxPos[1-ind] = 0;
-						else							// when other dimension is not maxed, scroll left by the surpassed amount
-						{
-							var overflow = _self.contentDim[1-ind] - _self.vboxPos[1-ind] -_self.vboxDim[1-ind];
-							_self.vboxPos[1-ind] += overflow;
+					// if sliders are over extended, use the zoom in function until sliders are useable
+					if(_self.vboxDim[ind] - this.zoomIncrement > _self.contentDim[ind])
+					{
+						var inc = _self.contentDim[ind] - w;
+						_self.zoomIn();
+						return false;
+					}
+					else
+					{
+						//font size stuff
+						var ratio = (_self.vboxDim[ind] - w) / _self.vboxDim[ind];
+						this.fontSize = this.fontSize - (this.fontSize*ratio);
+						
+						//set the new dimensions of vbox and reposition it
+						_self.vboxDim[ind] = w;		// clicked dimension size
+						_self.vboxDim[1-ind] = (ind==0)? w/_self.aspect: w*_self.aspect;	// other dimension's size based on aspect ratio
+						_self.vboxPos[ind] = (ind==0)? ui.values[0] : _self.contentDim[ind]-ui.values[1];	// set the vbox position based on value of first handle (reversed for Y)
+						
+						//if other dimension gets out of range, must adjust the vbox's position appropriately
+						if(_self.vboxPos[1-ind]+_self.vboxDim[1-ind] > _self.contentDim[1-ind])
+						{	 
+							if(_self.vboxPos[1-ind] <= 0)	// when other dimension is at max, keep the view box at 0
+								_self.vboxPos[1-ind] = 0;
+							else							// when other dimension is not maxed, scroll left by the surpassed amount
+							{
+								var overflow = _self.contentDim[1-ind] - _self.vboxPos[1-ind] -_self.vboxDim[1-ind];
+								_self.vboxPos[1-ind] += overflow;
+							}
 						}
+						// update the GUI
+						this.refresh();  //bad to redraw everything but needed for now to change font size
+//						_self.updateViewBoxes();
+//						_self.updateZoomBars();
 					}
 					
-					// update the GUI
-					_self.updateViewBoxes();
-					return false;
-					_self.updateZoomBars();
 					
 				}
 			}
@@ -546,9 +558,9 @@ SvgGrid.prototype = {
 				
 				this.vboxDim[0] -= this.zoomIncrement;
 				this.vboxDim[1] -= this.zoomIncrement/this.aspect;
-				this.refresh();
-				//this.updateViewBoxes();
-				//this.updateZoomBars();
+				this.refresh();  //bad to redraw everything but needed for now to change font size
+//				this.updateViewBoxes();
+//				this.updateZoomBars();
 			}
 		},
 		
@@ -570,10 +582,9 @@ SvgGrid.prototype = {
 				this.vboxDim[0] = this.contentDim[0];
 				this.vboxDim[1] = this.vboxDim[0]/this.aspect; //this.contentDim[0]/this.aspect;
 			}
-			this.updateDisplay(this.colsArray, this.rowsArray, this.connectionsArray);
-			this.refresh();
-//			this.updateViewBoxes();
-//			this.updateZoomBars();
+			this.refresh();  //bad to redraw everything but needed for now to change font size
+			//this.updateViewBoxes();
+			//this.updateZoomBars();
 		},
 		
 		makeActiveGrid : function(){
@@ -789,7 +800,7 @@ SvgGrid.prototype = {
 				label.setAttribute("font-size", this.fontSize + "px");
 				label.setAttribute("class","label");
 				var valign = label.getBBox().height/2 + 2;		//BBox only works if used after adding to DOM
-				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2));	// set after added so BBox method
+				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// set after added so BBox method
 
 				if(dev.direction)
 					label.setAttribute("data-direction", '/_dir_'+dev.direction );

@@ -415,7 +415,8 @@ function main()
     // cursor in the browser.
     setTimeout(
         function(){
-        	switch_mode('list');
+//        	switch_mode('list');
+        	switch_mode('grid');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
