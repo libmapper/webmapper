@@ -24,7 +24,7 @@ def serialise(monitor, device):
                mapper.BA_FOLD: 'fold',
                mapper.BA_WRAP: 'wrap'}
 
-    for c in monitor.db.connections_by_device_name(device):
+    for c in monitor.db.get_connections_by_device_name(device):
       
         this_connection = {
           'src': [ c['src_name'] ],
@@ -115,7 +115,7 @@ def deserialise(monitor, mapping_json):
             links = [( str(x), str(y) ) for x in srcdevs for y in destdevs]
             for l in links:
                 # Only make a link if it does not already exist
-                if not monitor.db.link_by_src_dest_names(l[0], l[1]):
+                if not monitor.db.get_link_by_src_dest_names(l[0], l[1]):
                     monitor.link(l[0], l[1])
 
             #The name of the source signal (assuming 1 to 1 for now)
@@ -138,7 +138,7 @@ def deserialise(monitor, mapping_json):
 
             # If connection already exists, use 'modify', otherwise 'connect'.
             # Assumes 1 to 1, again
-            cs = list(monitor.db.connections_by_device_and_signal_names(
+            cs = list(monitor.db.get_connections_by_device_and_signal_names(
                 srcdevs[0], str(srcsig.split('/')[2]),
                 destdevs[0], str(destsig.split('/')[2]) ))
             if len(cs) > 0:
@@ -179,7 +179,7 @@ def deserialise(monitor, mapping_json):
             destdev = str('/'+link[1]['device'])
 
             # Only make a link if it doesn't already exist.
-            if not monitor.db.link_by_src_dest_names(srcdev, destdev):
+            if not monitor.db.get_link_by_src_dest_names(srcdev, destdev):
                 monitor.link(srcdev, destdev)
 
             # The expression itself
@@ -214,7 +214,7 @@ def deserialise(monitor, mapping_json):
                      'muted': c['muted']})
 
             # If connection already exists, use 'modify', otherwise 'connect'.
-            cs = list(monitor.db.connections_by_device_and_signal_names(
+            cs = list(monitor.db.get_connections_by_device_and_signal_names(
                     str(link[0]['device']), str(link[0]['parameter']),
                     str(link[1]['device']), str(link[1]['parameter'])))
             if len(cs)>0:
