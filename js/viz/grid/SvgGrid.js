@@ -12,9 +12,10 @@ function SvgGrid(container, model, gridIndex){
 	this.svgColLabels;	 
 	this.cells = new Array();
 
-	this.rowsArray = new Array();
 	this.colsArray = new Array();
-
+	this.rowsArray = new Array();
+	this.connectionsArray = new Array();
+	
 	this.rowLabelsW = 300;
 	this.colLabelsH = 300;
 	this.scrollBarDim = [30,30];
@@ -58,7 +59,8 @@ function SvgGrid(container, model, gridIndex){
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs
 	
-	
+	this.fontSize = 16;
+	this.autoZoom = true;
 }
 
 SvgGrid.prototype = {
@@ -479,6 +481,8 @@ SvgGrid.prototype = {
 					return false;
 				else
 				{
+					
+					
 					//set the new dimensions of vbox and reposition it
 					_self.vboxDim[ind] = w;		// clicked dimension size
 					_self.vboxDim[1-ind] = (ind==0)? w/_self.aspect: w*_self.aspect;	// other dimension's size based on aspect ratio
@@ -498,7 +502,9 @@ SvgGrid.prototype = {
 					
 					// update the GUI
 					_self.updateViewBoxes();
+					return false;
 					_self.updateZoomBars();
+					
 				}
 			}
 			// for when the range was clicked (scroll and slide)
@@ -534,25 +540,40 @@ SvgGrid.prototype = {
 		{
 			if(this.vboxDim[0] > this.vboxMinDim[0])
 			{
+				this.autoZoom = false;
+				var ratio = this.zoomIncrement/this.vboxDim[0];
+				this.fontSize = this.fontSize - (this.fontSize*ratio);
+				
 				this.vboxDim[0] -= this.zoomIncrement;
 				this.vboxDim[1] -= this.zoomIncrement/this.aspect;
-				this.updateViewBoxes();
-				this.updateZoomBars();
+				this.refresh();
+				//this.updateViewBoxes();
+				//this.updateZoomBars();
 			}
 		},
 		
 		zoomOut : function()
 		{
-			if(this.vboxDim[0] <= this.contentDim[0]-this.zoomIncrement && this.vboxDim[0] < this.vboxMaxDim[0]-this.zoomIncrement){
+			this.autoZoom = false;
+		
+			var ratio = this.zoomIncrement/this.vboxDim[0];
+			this.fontSize = this.fontSize + (this.fontSize*ratio);
+			
+//			if(this.vboxDim[0] <= this.contentDim[0]-this.zoomIncrement && this.vboxDim[0] < this.vboxMaxDim[0]-this.zoomIncrement){
+			if(true){
 				this.vboxDim[0] += this.zoomIncrement;
 				this.vboxDim[1] += this.zoomIncrement/this.aspect;
 			}
 			else{
-				this.vboxDim[0] = (this.contentDim[0]<this.vboxMaxDim[0])? this.contentDim[0] : this.vboxMaxDim[0];
+				//this.vboxDim[0] = (this.contentDim[0]<this.vboxMaxDim[0])? this.contentDim[0] : this.vboxMaxDim[0];
+				ratio = ( this.contentDim[0] - this.vboxDim[0] ) / this.vboxDim[0];	// special zoom increment when reaching max
+				this.vboxDim[0] = this.contentDim[0];
 				this.vboxDim[1] = this.vboxDim[0]/this.aspect; //this.contentDim[0]/this.aspect;
 			}
-			this.updateViewBoxes();
-			this.updateZoomBars();
+			this.updateDisplay(this.colsArray, this.rowsArray, this.connectionsArray);
+			this.refresh();
+//			this.updateViewBoxes();
+//			this.updateZoomBars();
 		},
 		
 		makeActiveGrid : function(){
@@ -710,16 +731,18 @@ SvgGrid.prototype = {
 			}
 		},
 		
-		updateDisplay : function (colsArray, rowsArray, connectionsArray){
-			
+		updateDisplayData: function (colsArray, rowsArray, connectionsArray)
+		{
+			this.colsArray = colsArray;
+			this.rowsArray = rowsArray;
+			this.connectionsArray = connectionsArray;
+		},
+		
+		refresh : function ()
+		{
 			$('#svgGrid' + this.gridIndex).empty();
 			$('#svgRows' + this.gridIndex).empty();
 			$('#svgCols' + this.gridIndex).empty();
-			
-			this.colsArray = colsArray;
-			this.rowsArray = rowsArray;
-			
-			//this.init();
 			
 			this.cells.length = 0;
 			this.nCellIds = 0;
@@ -727,17 +750,18 @@ SvgGrid.prototype = {
 			this.nCols = 0;
 			
 			// create column labels
-			for (var index=0; index< colsArray.length; index++)
+			for (var index=0; index< this.colsArray.length; index++)
 			{
-				var dev = colsArray[index];
+				var dev = this.colsArray[index];
 				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
 				var label = document.createElementNS(this.svgNS,"text");
 				label.setAttribute("id", "colLabel" + this.nCols  );
 				label.appendChild(document.createTextNode(fullName)); //signals have also a device name, important for matching connections	
 				this.svgColLabels.appendChild(label);
-				var halign = (label.getBBox().height)/4 ;		//for centered alignment. *getBBox() only works if used after adding to DOM
-				var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin)+(this.cellDim[0]/2)-halign);			// I don't know why +4 
+				var halign = (label.getBBox().height);		//for centered alignment. *getBBox() only works if used after adding to DOM
+				var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why +4 
 				var yPos = this.labelMargin;
+				label.setAttribute("font-size", this.fontSize + "px");
 				label.setAttribute("class", "label");
 				label.setAttribute("data-src", fullName);
 				label.setAttribute("data-col", this.nCols);
@@ -751,9 +775,9 @@ SvgGrid.prototype = {
 			}
 			
 			// create row labels
-			for (var index=0; index< rowsArray.length; index++)
+			for (var index=0; index< this.rowsArray.length; index++)
 			{	
-				var dev = rowsArray[index];
+				var dev = this.rowsArray[index];
 				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
 				var label = document.createElementNS(this.svgNS,"text");
 				label.appendChild(document.createTextNode(fullName));	
@@ -762,9 +786,10 @@ SvgGrid.prototype = {
 				label.setAttribute("x", this.labelMargin);
 				label.setAttribute("data-dst", fullName);
 				label.setAttribute("data-row", this.nRows);
+				label.setAttribute("font-size", this.fontSize + "px");
 				label.setAttribute("class","label");
 				var valign = label.getBBox().height/2 + 2;		//BBox only works if used after adding to DOM
-				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin)+(this.cellDim[1]-valign));	// set after added so BBox method
+				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2));	// set after added so BBox method
 
 				if(dev.direction)
 					label.setAttribute("data-direction", '/_dir_'+dev.direction );
@@ -772,10 +797,7 @@ SvgGrid.prototype = {
 				this.nRows++;
 			}
 			
-			
-			
-			// create the cells
-
+			// create the cells  FIX!
 			var newSelected = [];
 			
 			for(var i=0; i<this.nRows; i++){
@@ -804,12 +826,29 @@ SvgGrid.prototype = {
 				}
 			}
 			
-			//FIX
+			//FIX part 2
 			this.selectedCells = newSelected;
 			for (var k=0; k<this.selectedCells.length; k++)
 				this.selectedCells[k].classList.add('cell_selected');
 
-
+			// create the connections
+			for (var i=0; i< this.connectionsArray.length; i++)
+			{
+				var conn = this.connectionsArray[i];
+				var s = conn[0];	// source
+				var d = conn[1];	// destination
+				
+				for (var j=0; j<this.cells.length; j++)
+				{
+					var src = this.cells[j].getAttribute("data-src"); 
+					var dst = this.cells[j].getAttribute("data-dst");
+					if(s == src && d == dst)
+					{
+						this.cells[j].classList.add('cell_connected');
+					}	
+				}
+			}
+			
 			// set style of cells if the mouse is over a cell
 			//style the cell
 			/*
@@ -829,24 +868,19 @@ SvgGrid.prototype = {
 				cell.setAttribute("class", "cell_up cell_selected");
 				*/
 			
+
+			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
 			
 		
 			// update values for the zoom-slider bars
-			
-			
 			// set the zoom level
 			// keeping cells as squares
-			
-			this.vboxDim[0] = this.svgDim[0];
-			this.vboxDim[1] = this.vboxDim[0]/this.aspect;
-			
-
-			
-			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
-		
-
-			
+			if(this.autoZoom)
+			{
+				this.vboxDim[0] = this.svgDim[0];
+				this.vboxDim[1] = this.vboxDim[0]/this.aspect;
+			}
 			
 		
 //		else if(this.contentDim[1] >= this.contentDim[0]) {
@@ -856,30 +890,6 @@ SvgGrid.prototype = {
 
 			this.updateViewBoxes();
 			this.updateZoomBars();
-
-			
-			
-			// create the links
-			
-			for (var i=0; i< connectionsArray.length; i++)
-			{
-				var conn = connectionsArray[i];
-				var s = conn[0];	// source
-				var d = conn[1];	// destination
-				
-				for (var j=0; j<this.cells.length; j++)
-				{
-					var src = this.cells[j].getAttribute("data-src"); 
-					var dst = this.cells[j].getAttribute("data-dst");
-					if(s == src && d == dst)
-					{
-						this.cells[j].classList.add('cell_connected');
-					}	
-				}
-				
-			}
-
-			
 		},
 		
 		/**

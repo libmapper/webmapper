@@ -4,7 +4,6 @@
 
 function GridView(container, model)
 {
-
 	var _self = this;
 	this._container = container;
 	this.model = model;
@@ -294,12 +293,6 @@ GridView.prototype = {
 			
 	},
 	
-	update_display : function ()
-	{
-		this.updateDevicesGrid();
-		this.updateSignalsGrid();		
-	},
-	
 	get_selected_connections: function(list){
 		
 		var vals =[];
@@ -317,25 +310,17 @@ GridView.prototype = {
 		return vals;
 	},
 	
+	update_display : function ()
+	{
+		this.updateDevicesGrid();
+		this.updateSignalsGrid();		
+	},
+	
 	updateDevicesGrid : function(){
 
 		//divide devices into sources and destinations
 		var srcDevs = new Array();
 		var dstDevs = new Array();
-		var links = new Array();
-		
-		/*
-		for (var i=0; i< this.model.devices.length; i++)
-		{
-			var dev = this.model.devices[i];
-			if(dev.n_outputs>0)		//create new COL Label
-				srcDevs.push(dev);
-			if(dev.n_inputs>0)
-				dstDevs.push(dev);
-		}
-		*/
-		
-		// add devices
 		
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
@@ -347,11 +332,11 @@ GridView.prototype = {
 				srcDevs.push(dev);
 			if (dev.n_inputs)
 				dstDevs.push(dev);
-		        
 		}
 		
 		// add links
 		
+		var links = new Array();
 		var l = this.model.links.keys();
 		for (var i=0; i<l.length; i++)			
 		{
@@ -360,8 +345,8 @@ GridView.prototype = {
 			links.push([src,dst]);
 		}
 		
-		this.devGrid.updateDisplay(srcDevs, dstDevs, links);
-		
+		this.devGrid.updateDisplayData(srcDevs, dstDevs, links);
+		this.devGrid.refresh();
 		
 	},
 	
@@ -400,7 +385,8 @@ GridView.prototype = {
 			connections.push([src,dst]);
 		}
 	    
-		this.sigGrid.updateDisplay(srcSigs, dstSigs, connections);
+		this.sigGrid.updateDisplayData(srcSigs, dstSigs, connections);
+		this.sigGrid.refresh();
 	},
 	
 	on_resize : function ()
