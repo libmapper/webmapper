@@ -38,6 +38,7 @@ function listView()
 
     var updateCallable = true;
     var updateTimeout;
+    var timesUpdateCalled = 0;
     this.update_display = function() {
 
         if (updateCallable == false) {
@@ -46,6 +47,8 @@ function listView()
 
         updateCallable = false;
         updateTimeout = setTimeout(function() {
+            timesUpdateCalled++;
+            //console.log("Update: "+timesUpdateCalled);
             
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
@@ -350,12 +353,15 @@ function update_links()
 //The first call is forgotten.
 var arrowTimeout;
 var arrowCallable = true;
+var timesArrowsCalled = 0;
 
 function update_arrows()
 {
     if (arrowCallable == false) {
         clearTimeout(arrowTimeout);
     }
+    timesArrowsCalled++;
+    //console.log("Arrows: "+timesArrowsCalled);
 
     arrowCallable = false;
     arrowTimeout = setTimeout( function() {
@@ -365,7 +371,7 @@ function update_arrows()
         else
             update_connections();
         arrowCallable = true;
-    }, 34);
+    }, 0);
 }
 
 function update_connections()
