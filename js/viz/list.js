@@ -39,6 +39,11 @@ var svgns = 'http://www.w3.org/2000/svg';
         this.update_display();
     }
 
+    this.remove = function() {
+        // Remove view specific handlers
+        $('*').off('.list');
+    }
+
     var updateCallable = true;
     var updateTimeout;
     var timesUpdateCalled = 0;
@@ -983,7 +988,7 @@ function fade_incompatible_signals(row, targetTableBody)
 
 this.add_handlers = function()
 {
-    $('body').on('click', function() {
+    $('body').on('click.list', function() {
         deselect_all();
     });
 
@@ -1080,7 +1085,7 @@ this.add_handlers = function()
     });
 
     $('.status.left').on('click', function(e) {
-
+        console.log('a');
     });
 
     drawing_handlers();
