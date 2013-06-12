@@ -408,7 +408,13 @@ GridView.prototype = {
 		document.getElementById("devGrid").style.height = h + "px";
 		document.getElementById("sigGrid").style.width = w + "px";
 		document.getElementById("sigGrid").style.height = h + "px";
+	},
+	
+	remove : function ()
+	{
+		
 	}
+	
 };
 
 function arrPushIfUnique(item, arr){

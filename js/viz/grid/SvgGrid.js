@@ -485,6 +485,7 @@ SvgGrid.prototype = {
 			{
 				
 				var w = ui.values[1]-ui.values[0];	// new slider width
+				
 				if(w < _self.vboxMinDim[ind] || w > _self.contentDim[ind])	// do nothing if range is less than minimum or more than content
 					return false;
 				else
@@ -498,6 +499,8 @@ SvgGrid.prototype = {
 					}
 					else
 					{
+						this.autoZoom = false;
+						
 						//font size stuff
 						var ratio = (_self.vboxDim[ind] - w) / _self.vboxDim[ind];
 						this.fontSize = this.fontSize - (this.fontSize*ratio);
