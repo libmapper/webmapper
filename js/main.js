@@ -36,7 +36,7 @@ function switch_mode(newMode)
         	view.update_display();
         	break;
         default:
-            console.log(newMode);
+            //console.log(newMode);
     }
 }
 
@@ -150,6 +150,10 @@ function update_connection_properties()
         clear_props();
         $('.signalControl').removeClass('disabled');
         $(".mode"+connectionModes[c.mode]).addClass("modesel");
+        if(connectionModes[c.mode] == "Expr") 
+            $('.expression').removeClass('disabled');
+        else
+            $('.expression').addClass('disabled');
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }

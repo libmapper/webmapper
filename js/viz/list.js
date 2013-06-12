@@ -40,6 +40,7 @@ var svgns = 'http://www.w3.org/2000/svg';
 
     var updateCallable = true;
     var updateTimeout;
+    var timesUpdateCalled = 0;
     this.update_display = function() {
 
         if (updateCallable == false) {
@@ -48,6 +49,8 @@ var svgns = 'http://www.w3.org/2000/svg';
 
         updateCallable = false;
         updateTimeout = setTimeout(function() {
+            timesUpdateCalled++;
+            //console.log("Update: "+timesUpdateCalled);
             
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
@@ -352,12 +355,15 @@ function update_links()
 //The first call is forgotten.
 var arrowTimeout;
 var arrowCallable = true;
+var timesArrowsCalled = 0;
 
 function update_arrows()
 {
     if (arrowCallable == false) {
         clearTimeout(arrowTimeout);
     }
+    timesArrowsCalled++;
+    //console.log("Arrows: "+timesArrowsCalled);
 
     arrowCallable = false;
     arrowTimeout = setTimeout( function() {
@@ -367,7 +373,7 @@ function update_arrows()
         else
             update_connections();
         arrowCallable = true;
-    }, 34);
+    }, 0);
 }
 
 function update_connections()
