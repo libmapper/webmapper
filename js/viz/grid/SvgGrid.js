@@ -485,6 +485,7 @@ SvgGrid.prototype = {
 			{
 				
 				var w = ui.values[1]-ui.values[0];	// new slider width
+				
 				if(w < _self.vboxMinDim[ind] || w > _self.contentDim[ind])	// do nothing if range is less than minimum or more than content
 					return false;
 				else
@@ -498,6 +499,8 @@ SvgGrid.prototype = {
 					}
 					else
 					{
+						this.autoZoom = false;
+						
 						//font size stuff
 						var ratio = (_self.vboxDim[ind] - w) / _self.vboxDim[ind];
 						this.fontSize = this.fontSize - (this.fontSize*ratio);
@@ -772,24 +775,31 @@ SvgGrid.prototype = {
 			for (var index=0; index< this.colsArray.length; index++)
 			{
 				var dev = this.colsArray[index];
-				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
 				var label = document.createElementNS(this.svgNS,"text");
+				
+				var name = dev.name;
+				
+				// extra data for signals
+				if(dev.device_name)
+				{
+					name = dev.device_name + name; 	// signals also have a device name, important for making connections
+					label.setAttribute("data-device_name", dev.device_name);
+					label.setAttribute("data-direction", dev.direction);					
+					label.setAttribute("data-length", dev.length);
+				}
+				
 				label.setAttribute("id", "colLabel" + this.nCols  );
-				label.appendChild(document.createTextNode(fullName)); //signals have also a device name, important for matching connections	
-				this.svgColLabels.appendChild(label);
-				var halign = (label.getBBox().height);		//for centered alignment. *getBBox() only works if used after adding to DOM
-				var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why +4 
-				var yPos = this.labelMargin;
+				label.setAttribute("data-src", name);
+				label.setAttribute("data-col", this.nCols);
 				label.setAttribute("font-size", this.fontSize + "px");
 				label.setAttribute("class", "label");
-				label.setAttribute("data-src", fullName);
-				label.setAttribute("data-col", this.nCols);
+				
+				label.appendChild(document.createTextNode(name)); 	
+				this.svgColLabels.appendChild(label);
+
+				var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why -1 .... getBBox() doesn't really work well 
+				var yPos = this.labelMargin;
 				label.setAttribute("transform","translate(" + xPos + "," + yPos + ")rotate(90)");
-				
-				if(dev.direction)
-					label.setAttribute("data-direction", '/_dir_'+dev.direction );
-					
-				
 				this.nCols++;
 			}
 			
@@ -797,22 +807,31 @@ SvgGrid.prototype = {
 			for (var index=0; index< this.rowsArray.length; index++)
 			{	
 				var dev = this.rowsArray[index];
-				var fullName = dev.device_name ? dev.device_name+dev.name : dev.name;
 				var label = document.createElementNS(this.svgNS,"text");
-				label.appendChild(document.createTextNode(fullName));	
-				this.svgRowLabels.appendChild(label);
+				
+				var name = dev.name;
+				
+				// extra data for signals
+				if(dev.device_name)
+				{
+					name = dev.device_name + name; 	// signals also have a device name, important for making connections
+					label.setAttribute("data-device_name", dev.device_name);
+					label.setAttribute("data-direction", dev.direction);					
+					label.setAttribute("data-length", dev.length);
+				}
+				
 				label.setAttribute("id", "rowLabel" + this.nRows);
-				label.setAttribute("x", this.labelMargin);
-				label.setAttribute("data-dst", fullName);
+				label.setAttribute("data-dst", name);
 				label.setAttribute("data-row", this.nRows);
 				label.setAttribute("font-size", this.fontSize + "px");
 				label.setAttribute("class","label");
-				var valign = label.getBBox().height/2 + 2;		//BBox only works if used after adding to DOM
-				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// set after added so BBox method
-
-				if(dev.direction)
-					label.setAttribute("data-direction", '/_dir_'+dev.direction );
 				
+				label.appendChild(document.createTextNode(name));	
+				this.svgRowLabels.appendChild(label);
+				
+				label.setAttribute("x", this.labelMargin);
+				label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
+
 				this.nRows++;
 			}
 			
@@ -827,6 +846,12 @@ SvgGrid.prototype = {
 					var src = colLabel.getAttribute("data-src");
 					var dst = rowLabel.getAttribute("data-dst");
 					var cell = this.createCell(i, j, src, dst);
+					
+					
+					if(rowLabel.getAttribute("data-device_name"))
+						cell.setAttribute("data-dst_device_name", rowLabel.getAttribute("data-device_name"));
+					if(colLabel.getAttribute("data-device_name"))
+						cell.setAttribute("data-src_device_name", colLabel.getAttribute("data-device_name"));
 					
 					// set the selected cells
 					// FIX: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
