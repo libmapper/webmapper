@@ -16,10 +16,11 @@ var svgns = 'http://www.w3.org/2000/svg';
     var devActions = null;
     var sigActions = null;
     var arrows = [];
+    // The most recently selected rows, for shift-selecting
+    var lastSelectedTr = {left: null, right: null};
 
     var sourceDeviceHeaders = ["name", "outputs", "IP", "port"];
     var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
-    //TODO include min/max
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     //"use strict";
@@ -163,7 +164,6 @@ function listTable(id)
     }
 
     // For when something changes on the network
-    // big TODO (make the tableupdater object obsolete)
     this.update = function(tableData, headerStrings)
     {
         $(this.tbody).empty();
@@ -586,6 +586,7 @@ function select_tr(tr)
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
+    //Is the row on the left or right?
     var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
     if (i==null)
         return;
@@ -606,8 +607,34 @@ function select_tr(tr)
         l.add(name, tr.parentNode);
     }
 
+    if(i == 0) // Left table
+        lastSelectedTr.left = tr;
+    else if (i == 1)
+        lastSelectedTr.right = tr;
+
     selectLists[selectedTab][i] = l;
     update_connection_properties();
+}
+
+//For selecting multiple rows with the 'shift' key
+function full_select_tr(tr)
+{
+    var targetTable = $(tr).parents('.tableDiv').attr('id') == 'leftTable' ? '#leftTable' : '#rightTable';
+    var trStart = targetTable == '#leftTable' ? lastSelectedTr.left : lastSelectedTr.right;
+    if( !trStart ) {
+        return;
+    }
+
+    var index1 = $(tr).index();
+    var index2 = $(trStart).index();
+
+    var startIndex = Math.min(index1, index2);
+    var endIndex = Math.max(index1, index2);
+
+    $(''+targetTable+' tbody tr').each( function(i, e) {
+        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') )
+            select_tr(e);
+    });
 }
 
 function deselect_all()
@@ -620,6 +647,8 @@ function deselect_all()
             selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
             $(this).removeClass('trsel');
         });
+    lastSelectedTr.left = null;
+    lastSelectedTr.right = null;
     update_arrows();
     update_connection_properties();
 }
@@ -959,7 +988,12 @@ this.add_handlers = function()
     });
 
     $('.displayTable tbody').on({
-        mousedown: function(e) { select_tr(this); update_arrows(); },
+        mousedown: function(e) { 
+            if(e.shiftKey == true)    // For selecting multiple rows at once
+                full_select_tr(this);
+            select_tr(this);
+            update_arrows(); 
+        },
         click: function(e) { e.stopPropagation(); }
     }, 'tr');
 
