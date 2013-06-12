@@ -230,7 +230,13 @@ GridView.prototype = {
 		var src = cell.getAttribute("data-src");
 		var dst = cell.getAttribute("data-dst");
 		if(this.model.isConnected(src, dst) == false)
+		{
+			var srcDev = cell.getAttribute("data-src_device_name");
+			var dstDev = cell.getAttribute("data-dst_device_name");
+			if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
+					$(this._container).trigger("link", [srcDev, dstDev]);	// trigger link event
 			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
+		}
 	},
 	disconnect : function (e, cell)
 	{
