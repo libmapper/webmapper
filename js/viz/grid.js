@@ -410,7 +410,7 @@ GridView.prototype = {
 		document.getElementById("sigGrid").style.height = h + "px";
 	},
 	
-	remove : function ()
+	cleanup : function ()
 	{
 		
 	}
