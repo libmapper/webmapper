@@ -111,6 +111,29 @@ var svgns = 'http://www.w3.org/2000/svg';
         return vals;
     }
 
+    this.get_focused_devices = function()
+    {
+        if (selectedTab == all_devices) {
+            return null;
+        }
+
+        var focusedDevices = new Assoc();
+        var sourceDevice = model.devices.get(selectedTab);
+
+        focusedDevices.add(sourceDevice.name, sourceDevice);
+
+        var links = model.links.keys();
+        for (var i in links) {
+            var devs = links[i].split('>');
+            if (devs[0] == sourceDevice.name) {
+                var destD = model.devices.get(devs[1]);
+                focusedDevices.add(destD.name, destD);
+            }
+        }
+
+        return focusedDevices;
+    }
+
     this.on_resize = function() 
     {
         update_arrows();
