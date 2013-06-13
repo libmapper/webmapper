@@ -77,29 +77,6 @@ SvgGrid.prototype = {
 		{ 
 			$(this._container).empty();
 			
-			// set the dimension variables
-			/*
-			 
-
-			this.svgDim[0] = this.contentDim[0];
-			this.svgDim[1] = this.contentDim[1];
-
-			//check available real estate
-			this.svgMaxDim[0] = $(window).width() - this.rowLabelsW - 50;
-			this.svgMaxDim[1] = $(window).height() - this.colLabelsH - 50 - 100; //100 should be dynamic for control bar
-
-			// ensure less than max dimensions of window
-			this.svgDim[0] = Math.min(this.svgDim[0], this.svgMaxDim[0]);
-			this.svgDim[1] = Math.min(this.svgDim[1], this.svgMaxDim[1]);
-
-			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
-			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
-			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
-			
-			$(this._container).width(this.svgDim[0] + this.rowLabelsW + 30);	// set so row labels stick to grid
-			
-			 */
-
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 			
@@ -125,7 +102,16 @@ SvgGrid.prototype = {
 				_self.zoomOut();
 			});
 			div.appendChild(btn);
-				
+
+			//zoom to fit button
+			btn = document.createElement("button");
+			btn.innerHTML = "Zoom to fit";
+			btn.addEventListener("click", function(evt){
+				_self.autoZoom = true;
+				_self.refresh();
+			});
+			div.appendChild(btn);
+			
 			//connection buttons
 			btn = document.createElement("button");
 			btn.innerHTML = "Connect";
@@ -268,7 +254,7 @@ SvgGrid.prototype = {
 			cell.setAttribute("ry", this.cellRoundedCorner);
 			cell.setAttribute("width",this.cellDim[0]);
 			cell.setAttribute("height",this.cellDim[1]);
-			cell.setAttribute("class","cell_up");
+			cell.setAttribute("defaultClass","cell_up");
 
 
 			var _self = this;	// to pass to the instance of LibMapperMatrixView to event handlers
@@ -315,8 +301,9 @@ SvgGrid.prototype = {
 						className = (className.indexOf("cell_selected") == -1)? "" : "cell_selected "; 
 						if(evt.type == "mouseover")
 							curCell.setAttribute("class", className + "row_over");
-						else if(evt.type == "mouseout")
-							curCell.setAttribute("class",className + "cell_up");
+						else if(evt.type == "mouseout"){
+							curCell.setAttribute("class",className + curCell.getAttribute("defaultClass"));
+						}
 					}
 				}
 			}
@@ -770,6 +757,32 @@ SvgGrid.prototype = {
 			this.nCellIds = 0;
 			this.nRows = 0;
 			this.nCols = 0;
+
+			this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+
+			// when autozoom is on, strech to fit into canvas
+			// must be done first to set the font size
+			if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
+			{
+				var originalDim = this.vboxDim[0];	//keep original dimension for calculating zoom of font
+				this.vbox = [0, 0];		// place viewbox at origin 
+				
+				// attempt to fit width
+				this.vboxDim[0] = this.contentDim[0];
+				this.vboxDim[1] = this.contentDim[0] / this.aspect;
+				// if width causes height to be clipped, choose height instead
+				if(this.vboxDim[1] < this.contentDim[1])
+				{
+					this.vboxDim[1] = this.contentDim[1];
+					this.vboxDim[0] = this.contentDim[1] * this.aspect;
+				}
+				
+				// font size stuff
+				var ratio = (originalDim - this.vboxDim[0]) / originalDim;
+				this.fontSize = this.fontSize - (this.fontSize*ratio);
+			}
+			
 			
 			// create column labels
 			for (var index=0; index< this.colsArray.length; index++)
@@ -835,9 +848,10 @@ SvgGrid.prototype = {
 				this.nRows++;
 			}
 			
-			// create the cells  FIX!
+			//FIX part 1/3
 			var newSelected = [];
 			
+			// create the cells  
 			for(var i=0; i<this.nRows; i++){
 				for(var j=0; j<this.nCols; j++)
 				{
@@ -847,14 +861,21 @@ SvgGrid.prototype = {
 					var dst = rowLabel.getAttribute("data-dst");
 					var cell = this.createCell(i, j, src, dst);
 					
-					
+					// extra data for signals grid
 					if(rowLabel.getAttribute("data-device_name"))
 						cell.setAttribute("data-dst_device_name", rowLabel.getAttribute("data-device_name"));
 					if(colLabel.getAttribute("data-device_name"))
 						cell.setAttribute("data-src_device_name", colLabel.getAttribute("data-device_name"));
+					// disable cells with different signal lengths
+					if(rowLabel.getAttribute("data-length") && colLabel.getAttribute("data-length") && rowLabel.getAttribute("data-length") != colLabel.getAttribute("data-length"))
+						cell.setAttribute("defaultClass","cell_disabled");
+					
+					// set the default style class 
+					// used for example, when reverting from mouseover style
+					cell.setAttribute("class", cell.getAttribute("defaultClass"));
 					
 					// set the selected cells
-					// FIX: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
+					// FIX part 2/3: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
 					// but it seems that all the attributes are still stored in the this.selectedCells
 					// so I check if the created cell has the same src/dst and the reset the selected cell
 					// should be fixed by storing srn/dst identifiers instead of reference to the actual cell
@@ -870,7 +891,7 @@ SvgGrid.prototype = {
 				}
 			}
 			
-			//FIX part 2
+			//FIX part 3/3
 			this.selectedCells = newSelected;
 			for (var k=0; k<this.selectedCells.length; k++)
 				this.selectedCells[k].classList.add('cell_selected');
@@ -913,18 +934,6 @@ SvgGrid.prototype = {
 				*/
 			
 
-			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
-			
-		
-			// update values for the zoom-slider bars
-			// set the zoom level
-			// keeping cells as squares
-			if(this.autoZoom)
-			{
-				this.vboxDim[0] = this.svgDim[0];
-				this.vboxDim[1] = this.vboxDim[0]/this.aspect;
-			}
 			
 		
 //		else if(this.contentDim[1] >= this.contentDim[0]) {

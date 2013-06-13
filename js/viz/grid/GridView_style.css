@@ -38,13 +38,17 @@ a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -
 a:hover { color: #036; }
 
 .cell_up{
-	fill: #DDDDDD;
-	
+	fill: #dddddd;	
+}
+
+.cell_disabled{
+	/*fill: url(pattern.png) top left repeat;*/
+	fill: #dddddd;
+	fill-opacity: 0.3;
 }
 
 .cell_over{
 	fill: #0076b0;
-	
 }
 .row_over{
 	fill: #AAAAAA;
@@ -55,7 +59,7 @@ a:hover { color: #036; }
 	stroke: #000000;
 }
 .cell_connected{
-	fill: #5cb267;
+	fill: #04C4D9;
 	animation-name: connected;
 	animation-duration: 300ms;
 	animation-timing-function: linear;
@@ -73,13 +77,13 @@ a:hover { color: #036; }
 @keyframes connected
 {
 	0%  {fill:#EEEEEE;}
-	100%  {fill:#5cb267;}
+	100%  {fill:#04C4D9;}
 }
 
 @-webkit-keyframes connected /* Safari and Chrome */
 {
 	0%  {fill:#EEEEEE;}
-	100%  {fill:#5cb267;}
+	100%  {fill:#04C4D9;}
 }
 
 .label{

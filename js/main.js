@@ -24,9 +24,9 @@ window.onload = main;
 
 function switch_mode(newMode)
 {
+	if(view)
+		view.cleanup();
     $('#container').empty();
-    if(view)
-        view.cleanup();
     switch(newMode)
     {
         case 'list':
