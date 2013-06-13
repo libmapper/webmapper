@@ -43,12 +43,12 @@ a:hover { color: #036; }
 
 .cell_disabled{
 	/*fill: url(pattern.png) top left repeat;*/
-	fill: #eedddd
+	fill: #dddddd;
+	fill-opacity: 0.3;
 }
 
 .cell_over{
 	fill: #0076b0;
-	
 }
 .row_over{
 	fill: #AAAAAA;

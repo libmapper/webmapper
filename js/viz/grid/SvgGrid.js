@@ -77,29 +77,6 @@ SvgGrid.prototype = {
 		{ 
 			$(this._container).empty();
 			
-			// set the dimension variables
-			/*
-			 
-
-			this.svgDim[0] = this.contentDim[0];
-			this.svgDim[1] = this.contentDim[1];
-
-			//check available real estate
-			this.svgMaxDim[0] = $(window).width() - this.rowLabelsW - 50;
-			this.svgMaxDim[1] = $(window).height() - this.colLabelsH - 50 - 100; //100 should be dynamic for control bar
-
-			// ensure less than max dimensions of window
-			this.svgDim[0] = Math.min(this.svgDim[0], this.svgMaxDim[0]);
-			this.svgDim[1] = Math.min(this.svgDim[1], this.svgMaxDim[1]);
-
-			this.aspect = this.svgDim[0]/this.svgDim[1];			// aspect ratio of SVG viewbox (for zooming)
-			this.aspectCol = this.svgDim[0]/this.colLabelsH;		// aspect ratio of col viewbox (for zooming)
-			this.aspectRow = this.rowLabelsW/this.svgDim[1];		// aspect ratio of row viewbox (for zooming)
-			
-			$(this._container).width(this.svgDim[0] + this.rowLabelsW + 30);	// set so row labels stick to grid
-			
-			 */
-
 			var div;
 			var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 			
@@ -125,7 +102,16 @@ SvgGrid.prototype = {
 				_self.zoomOut();
 			});
 			div.appendChild(btn);
-				
+
+			//zoom to fit button
+			btn = document.createElement("button");
+			btn.innerHTML = "Zoom to fit";
+			btn.addEventListener("click", function(evt){
+				_self.autoZoom = true;
+				_self.refresh();
+			});
+			div.appendChild(btn);
+			
 			//connection buttons
 			btn = document.createElement("button");
 			btn.innerHTML = "Connect";
@@ -771,6 +757,32 @@ SvgGrid.prototype = {
 			this.nCellIds = 0;
 			this.nRows = 0;
 			this.nCols = 0;
+
+			this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
+			this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+
+			// when autozoom is on, strech to fit into canvas
+			// must be done first to set the font size
+			if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
+			{
+				var originalDim = this.vboxDim[0];	//keep original dimension for calculating zoom of font
+				this.vbox = [0, 0];		// place viewbox at origin 
+				
+				// attempt to fit width
+				this.vboxDim[0] = this.contentDim[0];
+				this.vboxDim[1] = this.contentDim[0] / this.aspect;
+				// if width causes height to be clipped, choose height instead
+				if(this.vboxDim[1] < this.contentDim[1])
+				{
+					this.vboxDim[1] = this.contentDim[1];
+					this.vboxDim[0] = this.contentDim[1] * this.aspect;
+				}
+				
+				// font size stuff
+				var ratio = (originalDim - this.vboxDim[0]) / originalDim;
+				this.fontSize = this.fontSize - (this.fontSize*ratio);
+			}
+			
 			
 			// create column labels
 			for (var index=0; index< this.colsArray.length; index++)
@@ -922,18 +934,6 @@ SvgGrid.prototype = {
 				*/
 			
 
-			this.contentDim[0] = this.nCols*(this.cellDim[0]+this.cellMargin);
-			this.contentDim[1] = this.nRows*(this.cellDim[1]+this.cellMargin);
-			
-		
-			// update values for the zoom-slider bars
-			// set the zoom level
-			// keeping cells as squares
-			if(this.autoZoom)
-			{
-				this.vboxDim[0] = this.svgDim[0];
-				this.vboxDim[1] = this.vboxDim[0]/this.aspect;
-			}
 			
 		
 //		else if(this.contentDim[1] >= this.contentDim[0]) {
