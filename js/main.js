@@ -24,9 +24,9 @@ window.onload = main;
 
 function switch_mode(newMode)
 {
+	if(view)
+		view.cleanup();
     $('#container').empty();
-    if(view)
-        view.cleanup();
     switch(newMode)
     {
         case 'list':
@@ -421,7 +421,7 @@ function main()
     // cursor in the browser.
     setTimeout(
         function(){
-        	switch_mode('grid');
+        	switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
