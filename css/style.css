@@ -383,7 +383,6 @@ body {
   background-color: lightgrey;
   float: left;
   position: relative;
-  min-width: 700px;
 }
 
 /* Quick fix to get #container out of the way for loading form

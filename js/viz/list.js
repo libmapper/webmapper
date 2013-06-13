@@ -36,6 +36,10 @@ var svgns = 'http://www.w3.org/2000/svg';
         add_status_bar();
         this.add_handlers();
         select_tab(tabDevices);
+        $('#container').css({
+            'min-width': '700px',
+            'min-height': '150px'
+        });
         this.update_display();
     }
 
