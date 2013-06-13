@@ -47,6 +47,9 @@ GridView.prototype = {
 		
 		$(this._container).empty();
 		
+		$(this._container).css("min-width", "880px");
+		$(this._container).css("min-height", "580px");
+		
 		var wrapper = document.createElement("div");
 		wrapper.setAttribute("id", "gridWrapper");
 		this._container.appendChild(wrapper);

@@ -268,7 +268,7 @@ SvgGrid.prototype = {
 			cell.setAttribute("ry", this.cellRoundedCorner);
 			cell.setAttribute("width",this.cellDim[0]);
 			cell.setAttribute("height",this.cellDim[1]);
-			cell.setAttribute("class","cell_up");
+			cell.setAttribute("defaultClass","cell_up");
 
 
 			var _self = this;	// to pass to the instance of LibMapperMatrixView to event handlers
@@ -315,8 +315,9 @@ SvgGrid.prototype = {
 						className = (className.indexOf("cell_selected") == -1)? "" : "cell_selected "; 
 						if(evt.type == "mouseover")
 							curCell.setAttribute("class", className + "row_over");
-						else if(evt.type == "mouseout")
-							curCell.setAttribute("class",className + "cell_up");
+						else if(evt.type == "mouseout"){
+							curCell.setAttribute("class",className + curCell.getAttribute("defaultClass"));
+						}
 					}
 				}
 			}
@@ -835,9 +836,10 @@ SvgGrid.prototype = {
 				this.nRows++;
 			}
 			
-			// create the cells  FIX!
+			//FIX part 1/3
 			var newSelected = [];
 			
+			// create the cells  
 			for(var i=0; i<this.nRows; i++){
 				for(var j=0; j<this.nCols; j++)
 				{
@@ -847,14 +849,21 @@ SvgGrid.prototype = {
 					var dst = rowLabel.getAttribute("data-dst");
 					var cell = this.createCell(i, j, src, dst);
 					
-					
+					// extra data for signals grid
 					if(rowLabel.getAttribute("data-device_name"))
 						cell.setAttribute("data-dst_device_name", rowLabel.getAttribute("data-device_name"));
 					if(colLabel.getAttribute("data-device_name"))
 						cell.setAttribute("data-src_device_name", colLabel.getAttribute("data-device_name"));
+					// disable cells with different signal lengths
+					if(rowLabel.getAttribute("data-length") && colLabel.getAttribute("data-length") && rowLabel.getAttribute("data-length") != colLabel.getAttribute("data-length"))
+						cell.setAttribute("defaultClass","cell_disabled");
+					
+					// set the default style class 
+					// used for example, when reverting from mouseover style
+					cell.setAttribute("class", cell.getAttribute("defaultClass"));
 					
 					// set the selected cells
-					// FIX: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
+					// FIX part 2/3: This is dangerous. The selectedCells arraw points to a DOM element that were removed with empty 
 					// but it seems that all the attributes are still stored in the this.selectedCells
 					// so I check if the created cell has the same src/dst and the reset the selected cell
 					// should be fixed by storing srn/dst identifiers instead of reference to the actual cell
@@ -870,7 +879,7 @@ SvgGrid.prototype = {
 				}
 			}
 			
-			//FIX part 2
+			//FIX part 3/3
 			this.selectedCells = newSelected;
 			for (var k=0; k<this.selectedCells.length; k++)
 				this.selectedCells[k].classList.add('cell_selected');
