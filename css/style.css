@@ -306,6 +306,10 @@ body {
 
   .status.middle {
     width: 20%;
+    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 /****************/
 

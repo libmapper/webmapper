@@ -14,10 +14,11 @@ function listView()
     var devActions = null;
     var sigActions = null;
     var arrows = [];
+    // The most recently selected rows, for shift-selecting
+    var lastSelectedTr = {left: null, right: null};
 
     var sourceDeviceHeaders = ["name", "outputs", "IP", "port"];
     var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
-    //TODO include min/max
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     //"use strict";
@@ -38,6 +39,7 @@ function listView()
 
     var updateCallable = true;
     var updateTimeout;
+    var timesUpdateCalled = 0;
     this.update_display = function() {
 
         if (updateCallable == false) {
@@ -46,6 +48,8 @@ function listView()
 
         updateCallable = false;
         updateTimeout = setTimeout(function() {
+            timesUpdateCalled++;
+            //console.log("Update: "+timesUpdateCalled);
             
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
@@ -158,7 +162,6 @@ function listTable(id)
     }
 
     // For when something changes on the network
-    // big TODO (make the tableupdater object obsolete)
     this.update = function(tableData, headerStrings)
     {
         $(this.tbody).empty();
@@ -350,12 +353,15 @@ function update_links()
 //The first call is forgotten.
 var arrowTimeout;
 var arrowCallable = true;
+var timesArrowsCalled = 0;
 
 function update_arrows()
 {
     if (arrowCallable == false) {
         clearTimeout(arrowTimeout);
     }
+    timesArrowsCalled++;
+    //console.log("Arrows: "+timesArrowsCalled);
 
     arrowCallable = false;
     arrowTimeout = setTimeout( function() {
@@ -365,7 +371,7 @@ function update_arrows()
         else
             update_connections();
         arrowCallable = true;
-    }, 34);
+    }, 0);
 }
 
 function update_connections()
@@ -578,6 +584,7 @@ function select_tr(tr)
     var t = $(tr);
     var name = tr.firstChild.innerHTML;
 
+    //Is the row on the left or right?
     var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
     if (i==null)
         return;
@@ -598,13 +605,34 @@ function select_tr(tr)
         l.add(name, tr.parentNode);
     }
 
+    if(i == 0) // Left table
+        lastSelectedTr.left = tr;
+    else if (i == 1)
+        lastSelectedTr.right = tr;
+
     selectLists[selectedTab][i] = l;
     update_connection_properties();
 }
 
-function select_arrow(arrow)
+//For selecting multiple rows with the 'shift' key
+function full_select_tr(tr)
 {
+    var targetTable = $(tr).parents('.tableDiv').attr('id') == 'leftTable' ? '#leftTable' : '#rightTable';
+    var trStart = targetTable == '#leftTable' ? lastSelectedTr.left : lastSelectedTr.right;
+    if( !trStart ) {
+        return;
+    }
 
+    var index1 = $(tr).index();
+    var index2 = $(trStart).index();
+
+    var startIndex = Math.min(index1, index2);
+    var endIndex = Math.max(index1, index2);
+
+    $(''+targetTable+' tbody tr').each( function(i, e) {
+        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') )
+            select_tr(e);
+    });
 }
 
 function deselect_all()
@@ -617,6 +645,8 @@ function deselect_all()
             selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
             $(this).removeClass('trsel');
         });
+    lastSelectedTr.left = null;
+    lastSelectedTr.right = null;
     update_arrows();
     update_connection_properties();
 }
@@ -783,21 +813,19 @@ function drawing_curve(sourceRow)
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
-    // Do the same thing for the row height
-    var heightInPx = $(sourceRow).css('height');
-    this.rowHeight = +heightInPx.substring(0, heightInPx.length - 2);
-
-    //
+    
     this.clamptorow = function( row ) {
-        var y = ( $(row).index() + 1.5 ) * this.rowHeight;
+        var svgPos = fullOffset($('.svgDiv')[0]);
+        var rowPos = fullOffset(row);
+        var y = rowPos.top + rowPos.height/2 - svgPos.top;
         return y;
     }
 
     this.findrow = function ( y ) {
-        var index = Math.round( y/this.rowHeight );
-        if( index > this.targetTable.nVisibleRows)
-            index = this.targetTable.nVisibleRows;
-        var row = $(this.targetTable.tbody).find('tr')[index - 1];
+        var svgTop = $('.svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
+        var ttleft = $(this.targetTable.tbody).offset().left; // Left edge of the target table
+        var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
+        var row = $(td).parents('tr')[0]; 
         var incompatible = $(row).hasClass('incompatible');
         if( !incompatible )
             return row;
@@ -846,11 +874,12 @@ function drawing_curve(sourceRow)
         }
         // We're over a table row of the target table
         if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
+            var rowHeightPx = $(target).css('height');
+            var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             end[1] = this.clamptorow(target);
-            c1 = end[1] + moveEvent.offsetY - this.rowHeight/2;
-
+            c1 = end[1] + moveEvent.offsetY - rowHeight/2;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
@@ -957,7 +986,12 @@ this.add_handlers = function()
     });
 
     $('.displayTable tbody').on({
-        mousedown: function(e) { select_tr(this); update_arrows(); },
+        mousedown: function(e) { 
+            if(e.shiftKey == true)    // For selecting multiple rows at once
+                full_select_tr(this);
+            select_tr(this);
+            update_arrows(); 
+        },
         click: function(e) { e.stopPropagation(); }
     }, 'tr');
 
