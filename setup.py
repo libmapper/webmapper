@@ -1,3 +1,5 @@
+from distutils.core import setup
+
 
 import sys
 if 'py2exe' in sys.argv: import py2exe

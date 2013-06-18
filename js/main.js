@@ -49,6 +49,7 @@ function switch_mode(newMode)
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
         	viewIndex = 1;
+            $('#saveLoadDiv').removeClass('disabled');
         	view.update_display();
         	break;
         default:
