@@ -63,22 +63,7 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "ADD";
 		btn.addEventListener("click", function(evt){
-			if(_self.devGrid.selectedCells.length > 0)
-			{
-				for(var i=0; i<_self.devGrid.selectedCells.length; i++)
-				{
-					var cell = _self.devGrid.selectedCells[i];
-					cellSrc = cell.getAttribute("data-src");
-					cellDst = cell.getAttribute("data-dst");
-					if(model.isLinked(cellSrc, cellDst)){
-						arrPushIfUnique(cellSrc, _self.includedSrcs);
-						arrPushIfUnique(cellDst, _self.includedDsts);
-					}
-					//FIX!
-					$(_self._container).trigger("tab", cellSrc);
-				}	
-				_self.update_display();
-			}
+			_self.includeSelectedDevices(_self);
 		});
 		div.appendChild(btn);
 			
@@ -86,27 +71,7 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "REM";
 		btn.addEventListener("click", function(evt){
-			if(_self.devGrid.selectedCells.length > 0)
-			{
-				for(var i=0; i<_self.devGrid.selectedCells.length; i++)
-				{
-					var cell = _self.devGrid.selectedCells[i];
-					cellSrc = cell.getAttribute("data-src");
-					cellDst = cell.getAttribute("data-dst");
-					
-					var ind;
-					ind = _self.includedSrcs.indexOf(cellSrc);
-					if(ind>=0) 
-						_self.includedSrcs.splice(ind);
-					ind = _self.includedDsts.indexOf(cellDst); 
-					if(ind>=0) 
-						_self.includedDsts.splice(ind);
-					
-					//FIX: need a command to remove signals from the model
-					//command.send('tab', "mischkabibble");
-				}	
-				_self.update_display();
-			}
+			_self.excludeSelectedDevices(_self);
 		});
 		div.appendChild(btn);
 
@@ -297,7 +262,8 @@ GridView.prototype = {
 			
 	},
 	
-	get_selected_connections: function(list){
+	get_selected_connections: function(list)
+	{
 		
 		var vals =[];
 		
@@ -312,6 +278,72 @@ GridView.prototype = {
 				vals.push(this.model.getConnection(src, dst));
 		}	
 		return vals;
+	},
+	
+	/**
+	 * returns an assoc containing the devices included in the signals grid
+	 */
+	get_focused_devices : function()
+	{
+		var list = new Assoc();
+		for (var i=0; i<this.includedSrcs.length; i++)
+		{
+			var key = this.includedSrcs[i];
+			var val = this.model.devices.get(key);
+			list.add(key, val);
+		}
+		for (var i=0; i<this.includedDsts.length; i++)
+		{
+			var key = this.includedDsts[i];
+			var val = this.model.devices.get(key);
+			list.add(key, val);
+		}
+		return list;
+	},
+	
+	includeSelectedDevices : function (_self)
+	{
+		if(_self.devGrid.selectedCells.length > 0)
+		{
+			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+			{
+				var cell = _self.devGrid.selectedCells[i];
+				cellSrc = cell.getAttribute("data-src");
+				cellDst = cell.getAttribute("data-dst");
+				if(model.isLinked(cellSrc, cellDst)){
+					arrPushIfUnique(cellSrc, _self.includedSrcs);
+					arrPushIfUnique(cellDst, _self.includedDsts);
+				}
+				//FIX!
+				$(_self._container).trigger("tab", cellSrc);
+			}	
+			_self.update_display();
+		}
+	},
+	
+	excludeSelectedDevices : function (_self)
+	{
+		if(_self.devGrid.selectedCells.length > 0)
+		{
+			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+			{
+				var cell = _self.devGrid.selectedCells[i];
+				cellSrc = cell.getAttribute("data-src");
+				cellDst = cell.getAttribute("data-dst");
+				
+				var ind;
+				ind = _self.includedSrcs.indexOf(cellSrc);
+				if(ind>=0) 
+					_self.includedSrcs.splice(ind);
+				ind = _self.includedDsts.indexOf(cellDst); 
+				if(ind>=0) 
+					_self.includedDsts.splice(ind);
+				
+				//FIX: need a command to remove signals from the model
+				//command.send('tab', "mischkabibble");
+			}	
+			_self.update_display();
+		}
 	},
 	
 	update_display : function ()
