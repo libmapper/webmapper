@@ -17,7 +17,7 @@ function SvgGrid(container, model, gridIndex){
 	this.connectionsArray = new Array();
 	
 	this.rowLabelsW = 300;
-	this.colLabelsH = 300;
+	this.colLabelsH = 100;
 	this.scrollBarDim = [30,30];
 	this.svgMinDim = [33, 33];	
 	
