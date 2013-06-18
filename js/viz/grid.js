@@ -310,12 +310,10 @@ GridView.prototype = {
 				var cell = _self.devGrid.selectedCells[i];
 				cellSrc = cell.getAttribute("data-src");
 				cellDst = cell.getAttribute("data-dst");
-				if(model.isLinked(cellSrc, cellDst)){
-					arrPushIfUnique(cellSrc, _self.includedSrcs);
-					arrPushIfUnique(cellDst, _self.includedDsts);
-				}
-				//FIX!
-				$(_self._container).trigger("tab", cellSrc);
+				arrPushIfUnique(cellSrc, _self.includedSrcs);
+				arrPushIfUnique(cellDst, _self.includedDsts);
+				$(_self._container).trigger("getSignalsByDevice", cellSrc);
+				$(_self._container).trigger("getSignalsByDevice", cellDst);
 			}	
 			_self.update_display();
 		}

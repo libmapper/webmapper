@@ -416,8 +416,13 @@ function main()
     // actions from VIEW
 
     $("#container").on("tab", function(e, selectedTab){
-        command.send('tab', selectedTab);
+    	command.send('tab', selectedTab);
     });
+    
+    $("#container").on("getSignalsByDevice", function(e, deviceName){
+        command.send('get_signals_by_device_name', deviceName);
+    });
+    
     $("#container").on("link", function(e, src, dst){
         command.send('link', [src, dst]);
     });
