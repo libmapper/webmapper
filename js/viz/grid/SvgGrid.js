@@ -15,26 +15,22 @@ function SvgGrid(container, model, gridIndex){
 	this.colsArray = new Array();
 	this.rowsArray = new Array();
 	this.connectionsArray = new Array();
-	
-	this.rowLabelsW = 300;
-	this.colLabelsH = 300;
+
 	this.scrollBarDim = [30,30];
 	this.svgMinDim = [33, 33];	
-	
-	
+	this.rowLabelsW = 300;
+	this.colLabelsH = 150;
 	this.svgDim = []; 	// x-y dimensions of the svg canvas
 	this.aspect;		// aspect ratio of SVG viewbox (for zooming)
 	this.aspectCol;		// aspect ratio of col viewbox (for zooming)
 	this.aspectRow;		// aspect ratio of row viewbox (for zooming)
 	this.initDimensions(container);
-	
 	this.vboxPos = [0, 0];									// vbox x-y position
 	this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
 	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
 //	this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
 //	this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
 	//this.svgMaxDim = [600, 800];	
-	
 	this.cellDim = [32, 32];								// cell width-height dimensions
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
 	this.cellMargin = 1;									// margin between cells

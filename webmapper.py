@@ -128,6 +128,9 @@ def sync_device(name, is_src):
             monitor.request_input_signals_by_device_name(name)
     monitor.request_device_info(name)
 
+def get_signals_by_device_name(src_dev):
+    monitor.request_signals_by_device_name(src_dev)
+
 def select_tab(src_dev):
     if src_dev == "All Devices":
         monitor.request_devices()
@@ -140,6 +143,8 @@ def select_tab(src_dev):
         monitor.request_connections_by_src_device_name(src_dev)
 
 server.add_command_handler("tab", lambda x: select_tab(x))
+
+server.add_command_handler("get_signals_by_device_name", lambda x: get_signals_by_device_name(x))
 
 server.add_command_handler("all_signals",
                            lambda x: ("all_signals",

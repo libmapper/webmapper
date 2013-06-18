@@ -92,7 +92,9 @@ a:hover { color: #036; }
 .label_over{
 	font-weight: bold;		
 }
-
+.label_selected{
+	fill: red;		
+}
 
 .pen{
 	stroke: #00FF00;
