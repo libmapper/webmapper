@@ -103,12 +103,37 @@ function on_load()
     });
 
     form.firstChild.onchange = function(){
+
         var fn = document.createElement('input');
         fn.type = 'hidden';
         fn.name = 'filename';
         fn.value = form.firstChild.value;
-        console.log(form.firstChild.value);
         form.appendChild(fn);
+
+        // The devices currently in focused
+        var devs = view.get_focused_devices();
+        // Split them into sources and destinations
+        var srcdevs = [];
+        var destdevs = [];
+        for (var i in devs.contents) {
+            if( devs.contents[i].n_outputs )
+                srcdevs.push( devs.contents[i].name );
+            if( devs.contents[i].n_inputs )
+                destdevs.push( devs.contents[i].name );
+        }
+
+        //So that the monitor can see which devices are being looked at
+        var srcs = document.createElement('input');
+        srcs.type = 'hidden';
+        srcs.name = 'sources';
+        srcs.value = srcdevs.join(); 
+        form.appendChild(srcs);
+        var dests = document.createElement('input');
+        dests.type = 'hidden';
+        dests.name = 'destinations';
+        dests.value = destdevs.join(); 
+        form.appendChild(dests);
+
         form.submit();
     };
     return false;

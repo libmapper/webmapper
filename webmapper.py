@@ -92,8 +92,8 @@ def on_save(arg):
     fn = '.'.join(fn.split('.')[:-1]+['json'])
     return fn, mapperstorage.serialise(monitor, arg['dev'])
 
-def on_load(mapping_json):
-    mapperstorage.deserialise(monitor, mapping_json)
+def on_load(mapping_json, devices):
+    mapperstorage.deserialise(monitor, mapping_json, devices)
 
 def init_monitor():
     monitor.db.add_device_callback(on_device)
