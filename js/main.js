@@ -15,6 +15,10 @@ var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 
 //A global variable storing which display mode is currently in use
 var view;
+var viewIndex;					// to index into viewData 
+var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+
+
 //Where the network will be saved
 var saveLocation = '';
 var selectedTab;
@@ -25,20 +29,36 @@ window.onload = main;
 function switch_mode(newMode)
 {
 	if(view)
+	{
+		// save view settings
+		if(typeof view.save_view_settings == 'function')
+			viewData[viewIndex] = view.save_view_settings();
+		
+		// tell the view to cleanup (ex: removing event listeners)
 		view.cleanup();
+	}
+	
     $('#container').empty();
     switch(newMode)
     {
         case 'list':
             view = new listView(model);
+            viewIndex = 0;
             view.init();
             break;
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
+        	viewIndex = 1;
         	view.update_display();
         	break;
         default:
             //console.log(newMode);
+    }
+    
+    // load view settings if any
+    if(viewData[viewIndex]){
+	    if(typeof view.load_view_settings == 'function')
+	    		view.load_view_settings(viewData[viewIndex]);
     }
 }
 

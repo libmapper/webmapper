@@ -445,6 +445,23 @@ GridView.prototype = {
 		document.getElementById("sigGrid").style.height = h + "px";
 	},
 	
+	load_view_settings : function (data)
+	{
+		this.includedSrcs = data[0];
+		this.includedDsts = data[1];
+		this.switchView(data[2]);
+		this.update_display();
+	},
+	
+	save_view_settings : function ()
+	{
+		var data = [];
+		data.push(this.includedSrcs);
+		data.push(this.includedDsts);
+		data.push(this.viewMode);
+		return data;
+	},
+	
 	cleanup : function ()
 	{
 		
