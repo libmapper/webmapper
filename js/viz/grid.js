@@ -110,8 +110,10 @@ GridView.prototype = {
 		
 		this.calculateSizes();	// to set width/height of divs before initializing the grids
 		
-		this.devGrid = new SvgGrid(document.getElementById("devGrid"), this.model, 0);
-		this.sigGrid = new SvgGrid(document.getElementById("sigGrid"), this.model, 1);
+		this.devGrid = new GridDevices();
+		this.devGrid.preInit(document.getElementById("devGrid"), this.model, 0);
+		this.sigGrid = new GridSignals();
+		this.sigGrid.preInit(document.getElementById("sigGrid"), this.model, 1);
 		
 		$("#devGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
