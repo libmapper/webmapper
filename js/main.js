@@ -478,8 +478,6 @@ function main()
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            //Naming collision between this and list, should figure it out
-            //(maybe add_UI_handlers can be a method of list)
             add_handlers();
         },
         100);

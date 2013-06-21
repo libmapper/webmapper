@@ -4,7 +4,7 @@ function listView(model)
 
 	this.model = model;
 	
-var svgns = 'http://www.w3.org/2000/svg';
+    var svgns = 'http://www.w3.org/2000/svg';
 
     var tabList = null;
     var tabDevices = null;
