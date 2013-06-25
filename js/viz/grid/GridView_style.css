@@ -58,6 +58,12 @@ a:hover { color: #036; }
 	stroke-width:2;
 	stroke: #000000;
 }
+
+.cell_added{
+	stroke-width:10;
+	stroke: #FF0000;
+}
+
 .cell_connected{
 	fill: #04C4D9;
 	animation-name: connected;

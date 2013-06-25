@@ -196,6 +196,9 @@ GridSVG.prototype = {
 			
 			this.initHorizontalZoomSlider($("#hZoomSlider" + this.gridIndex));
 			this.initVerticalZoomSlider($("#vZoomSlider" + this.gridIndex));
+			
+			
+			
 		},
 
 		initHorizontalZoomSlider : function ()
@@ -422,7 +425,11 @@ GridSVG.prototype = {
 				this.selectedCells[i].classList.remove('cell_selected');
 			this.selectedCells.length=0;	//clears the array
 		},
-		
+		selectedCells_restore : function (cells)
+		{
+			if(cells)
+				this.selectedCells = cells;
+		},
 		
 		nextCellId : function (){
 			return "cell" + this.gridIndex + "_" + this.nCellIds++;

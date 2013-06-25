@@ -110,10 +110,27 @@ GridView.prototype = {
 		
 		this.calculateSizes();	// to set width/height of divs before initializing the grids
 		
+		// FIX part 1/2
+		// saving selected cell to restore after being re-initialized
+		// ideally should not be redrawing everything but just updateing SVG dimensions on_resize
+		// however on_resize is giving trouble calculating the font size zoom because aspect ratio changes
+		var prevSelectedDev;
+		if(this.devGrid && this.devGrid.selectedCells)
+			prevSelectedDev = this.devGrid.selectedCells;
+		var prevSelectedSig;
+		if(this.sigGrid && this.sigGrid.selectedCells)
+			prevSelectedSig = this.sigGrid.selectedCells;
+		
 		this.devGrid = new GridDevices();
 		this.devGrid.preInit(document.getElementById("devGrid"), this.model, 0);
 		this.sigGrid = new GridSignals();
 		this.sigGrid.preInit(document.getElementById("sigGrid"), this.model, 1);
+
+		// FIX part 2/2
+		if(prevSelectedDev)
+			this.devGrid.selectedCells_restore(prevSelectedDev);
+		if(prevSelectedSig)
+			this.sigGrid.selectedCells_restore(prevSelectedSig);
 		
 		$("#devGrid").on("connect", function(e, cell){
 			e.stopPropagation();	//prevents bubbling to main.js
