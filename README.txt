@@ -26,5 +26,3 @@ Grid view Command keys:
 	space: toggle selected cell(s)
 
 	*There are 2 grids. The left side is for devices, the right for signals. Select link(s) on the left and Press "ADD" to include the linked devices in the signals grid.
-	**devices must be linked for connection to work (a future version will create the link automatically)
-	***state of the view is not retained when switching view or view modes
