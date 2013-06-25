@@ -59,9 +59,14 @@ a:hover { color: #036; }
 	stroke: #000000;
 }
 
-.cell_added{
-	stroke-width:10;
-	stroke: #FF0000;
+.includedSrc {
+	fill: url(#Pattern_IncludedSrc);
+}
+.includedDst {
+	fill: url(#Pattern_IncludedDst);
+}
+.includedSrc.includedDst {
+	fill: url(#Pattern_IncludedSrcDst);
 }
 
 .cell_connected{

@@ -14,9 +14,6 @@ function GridView(container, model)
 	
 	this.viewMode = 3;
 	
-	this.includedSrcs = new Array();
-	this.includedDsts = new Array();
-	
 	this.init();
 
 	//Keyboard handlers
@@ -305,15 +302,15 @@ GridView.prototype = {
 	get_focused_devices : function()
 	{
 		var list = new Assoc();
-		for (var i=0; i<this.includedSrcs.length; i++)
+		for (var i=0; i<this.devGrid.includedSrcs.length; i++)
 		{
-			var key = this.includedSrcs[i];
+			var key = this.devGrid.includedSrcs[i];
 			var val = this.model.devices.get(key);
 			list.add(key, val);
 		}
-		for (var i=0; i<this.includedDsts.length; i++)
+		for (var i=0; i<this.devGrid.includedDsts.length; i++)
 		{
-			var key = this.includedDsts[i];
+			var key = this.devGrid.includedDsts[i];
 			var val = this.model.devices.get(key);
 			list.add(key, val);
 		}
@@ -329,8 +326,8 @@ GridView.prototype = {
 				var cell = _self.devGrid.selectedCells[i];
 				cellSrc = cell.getAttribute("data-src");
 				cellDst = cell.getAttribute("data-dst");
-				arrPushIfUnique(cellSrc, _self.includedSrcs);
-				arrPushIfUnique(cellDst, _self.includedDsts);
+				arrPushIfUnique(cellSrc, _self.devGrid.includedSrcs);
+				arrPushIfUnique(cellDst, _self.devGrid.includedDsts);
 				$(_self._container).trigger("getSignalsByDevice", cellSrc);
 				$(_self._container).trigger("getSignalsByDevice", cellDst);
 			}	
@@ -349,12 +346,12 @@ GridView.prototype = {
 				cellDst = cell.getAttribute("data-dst");
 				
 				var ind;
-				ind = _self.includedSrcs.indexOf(cellSrc);
+				ind = _self.devGrid.includedSrcs.indexOf(cellSrc);
 				if(ind>=0) 
-					_self.includedSrcs.splice(ind);
-				ind = _self.includedDsts.indexOf(cellDst); 
+					_self.devGrid.includedSrcs.splice(ind);
+				ind = _self.devGrid.includedDsts.indexOf(cellDst); 
 				if(ind>=0) 
-					_self.includedDsts.splice(ind);
+					_self.devGrid.includedDsts.splice(ind);
 				
 				//FIX: need a command to remove signals from the model
 				//command.send('tab', "mischkabibble");
@@ -417,12 +414,12 @@ GridView.prototype = {
 	        
 	        //var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
 
-			for (var i=0; i<this.includedSrcs.length; i++){
-				if(sig.device_name == this.includedSrcs[i])
+			for (var i=0; i<this.devGrid.includedSrcs.length; i++){
+				if(sig.device_name == this.devGrid.includedSrcs[i])
 					srcSigs.push(sig);
 			}
-			for (var i=0; i<this.includedDsts.length; i++){
-				if(sig.device_name == this.includedDsts[i])
+			for (var i=0; i<this.devGrid.includedDsts.length; i++){
+				if(sig.device_name == this.devGrid.includedDsts[i])
 					dstSigs.push(sig);
 			}
 	    }
@@ -464,8 +461,8 @@ GridView.prototype = {
 	
 	load_view_settings : function (data)
 	{
-		this.includedSrcs = data[0];
-		this.includedDsts = data[1];
+		this.devGrid.includedSrcs = data[0];
+		this.devGrid.includedDsts = data[1];
 		this.switchView(data[2]);
 		this.update_display();
 	},
@@ -473,8 +470,8 @@ GridView.prototype = {
 	save_view_settings : function ()
 	{
 		var data = [];
-		data.push(this.includedSrcs);
-		data.push(this.includedDsts);
+		data.push(this.devGrid.includedSrcs);
+		data.push(this.devGrid.includedDsts);
 		data.push(this.viewMode);
 		return data;
 	},

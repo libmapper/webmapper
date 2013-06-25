@@ -1,4 +1,6 @@
 function GridDevices(){
+	this.includedSrcs = [];
+	this.includedDsts = [];
 };
 GridDevices.prototype = new GridSVG;
 GridDevices.prototype.constructor = GridDevices; 
@@ -10,6 +12,47 @@ GridDevices.prototype.refresh = function ()
 	$('#svgGrid' + this.gridIndex).empty();
 	$('#svgRows' + this.gridIndex).empty();
 	$('#svgCols' + this.gridIndex).empty();
+	
+	// patterns for textured cells
+	var defs = document.createElementNS(this.svgNS, "defs");
+	var pattern, path;
+	
+	pattern = document.createElementNS(this.svgNS, "pattern");
+	pattern.setAttribute('id', "Pattern_IncludedSrc");
+	pattern.setAttribute('patternUnits', 'objectBoundingBox');
+	pattern.setAttribute('width', "20%");
+	pattern.setAttribute('height', "20%");
+	path = document.createElementNS(this.svgNS, 'path');
+	path.setAttribute("d", "M 3 0 L 3 32");
+	path.setAttribute("style", "stroke: #333333; fill: none;");
+	pattern.appendChild(path);
+	defs.appendChild(pattern);
+	
+	pattern = document.createElementNS(this.svgNS, "pattern");
+	pattern.setAttribute('id', "Pattern_IncludedDst");
+	pattern.setAttribute('patternUnits', 'objectBoundingBox');
+	pattern.setAttribute('width', "20%");
+	pattern.setAttribute('height', "20%");
+	path = document.createElementNS(this.svgNS, 'path');
+	path.setAttribute("d", "M 0 0 L 32 0");
+	path.setAttribute("style", "stroke: #333333; fill: none;");
+	pattern.appendChild(path);
+	defs.appendChild(pattern);
+	
+	pattern = document.createElementNS(this.svgNS, "pattern");
+	pattern.setAttribute('id', "Pattern_IncludedSrcDst");
+	pattern.setAttribute('patternUnits', 'objectBoundingBox');
+	pattern.setAttribute('width', "20%");
+	pattern.setAttribute('height', "20%");
+	path = document.createElementNS(this.svgNS, 'path');
+	path.setAttribute("d", "M 0 0 L 32 0 M 0 0 L 0 32");
+	path.setAttribute("style", "stroke: #333333; fill: none;");
+	pattern.appendChild(path);
+	defs.appendChild(pattern);
+	
+	
+	this.svg.appendChild(defs);
+	
 	
 	this.cells.length = 0;
 	this.nCellIds = 0;
@@ -49,16 +92,7 @@ GridDevices.prototype.refresh = function ()
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
-		
-		// extra data for signals
-		if(dev.device_name)
-		{
-			name = dev.device_name + name; 	// signals also have a device name, important for making connections
-			label.setAttribute("data-device_name", dev.device_name);
-			label.setAttribute("data-direction", dev.direction);					
-			label.setAttribute("data-length", dev.length);
-		}
-		
+			
 		label.setAttribute("id", "colLabel" + this.nCols  );
 		label.setAttribute("data-src", name);
 		label.setAttribute("data-col", this.nCols);
@@ -82,15 +116,6 @@ GridDevices.prototype.refresh = function ()
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
-		
-		// extra data for signals
-		if(dev.device_name)
-		{
-			name = dev.device_name + name; 	// signals also have a device name, important for making connections
-			label.setAttribute("data-device_name", dev.device_name);
-			label.setAttribute("data-direction", dev.direction);					
-			label.setAttribute("data-length", dev.length);
-		}
 		
 		label.setAttribute("id", "rowLabel" + this.nRows);
 		label.setAttribute("data-dst", name);
@@ -123,6 +148,31 @@ GridDevices.prototype.refresh = function ()
 			// set the default style class 
 			// used for example, when reverting from mouseover style
 			cell.setAttribute("class", cell.getAttribute("defaultClass"));
+			
+			// extra styling for devices, if added into view
+			for(var k=0; k<this.includedSrcs.length; k++)
+			{
+				var includedSrc = this.includedSrcs[k];
+				if(src == includedSrc)
+					cell.classList.add('includedSrc');
+			}
+			for(var k=0; k<this.includedDsts.length; k++)
+			{
+				var includedDst = this.includedDsts[k];
+				if(dst == includedDst)
+					cell.classList.add('includedDst');
+			}
+			/*
+			if(includedInSrcs)
+				cell.setAttribute("style", "fill: url(#Pattern_IncludedSrc)");
+			if(includedInDsts)
+				cell.setAttribute("style", "fill: url(#Pattern_IncludedDst)");
+			if(includedInSrcs && includedInDsts)
+				cell.setAttribute("style", "fill: url(#Pattern_IncludedSrcDst)");
+			*/
+			
+			
+			
 			
 			// set the selected cells
 			// FIX part 2/3: This is dangerous. The selectedCells array points to a DOM element that were removed with empty 
