@@ -152,6 +152,7 @@ GridDevices.prototype.refresh = function ()
 			this.svg.appendChild(cell);
 			
 			// extra styling for devices, if added into view
+			if(this.includedSrcs)
 			for(var k=0; k<this.includedSrcs.length; k++)
 			{
 				var includedSrc = this.includedSrcs[k];
@@ -161,10 +162,10 @@ GridDevices.prototype.refresh = function ()
 					cell2.removeAttribute("id");
 					cell2.setAttribute("class", "includedSrc");
 					cell2.setAttribute("style", "pointer-events: none");
-					
-					//cell.classList.add('includedSrc');
+					this.svg.appendChild(cell2);
 				}
 			}
+			if(this.includedDsts)
 			for(var k=0; k<this.includedDsts.length; k++)
 			{
 				var includedDst = this.includedDsts[k];
@@ -173,18 +174,9 @@ GridDevices.prototype.refresh = function ()
 					cell3.removeAttribute("id");
 					cell3.setAttribute("class", "includedDst");
 					cell3.setAttribute("style", "pointer-events: none");
+					this.svg.appendChild(cell3);
 				}
 			}
-			/*
-			if(includedInSrcs)
-				cell.setAttribute("style", "fill: url(#Pattern_IncludedSrc)");
-			if(includedInDsts)
-				cell.setAttribute("style", "fill: url(#Pattern_IncludedDst)");
-			if(includedInSrcs && includedInDsts)
-				cell.setAttribute("style", "fill: url(#Pattern_IncludedSrcDst)");
-			*/
-			
-			
 			
 			
 			// set the selected cells
@@ -201,11 +193,7 @@ GridDevices.prototype.refresh = function ()
 
 				}
 			}
-			
-			if(cell2)
-				this.svg.appendChild(cell2);
-			if(cell3)
-				this.svg.appendChild(cell3);
+
 		}
 	}
 	
@@ -235,4 +223,17 @@ GridDevices.prototype.refresh = function ()
 	this.updateViewBoxes();
 	this.updateZoomBars();
 	
+};
+
+/**
+ * the included devices variables come from grid.js and need to be set each time
+ * they are changed... this is because on_resize recreates all elements :(
+ */
+GridDevices.prototype.setIncludedSrcs = function (val)
+{
+	this.includedSrcs = val;
+};
+GridDevices.prototype.setIncludedDsts = function (val)
+{
+	this.includedDsts = val;
 };

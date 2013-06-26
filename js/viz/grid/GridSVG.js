@@ -60,7 +60,7 @@ GridSVG.prototype = {
 			this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 			this.nCellIds = 0;											// helper for generating cell IDs
 			
-			this.fontSize = 16;
+			this.fontSize = 12;
 			this.autoZoom = true;
 		}, 
 		
