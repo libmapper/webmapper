@@ -270,10 +270,10 @@ GridSVG.prototype = {
 				_self.onCellClick(evt, _self);
 			});
 			cell.addEventListener("mouseover", function(evt){
-//				_self.onCellMouseOver(evt, _self);
+				_self.onCellMouseOver(evt, _self);
 			});
 			cell.addEventListener("mouseout", function(evt){
-//				_self.onCellMouseOver(evt, _self);
+				_self.onCellMouseOver(evt, _self);
 			});
 			
 			_self.cells.push(cell);

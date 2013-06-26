@@ -23,8 +23,8 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('width', "20%");
 	pattern.setAttribute('height', "20%");
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 3 0 L 3 32");
-	path.setAttribute("style", "stroke: #333333; fill: blue; ");
+	path.setAttribute("d", "M 3 0 l 0 32");
+	path.setAttribute("style", "stroke: #999; fill: blue; ");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -34,8 +34,8 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('width', "20%");
 	pattern.setAttribute('height', "20%");
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 0 0 L 32 0");
-	path.setAttribute("style", "stroke: #333333; fill: none;");
+	path.setAttribute("d", "M 0 3 l 32 0");
+	path.setAttribute("style", "stroke: #999; fill: none;");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -46,7 +46,7 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('height', "20%");
 	path = document.createElementNS(this.svgNS, 'path');
 	path.setAttribute("d", "M 0 0 L 32 0 M 0 0 L 0 32");
-	path.setAttribute("style", "stroke: #333333; fill: none;");
+	path.setAttribute("style", "stroke: #999; fill: none;");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -149,18 +149,31 @@ GridDevices.prototype.refresh = function ()
 			// used for example, when reverting from mouseover style
 			cell.setAttribute("class", cell.getAttribute("defaultClass"));
 			
+			this.svg.appendChild(cell);
+			
 			// extra styling for devices, if added into view
 			for(var k=0; k<this.includedSrcs.length; k++)
 			{
 				var includedSrc = this.includedSrcs[k];
 				if(src == includedSrc)
-					cell.classList.add('includedSrc');
+				{
+					var cell2 = cell.cloneNode();
+					cell2.removeAttribute("id");
+					cell2.setAttribute("class", "includedSrc");
+					cell2.setAttribute("style", "pointer-events: none");
+					
+					//cell.classList.add('includedSrc');
+				}
 			}
 			for(var k=0; k<this.includedDsts.length; k++)
 			{
 				var includedDst = this.includedDsts[k];
-				if(dst == includedDst)
-					cell.classList.add('includedDst');
+				if(dst == includedDst){
+					var cell3 = cell.cloneNode();
+					cell3.removeAttribute("id");
+					cell3.setAttribute("class", "includedDst");
+					cell3.setAttribute("style", "pointer-events: none");
+				}
 			}
 			/*
 			if(includedInSrcs)
@@ -185,9 +198,14 @@ GridDevices.prototype.refresh = function ()
 				if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
 				{
 					newSelected.push(cell);
+
 				}
 			}
-			this.svg.appendChild(cell);
+			
+			if(cell2)
+				this.svg.appendChild(cell2);
+			if(cell3)
+				this.svg.appendChild(cell3);
 		}
 	}
 	
