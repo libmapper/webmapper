@@ -2,7 +2,46 @@
  * Parent Class for Grid Objects
  */
 
-function GridSVG(){};
+function GridSVG()
+{
+	this.svgNS = "http://www.w3.org/2000/svg";
+	this.svgNSxlink = "http://www.w3.org/1999/xlink";
+	this.svg;			// holding <SVG> elements for easy reference
+	this.svgRowLabels;
+	this.svgColLabels;	 
+	this.cells = new Array();
+	
+	this.colsArray = new Array();
+	this.rowsArray = new Array();
+	this.connectionsArray = new Array();
+	
+	this.scrollBarDim = [30,30];
+	this.svgMinDim = [33, 33];	
+	this.rowLabelsW = 300;
+	this.colLabelsH = 150;
+	this.svgDim = []; 	// x-y dimensions of the svg canvas
+	this.aspect;		// aspect ratio of SVG viewbox (for zooming)
+	this.aspectCol;		// aspect ratio of col viewbox (for zooming)
+	this.aspectRow;		// aspect ratio of row viewbox (for zooming)
+	this.vboxPos = [0, 0];									// vbox x-y position
+	this.cellDim = [32, 32];								// cell width-height dimensions
+	this.cellRoundedCorner = 0;								// cell rounded corners radius
+	this.cellMargin = 1;									// margin between cells
+	this.labelMargin = 5;									// offset for source signal labels
+	this.zoomIncrement = 50;							
+	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
+	this.nCellIds = 0;											// helper for generating cell IDs	
+	this.fontSize = 12;
+	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
+	this.selectedCells = []; 					// holds a reference to the selected cells
+	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
+	this.nRows = 0;											// number of rows in grid (destination signals)
+	this.nCols = 0;											// number of columns in grid (source signals)
+	this.contentDim = [0, 0];								// width-height dimension of full content
+	this.autoZoom = true;
+//			this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
+//			this.svgMaxDim = [600, 800];	
+};
 
 
 
@@ -11,57 +50,14 @@ GridSVG.prototype = {
 		
 		preInit : function (container, model, gridIndex)
 		{	
-			this.svgNS = "http://www.w3.org/2000/svg";
-			this.svgNSxlink = "http://www.w3.org/1999/xlink";
 
 			this.model = model;
 			this.gridIndex = gridIndex;
 			this._container = container;
-			
-			this.svg;			// holding <SVG> elements for easy reference
-			this.svgRowLabels;
-			this.svgColLabels;	 
-			this.cells = new Array();
-
-			this.colsArray = new Array();
-			this.rowsArray = new Array();
-			this.connectionsArray = new Array();
-
-			this.scrollBarDim = [30,30];
-			this.svgMinDim = [33, 33];	
-			this.rowLabelsW = 300;
-			this.colLabelsH = 150;
-			this.svgDim = []; 	// x-y dimensions of the svg canvas
-			this.aspect;		// aspect ratio of SVG viewbox (for zooming)
-			this.aspectCol;		// aspect ratio of col viewbox (for zooming)
-			this.aspectRow;		// aspect ratio of row viewbox (for zooming)
 			this.initDimensions(container);
-			this.vboxPos = [0, 0];									// vbox x-y position
 			this.vboxDim = [ this.svgDim[0], this.svgDim[1] ];		// vbox width-height dimensions
-			this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
-//			this.vboxMinDim = [50, 50];							// vbox minimum width-height dimensions
-//			this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
-			//this.svgMaxDim = [600, 800];	
-			this.cellDim = [32, 32];								// cell width-height dimensions
-			this.cellRoundedCorner = 0;								// cell rounded corners radius
-			this.cellMargin = 1;									// margin between cells
-			this.labelMargin = 5;									// offset for source signal labels
-			this.zoomIncrement = 50;							
-			
-			this.selectedCells = []; 					// holds a reference to the selected cells
-			this.mousedOverCell = null;					// hold a reference to the cell that's moused over
-
-			this.nRows = 0;											// number of rows in grid (destination signals)
-			this.nCols = 0;											// number of columns in grid (source signals)
-			this.contentDim = [0, 0];								// width-height dimension of full content
 			
 			this.init();
-			
-			this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
-			this.nCellIds = 0;											// helper for generating cell IDs
-			
-			this.fontSize = 12;
-			this.autoZoom = true;
 		}, 
 		
 		initDimensions : function (container)
@@ -113,6 +109,7 @@ GridSVG.prototype = {
 			btn.innerHTML = "Zoom to fit";
 			btn.addEventListener("click", function(evt){
 				_self.autoZoom = true;
+				_self.vboxPos = [0,0];
 				_self.refresh();
 			});
 			div.appendChild(btn);
