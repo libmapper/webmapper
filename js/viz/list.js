@@ -84,7 +84,8 @@ function listView(model)
 
             //Because svg keeps getting nudged left for some reason
             $('svg').css('left', '0px');
-            $('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
+            update_row_heights();
+            //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
 
             updateCallable = true;
 
@@ -138,10 +139,20 @@ function listView(model)
     this.on_resize = function() 
     {
         update_arrows();
-        $('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
+        update_row_heights();
+        //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
     }
 
+//A function to make sure that rows fill up the available space, in testing for now
+function update_row_heights()
+{
+    var tableHeight = $('.tableDiv').height() - $('.tableDiv th').height();
+    var leftHeight = tableHeight/leftTable.nVisibleRows;
+    var rightHeight = tableHeight/rightTable.nVisibleRows;
 
+    $('#leftTable tbody tr').css('height', leftHeight+'px');
+    $('#rightTable tbody tr').css('height', rightHeight+'px');
+}
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -454,12 +465,16 @@ function filter_view()
             $(this).addClass('invisible');
     });
 
+
+
     update_arrows();
     $(leftTable.table).trigger('update');
     $(rightTable.table).trigger('update');
 
     rightTable.set_status();
     leftTable.set_status();
+
+    update_row_heights();
 }
 
 function filter_match(row)
