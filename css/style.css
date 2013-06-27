@@ -240,6 +240,7 @@ body {
     height: calc(100% - 96px);
     background: white;
     border: solid 1px black;
+    border-bottom: 0;
   }
 
   /* The table itself */
@@ -252,6 +253,10 @@ body {
     }
     #rightTable {
       left: 60%;
+      border-left: 0;
+    }
+    #leftTable {
+      border-right: 0;
     }
 
       /* Rows and headers */
@@ -330,6 +335,7 @@ body {
     position: absolute;
     background-color: white;
     border: 1px solid black;
+    border-bottom: 0;
     left: 40%;
     height: calc(100% - 96px);
     width: 20%;

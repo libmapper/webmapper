@@ -557,7 +557,7 @@ function create_arrow(left, right, sel, muted)
 
     line.attr({
         "fill": "none",
-        "stroke-width": 2,
+        "stroke-width": 1.5,
         "cursor": "pointer"
     });
 
