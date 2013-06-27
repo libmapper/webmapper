@@ -38,7 +38,7 @@ a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -
 a:hover { color: #036; }
 
 .cell_up{
-	fill: #dddddd;	
+	fill: #dfdfdf;	
 }
 
 .cell_disabled{
@@ -51,12 +51,12 @@ a:hover { color: #036; }
 	fill: #0076b0;
 }
 .row_over{
-	fill: #AAAAAA;
+	fill: #999999;
 }
 
 .cell_selected{
 	stroke-width:2;
-	stroke: #000000;
+	stroke: #ff0000;
 }
 
 .includedSrc {
@@ -122,4 +122,12 @@ a:hover { color: #036; }
 	fill: #EEEEEE;
 }
 	
-	
+#actionBar{
+	margin: 10px 10px;
+	height: 30px;	
+}
+
+.buttonBar{
+	padding: 10px 10px;
+	background-color: #eeeeee;
+}

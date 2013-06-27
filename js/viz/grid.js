@@ -57,11 +57,10 @@ GridView.prototype = {
 		// button bar
 		div = document.createElement("div");
 		div.setAttribute("id", "actionBar");
-		div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px;");
 		
 		// add device button
 		btn = document.createElement("button");
-		btn.innerHTML = "ADD";
+		btn.innerHTML = "Add";
 		btn.addEventListener("click", function(evt){
 			_self.includeSelectedDevices(_self);
 		});
@@ -69,7 +68,7 @@ GridView.prototype = {
 			
 		//remove device button
 		btn = document.createElement("button");
-		btn.innerHTML = "REM";
+		btn.innerHTML = "Remove";
 		btn.addEventListener("click", function(evt){
 			_self.excludeSelectedDevices(_self);
 		});
@@ -77,14 +76,14 @@ GridView.prototype = {
 
 		// View Buttons
 		btn = document.createElement("button");
-		btn.innerHTML = "Devices View";
+		btn.innerHTML = "Devices";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(1);
 		});
 		div.appendChild(btn);
 		
 		btn = document.createElement("button");
-		btn.innerHTML = "Signals View";
+		btn.innerHTML = "Signals";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(2);
 		});
@@ -454,7 +453,7 @@ GridView.prototype = {
 		if(this.viewMode == 3)
 			w = Math.floor($(this._container).width()/2) - 8;
 		
-		var h = $(this._container).height() - $("#actionBar").height() - 2;
+		var h = $(this._container).height() - $("#actionBar").height() - 2 -30;
 		
 		document.getElementById("devGrid").style.width = w + "px";
 		document.getElementById("devGrid").style.height = h + "px";

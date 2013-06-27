@@ -17,7 +17,7 @@ function GridSVG()
 	
 	this.scrollBarDim = [30,30];
 	this.svgMinDim = [33, 33];	
-	this.rowLabelsW = 300;
+	this.rowLabelsW = 200;
 	this.colLabelsH = 150;
 	this.svgDim = []; 	// x-y dimensions of the svg canvas
 	this.aspect;		// aspect ratio of SVG viewbox (for zooming)
@@ -27,7 +27,7 @@ function GridSVG()
 	this.cellDim = [32, 32];								// cell width-height dimensions
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
 	this.cellMargin = 1;									// margin between cells
-	this.labelMargin = 5;									// offset for source signal labels
+	this.labelMargin = 10;									// offset for source signal labels
 	this.zoomIncrement = 50;							
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs	
@@ -63,8 +63,9 @@ GridSVG.prototype = {
 		initDimensions : function (container)
 		{
 			var w = $(container).width();
-			var h = $(container).height() - 50;
-			this.svgDim = [w - this.rowLabelsW - this.scrollBarDim[0], h - this.colLabelsH - this.scrollBarDim[1]];								// x-y dimensions of the svg canvas
+			var h = $(container).height() - 50 - $(".buttonBar").height();
+			this.svgDim[0] = w - this.rowLabelsW - this.scrollBarDim[0] - this.labelMargin;	// dimensions of the svg canvas
+			this.svgDim[1] = h - this.colLabelsH - this.scrollBarDim[1] - this.labelMargin;	// dimensions of the svg canvas
 		
 			// ensure SVG Canvas has min dimensions
 			this.svgDim[0] = Math.max(this.svgDim[0], this.svgMinDim[0]);
@@ -83,8 +84,7 @@ GridSVG.prototype = {
 			
 			// button bar
 			div = document.createElement("div");
-			div.setAttribute("id", "buttonBar");
-			div.setAttribute("style", "margin-bottom: 5px; margin-left: 16px;");
+			div.setAttribute("class", "buttonBar");
 			
 			var btn;
 			
@@ -137,16 +137,40 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			this._container.appendChild(div);
+
+			
+			
+			// svg column labels
+			this.svgColLabels = document.createElementNS(this.svgNS, "svg");
+			this.svgColLabels.setAttribute("id", "svgCols" + this.gridIndex);
+			this.svgColLabels.setAttribute("xmlns", this.svgNS);
+			this.svgColLabels.setAttribute("xmlns:xlink", this.svgNSxlink);
+			this.svgColLabels.setAttribute("width", this.svgDim[0]);
+			this.svgColLabels.setAttribute("height", this.colLabelsH);
+			this.svgColLabels.setAttribute("style", "float: left; clear:both; margin-left:"+ (this.rowLabelsW + 30).toString() + "px; margin-bottom: " + this.labelMargin +"px");
+			this.svgColLabels.setAttribute("preserveAspectRatio", "none");
+			this._container.appendChild(this.svgColLabels);
 			
 			//horizontal scrollbar 
 			div = document.createElement("div");
 			div.setAttribute("id", "hZoomSlider" + this.gridIndex);
-			div.setAttribute("style", "position: relative; margin-top: 10px; clear:both;");
+			div.setAttribute("style", "position: relative; margin-top: 10px; clear:both; margin-left: " + (this.rowLabelsW+38).toString() + "px");
 			this._container.appendChild(div);
 			
 			// a wrapper div to hold vscroll, grid + row labels
 			var wrapper1 = document.createElement("div");
 			wrapper1.setAttribute("style", "margin-top: 5px; clear: both;");
+			
+			// svg row labels
+			this.svgRowLabels = document.createElementNS(this.svgNS, "svg");
+			this.svgRowLabels.setAttribute("id", "svgRows" + this.gridIndex);
+			this.svgRowLabels.setAttribute("xmlns", this.svgNS);
+			this.svgRowLabels.setAttribute("xmlns:xlink", this.svgNSxlink);
+			this.svgRowLabels.setAttribute("width", this.rowLabelsW);
+			this.svgRowLabels.setAttribute("height", this.svgDim[1]);
+			this.svgRowLabels.setAttribute("style", "float:left; margin-right: " + this.labelMargin +"px");
+			this.svgRowLabels.setAttribute("preserveAspectRatio", "none");
+			wrapper1.appendChild(this.svgRowLabels);
 			
 			// vertical scrollbar
 			div = document.createElement("div");
@@ -166,30 +190,7 @@ GridSVG.prototype = {
 			this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 			wrapper1.appendChild(this.svg);	
 			
-			// svg row labels
-			this.svgRowLabels = document.createElementNS(this.svgNS, "svg");
-			this.svgRowLabels.setAttribute("id", "svgRows" + this.gridIndex);
-			this.svgRowLabels.setAttribute("xmlns", this.svgNS);
-			this.svgRowLabels.setAttribute("xmlns:xlink", this.svgNSxlink);
-			this.svgRowLabels.setAttribute("width", this.rowLabelsW);
-			this.svgRowLabels.setAttribute("height", this.svgDim[1]);
-			this.svgRowLabels.setAttribute("style", "float:left;");
-			this.svgRowLabels.setAttribute("preserveAspectRatio", "none");
-			wrapper1.appendChild(this.svgRowLabels);
-			
 			this._container.appendChild(wrapper1);
-			
-			// svg column labels
-			this.svgColLabels = document.createElementNS(this.svgNS, "svg");
-			this.svgColLabels.setAttribute("id", "svgCols" + this.gridIndex);
-			this.svgColLabels.setAttribute("xmlns", this.svgNS);
-			this.svgColLabels.setAttribute("xmlns:xlink", this.svgNSxlink);
-			this.svgColLabels.setAttribute("width", this.svgDim[0]);
-			this.svgColLabels.setAttribute("height", this.colLabelsH);
-			this.svgColLabels.setAttribute("style", "float: left; clear:both; margin-left:30px;");
-			this.svgColLabels.setAttribute("preserveAspectRatio", "none");
-			
-			this._container.appendChild(this.svgColLabels);
 			
 			this.initHorizontalZoomSlider($("#hZoomSlider" + this.gridIndex));
 			this.initVerticalZoomSlider($("#vZoomSlider" + this.gridIndex));
@@ -721,8 +722,8 @@ GridSVG.prototype = {
 		updateViewBoxes : function()
 		{
 			this.svg.setAttribute("viewBox", this.toViewBoxString(this.vboxPos[0], this.vboxPos[1], this.vboxDim[0], this.vboxDim[1]));
-			this.svgColLabels.setAttribute("viewBox", this.toViewBoxString(this.vboxPos[0], 0, this.vboxDim[0], this.vboxDim[0]/this.aspectCol));
-			this.svgRowLabels.setAttribute("viewBox", this.toViewBoxString(0, this.vboxPos[1], this.vboxDim[1]*this.aspectRow, this.vboxDim[1]));
+			this.svgColLabels.setAttribute("viewBox", this.toViewBoxString(this.vboxPos[0], this.colLabelsH - (this.vboxDim[0]/this.aspectCol), this.vboxDim[0], this.vboxDim[0]/this.aspectCol));
+			this.svgRowLabels.setAttribute("viewBox", this.toViewBoxString(this.rowLabelsW - (this.vboxDim[1]*this.aspectRow), this.vboxPos[1], this.vboxDim[1]*this.aspectRow, this.vboxDim[1]));
 		},
 		
 		/**

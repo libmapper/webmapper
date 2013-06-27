@@ -20,11 +20,11 @@ GridDevices.prototype.refresh = function ()
 	pattern = document.createElementNS(this.svgNS, "pattern");
 	pattern.setAttribute('id', "Pattern_IncludedSrc");
 	pattern.setAttribute('patternUnits', 'objectBoundingBox');
-	pattern.setAttribute('width', "20%");
+	pattern.setAttribute('width', "100%");
 	pattern.setAttribute('height', 32);
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 3 1 l 0 30 ");
-	path.setAttribute("style", "stroke: #999; fill: blue; ");
+	path.setAttribute("d", "M 16 1 l 0 30 ");
+	path.setAttribute("style", "stroke: #ffffff; fill: blue; ");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -32,10 +32,10 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('id', "Pattern_IncludedDst");
 	pattern.setAttribute('patternUnits', 'objectBoundingBox');
 	pattern.setAttribute('width', 32);
-	pattern.setAttribute('height', "20%");
+	pattern.setAttribute('height', "100%");
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 1 3 l 30 0");
-	path.setAttribute("style", "stroke: #999; fill: none;");
+	path.setAttribute("d", "M 1 16 l 30 0");
+	path.setAttribute("style", "stroke: #ffffff; fill: none;");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -86,12 +86,13 @@ GridDevices.prototype.refresh = function ()
 		label.setAttribute("data-col", this.nCols);
 		label.setAttribute("font-size", this.fontSize + "px");
 		label.setAttribute("class", "label");
+		label.setAttribute("text-anchor", "end");
 		
 		label.appendChild(document.createTextNode(name)); 	
 		this.svgColLabels.appendChild(label);
 
 		var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why -1 .... getBBox() doesn't really work well 
-		var yPos = this.labelMargin;
+		var yPos = this.colLabelsH;
 		label.setAttribute("transform","translate(" + xPos + "," + yPos + ")rotate(90)");
 		
 		this.nCols++;
@@ -110,12 +111,13 @@ GridDevices.prototype.refresh = function ()
 		label.setAttribute("data-row", this.nRows);
 		label.setAttribute("font-size", this.fontSize + "px");
 		label.setAttribute("class","label");
+		label.setAttribute("text-anchor", "end");
+		label.setAttribute("x", this.rowLabelsW);
+		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
 		
 		label.appendChild(document.createTextNode(name));	
 		this.svgRowLabels.appendChild(label);
 		
-		label.setAttribute("x", this.labelMargin);
-		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
 
 		this.nRows++;
 	}

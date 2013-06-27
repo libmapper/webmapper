@@ -62,12 +62,13 @@ GridSignals.prototype.refresh = function ()
 		label.setAttribute("data-col", this.nCols);
 		label.setAttribute("font-size", this.fontSize + "px");
 		label.setAttribute("class", "label");
+		label.setAttribute("text-anchor", "end");
 		
 		label.appendChild(document.createTextNode(name)); 	
 		this.svgColLabels.appendChild(label);
 
 		var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why -1 .... getBBox() doesn't really work well 
-		var yPos = this.labelMargin;
+		var yPos = this.colLabelsH;
 		label.setAttribute("transform","translate(" + xPos + "," + yPos + ")rotate(90)");
 		
 		this.nCols++;
@@ -95,11 +96,12 @@ GridSignals.prototype.refresh = function ()
 		label.setAttribute("data-row", this.nRows);
 		label.setAttribute("font-size", this.fontSize + "px");
 		label.setAttribute("class","label");
+		label.setAttribute("text-anchor", "end");
 		
 		label.appendChild(document.createTextNode(name));	
 		this.svgRowLabels.appendChild(label);
 		
-		label.setAttribute("x", this.labelMargin);
+		label.setAttribute("x", this.rowLabelsW);
 		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
 
 		this.nRows++;
