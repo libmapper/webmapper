@@ -84,6 +84,7 @@ function listView(model)
 
             //Because svg keeps getting nudged left for some reason
             $('svg').css('left', '0px');
+            $('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
 
             updateCallable = true;
 
@@ -137,6 +138,7 @@ function listView(model)
     this.on_resize = function() 
     {
         update_arrows();
+        $('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
     }
 
 
@@ -1015,7 +1017,7 @@ function fade_incompatible_signals(row, targetTableBody)
 
 this.add_handlers = function()
 {
-    $('body').on('click.list', function() {
+    $('#container').on('click.list', function() {
         deselect_all();
     });
 

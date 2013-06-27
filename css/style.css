@@ -183,6 +183,7 @@ body {
   
     .modesDiv {
       padding: 0 10px;
+      margin-left: 30px;
     }
     .modesDiv div {
       padding: 3pt;
@@ -190,7 +191,7 @@ body {
       display: inline-block;
     }
     .modesel {
-      background: darkgrey;
+      background: #9CC2CF;
     }
 
     div.range {
@@ -199,7 +200,6 @@ body {
     }
     input.range {
       border: 1px solid darkgrey;
-      font-size: 9pt;
       text-align: center;
       margin: 0;
     }
@@ -208,6 +208,7 @@ body {
     }
     input.range, input.expression {
       height: 19px;
+      font-size: 9pt;
     }
 
     /* For proper spacing of text of range divs */
@@ -281,7 +282,7 @@ body {
       .displayTable tr td {
         margin: 3pt;
         height: 13pt;
-        vertical-align: top;
+        vertical-align: middle;
         border: solid 0px black;
         padding-left: 5px;
         cursor: default;
@@ -342,7 +343,7 @@ body {
   }
   #svgTop {
     width: 100%;
-    height: 18px;
+    min-height: 18px !important;
     border-bottom: 1px solid black;
     background-color: lightgray;
     position: absolute;

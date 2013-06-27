@@ -184,6 +184,7 @@ function update_connection_properties()
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
         //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
     };
 
@@ -195,13 +196,21 @@ function update_connection_properties()
     }
     if (conns.length == 1) {
         var c = conns[0];
+        var mode = connectionModes[c.mode];
         clear_props();
         $('.signalControl').removeClass('disabled');
-        $(".mode"+connectionModes[c.mode]).addClass("modesel");
-        if(connectionModes[c.mode] == "Expr") 
-            $('.expression').removeClass('disabled');
-        else
+        $('.signalControl').children('*').removeClass('disabled');
+        $(".mode"+mode).addClass("modesel");
+
+        if(mode != "Expr") 
             $('.expression').addClass('disabled');
+
+        if(mode != "Line")
+            $('#srcRange').addClass('disabled');
+
+        if(mode == "Expr" || mode == "Byp")
+            $('#destRange input.range').addClass('disabled');
+
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
