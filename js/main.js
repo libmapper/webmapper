@@ -540,11 +540,8 @@ function add_signal_control_bar()
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='extratoolsDiv'>"+
-            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-            "<input id='refresh' class='extratools' type='button'>"+
-        "</div>"
-    );
+        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+        "<div id='refresh' class='extratools'>");
 }
 
 /**

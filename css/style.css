@@ -68,7 +68,6 @@ body {
 
     .topMenu>div {
       display: inline-block;
-      margin-top: 5px;
     }
 
     .topMenu li {
@@ -157,24 +156,17 @@ body {
     }
 
     #refresh {
-      background:url(/images/refresh.png) no-repeat;
+      background-image: url(/images/refresh.png);
       cursor: pointer;
-      border: solid 1px darkgray;
-      border-radius: 5px;
-      margin: 0px;
-      padding: 0px;
       width: 24px;
       height: 24px;
     }
 
     #wsstatus {
-      margin: 0px;
-      padding: 0px;
-      padding-right: 10px;
-      padding-top: 5px;
-      height: 24px;
-      font-size: 8pt;
-      color: gray;
+      position: fixed;
+      bottom: 6px;
+      right: 14px;
+      z-index: 9; 
     }
     .signalControl {
       z-index: 1;
