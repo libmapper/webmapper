@@ -1,6 +1,6 @@
 function GridDevices(){
-	this.includedSrcs = [];
-	this.includedDsts = [];
+	this.includedSrcs = new Array();
+	this.includedDsts = new Array();
 };
 GridDevices.prototype = new GridSVG;
 GridDevices.prototype.constructor = GridDevices; 
@@ -21,9 +21,9 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('id', "Pattern_IncludedSrc");
 	pattern.setAttribute('patternUnits', 'objectBoundingBox');
 	pattern.setAttribute('width', "20%");
-	pattern.setAttribute('height', "20%");
+	pattern.setAttribute('height', 32);
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 3 0 l 0 32");
+	path.setAttribute("d", "M 3 1 l 0 30 ");
 	path.setAttribute("style", "stroke: #999; fill: blue; ");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
@@ -31,25 +31,13 @@ GridDevices.prototype.refresh = function ()
 	pattern = document.createElementNS(this.svgNS, "pattern");
 	pattern.setAttribute('id', "Pattern_IncludedDst");
 	pattern.setAttribute('patternUnits', 'objectBoundingBox');
-	pattern.setAttribute('width', "20%");
+	pattern.setAttribute('width', 32);
 	pattern.setAttribute('height', "20%");
 	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 0 3 l 32 0");
+	path.setAttribute("d", "M 1 3 l 30 0");
 	path.setAttribute("style", "stroke: #999; fill: none;");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
-	
-	pattern = document.createElementNS(this.svgNS, "pattern");
-	pattern.setAttribute('id', "Pattern_IncludedSrcDst");
-	pattern.setAttribute('patternUnits', 'objectBoundingBox');
-	pattern.setAttribute('width', "20%");
-	pattern.setAttribute('height', "20%");
-	path = document.createElementNS(this.svgNS, 'path');
-	path.setAttribute("d", "M 0 0 L 32 0 M 0 0 L 0 32");
-	path.setAttribute("style", "stroke: #999; fill: none;");
-	pattern.appendChild(path);
-	defs.appendChild(pattern);
-	
 	
 	this.svg.appendChild(defs);
 	
@@ -190,7 +178,12 @@ GridDevices.prototype.refresh = function ()
 				if (c.getAttribute("data-src") == src && c.getAttribute("data-dst") == dst)
 				{
 					newSelected.push(cell);
-
+					
+//					var cell4 = cell.cloneNode();
+//					cell4.removeAttribute("id");
+//					cell4.setAttribute("class", "cell_selected");
+//					cell4.setAttribute("style", "pointer-events: none; fill: none");
+//					this.svg.appendChild(cell4);
 				}
 			}
 
@@ -229,6 +222,7 @@ GridDevices.prototype.refresh = function ()
  * the included devices variables come from grid.js and need to be set each time
  * they are changed... this is because on_resize recreates all elements :(
  */
+/*
 GridDevices.prototype.setIncludedSrcs = function (val)
 {
 	this.includedSrcs = val;
@@ -237,3 +231,4 @@ GridDevices.prototype.setIncludedDsts = function (val)
 {
 	this.includedDsts = val;
 };
+*/

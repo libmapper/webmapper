@@ -13,11 +13,11 @@ function GridView(container, model)
 	this.sigGrid;
 	
 	this.viewMode = 3;
+	this.includedSrcs = [];
+	this.includedDsts = [];
 	
 	this.init();
 
-	this.includedSrcs = [];
-	this.includedDsts = [];
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
@@ -123,8 +123,8 @@ GridView.prototype = {
 		
 		this.devGrid = new GridDevices();
 		this.devGrid.preInit(document.getElementById("devGrid"), this.model, 0);
-		this.devGrid.setIncludedSrcs(this.includedSrcs);
-		this.devGrid.setIncludedDsts(this.includedDsts);
+		this.devGrid.includedSrcs = this.includedSrcs;	// sets the binding for included sources
+		this.devGrid.includedDsts = this.includedDsts;	// sets the binding for included sources
 		
 		this.sigGrid = new GridSignals();
 		this.sigGrid.preInit(document.getElementById("sigGrid"), this.model, 1);
@@ -337,8 +337,6 @@ GridView.prototype = {
 				$(_self._container).trigger("getSignalsByDevice", cellSrc);
 				$(_self._container).trigger("getSignalsByDevice", cellDst);
 			}	
-			_self.devGrid.setIncludedSrcs(_self.includedSrcs);
-			_self.devGrid.setIncludedDsts(_self.includedDsts);
 			_self.update_display();
 		}
 	},
@@ -356,16 +354,11 @@ GridView.prototype = {
 				var ind;
 				ind = _self.includedSrcs.indexOf(cellSrc);
 				if(ind>=0) 
-					_self.includedSrcs.splice(ind);
+					_self.includedSrcs.splice(ind, 1);
 				ind = _self.includedDsts.indexOf(cellDst); 
 				if(ind>=0) 
-					_self.includedDsts.splice(ind);
-				
-				//FIX: need a command to remove signals from the model
-				//command.send('tab', "mischkabibble");
+					_self.includedDsts.splice(ind, 1);
 			}	
-			_self.devGrid.setIncludedSrcs(_self.includedSrcs);
-			_self.devGrid.setIncludedDsts(_self.includedDsts);
 			_self.update_display();
 		}
 	},
