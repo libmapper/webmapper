@@ -237,7 +237,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 96px);
+    height: calc(100% - 87px);
     background: white;
     border: solid 1px black;
     border-bottom: 0;
@@ -337,7 +337,7 @@ body {
     border: 1px solid black;
     border-bottom: 0;
     left: 40%;
-    height: calc(100% - 96px);
+    height: calc(100% - 87px);
     width: 20%;
   }
   #svgTop {
@@ -360,13 +360,13 @@ body {
 /* Make sure inputs are not obscured*/
     #titleSearchDiv input{
       z-index: 1;
-      margin-top: 16px;
+      margin-top: 12px;
     }
     #titleSearchDiv {
-      height: 50px;
+      height: 41px;
     }
     #titleSearchDiv h2 {
-      margin-top: 11px;
+      margin-top: 9px;
       font-weight: normal;
     }
     #svgTitle {
@@ -381,7 +381,7 @@ body {
       left: 10px;
     }
     #leftSearch {
-      right: 60%;
+      right: 61%;
     }
     #rightTitle {
       left: 60%;
