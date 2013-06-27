@@ -60,9 +60,10 @@ body {
 
 /*The top menu*/
     .topMenu {
-      padding: 0;
+      padding: 10px 0;
       top: 0;
-      margin-bottom: 5px;
+      margin: 0;
+      margin-top: -1px;
       min-width: 560px;
     }
 
@@ -79,6 +80,11 @@ body {
 
     form {
       margin-bottom: 0px;
+    }
+
+    #modeSelection {
+      position: relative;
+      top:  -1px;
     }
 
 
@@ -119,9 +125,6 @@ body {
           position: relative;
           top: 4px;
         }
-        #boundaryMin {
-            margin-left: 5px;
-        }
         .boundaryNone {
           background-position: 0px 0px;
         }
@@ -156,15 +159,20 @@ body {
     }
 
     #refresh {
+      position: absolute;
+      top:  14px;
+      right:  14px;
       background-image: url(/images/refresh.png);
+      background-size: contain;
+      background-repeat: no-repeat;
       cursor: pointer;
-      width: 24px;
-      height: 24px;
+      width: 25px;
+      height: 25px;
     }
 
     #wsstatus {
       position: fixed;
-      bottom: 6px;
+      bottom: 12px;
       right: 14px;
       z-index: 9; 
     }
@@ -177,7 +185,7 @@ body {
       padding: 0 10px;
     }
     .modesDiv div {
-      padding: 5pt;
+      padding: 3pt;
       cursor: pointer;
       display: inline-block;
     }
@@ -188,6 +196,23 @@ body {
     div.range {
       margin-left: 10px;
       padding: 3px 3px;
+    }
+    input.range {
+      border: 1px solid darkgrey;
+      font-size: 9pt;
+      text-align: center;
+      margin: 0;
+    }
+    input.range.Min {
+      border-right: 0;
+    }
+    input.range, input.expression {
+      height: 19px;
+    }
+
+    /* For proper spacing of text of range divs */
+    #boundaryMin, #rangeSrcMin, input.expression {
+      margin-left: 5px
     }
 
     #saveLoadDiv {

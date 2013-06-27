@@ -526,7 +526,7 @@ function add_signal_control_bar()
             'maxLength': 15,
             "size": 5,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
-            'class': 'range',   
+            'class': 'range '+minOrMax,   
             'id': 'range'+srcOrDest+minOrMax,
             'index': i
         })
