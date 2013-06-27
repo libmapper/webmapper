@@ -183,7 +183,7 @@ function update_connection_properties()
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
-        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').addClass('disabled');
     };
 
@@ -514,7 +514,7 @@ function add_signal_control_bar()
 
     //Add the range controls
     $('.topMenu').append(
-        "<div id='srcRange' class='range signalControl disabled'>Source Range:</div>"+
+        "<div id='srcRange' class='range signalControl disabled'>Src Range:</div>"+
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
@@ -532,8 +532,8 @@ function add_signal_control_bar()
         })
     });
 
-    $("<input id='boundaryMin' class='boundary' type='button'></input>").insertBefore('#rangeDestMin');
-    $("<input id='boundaryMax' class='boundary' type='button'></input>").insertAfter('#rangeDestMax');
+    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#rangeDestMin');
+    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#rangeDestMax');
 
 }
 
