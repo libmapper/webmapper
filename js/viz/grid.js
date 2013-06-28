@@ -74,6 +74,29 @@ GridView.prototype = {
 		});
 		div.appendChild(btn);
 
+		
+		// combo box for selecting view mode
+		var comboBox = document.createElement("select");
+		var option = document.createElement('option');
+		option.value = '1';
+		option.appendChild(document.createTextNode('Devices View'));
+		comboBox.appendChild(option);
+		option = document.createElement('option');
+		option.value = '2';
+		option.appendChild(document.createTextNode('Signals View'));
+		comboBox.appendChild(option);
+		option = document.createElement('option');
+		option.value = '3';
+		option.appendChild(document.createTextNode('Split'));
+		comboBox.selectedIndex = 2;
+		comboBox.appendChild(option);
+		
+		comboBox.addEventListener("change", function(evt){
+			_self.switchView(this[this.selectedIndex].value);
+		});
+		
+		div.appendChild(comboBox);
+		
 		// View Buttons
 		btn = document.createElement("button");
 		btn.innerHTML = "Devices";

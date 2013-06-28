@@ -108,9 +108,7 @@ GridSVG.prototype = {
 			btn = document.createElement("button");
 			btn.innerHTML = "Zoom to fit";
 			btn.addEventListener("click", function(evt){
-				_self.autoZoom = true;
-				_self.vboxPos = [0,0];
-				_self.refresh();
+				_self.zoomToFit();
 			});
 			div.appendChild(btn);
 			
@@ -594,12 +592,20 @@ GridSVG.prototype = {
 			//this.updateZoomBars();
 		},
 		
+		zoomToFit : function()
+		{
+			this.autoZoom = true;
+			this.vboxPos = [0,0];
+			this.refresh();
+		},
+		
 		makeActiveGrid : function(){
 			$(this._container).trigger("makeActiveGrid", this.gridIndex);
 		},
 		
 		keyboardHandler: function (e)
 		{
+			//console.log(e.keyCode);
 			 
 			if(this.nCols == 0 || this.nRows == 0)
 				return;
@@ -611,6 +617,20 @@ GridSVG.prototype = {
 					this.toggleConnection();
 			}	
 			
+			// 'c' to connect
+			else if(e.keyCode == 67)	
+			{
+				if(this.selectedCells.length > 0)
+					this.connect();
+			}	
+
+			// 'd' to disconnect
+			else if(e.keyCode == 68)	
+			{
+				if(this.selectedCells.length > 0)
+					this.disconnect();
+			}	
+			
 			// 'ctrl' + '+' to zoom in
 			else if(e.keyCode == 187 && e.ctrlKey)
 				this.zoomIn();
@@ -618,6 +638,10 @@ GridSVG.prototype = {
 			// 'ctrl' + '-' to zoom out
 			else if(e.keyCode == 189 && e.ctrlKey)
 				this.zoomOut();
+			
+			// 'ctrl' + '0' to zoom to fit
+			else if(e.keyCode == 48 && e.ctrlKey)
+				this.zoomToFit();
 			
 			// movement arrows to move the selected cell
 			else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)	
