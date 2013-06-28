@@ -32,14 +32,14 @@ function GridSVG()
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs	
 	this.fontSize = 12;
-	this.vboxMinDim = [ 50,50 ];		// vbox width-height dimensions
+	this.vboxMinDim = [ 48,48 ];		// vbox width-height dimensions
+	this.vboxMaxDim = [2000, 2000];		// *not used in zoom scroll bars
 	this.selectedCells = []; 					// holds a reference to the selected cells
 	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
 	this.nRows = 0;											// number of rows in grid (destination signals)
 	this.nCols = 0;											// number of columns in grid (source signals)
 	this.contentDim = [0, 0];								// width-height dimension of full content
 	this.autoZoom = true;
-//			this.vboxMaxDim = [3000, 3000];		// *not used in zoom scroll bars
 //			this.svgMaxDim = [600, 800];	
 };
 
@@ -555,29 +555,46 @@ GridSVG.prototype = {
 		
 		zoomIn : function()
 		{
-			if(this.vboxDim[0] > this.vboxMinDim[0])
+			this.autoZoom = false;
+			
+			if(this.vboxDim[0] - this.zoomIncrement > this.vboxMinDim[0])
 			{
-				this.autoZoom = false;
 				var ratio = this.zoomIncrement/this.vboxDim[0];
 				this.fontSize = this.fontSize - (this.fontSize*ratio);
-				
 				this.vboxDim[0] -= this.zoomIncrement;
 				this.vboxDim[1] -= this.zoomIncrement/this.aspect;
 				this.refresh();  //bad to redraw everything but needed for now to change font size
+			}
+			else
+			{
+				var diff = this.vboxMinDim[0]-this.vboxDim[0];
+				if(diff)
+				{
+					var ratio = diff/this.vboxDim[0];
+					this.fontSize = this.fontSize + (this.fontSize*ratio);
+					this.vboxDim[0] += diff;
+					this.vboxDim[1] += diff/this.aspect;
+					this.refresh();  //bad to redraw everything but needed for now to change font size
+				}
+			}
 //				this.updateViewBoxes();
 //				this.updateZoomBars();
-			}
 		},
 		
 		zoomOut : function()
 		{
 			this.autoZoom = false;
-		
-			var ratio = this.zoomIncrement/this.vboxDim[0];
-			this.fontSize = this.fontSize + (this.fontSize*ratio);
 			
-//			if(this.vboxDim[0] <= this.contentDim[0]-this.zoomIncrement && this.vboxDim[0] < this.vboxMaxDim[0]-this.zoomIncrement){
-			if(true){
+			// zoom maxed by vboxMaxDim
+			if(this.vboxDim[0] + this.zoomIncrement < this.vboxMaxDim[0] && this.vboxDim[1] + (this.zoomIncrement/this.aspect) < this.vboxMaxDim[1]){
+				var ratio = this.zoomIncrement/this.vboxDim[0];
+				this.vboxDim[0] += this.zoomIncrement;
+				this.vboxDim[1] += this.zoomIncrement/this.aspect;
+				this.fontSize = this.fontSize + (this.fontSize*ratio);
+			}
+			
+			/*	// zoom maxed by content
+			if(this.vboxDim[0] <= this.contentDim[0]-this.zoomIncrement && this.vboxDim[0] < this.vboxMaxDim[0]-this.zoomIncrement){
 				this.vboxDim[0] += this.zoomIncrement;
 				this.vboxDim[1] += this.zoomIncrement/this.aspect;
 			}
@@ -587,6 +604,7 @@ GridSVG.prototype = {
 				this.vboxDim[0] = this.contentDim[0];
 				this.vboxDim[1] = this.vboxDim[0]/this.aspect; //this.contentDim[0]/this.aspect;
 			}
+			*/
 			this.refresh();  //bad to redraw everything but needed for now to change font size
 			//this.updateViewBoxes();
 			//this.updateZoomBars();
