@@ -1,6 +1,7 @@
 function GridDevices(){
 	this.includedSrcs = new Array();
 	this.includedDsts = new Array();
+	this.selectedLabels = new Array();
 };
 GridDevices.prototype = new GridSVG;
 GridDevices.prototype.constructor = GridDevices; 
@@ -8,6 +9,7 @@ GridDevices.prototype.constructor = GridDevices;
 
 GridDevices.prototype.refresh = function ()
 {
+	var _self = this;
 
 	$('#svgGrid' + this.gridIndex).empty();
 	$('#svgRows' + this.gridIndex).empty();
@@ -87,6 +89,10 @@ GridDevices.prototype.refresh = function ()
 		label.setAttribute("font-size", this.fontSize + "px");
 		label.setAttribute("class", "label");
 		label.setAttribute("text-anchor", "end");
+	
+		label.addEventListener("click", function(evt){
+			_self.onLabelClick(evt, _self);
+		});
 		
 		label.appendChild(document.createTextNode(name)); 	
 		this.svgColLabels.appendChild(label);
@@ -114,6 +120,10 @@ GridDevices.prototype.refresh = function ()
 		label.setAttribute("text-anchor", "end");
 		label.setAttribute("x", this.rowLabelsW);
 		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
+		
+		label.addEventListener("click", function(evt){
+			_self.onLabelClick(evt, _self);
+		});
 		
 		label.appendChild(document.createTextNode(name));	
 		this.svgRowLabels.appendChild(label);
@@ -220,17 +230,87 @@ GridDevices.prototype.refresh = function ()
 	
 };
 
+GridDevices.prototype.onLabelClick = function (evt, _self)
+{
+	_self.makeActiveGrid();
+	_self.selectedCells_clearAll();
+	
+	var label = evt.target;
+	
+	// if COMMAND key is pressed, user is adding/removing to selection
+	
+	if(evt.metaKey)	// COMMAND key on MAC, CONTROL key on PC
+	{
+		if(_self.selectedLabels_getLabelIndex(label) == -1)	// not already selected
+			_self.selectedLabels_addLabel(label);
+		else
+			_self.selectedLabels_removeLabel(label);
+	}
+	
+	// if COMMAND is not pressed, then user is selecting a single cell
+	
+	else
+	{
+		if(_self.selectedLabels.length == 0)		// case: no selected cell
+		{
+			_self.selectedLabels_addLabel(label);
+		}
+		else if(_self.selectedLabels.length == 1)		// case: one selected cell
+		{
+			if(_self.selectedLabels_getLabelIndex(label) == -1)	// not already selected, so select
+			{
+				_self.selectedLabels_clearAll();
+				_self.selectedLabels_addLabel(label);
+			}
+			else									// already selected, so remove
+				_self.selectedLabels_clearAll();					
+		}
+		else	// case: more than one selected cell
+		{
+			_self.selectedLabels_clearAll();
+			_self.selectedLabels_addLabel(label);
+		}
+	}
+};
+
 /**
- * the included devices variables come from grid.js and need to be set each time
- * they are changed... this is because on_resize recreates all elements :(
+ * Handlers for manipulating the array of selected cells
  */
-/*
-GridDevices.prototype.setIncludedSrcs = function (val)
-{
-	this.includedSrcs = val;
+GridDevices.prototype.selectedLabels_addLabel = function(label){
+	label.classList.add('label_selected');			
+	this.selectedLabels.push(label);
 };
-GridDevices.prototype.setIncludedDsts = function (val)
-{
-	this.includedDsts = val;
+GridDevices.prototype.selectedLabels_removeLabel = function(label){
+	var index = this.selectedLabels_getLabelIndex(label);
+	if(index > -1){
+		label.classList.remove('label_selected');
+		this.selectedLabels.splice(index, 1);				
+	}
 };
-*/
+GridDevices.prototype.selectedLabels_getLabelIndex = function (label){
+	var index = -1;
+	for(var i=0; i<this.selectedLabels.length; i++)
+	{
+		if (this.selectedLabels[i].id == label.id){
+			index = i;
+			break;
+		}
+	}
+	return index;
+	//return this.selectedLabels.indexOf(label);	// not sure but might be dangerous 
+};
+GridDevices.prototype.selectedLabels_clearAll = function (){
+	for(var i=0; i<this.selectedLabels.length; i++)
+		this.selectedLabels[i].classList.remove('label_selected');
+	this.selectedLabels.length=0;	//clears the array
+};
+GridDevices.prototype.selectedLabels_restore = function (labels)
+{
+	if(labels)
+		this.selectedLabels = labels;
+};
+GridDevices.prototype.onCellClick = function(evt, _self)
+{
+	this.selectedLabels_clearAll();
+	GridSVG.prototype.onCellClick(evt, _self);
+};

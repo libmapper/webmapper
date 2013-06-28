@@ -324,13 +324,14 @@ GridView.prototype = {
 	
 	includeSelectedDevices : function (_self)
 	{
+		// for selected cells
 		if(_self.devGrid.selectedCells.length > 0)
 		{
 			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
 			{
 				var cell = _self.devGrid.selectedCells[i];
-				cellSrc = cell.getAttribute("data-src");
-				cellDst = cell.getAttribute("data-dst");
+				var cellSrc = cell.getAttribute("data-src");
+				var cellDst = cell.getAttribute("data-dst");
 				arrPushIfUnique(cellSrc, _self.includedSrcs);
 				arrPushIfUnique(cellDst, _self.includedDsts);
 				$(_self._container).trigger("getSignalsByDevice", cellSrc);
@@ -338,17 +339,39 @@ GridView.prototype = {
 			}	
 			_self.update_display();
 		}
+		// for selected labels
+		if(_self.devGrid.selectedLabels.length > 0)
+		{
+			for(var i=0; i<_self.devGrid.selectedLabels.length; i++)
+			{
+				var label = _self.devGrid.selectedLabels[i];
+				if(label.hasAttribute("data-src"))
+				{
+					var labelSrc = label.getAttribute("data-src");
+					arrPushIfUnique(labelSrc, _self.includedSrcs);
+					$(_self._container).trigger("getSignalsByDevice", labelSrc);
+				}
+				if(label.hasAttribute("data-dst"))
+				{
+					var labelDst = label.getAttribute("data-dst");
+					arrPushIfUnique(labelDst, _self.includedDsts);
+					$(_self._container).trigger("getSignalsByDevice", labelDst);
+				}
+			}	
+			_self.update_display();
+		}
 	},
 	
 	excludeSelectedDevices : function (_self)
 	{
+		// for selected cells
 		if(_self.devGrid.selectedCells.length > 0)
 		{
 			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
 			{
 				var cell = _self.devGrid.selectedCells[i];
-				cellSrc = cell.getAttribute("data-src");
-				cellDst = cell.getAttribute("data-dst");
+				var cellSrc = cell.getAttribute("data-src");
+				var cellDst = cell.getAttribute("data-dst");
 				
 				var ind;
 				ind = _self.includedSrcs.indexOf(cellSrc);
@@ -357,6 +380,30 @@ GridView.prototype = {
 				ind = _self.includedDsts.indexOf(cellDst); 
 				if(ind>=0) 
 					_self.includedDsts.splice(ind, 1);
+			}	
+			_self.update_display();
+		}
+		// for selected labels		
+		if(_self.devGrid.selectedLabels.length > 0)
+		{
+			for(var i=0; i<_self.devGrid.selectedLabels.length; i++)
+			{
+				var label = _self.devGrid.selectedLabels[i];
+				
+				if(label.hasAttribute("data-src"))
+				{
+					var labelSrc = label.getAttribute("data-src");
+					var ind = _self.includedSrcs.indexOf(labelSrc);
+					if(ind>=0) 
+						_self.includedSrcs.splice(ind, 1);
+				}
+				if(label.hasAttribute("data-dst"))
+				{
+					var labelDst = label.getAttribute("data-dst");
+					var ind = _self.includedDsts.indexOf(labelDst); 
+					if(ind>=0) 
+						_self.includedDsts.splice(ind, 1);
+				}
 			}	
 			_self.update_display();
 		}

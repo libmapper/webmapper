@@ -131,3 +131,21 @@ a:hover { color: #036; }
 	padding: 10px 10px;
 	background-color: #eeeeee;
 }
+
+#actionBar button, .buttonBar button{
+	font-size: 14px;
+	border-radius: 0px; 
+	-moz-border-radius: 0px; 
+	-webkit-border-radius: 0px; 
+	border: 0;
+	background: #F2FFDE;
+	padding: 10px 15px;
+}
+#actionBar button:hover, .buttonBar button:hover{
+	background-color:yellow;
+}
+	
+	
+	
+	
+	

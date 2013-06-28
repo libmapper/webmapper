@@ -356,7 +356,6 @@ GridSVG.prototype = {
 					_self.selectedCells_addCell(cell);
 				else
 					_self.selectedCells_removeCell(cell);
-					
 			}
 			
 			// if COMMAND is not pressed, then user is selecting a single cell
