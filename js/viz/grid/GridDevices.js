@@ -228,6 +228,13 @@ GridDevices.prototype.refresh = function ()
 	this.updateViewBoxes();
 	this.updateZoomBars();
 	
+	if(_self.mousedOverCell)
+	{
+		var evtObj = document.createEvent('MouseEvents');
+		evtObj.initEvent( 'mouseover', true, false );
+		_self.mousedOverCell.dispatchEvent(evtObj);
+	}
+	
 };
 
 GridDevices.prototype.onLabelClick = function (evt, _self)

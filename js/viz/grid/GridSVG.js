@@ -62,7 +62,7 @@ GridSVG.prototype = {
 		
 		initDimensions : function (container)
 		{
-			var w = $(container).width();
+			var w = $(container).width() - 80;
 			var h = $(container).height() - 50;
 			this.svgDim[0] = w - this.rowLabelsW - this.scrollBarDim[0] - this.labelMargin;	// dimensions of the svg canvas
 			this.svgDim[1] = h - this.colLabelsH - this.scrollBarDim[1] - this.labelMargin;	// dimensions of the svg canvas
@@ -282,6 +282,15 @@ GridSVG.prototype = {
 		 */
 		onCellMouseOver : function(evt, _self)    
 		{
+			if(_self.mousedOverCell)
+			{
+				var old = _self.mousedOverCell;
+				_self.mousedOverCell = null;
+				var evtObjOut = document.createEvent('MouseEvents');
+				evtObjOut.initEvent( 'mouseout', true, false );
+				old.dispatchEvent(evtObjOut);
+			}
+			
 			// keep reference to cell mouse is over (useful in other methods)
 			if(evt.type == "mouseover")
 				_self.mousedOverCell = evt.target;	
@@ -714,6 +723,24 @@ GridSVG.prototype = {
 					// set the new selected cell based on the arrow key movement
 					var newCell = this.getCellByPos(newPos[0], newPos[1]);
 					this.selectedCells_addCell(newCell);
+					
+					
+					// fire mouseover and mouseout events for the cell and previously selected cell 
+					 if( document.createEvent ) 
+					 {
+						 var evtObjOut = document.createEvent('MouseEvents');
+						 var evtObjOver = document.createEvent('MouseEvents');
+						 evtObjOver.initEvent( 'mouseover', true, false );
+						 evtObjOut.initEvent( 'mouseout', true, false );
+						 lastSelected.dispatchEvent(evtObjOut);
+						 newCell.dispatchEvent(evtObjOver);
+				     } 
+					 else if( document.createEventObject ) 
+				     {
+						 lastSelected.fireEvent('onmouseout');
+						 newCell.fireEvent('onmouseover');
+				     }
+					 
 					
 					// calculate if new selected cell is visible or if it is out of view
 					// if out of view then move the viewbox

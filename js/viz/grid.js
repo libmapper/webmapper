@@ -12,7 +12,7 @@ function GridView(container, model)
 	this.devGrid;
 	this.sigGrid;
 	
-	this.viewMode = 3;
+	this.viewMode = 0;
 	this.includedSrcs = [];
 	this.includedDsts = [];
 	
@@ -74,49 +74,62 @@ GridView.prototype = {
 		});
 		div.appendChild(btn);
 
-		
+		/*
 		// combo box for selecting view mode
+		var option;
+		
+		var comboBoxDiv = document.createElement("span");
+		comboBoxDiv.setAttribute("class", "styled-select");
+		
 		var comboBox = document.createElement("select");
-		var option = document.createElement('option');
+		
+		option = document.createElement('option');
+		option.value = '0';
+		option.appendChild(document.createTextNode('Split'));
+		comboBox.appendChild(option);
+
+		option = document.createElement('option');
 		option.value = '1';
 		option.appendChild(document.createTextNode('Devices View'));
 		comboBox.appendChild(option);
+
 		option = document.createElement('option');
 		option.value = '2';
 		option.appendChild(document.createTextNode('Signals View'));
 		comboBox.appendChild(option);
-		option = document.createElement('option');
-		option.value = '3';
-		option.appendChild(document.createTextNode('Split'));
-		comboBox.selectedIndex = 2;
-		comboBox.appendChild(option);
 		
 		comboBox.addEventListener("change", function(evt){
-			_self.switchView(this[this.selectedIndex].value);
+			_self.switchView(this.selectedIndex);
 		});
 		
-		div.appendChild(comboBox);
+		comboBox.selectedIndex = this.viewMode;
+		comboBoxDiv.appendChild(comboBox);
+		div.appendChild(comboBoxDiv);
+		*/
 		
 		// View Buttons
 		btn = document.createElement("button");
-		btn.innerHTML = "Devices";
+		btn.innerHTML = "Split View";
+		btn.addEventListener("click", function(evt){
+			_self.switchView(0);
+		});
+		div.appendChild(btn);
+		
+		btn = document.createElement("button");
+		btn.innerHTML = "Devices Only";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(1);
 		});
 		div.appendChild(btn);
 		
 		btn = document.createElement("button");
-		btn.innerHTML = "Signals";
+		btn.innerHTML = "Signals Only";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(2);
 		});
 		div.appendChild(btn);
-		btn = document.createElement("button");
-		btn.innerHTML = "Split View";
-		btn.addEventListener("click", function(evt){
-			_self.switchView(3);
-		});
-		div.appendChild(btn);
+		
+		
 		wrapper.appendChild(div);
 		// END button bar
 		
@@ -211,24 +224,25 @@ GridView.prototype = {
 		if(mode == this.viewMode)
 			return;
 		
-		var len = 200;		// length of the animation in ms
 		this.viewMode = mode;
 
 		this.on_resize();
 		
 		switch (mode) 
 		{
+		case 0:
+			$('#devGrid').show();
+			$('#sigGrid').show();
+			break;
 		case 1:
 			$('#devGrid').show();
 			$('#sigGrid').hide();
+			this.setActiveGrid(0);
 			break;
 		case 2:
 			$('#devGrid').hide();
 			$('#sigGrid').show();
-			break;
-		case 3:
-			$('#devGrid').show();
-			$('#sigGrid').show();
+			this.setActiveGrid(1);
 			break;
 		}
 	},
@@ -299,7 +313,16 @@ GridView.prototype = {
 	
 	keyboardHandler: function (e, _self)
 	{
-		if(this.activeGridIndex == 0)
+		// 'ctrl' + '1 / 2 / 3 ' to change view modes
+		if(e.keyCode == 49 && e.ctrlKey)
+			this.switchView(0);
+		else if(e.keyCode == 50 && e.ctrlKey)
+			this.switchView(1);
+		else if(e.keyCode == 51 && e.ctrlKey)
+			this.switchView(2);
+		
+		// else pass it to the active view
+		else if(this.activeGridIndex == 0)
 			this.devGrid.keyboardHandler(e);
 		else if(this.activeGridIndex == 1)
 			this.sigGrid.keyboardHandler(e);
@@ -520,10 +543,10 @@ GridView.prototype = {
 	calculateSizes : function ()
 	{
 		var w = $(this._container).width() - 8;
-		if(this.viewMode == 3)
+		if(this.viewMode == 0)
 			w = Math.floor($(this._container).width()/2) - 8;
 		
-		var h = $(this._container).height() - $("#actionBar").height() - 2 -30;
+		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		
 		document.getElementById("devGrid").style.width = w + "px";
 		document.getElementById("devGrid").style.height = h + "px";

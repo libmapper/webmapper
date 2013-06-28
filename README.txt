@@ -19,10 +19,22 @@ List view Command keys:
 
 Grid view Command keys:
 
+
+	click on cell: select the cellmateselected
+	COMMAND click a cell: select multiple cells
+
 	arrows: move selected cell
 	SHIFT + arrows: move selected cell by 3
-	click on cell: make selected
-	COMMAND click a cell: select multiple cells
-	space: toggle selected cell(s)
 
-	*There are 2 grids. The left side is for devices, the right for signals. Select link(s) on the left and Press "ADD" to include the linked devices in the signals grid.
+	space: toggle selected cell(s)
+	c: connect selected cell(s)
+	d: disconnect selected cell(s)
+
+	CTRL +: zoom in on active grid
+	CTRL -: zoom out on active grid
+	CTRL 0: zoom-to-fit on active grid
+	CTRL 1: switch to split view
+	CTRL 2: switch to devices only view
+	CTRL 3: switch to signals only view
+
+	Instructions: There are 2 grids. The left side is the devices grid, the right is the signals grid. Select cells or device labels on the left and press the "Add"/"Remove" button to include/exclude the selected devices in the signals grid. *tested on Google Chrome only
