@@ -621,6 +621,18 @@ GridSVG.prototype = {
 				this.vboxDim[0] += this.zoomIncrement;
 				this.vboxDim[1] += this.zoomIncrement/this.aspect;
 				this.fontSize = this.fontSize + (this.fontSize*ratio);
+				
+				for(var ind=0; ind<2; ind++)
+				{
+					// if zoomed out beyond content, keep vbox at origin
+					if(this.vboxDim[ind] > this.contentDim[ind])
+						this.vboxPos[ind] = 0;
+					// if zooming out when scrolled to max, adjust the vbox to keep it at max
+					else if(this.vboxPos[ind] + this.vboxDim[ind] > this.contentDim[ind]){
+						var diff = this.vboxPos[ind] + this.vboxDim[ind] - this.contentDim[ind];
+						this.vboxPos[ind] -= diff;
+					}
+				}
 			}
 			
 			/*	// zoom maxed by content

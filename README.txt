@@ -19,7 +19,6 @@ List view Command keys:
 
 Grid view Command keys:
 
-
 	click on cell: select the cellmateselected
 	COMMAND click a cell: select multiple cells
 
@@ -39,5 +38,5 @@ Grid view Command keys:
 	ALT leftArrow: set devices grid as active
 	ALT rightArrow: set signals grid as active
 
-	Instructions: There are 2 grids. The left side is the devices grid, the right is the signals grid. Select cells or device labels on the left and press the "Add"/"Remove" button to include/exclude the selected devices in the signals grid. You can also use the keyboard arrows to move the selected cell around. All keyboard shortcuts affect the 'active' grid, indicated by the little square in the upper left corner of the grid.
- *tested on Google Chrome only
+	Instructions: There are 2 grids. The left side is the DEVICES grid, the right is the SIGNALS grid. Select cells or device labels on the DEVICES grid and press the "Add"/"Remove" button (or 'a'/'s' keyboard shortcut) to include/exclude the selected devices in the signals grid. Vertical/horizontal lines on the cells in the DEVICES grid indicate the device is included in the SIGNALS grid. You can use the keyboard arrows to move the selected cell around. All keyboard shortcuts affect the 'active' grid, indicated by the little square in the upper left corner of the grid.
+ *Grid view was developed and tested on Google Chrome only
