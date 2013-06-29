@@ -240,7 +240,7 @@ body {
     width: 40%;
     height: calc(100% - 87px);
     background: white;
-    border: solid 1px black;
+    /*border: solid 1px black;*/
     border-bottom: 0;
   }
 
@@ -263,7 +263,7 @@ body {
       /* Rows and headers */
       thead {
         background-color: lightgray;
-        border-bottom: 1px solid black;
+        /*border-bottom: 1px solid black;*/
         cursor: pointer;
       }
 
@@ -319,7 +319,7 @@ body {
     background-color: lightgray;
     padding-left: 10px;
     padding-top: 3px;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
   }
 
   .status.middle {
@@ -339,7 +339,7 @@ body {
   .svgDiv {
     position: absolute;
     background-color: white;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
     border-bottom: 0;
     left: 40%;
     height: calc(100% - 87px);
@@ -348,7 +348,7 @@ body {
   #svgTop {
     width: 100%;
     min-height: 18px !important;
-    border-bottom: 1px solid black;
+    /*border-bottom: 1px solid black;*/
     background-color: lightgray;
     position: absolute;
     top: 0px;
