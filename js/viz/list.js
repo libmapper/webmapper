@@ -83,7 +83,7 @@ function listView(model)
             filter_view();
 
             //Because svg keeps getting nudged left for some reason
-            $('svg').css('left', '0px');
+            //$('svg').css('left', '0px');
             update_row_heights();
             //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
 
