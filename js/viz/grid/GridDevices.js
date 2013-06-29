@@ -148,7 +148,6 @@ GridDevices.prototype.refresh = function ()
 			// set the default style class 
 			// used for example, when reverting from mouseover style
 			cell.setAttribute("class", cell.getAttribute("defaultClass"));
-			
 			this.svg.appendChild(cell);
 			
 			// extra styling for devices, if added into view
@@ -228,11 +227,11 @@ GridDevices.prototype.refresh = function ()
 	this.updateViewBoxes();
 	this.updateZoomBars();
 	
-	if(_self.mousedOverCell)
+	if(this.mousedOverCell)
 	{
 		var evtObj = document.createEvent('MouseEvents');
 		evtObj.initEvent( 'mouseover', true, false );
-		_self.mousedOverCell.dispatchEvent(evtObj);
+		this.mousedOverCell.dispatchEvent(evtObj);
 	}
 	
 };

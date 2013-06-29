@@ -266,37 +266,56 @@ GridSVG.prototype = {
 				_self.onCellClick(evt, _self);
 			});
 			cell.addEventListener("mouseover", function(evt){
-				_self.onCellMouseOver(evt, _self);
+				_self.onCellMouseOver(evt);
 			});
 			cell.addEventListener("mouseout", function(evt){
-				_self.onCellMouseOver(evt, _self);
+				_self.onCellMouseOut();
 			});
 			
 			_self.cells.push(cell);
 			return cell;
 		},
 		
+		onCellMouseOut : function()
+		{
+			// style cells
+			for(var i=0; i< this.cells.length; i++)
+			{
+				var curCell = this.cells[i];
+				var className = curCell.getAttribute("class");
+				if(className.indexOf("cell_connected") == -1)
+				{
+					className = (className.indexOf("cell_selected") == -1)? "" : "cell_selected "; 
+					curCell.setAttribute("class",className + curCell.getAttribute("defaultClass"));
+				}
+			}
+			
+			// style row label
+			var rowNodes = this.svgRowLabels.childNodes;
+			for(i=0; i<rowNodes.length; i++) {
+			    rowNodes[i].setAttribute("class","label");
+			}
+
+			// style col label
+			var colNodes = this.svgColLabels.childNodes;
+			for(i=0; i<colNodes.length; i++) {
+			    colNodes[i].setAttribute("class","label");
+			}
+
+			
+			this.mousedOverCell = null;
+			
+		},
 		/**
 		 * on cell mouseover, highlights corresponding row and columns
 		 * must handle special cases: if the cell is the selected cell or has a connection
 		 */
-		onCellMouseOver : function(evt, _self)    
+		onCellMouseOver : function(evt)    
 		{
-			if(_self.mousedOverCell)
-			{
-				var old = _self.mousedOverCell;
-				_self.mousedOverCell = null;
-				var evtObjOut = document.createEvent('MouseEvents');
-				evtObjOut.initEvent( 'mouseout', true, false );
-				old.dispatchEvent(evtObjOut);
-			}
+			if(this.mousedOverCell)
+				this.onCellMouseOut();
 			
-			// keep reference to cell mouse is over (useful in other methods)
-			if(evt.type == "mouseover")
-				_self.mousedOverCell = evt.target;	
-			else if (evt.type == "mouseout")
-				_self.mousedOverCell = null;	
-				
+			this.mousedOverCell = evt.target;	
 			var selectedRow = evt.target.getAttribute("data-row");
 			var selectedCol = evt.target.getAttribute("data-col");
 			
@@ -312,34 +331,21 @@ GridSVG.prototype = {
 					if(className.indexOf("cell_connected") == -1)
 					{
 						className = (className.indexOf("cell_selected") == -1)? "" : "cell_selected "; 
-						if(evt.type == "mouseover")
-							curCell.setAttribute("class", className + "row_over");
-						else if(evt.type == "mouseout"){
-							curCell.setAttribute("class",className + curCell.getAttribute("defaultClass"));
-						}
+						curCell.setAttribute("class", className + "row_over");
 					}
 				}
 			}
 			
 			// style row label
-			var rowLabel = _self.svgRowLabels.getElementById("rowLabel" + selectedRow);
+			var rowLabel = this.svgRowLabels.getElementById("rowLabel" + selectedRow);
 			if(rowLabel != null)
-			{
-				if(evt.type == "mouseover")
-					rowLabel.setAttribute("class","label_over");
-				else if(evt.type == "mouseout")
-					rowLabel.setAttribute("class","label");
-			}
+				rowLabel.setAttribute("class","label_over");
 			
-		
 			// style col label
-			var colLabel = _self.svgColLabels.getElementById("colLabel" + selectedCol);
+			var colLabel = this.svgColLabels.getElementById("colLabel" + selectedCol);
 			if(colLabel != null)
 			{
-				if(evt.type == "mouseover")
-					colLabel.setAttribute("class","label_over");
-				else if(evt.type == "mouseout")
-					colLabel.setAttribute("class","label");
+				colLabel.setAttribute("class","label_over");
 			}
 		},
 		
@@ -686,8 +692,6 @@ GridSVG.prototype = {
 					// clear all selected cells when arrows are pressed
 					this.selectedCells_clearAll();
 					
-
-					
 					// set position of the new selected cell
 					var newPos = [currentPos[0], currentPos[1]];		// [row, col]... I know very confusing with X/Y coordinates
 					switch(e.keyCode)	
@@ -723,21 +727,17 @@ GridSVG.prototype = {
 					// set the new selected cell based on the arrow key movement
 					var newCell = this.getCellByPos(newPos[0], newPos[1]);
 					this.selectedCells_addCell(newCell);
-					
+					this.onCellMouseOut();
 					
 					// fire mouseover and mouseout events for the cell and previously selected cell 
 					 if( document.createEvent ) 
 					 {
-						 var evtObjOut = document.createEvent('MouseEvents');
-						 var evtObjOver = document.createEvent('MouseEvents');
-						 evtObjOver.initEvent( 'mouseover', true, false );
-						 evtObjOut.initEvent( 'mouseout', true, false );
-						 lastSelected.dispatchEvent(evtObjOut);
-						 newCell.dispatchEvent(evtObjOver);
+						 var evtOver = document.createEvent('MouseEvents');
+						 evtOver.initEvent( 'mouseover', true, false );
+						 newCell.dispatchEvent(evtOver);
 				     } 
 					 else if( document.createEventObject ) 
 				     {
-						 lastSelected.fireEvent('onmouseout');
 						 newCell.fireEvent('onmouseover');
 				     }
 					 

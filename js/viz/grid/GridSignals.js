@@ -173,6 +173,13 @@ GridSignals.prototype.refresh = function ()
 		}
 	}
 
+	if(this.mousedOverCell)
+	{
+		var evtObj = document.createEvent('MouseEvents');
+		evtObj.initEvent( 'mouseover', true, false );
+		this.mousedOverCell.dispatchEvent(evtObj);
+	}
+
 	this.updateViewBoxes();
 	this.updateZoomBars();
 };

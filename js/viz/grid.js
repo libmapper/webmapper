@@ -62,7 +62,7 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "Add";
 		btn.addEventListener("click", function(evt){
-			_self.includeSelectedDevices(_self);
+			_self.includeSelectedDevices();
 		});
 		div.appendChild(btn);
 			
@@ -70,7 +70,7 @@ GridView.prototype = {
 		btn = document.createElement("button");
 		btn.innerHTML = "Remove";
 		btn.addEventListener("click", function(evt){
-			_self.excludeSelectedDevices(_self);
+			_self.excludeSelectedDevices();
 		});
 		div.appendChild(btn);
 
@@ -147,11 +147,14 @@ GridView.prototype = {
 		
 		// FIX part 1/2
 		// saving selected cell to restore after being re-initialized
-		// ideally should not be redrawing everything but just updateing SVG dimensions on_resize
+		// ideally should not be redrawing everything but just updating SVG dimensions on_resize
 		// however on_resize is giving trouble calculating the font size zoom because aspect ratio changes
 		var prevSelectedDev;
+		var prevMousedOver;
 		if(this.devGrid && this.devGrid.selectedCells)
 			prevSelectedDev = this.devGrid.selectedCells;
+		if(this.devGrid && this.devGrid.mousedOverCell)
+			prevMousedOver = this.devGrid.mousedOverCell;
 		var prevSelectedSig;
 		if(this.sigGrid && this.sigGrid.selectedCells)
 			prevSelectedSig = this.sigGrid.selectedCells;
@@ -167,6 +170,8 @@ GridView.prototype = {
 		// FIX part 2/2
 		if(prevSelectedDev)
 			this.devGrid.selectedCells_restore(prevSelectedDev);
+		if(prevMousedOver)
+			this.devGrid.mousedOverCell = prevMousedOver;
 		if(prevSelectedSig)
 			this.sigGrid.selectedCells_restore(prevSelectedSig);
 		
@@ -323,7 +328,18 @@ GridView.prototype = {
 		
 		// else pass it to the active view
 		else if(this.activeGridIndex == 0)
-			this.devGrid.keyboardHandler(e);
+		{
+			// 'a' to include
+			if(e.keyCode == 65)	
+				this.includeSelectedDevices();
+
+			// 's' to exclude
+			else if(e.keyCode == 83)	
+				this.excludeSelectedDevices();
+
+			else
+				this.devGrid.keyboardHandler(e);
+		}
 		else if(this.activeGridIndex == 1)
 			this.sigGrid.keyboardHandler(e);
 			
@@ -368,90 +384,90 @@ GridView.prototype = {
 		return list;
 	},
 	
-	includeSelectedDevices : function (_self)
+	includeSelectedDevices : function ()
 	{
 		// for selected cells
-		if(_self.devGrid.selectedCells.length > 0)
+		if(this.devGrid.selectedCells.length > 0)
 		{
-			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+			for(var i=0; i<this.devGrid.selectedCells.length; i++)
 			{
-				var cell = _self.devGrid.selectedCells[i];
+				var cell = this.devGrid.selectedCells[i];
 				var cellSrc = cell.getAttribute("data-src");
 				var cellDst = cell.getAttribute("data-dst");
-				arrPushIfUnique(cellSrc, _self.includedSrcs);
-				arrPushIfUnique(cellDst, _self.includedDsts);
-				$(_self._container).trigger("getSignalsByDevice", cellSrc);
-				$(_self._container).trigger("getSignalsByDevice", cellDst);
+				arrPushIfUnique(cellSrc, this.includedSrcs);
+				arrPushIfUnique(cellDst, this.includedDsts);
+				$(this._container).trigger("getSignalsByDevice", cellSrc);
+				$(this._container).trigger("getSignalsByDevice", cellDst);
 			}	
-			_self.update_display();
+			this.update_display();
 		}
 		// for selected labels
-		if(_self.devGrid.selectedLabels.length > 0)
+		if(this.devGrid.selectedLabels.length > 0)
 		{
-			for(var i=0; i<_self.devGrid.selectedLabels.length; i++)
+			for(var i=0; i<this.devGrid.selectedLabels.length; i++)
 			{
-				var label = _self.devGrid.selectedLabels[i];
+				var label = this.devGrid.selectedLabels[i];
 				if(label.hasAttribute("data-src"))
 				{
 					var labelSrc = label.getAttribute("data-src");
-					arrPushIfUnique(labelSrc, _self.includedSrcs);
-					$(_self._container).trigger("getSignalsByDevice", labelSrc);
+					arrPushIfUnique(labelSrc, this.includedSrcs);
+					$(this._container).trigger("getSignalsByDevice", labelSrc);
 				}
 				if(label.hasAttribute("data-dst"))
 				{
 					var labelDst = label.getAttribute("data-dst");
-					arrPushIfUnique(labelDst, _self.includedDsts);
-					$(_self._container).trigger("getSignalsByDevice", labelDst);
+					arrPushIfUnique(labelDst, this.includedDsts);
+					$(this._container).trigger("getSignalsByDevice", labelDst);
 				}
 			}	
-			_self.update_display();
+			this.update_display();
 		}
 	},
 	
-	excludeSelectedDevices : function (_self)
+	excludeSelectedDevices : function ()
 	{
 		// for selected cells
-		if(_self.devGrid.selectedCells.length > 0)
+		if(this.devGrid.selectedCells.length > 0)
 		{
-			for(var i=0; i<_self.devGrid.selectedCells.length; i++)
+			for(var i=0; i<this.devGrid.selectedCells.length; i++)
 			{
-				var cell = _self.devGrid.selectedCells[i];
+				var cell = this.devGrid.selectedCells[i];
 				var cellSrc = cell.getAttribute("data-src");
 				var cellDst = cell.getAttribute("data-dst");
 				
 				var ind;
-				ind = _self.includedSrcs.indexOf(cellSrc);
+				ind = this.includedSrcs.indexOf(cellSrc);
 				if(ind>=0) 
-					_self.includedSrcs.splice(ind, 1);
-				ind = _self.includedDsts.indexOf(cellDst); 
+					this.includedSrcs.splice(ind, 1);
+				ind = this.includedDsts.indexOf(cellDst); 
 				if(ind>=0) 
-					_self.includedDsts.splice(ind, 1);
+					this.includedDsts.splice(ind, 1);
 			}	
-			_self.update_display();
+			this.update_display();
 		}
 		// for selected labels		
-		if(_self.devGrid.selectedLabels.length > 0)
+		if(this.devGrid.selectedLabels.length > 0)
 		{
-			for(var i=0; i<_self.devGrid.selectedLabels.length; i++)
+			for(var i=0; i<this.devGrid.selectedLabels.length; i++)
 			{
-				var label = _self.devGrid.selectedLabels[i];
+				var label = this.devGrid.selectedLabels[i];
 				
 				if(label.hasAttribute("data-src"))
 				{
 					var labelSrc = label.getAttribute("data-src");
-					var ind = _self.includedSrcs.indexOf(labelSrc);
+					var ind = this.includedSrcs.indexOf(labelSrc);
 					if(ind>=0) 
-						_self.includedSrcs.splice(ind, 1);
+						this.includedSrcs.splice(ind, 1);
 				}
 				if(label.hasAttribute("data-dst"))
 				{
 					var labelDst = label.getAttribute("data-dst");
-					var ind = _self.includedDsts.indexOf(labelDst); 
+					var ind = this.includedDsts.indexOf(labelDst); 
 					if(ind>=0) 
-						_self.includedDsts.splice(ind, 1);
+						this.includedDsts.splice(ind, 1);
 				}
 			}	
-			_self.update_display();
+			this.update_display();
 		}
 	},
 	
