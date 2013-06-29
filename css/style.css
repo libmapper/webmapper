@@ -37,24 +37,25 @@ body {
   .topTabs {
     margin: 0px;
     border-radius: 0px;
-    background: darkgrey;
+    background: inherit;
   }
 
   .topTabs li {
-    border-left: solid 1px black;
-    border-right: solid 1px black;
-    border-top: solid 1px black;
-    border-top-right-radius: 5px;
+    /*border-left: solid 1px black;*/
+    /*border-right: solid 1px black;*/
+    /*border-top: solid 1px black;*/
+    border-top-right-radius: 12px;
     border-top-left-radius: 5px;
     padding: 2pt 10px 2pt 10px;
     margin: 0px;
+    background: gray;
     display: inline-block;
     list-style: none;
     cursor: pointer;
   }
 
   .tabsel {
-    background: lightgrey;
+    background: lightgrey !important;
   }
 /****************/
 
@@ -347,7 +348,6 @@ body {
   }
   #svgTop {
     width: 100%;
-    min-height: 18px !important;
     /*border-bottom: 1px solid black;*/
     background-color: lightgray;
     position: absolute;
@@ -369,6 +369,7 @@ body {
     }
     #titleSearchDiv {
       height: 41px;
+      background: lightgray;
     }
     #titleSearchDiv h2 {
       margin-top: 9px;
@@ -399,7 +400,7 @@ body {
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
-  background-color: lightgrey;
+  background-color: inherit;
   float: left;
   position: relative;
 }

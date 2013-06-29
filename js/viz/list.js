@@ -146,7 +146,7 @@ function listView(model)
 //A function to make sure that rows fill up the available space, in testing for now
 function update_row_heights()
 {
-    var tableHeight = $('.tableDiv').height() - $('.tableDiv th').height();
+    var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
     var leftHeight = tableHeight/leftTable.nVisibleRows;
     var rightHeight = tableHeight/rightTable.nVisibleRows;
 
