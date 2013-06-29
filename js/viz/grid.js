@@ -328,6 +328,7 @@ GridView.prototype = {
 		case 0:
 			$('#devGrid').show();
 			$('#sigGrid').show();
+			this.setActiveGrid(this.activeGridIndex);
 			break;
 		case 1:
 			$('#devGrid').show();
