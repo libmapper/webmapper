@@ -194,14 +194,14 @@ GridView.prototype = {
 		});
 		
 		comboBoxDiv.appendChild(this.viewPresetSelector);
-		div.appendChild(comboBoxDiv);
-		
+		div.appendChild(comboBoxDiv);		
 		//END view presets
-		
-		
 		
 		wrapper.appendChild(div);
 		// END button bar
+		
+		
+		
 		
 		// devices Grid (gridIndex=0)
 		div = document.createElement("div");
