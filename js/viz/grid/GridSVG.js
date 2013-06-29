@@ -510,7 +510,7 @@ GridSVG.prototype = {
 				
 				var w = ui.values[1]-ui.values[0];	// new slider width
 				
-				if(w < _self.vboxMinDim[ind] || w > _self.contentDim[ind])	// do nothing if range is less than minimum or more than content
+				if(w < _self.vboxMinDim[ind] || w > _self.vboxMaxDim[ind] || w > _self.contentDim[ind])	// do nothing if range is beyond min/max or larger than contentDim
 					return false;
 				else
 				{
