@@ -17,7 +17,7 @@ function GridView(container, model)
 	this.includedDsts = [];
 	
 	this.init();
-
+	this.setActiveGrid(this.activeGridIndex);
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
