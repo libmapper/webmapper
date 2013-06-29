@@ -335,9 +335,10 @@ GridView.prototype = {
 			if(this.viewMode == 0)
 				if(e.keyCode == 37)	// left
 					this.setActiveGrid(0);
-				else				// right
-					if(this.includedSrcs.length > 0 && this.includedDsts > 0)	// only if there are signals
+				else{				// right
+					if(this.includedSrcs.length > 0 && this.includedDsts.length > 0)	// only if there are signals
 						this.setActiveGrid(1);
+				}
 		}
 		
 		// else pass it to the active view
