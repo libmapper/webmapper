@@ -12,7 +12,7 @@ function GridView(container, model)
 	this.devGrid;
 	this.sigGrid;
 	
-	this.viewPresets = [new GridViewPreset('Default', [], [])];	// create empty preset
+	this.viewPresets = [new GridViewPreset('Default Preset', [], [])];	// create empty preset
 	this.viewPresetSelector;
 	this.viewPresetIndex = 0;
 	this.viewPresetCounter = 1;
@@ -66,6 +66,7 @@ GridView.prototype = {
 		// add device button
 		btn = document.createElement("button");
 		btn.innerHTML = "Add";
+		btn.title = "include the selected device(s) in the SIGNALS grid (A)";
 		btn.addEventListener("click", function(evt){
 			_self.includeSelectedDevices();
 		});
@@ -74,6 +75,7 @@ GridView.prototype = {
 		//remove device button
 		btn = document.createElement("button");
 		btn.innerHTML = "Remove";
+		btn.title = "exclude the selected device(s) from the SIGNALS grid (S)";
 		btn.addEventListener("click", function(evt){
 			_self.excludeSelectedDevices();
 		});
@@ -115,6 +117,7 @@ GridView.prototype = {
 		// View Buttons
 		btn = document.createElement("button");
 		btn.innerHTML = "Split View";
+		btn.title = "view DEVICES and SIGNALS grid (CTRL+1)";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(0);
 		});
@@ -122,6 +125,7 @@ GridView.prototype = {
 		
 		btn = document.createElement("button");
 		btn.innerHTML = "Devices Only";
+		btn.title = "solo DEVICES grid (CTRL+2)";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(1);
 		});
@@ -129,6 +133,7 @@ GridView.prototype = {
 		
 		btn = document.createElement("button");
 		btn.innerHTML = "Signals Only";
+		btn.title = "solo SIGNALS grid (CTRL+3)";
 		btn.addEventListener("click", function(evt){
 			_self.switchView(2);
 		});
@@ -138,6 +143,7 @@ GridView.prototype = {
 		// combo box for selecting view presets
 		btn = document.createElement("button");
 		btn.innerHTML = "Delete";
+		btn.title = "delete the current preset";
 		btn.setAttribute("style", "float: right;");
 		btn.addEventListener("click", function(evt){
 			_self.deleteViewPreset();
@@ -146,6 +152,7 @@ GridView.prototype = {
 		
 		btn = document.createElement("button");
 		btn.innerHTML = "Update";
+		btn.title = "save the current configution into the current preset";
 		btn.setAttribute("style", "float: right;");
 		btn.addEventListener("click", function(evt){
 			_self.updateViewPreset();
@@ -154,6 +161,7 @@ GridView.prototype = {
 		
 		btn = document.createElement("button");
 		btn.innerHTML = "Save New";
+		btn.title = "save the current configuration as a preset";
 		btn.setAttribute("style", "float: right;");
 		btn.addEventListener("click", function(evt){
 			_self.saveViewPreset();
@@ -163,6 +171,7 @@ GridView.prototype = {
 		var comboBoxDiv = document.createElement("span");
 		comboBoxDiv.setAttribute("class", "styled-select");
 		comboBoxDiv.setAttribute("style", "float: right;");
+		comboBoxDiv.title = "choose a preset (ALT + up/right arrow)";
 		
 		this.viewPresetSelector = document.createElement("select");
 		this.viewPresetSelector.setAttribute("id", "viewPresetSelctor");

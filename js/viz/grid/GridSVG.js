@@ -103,6 +103,7 @@ GridSVG.prototype = {
 			div.setAttribute("id", "activeIndicator" + this.gridIndex);
 			div.setAttribute("style", "width: 14px; height: 14px; position: relative; float: left; margin: 2px 12px 2px " + (this.rowLabelsW+17).toString() + "px");
 			div.setAttribute("class", "inactiveGridIndicator");
+			div.title = "active grid indicator (ALT + left/right arrow to switch)";
 			wrapper0.appendChild(div);
 			
 			//horizontal scrollbar 
@@ -159,6 +160,7 @@ GridSVG.prototype = {
 			//zoom in button
 			btn = document.createElement("button");
 			btn.innerHTML = "+";
+			btn.title = "Zoom IN (CTRL +)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomIn();
 			});
@@ -167,6 +169,7 @@ GridSVG.prototype = {
 			//zoom out button
 			btn = document.createElement("button");
 			btn.innerHTML = "-";
+			btn.title = "Zoom OUT (CTRL -)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomOut();
 			});
@@ -175,6 +178,7 @@ GridSVG.prototype = {
 			//zoom to fit button
 			btn = document.createElement("button");
 			btn.innerHTML = "Zoom to fit";
+			btn.title = "Zoom to fit content (CTRL + 0)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomToFit();
 			});
@@ -183,6 +187,7 @@ GridSVG.prototype = {
 			//connection buttons
 			btn = document.createElement("button");
 			btn.innerHTML = "Connect";
+			btn.title = "connect the selected cell(s) (C)";
 			btn.addEventListener("click", function(evt){
 				_self.connect();
 			});
@@ -190,6 +195,7 @@ GridSVG.prototype = {
 			
 			btn = document.createElement("button");
 			btn.innerHTML = "Disconnect";
+			btn.title = "disconnect the selected cell(s) (D)";
 			btn.addEventListener("click", function(evt){
 				_self.disconnect();
 			});
@@ -197,6 +203,7 @@ GridSVG.prototype = {
 			
 			btn = document.createElement("button");
 			btn.innerHTML = "Toggle";
+			btn.title = "toggle the selected cell(s)  (ENTER)";
 			btn.addEventListener("click", function(evt){
 				_self.toggleConnection();
 			});
