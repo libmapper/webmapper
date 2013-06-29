@@ -694,7 +694,14 @@ GridSVG.prototype = {
 			// movement arrows to move the selected cell
 			else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)	
 			{
-				if(this.selectedCells.length > 0)	// only move the selected cell if there was a previously selected cell
+				if(this.selectedCells.length == 0)	// if there is no selected cell
+				{
+					var newCell = this.getCellByPos(0, 0);
+					this.selectedCells_addCell(newCell);
+					this.triggerMouseOver(newCell);						// trigger mouseover events for the new selected cell
+					this.vboxPos = [0,0];
+				}
+				else // if there is a previously selected cell(s)
 				{
 					var m = 1;	// cell jump size
 					if (e.shiftKey === true)
@@ -742,19 +749,8 @@ GridSVG.prototype = {
 					// set the new selected cell based on the arrow key movement
 					var newCell = this.getCellByPos(newPos[0], newPos[1]);
 					this.selectedCells_addCell(newCell);
-					this.onCellMouseOut();
-					
-					// fire mouseover and mouseout events for the cell and previously selected cell 
-					 if( document.createEvent ) 
-					 {
-						 var evtOver = document.createEvent('MouseEvents');
-						 evtOver.initEvent( 'mouseover', true, false );
-						 newCell.dispatchEvent(evtOver);
-				     } 
-					 else if( document.createEventObject ) 
-				     {
-						 newCell.fireEvent('onmouseover');
-				     }
+					this.onCellMouseOut();								// trigger mouse out event for previous selected cells
+					this.triggerMouseOver(newCell);						// trigger mouseover events for the new selected cell
 					 
 					
 					// calculate if new selected cell is visible or if it is out of view
@@ -795,10 +791,9 @@ GridSVG.prototype = {
 							}
 						  break;
 					}
-							
-					this.updateViewBoxes();
-					this.updateZoomBars();
 				}
+				this.updateViewBoxes();
+				this.updateZoomBars();
 			}
 		},
 		
@@ -905,6 +900,19 @@ GridSVG.prototype = {
 		getSelectedCells : function()
 		{
 				return this.selectedCells;
+		},
+		triggerMouseOver : function(target)
+		{
+			if( document.createEvent ) 
+			 {
+				 var evtOver = document.createEvent('MouseEvents');
+				 evtOver.initEvent( 'mouseover', true, false );
+				 target.dispatchEvent(evtOver);
+		     } 
+			 else if( document.createEventObject ) 
+		     {
+				 target.fireEvent('onmouseover');
+		     }
 		}
 		
 		

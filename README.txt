@@ -36,6 +36,8 @@ Grid view Command keys:
 	CTRL 1: switch to split view
 	CTRL 2: switch to devices only view
 	CTRL 3: switch to signals only view
+	ALT leftArrow: set devices grid as active
+	ALT rightArrow: set signals grid as active
 
 	Instructions: There are 2 grids. The left side is the devices grid, the right is the signals grid. Select cells or device labels on the left and press the "Add"/"Remove" button to include/exclude the selected devices in the signals grid. You can also use the keyboard arrows to move the selected cell around. All keyboard shortcuts affect the 'active' grid, indicated by the little square in the upper left corner of the grid.
  *tested on Google Chrome only
