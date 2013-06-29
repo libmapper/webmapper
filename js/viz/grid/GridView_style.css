@@ -9,9 +9,9 @@
 
 
 
-#hZoomSlider0 {margin-left: 29px; height: 18px }
+#hZoomSlider0 {height: 18px }
 #hZoomSlider0 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
-#hZoomSlider1 {margin-left: 29px; height: 18px }
+#hZoomSlider1 {height: 18px }
 #hZoomSlider1 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
 
 #vZoomSlider0 {width: 18px;}
@@ -30,9 +30,16 @@
 [id*='hZoomSlider-'] .ui-state-focus, [id*='vZoomSlider'] .ui-state-focus{background: #f6f6f6; border: 1px solid #cccccc;}
 [id*='hZoomSlider-'] .ui-state-focus.ui-state-hover, [id*='vZoomSlider'] .ui-state-focus.ui-state-hover{background: #fdf5ee; border: 1px solid #fcbc09;}
 
-.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr { border-radius: 0;}
+#hZoomSlider0 .ui-corner-all, .ui-corner-top, .ui-corner-bottom, .ui-corner-right, .ui-corner-left, .ui-corner-tr { 
+	border-radius: 0;
+}
 
-
+.activeGridIndicator{
+	background: #555; border: 1px solid #cccccc;
+}
+.inactiveGridIndicator{
+	background: #fff; border: 1px solid #cccccc;
+}
 
 a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -moz-use-text-color; outline-style: none; outline-width: medium; }
 a:hover { color: #036; }

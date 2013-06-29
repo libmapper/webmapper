@@ -254,6 +254,8 @@ GridView.prototype = {
 	
 	setActiveGrid : function(gridIndex){
 		this.activeGridIndex = gridIndex;
+		document.getElementById("activeIndicator" + gridIndex).setAttribute("class", "activeGridIndicator");
+		document.getElementById("activeIndicator" + (1-gridIndex)).setAttribute("class", "inactiveGridIndicator");
 	},
 	
 	connect : function (e, cell)

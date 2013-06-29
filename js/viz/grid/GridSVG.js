@@ -93,15 +93,30 @@ GridSVG.prototype = {
 			this.svgColLabels.setAttribute("preserveAspectRatio", "none");
 			this._container.appendChild(this.svgColLabels);
 			
+			
+			// wrapper TOP
+			var wrapper0 = document.createElement("div");
+			wrapper0.setAttribute("style", "margin-top: 10px; clear: both; ");
+			
+			// active grid indicator
+			div = document.createElement("div");
+			div.setAttribute("id", "activeIndicator" + this.gridIndex);
+			div.setAttribute("style", "width: 14px; height: 14px; position: relative; float: left; margin: 2px 12px 2px " + (this.rowLabelsW+17).toString() + "px");
+			div.setAttribute("class", "inactiveGridIndicator");
+			wrapper0.appendChild(div);
+			
 			//horizontal scrollbar 
 			div = document.createElement("div");
 			div.setAttribute("id", "hZoomSlider" + this.gridIndex);
-			div.setAttribute("style", "position: relative; margin-top: 10px; clear:both; margin-left: " + (this.rowLabelsW+38).toString() + "px");
-			this._container.appendChild(div);
+			div.setAttribute("style", "position: relative; clear:right; margin-left: 2px; float: left; margin-bottom: 10px; ");
+			wrapper0.appendChild(div);
+			
+			this._container.appendChild(wrapper0);
+			// END wrapper TOP
 			
 			// a wrapper div to hold vscroll, grid + row labels
 			var wrapper1 = document.createElement("div");
-			wrapper1.setAttribute("style", "margin-top: 5px; clear: both;");
+			wrapper1.setAttribute("style", "margin-top: 9px; clear: both;");
 			
 			// svg row labels
 			this.svgRowLabels = document.createElementNS(this.svgNS, "svg");
@@ -117,7 +132,7 @@ GridSVG.prototype = {
 			// vertical scrollbar
 			div = document.createElement("div");
 			div.setAttribute("id", "vZoomSlider" + this.gridIndex);
-			div.setAttribute("style", "float:left;margin-left: 5px;");
+			div.setAttribute("style", "float:left;margin-left: 5px; margin-right: 4px;");
 			wrapper1.appendChild(div);
 			
 			// svg canvas
