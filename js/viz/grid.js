@@ -62,37 +62,20 @@ GridView.prototype = {
 		// button bar
 		div = document.createElement("div");
 		div.setAttribute("id", "actionBar");
+		div.setAttribute("style", "float: left;");
 		
-		// add device button
-		btn = document.createElement("button");
-		btn.innerHTML = "Add";
-		btn.title = "include the selected device(s) in the SIGNALS grid (A)";
-		btn.addEventListener("click", function(evt){
-			_self.includeSelectedDevices();
-		});
-		div.appendChild(btn);
-			
-		//remove device button
-		btn = document.createElement("button");
-		btn.innerHTML = "Remove";
-		btn.title = "exclude the selected device(s) from the SIGNALS grid (S)";
-		btn.addEventListener("click", function(evt){
-			_self.excludeSelectedDevices();
-		});
-		div.appendChild(btn);
-
-		/*
-		// combo box for selecting view mode
-		var option;
-		
+		// view mode
 		var comboBoxDiv = document.createElement("span");
+		comboBoxDiv.title = "select a view mode";
 		comboBoxDiv.setAttribute("class", "styled-select");
+		comboBoxDiv.setAttribute("style", "float: left;");
 		
 		var comboBox = document.createElement("select");
+		var option;
 		
 		option = document.createElement('option');
 		option.value = '0';
-		option.appendChild(document.createTextNode('Split'));
+		option.appendChild(document.createTextNode('Split View'));
 		comboBox.appendChild(option);
 
 		option = document.createElement('option');
@@ -112,8 +95,29 @@ GridView.prototype = {
 		comboBox.selectedIndex = this.viewMode;
 		comboBoxDiv.appendChild(comboBox);
 		div.appendChild(comboBoxDiv);
-		*/
+		// END view mode
 		
+		// add device button
+		btn = document.createElement("button");
+		btn.innerHTML = "Add";
+		btn.setAttribute("style", "float: left;");
+		btn.title = "include the selected device(s) in the SIGNALS grid (A)";
+		btn.addEventListener("click", function(evt){
+			_self.includeSelectedDevices();
+		});
+		div.appendChild(btn);
+			
+		//remove device button
+		btn = document.createElement("button");
+		btn.innerHTML = "Remove";
+		btn.setAttribute("style", "float: left;");
+		btn.title = "exclude the selected device(s) from the SIGNALS grid (S)";
+		btn.addEventListener("click", function(evt){
+			_self.excludeSelectedDevices();
+		});
+		div.appendChild(btn);
+		
+/*		
 		// View Buttons
 		btn = document.createElement("button");
 		btn.innerHTML = "Split View";
@@ -138,9 +142,9 @@ GridView.prototype = {
 			_self.switchView(2);
 		});
 		div.appendChild(btn);
+*/		
 		
-		
-		// combo box for selecting view presets
+		// view presets
 		btn = document.createElement("button");
 		btn.innerHTML = "Delete";
 		btn.title = "delete the current preset";
@@ -168,13 +172,13 @@ GridView.prototype = {
 		});
 		div.appendChild(btn);
 
-		var comboBoxDiv = document.createElement("span");
+		comboBoxDiv = document.createElement("span");
 		comboBoxDiv.setAttribute("class", "styled-select");
 		comboBoxDiv.setAttribute("style", "float: right;");
 		comboBoxDiv.title = "choose a preset (ALT + up/right arrow)";
 		
 		this.viewPresetSelector = document.createElement("select");
-		this.viewPresetSelector.setAttribute("id", "viewPresetSelctor");
+		this.viewPresetSelector.setAttribute("id", "viewPresetSelector");
 		var option;
 		for(var i=0; i<this.viewPresets.length; i++)
 		{
@@ -678,9 +682,9 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = $(this._container).width() - 8;
+		var w = $(this._container).width() ;
 		if(this.viewMode == 0)
-			w = Math.floor($(this._container).width()/2) - 8;
+			w = Math.floor($(this._container).width()/2) ;
 		
 		var h = $(this._container).height() - $("#actionBar").height() - 2;
 		

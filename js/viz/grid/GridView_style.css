@@ -133,8 +133,8 @@ a:hover { color: #036; }
 
 #actionBar{
 	margin-top: 10px;
-	padding: 2px 0px;
-	width: 100%;
+	padding: 2px 5px;
+	width: 99%;
 	clear: both;
 	position: relative;
 	
@@ -169,14 +169,11 @@ a:hover { color: #036; }
 #actionBar button:active, .buttonBar button:active{
 	background-color: #FFFFF0;
 }
-	
-
-#actionBar select{
-	heigth: 100px;
-}
 
 
-#actionBar .styled-select {
+
+#actionBar .styled-select 
+{
    width: 200px;
    overflow: hidden;
    border: 0px solid #ccc;

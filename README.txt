@@ -35,8 +35,10 @@ Grid view Command keys:
 	CTRL 1: switch to SPLIT view
 	CTRL 2: switch to DEVICES only view
 	CTRL 3: switch to SIGNALS only view
+
 	ALT leftArrow: set DEVICES grid as active
 	ALT rightArrow: set SIGNALS grid as active
+	ALT up/down arrows: cycle through presets
 
 Grid View Instructions: 
 

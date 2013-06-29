@@ -26,7 +26,7 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('height', 32);
 	path = document.createElementNS(this.svgNS, 'path');
 	path.setAttribute("d", "M 16 1 l 0 30 ");
-	path.setAttribute("style", "stroke: #ffffff; fill: blue; ");
+	path.setAttribute("style", "stroke: darkBlue; fill: none; ");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
@@ -37,7 +37,7 @@ GridDevices.prototype.refresh = function ()
 	pattern.setAttribute('height', "100%");
 	path = document.createElementNS(this.svgNS, 'path');
 	path.setAttribute("d", "M 1 16 l 30 0");
-	path.setAttribute("style", "stroke: #ffffff; fill: none;");
+	path.setAttribute("style", "stroke: darkBlue; fill: none;");
 	pattern.appendChild(path);
 	defs.appendChild(pattern);
 	
