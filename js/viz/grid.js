@@ -21,7 +21,7 @@ function GridView(container, model)
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
-		_self.keyboardHandler(e, _self);
+		_self.keyboardHandler(e);
 	};
 	/**
 	 * Disables my keyboard shortcuts from moving the browser's scroll bar 
@@ -318,8 +318,10 @@ GridView.prototype = {
 	},
 	
 	
-	keyboardHandler: function (e, _self)
+	keyboardHandler: function (e)
 	{
+		//console.log(e.keyCode);
+		
 		// 'ctrl' + '1 / 2 / 3 ' to change view modes
 		if(e.keyCode == 49 && e.ctrlKey)
 			this.switchView(0);
@@ -327,6 +329,16 @@ GridView.prototype = {
 			this.switchView(1);
 		else if(e.keyCode == 51 && e.ctrlKey)
 			this.switchView(2);
+		// 'ALT + left/right to move the active grid
+		else if( (e.keyCode == 37 || e.keyCode == 39 ) && e.altKey)
+		{
+			if(this.viewMode == 0)
+				if(e.keyCode == 37)	// left
+					this.setActiveGrid(0);
+				else				// right
+					if(this.includedSrcs.length > 0 && this.includedDsts > 0)	// only if there are signals
+						this.setActiveGrid(1);
+		}
 		
 		// else pass it to the active view
 		else if(this.activeGridIndex == 0)
@@ -577,6 +589,7 @@ GridView.prototype = {
 		this.includedSrcs = data[0];
 		this.includedDsts = data[1];
 		this.switchView(data[2]);
+		this.setActiveGrid(data[3]);
 		this.update_display();
 	},
 	
@@ -586,6 +599,8 @@ GridView.prototype = {
 		data.push(this.includedSrcs);
 		data.push(this.includedDsts);
 		data.push(this.viewMode);
+		data.push(this.activeGridIndex);
+		
 		return data;
 	},
 	

@@ -35,7 +35,7 @@
 }
 
 .activeGridIndicator{
-	background: #555; border: 1px solid #cccccc;
+	background: #555; border: 1px solid #000;
 }
 .inactiveGridIndicator{
 	background: #fff; border: 1px solid #cccccc;

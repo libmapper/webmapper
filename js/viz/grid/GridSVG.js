@@ -89,7 +89,7 @@ GridSVG.prototype = {
 			this.svgColLabels.setAttribute("xmlns:xlink", this.svgNSxlink);
 			this.svgColLabels.setAttribute("width", this.svgDim[0]);
 			this.svgColLabels.setAttribute("height", this.colLabelsH);
-			this.svgColLabels.setAttribute("style", "float: left; clear:both; margin-left:"+ (this.rowLabelsW + 30).toString() + "px; margin-bottom: " + this.labelMargin +"px");
+			this.svgColLabels.setAttribute("style", "float: left; clear:both; margin-left:"+ (this.rowLabelsW + 42).toString() + "px; margin-bottom: " + this.labelMargin +"px");
 			this.svgColLabels.setAttribute("preserveAspectRatio", "none");
 			this._container.appendChild(this.svgColLabels);
 			

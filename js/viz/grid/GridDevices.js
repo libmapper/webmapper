@@ -119,7 +119,7 @@ GridDevices.prototype.refresh = function ()
 		label.setAttribute("class","label");
 		label.setAttribute("text-anchor", "end");
 		label.setAttribute("x", this.rowLabelsW);
-		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.floor(this.cellDim[1]/2) + 1);	// I don't know why +1... getBBox doesn't really work well
+		label.setAttribute("y", (this.nRows)*(this.cellDim[1]+this.cellMargin) + Math.ceil(this.cellDim[1]/2) + 2 );
 		
 		label.addEventListener("click", function(evt){
 			_self.onLabelClick(evt, _self);
