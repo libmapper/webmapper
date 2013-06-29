@@ -12,6 +12,11 @@ function GridView(container, model)
 	this.devGrid;
 	this.sigGrid;
 	
+	this.viewPresets = [new GridViewPreset('Default', [], [])];	// create empty preset
+	this.viewPresetSelector;
+	this.viewPresetIndex = 0;
+	this.viewPresetCounter = 1;
+	
 	this.viewMode = 0;
 	this.includedSrcs = [];
 	this.includedDsts = [];
@@ -130,6 +135,58 @@ GridView.prototype = {
 		div.appendChild(btn);
 		
 		
+		// combo box for selecting view presets
+		btn = document.createElement("button");
+		btn.innerHTML = "Delete";
+		btn.setAttribute("style", "float: right;");
+		btn.addEventListener("click", function(evt){
+			_self.deleteViewPreset();
+		});
+		div.appendChild(btn);
+		
+		btn = document.createElement("button");
+		btn.innerHTML = "Update";
+		btn.setAttribute("style", "float: right;");
+		btn.addEventListener("click", function(evt){
+			_self.updateViewPreset();
+		});
+		div.appendChild(btn);
+		
+		btn = document.createElement("button");
+		btn.innerHTML = "Save New";
+		btn.setAttribute("style", "float: right;");
+		btn.addEventListener("click", function(evt){
+			_self.saveViewPreset();
+		});
+		div.appendChild(btn);
+
+		var comboBoxDiv = document.createElement("span");
+		comboBoxDiv.setAttribute("class", "styled-select");
+		comboBoxDiv.setAttribute("style", "float: right;");
+		
+		this.viewPresetSelector = document.createElement("select");
+		this.viewPresetSelector.setAttribute("id", "viewPresetSelctor");
+		var option;
+		for(var i=0; i<this.viewPresets.length; i++)
+		{
+			option = document.createElement('option');
+			option.value = i;
+			option.appendChild(document.createTextNode(this.viewPresets[i].name));
+			this.viewPresetSelector.appendChild(option);
+		}
+		this.viewPresetSelector.selectedIndex = this.viewPresetIndex;
+
+		this.viewPresetSelector.addEventListener("change", function(evt){
+			_self.loadViewPreset(this.selectedIndex);
+		});
+		
+		comboBoxDiv.appendChild(this.viewPresetSelector);
+		div.appendChild(comboBoxDiv);
+		
+		//END view presets
+		
+		
+		
 		wrapper.appendChild(div);
 		// END button bar
 		
@@ -221,6 +278,26 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.setActiveGrid(gridIndex);
 		});
+		
+		
+		// on resize, this init function is called again, so re-instate the view mode
+		switch (this.viewMode) 
+		{
+		case 0:
+			$('#devGrid').show();
+			$('#sigGrid').show();
+			break;
+		case 1:
+			$('#devGrid').show();
+			$('#sigGrid').hide();
+			this.setActiveGrid(0);
+			break;
+		case 2:
+			$('#devGrid').hide();
+			$('#sigGrid').show();
+			this.setActiveGrid(1);
+			break;
+		}
 		
 	},
 	
@@ -339,6 +416,25 @@ GridView.prototype = {
 					if(this.includedSrcs.length > 0 && this.includedDsts.length > 0)	// only if there are signals
 						this.setActiveGrid(1);
 				}
+		}
+		// 'ALT + up/down to cycle through presets
+		else if( e.keyCode == 38 && e.altKey)	// up
+		{
+			if(this.viewPresets.length == 0)
+				return
+			this.viewPresetIndex--;
+			if(this.viewPresetIndex < 0)
+				this.viewPresetIndex = this.viewPresets.length -1;	// loop to end
+			this.loadViewPreset(this.viewPresetIndex);
+		}
+		else if( e.keyCode == 40 && e.altKey)	// up
+		{
+			if(this.viewPresets.length == 0)
+				return
+			this.viewPresetIndex++;
+			if(this.viewPresetIndex >= this.viewPresets.length)
+				this.viewPresetIndex = 0;	// loop to beginning
+			this.loadViewPreset(this.viewPresetIndex);
 		}
 		
 		// else pass it to the active view
@@ -585,22 +681,85 @@ GridView.prototype = {
 		document.getElementById("sigGrid").style.height = h + "px";
 	},
 	
+	saveViewPreset : function()
+	{
+		if(this.includedSrcs.length == 0 && this.includedDsts.length == 0)
+			return;
+		
+		var name = 'Preset ' + this.viewPresetCounter++;
+		var newPreset = new GridViewPreset(name, this.includedSrcs.slice(0), this.includedDsts.slice(0));
+		this.viewPresets.push(newPreset);
+		
+		var option = document.createElement('option');
+		option.value = this.viewPresets.length-1;
+		option.appendChild(document.createTextNode(name));
+		this.viewPresetSelector.appendChild(option);
+		this.viewPresetIndex = this.viewPresets.length-1;
+		this.viewPresetSelector.selectedIndex = this.viewPresets.length-1;
+	},
+	
+	updateViewPreset : function()
+	{
+		if(this.includedSrcs.length == 0 && this.includedDsts.length == 0)
+			return;
+		
+		var preset = this.viewPresets[this.viewPresetIndex];
+		preset.includedSrcs = this.includedSrcs.slice(0);
+		preset.includedDsts = this.includedDsts.slice(0);
+	},
+	
+	loadViewPreset : function(index)
+	{
+		var preset = this.viewPresets[index];
+		this.viewPresetIndex = index;
+		this.viewPresetSelector.selectedIndex = index;
+		this.includedSrcs = preset.includedSrcs.slice(0);	// slice to return clone, not reference
+		this.includedDsts = preset.includedDsts.slice(0);
+		this.devGrid.includedSrcs = this.includedSrcs;
+		this.devGrid.includedDsts = this.includedDsts;
+		this.update_display();
+		this.devGrid.zoomToFit();
+		this.sigGrid.zoomToFit();
+		if(index == 0)
+			this.setActiveGrid(0);
+	},
+	
+	deleteViewPreset : function()
+	{
+		var index = this.viewPresetSelector.selectedIndex; 
+		if(index > 0)
+		{
+			this.viewPresets.splice(index, 1);
+			this.loadViewPreset(0);
+			this.viewPresetSelector.selectedIndex = 0;
+			this.viewPresetSelector.options[index] = null;
+		}
+		
+	},
+	
 	load_view_settings : function (data)
 	{
 		this.includedSrcs = data[0];
 		this.includedDsts = data[1];
 		this.switchView(data[2]);
 		this.setActiveGrid(data[3]);
-		this.update_display();
+		this.viewPresets = data[4];
+		this.viewPresetIndex = data[5];
+		this.viewPresetCounter = data[6];
+		this.init();
 	},
 	
 	save_view_settings : function ()
 	{
 		var data = [];
-		data.push(this.includedSrcs);
-		data.push(this.includedDsts);
-		data.push(this.viewMode);
-		data.push(this.activeGridIndex);
+		data.push(this.includedSrcs);		// 0
+		data.push(this.includedDsts);		// 1
+		data.push(this.viewMode);			// 2
+		data.push(this.activeGridIndex);	// 3
+		data.push(this.viewPresets);		// 4
+		data.push(this.viewPresetIndex);	// 5
+		data.push(this.viewPresetCounter);	// 6
+		
 		
 		return data;
 	},
@@ -611,6 +770,15 @@ GridView.prototype = {
 	}
 	
 };
+
+function GridViewPreset(name, includedSrcs, includedDsts)
+{
+	this.name = name;
+	this.includedSrcs = includedSrcs;
+	this.includedDsts = includedDsts;
+};
+
+
 
 function arrPushIfUnique(item, arr){
 	if(arrIsUnique(item, arr))

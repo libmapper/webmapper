@@ -154,7 +154,7 @@ a:hover { color: #036; }
 .buttonBar button{
 }
 
-#actionBar button, .buttonBar button, #actionBar select{
+#actionBar button, .buttonBar button{
 	font-size: 14px;
 	border-radius: 3px; 
 	-moz-border-radius: 3px; 
@@ -171,22 +171,37 @@ a:hover { color: #036; }
 }
 	
 
-/*
-#actionBar .styled-select {
-   width: 240px;
-   overflow: hidden;
-   border: 1px solid #ccc;
-   background: url(new_arrow.png) no-repeat right #ddd;
+#actionBar select{
+	heigth: 100px;
 }
+
+
+#actionBar .styled-select {
+   width: 200px;
+   overflow: hidden;
+   border: 0px solid #ccc;
+   margin-top: 2px;
+   margin-right: 3px;
+   padding: 1px 5px 0px 5px;
+   background: url(dropdown_arrow.png) no-repeat right #F2FFDE;
+   	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+}
+#actionBar .styled-select:hover {
+	background-color: #EEE8AA;
+}
+
+	
 .styled-select select {
    background: transparent;
-   width: 268px;
+   width: 228px;
    padding: 5px;
-   font-size: 16px;
+   font-size: 14px;
    line-height: 1;
    border: 0;
    border-radius: 0;
-   height: 34px;
+   height: 36px;
    -webkit-appearance: none;
    }
-	*/
+	
