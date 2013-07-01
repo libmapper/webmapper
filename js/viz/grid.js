@@ -303,14 +303,13 @@ GridView.prototype = {
 		case 1:
 			$('#devGrid').show();
 			$('#sigGrid').hide();
-			this.setActiveGrid(0);
 			break;
 		case 2:
 			$('#devGrid').hide();
 			$('#sigGrid').show();
-			this.setActiveGrid(1);
 			break;
 		}
+		this.setActiveGrid(this.activeGridIndex);
 		
 	},
 	
