@@ -57,7 +57,7 @@ GridDevices.prototype.refresh = function ()
 	if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
 	{
 		var originalDim = this.vboxDim[0];	//keep original dimension for calculating zoom of font
-		this.vbox = [0, 0];		// place viewbox at origin 
+		this.vboxPos = [0, 0];		// place viewbox at origin 
 		
 		// attempt to fit width
 		this.vboxDim[0] = this.contentDim[0];

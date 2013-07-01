@@ -28,12 +28,12 @@ function GridSVG()
 	this.cellRoundedCorner = 0;								// cell rounded corners radius
 	this.cellMargin = 1;									// margin between cells
 	this.labelMargin = 10;									// offset for source signal labels
-	this.zoomIncrement = 50;							
+	this.zoomIncrement = 32;							
 	this.handleClicked; this.handleClick; this.handleValues;	// helpers for zooming scroll bars
 	this.nCellIds = 0;											// helper for generating cell IDs	
 	this.fontSize = 12;
 	this.vboxMinDim = [ 48,48 ];		// vbox width-height dimensions
-	this.vboxMaxDim = [2000, 2000];		// *not used in zoom scroll bars
+	this.vboxMaxDim = [3200, 3200];		// *not used in zoom scroll bars
 	this.selectedCells = []; 					// holds a reference to the selected cells
 	this.mousedOverCell = null;					// hold a reference to the cell that's moused over
 	this.nRows = 0;											// number of rows in grid (destination signals)
