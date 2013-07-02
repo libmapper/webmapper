@@ -36,4 +36,8 @@ Grid view Command keys:
 	***state of the view is not retained when switching view or view modes
 
 
+Known bugs:
+	- Saving does not work in the grid mode
+
+
 	Have fun! Do report any bugs.

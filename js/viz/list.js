@@ -4,7 +4,7 @@ function listView(model)
 
 	this.model = model;
 	
-var svgns = 'http://www.w3.org/2000/svg';
+    var svgns = 'http://www.w3.org/2000/svg';
 
     var tabList = null;
     var tabDevices = null;
@@ -83,7 +83,9 @@ var svgns = 'http://www.w3.org/2000/svg';
             filter_view();
 
             //Because svg keeps getting nudged left for some reason
-            $('svg').css('left', '0px');
+            //$('svg').css('left', '0px');
+            update_row_heights();
+            //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
 
             updateCallable = true;
 
@@ -137,9 +139,20 @@ var svgns = 'http://www.w3.org/2000/svg';
     this.on_resize = function() 
     {
         update_arrows();
+        update_row_heights();
+        //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
     }
 
+//A function to make sure that rows fill up the available space, in testing for now
+function update_row_heights()
+{
+    var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+    var leftHeight = tableHeight/leftTable.nVisibleRows;
+    var rightHeight = tableHeight/rightTable.nVisibleRows;
 
+    $('#leftTable tbody tr').css('height', leftHeight+'px');
+    $('#rightTable tbody tr').css('height', rightHeight+'px');
+}
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -452,12 +465,16 @@ function filter_view()
             $(this).addClass('invisible');
     });
 
+
+
     update_arrows();
     $(leftTable.table).trigger('update');
     $(rightTable.table).trigger('update');
 
     rightTable.set_status();
     leftTable.set_status();
+
+    update_row_heights();
 }
 
 function filter_match(row)
@@ -557,7 +574,7 @@ function create_arrow(left, right, sel, muted)
 
     line.attr({
         "fill": "none",
-        "stroke-width": 2,
+        "stroke-width": 1.5,
         "cursor": "pointer"
     });
 
@@ -1015,7 +1032,7 @@ function fade_incompatible_signals(row, targetTableBody)
 
 this.add_handlers = function()
 {
-    $('body').on('click.list', function() {
+    $('#container').on('click.list', function() {
         deselect_all();
     });
 

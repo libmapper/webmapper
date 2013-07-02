@@ -16,11 +16,10 @@ input {
   -moz-user-select: text;
   -o-user-select: text;
   user-select: text;
-  border-radius: 5px;
 }
 
 body {
-  font-family: sans, helv, helvetica, Arial;
+  font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
   background: pink;
   margin-top: 3px;
@@ -38,37 +37,39 @@ body {
   .topTabs {
     margin: 0px;
     border-radius: 0px;
-    background: darkgrey;
+    background: inherit;
   }
 
   .topTabs li {
-    border-left: solid 1px black;
-    border-right: solid 1px black;
-    border-top: solid 1px black;
-    border-top-right-radius: 5px;
+    /*border-left: solid 1px black;*/
+    /*border-right: solid 1px black;*/
+    /*border-top: solid 1px black;*/
+    border-top-right-radius: 12px;
     border-top-left-radius: 5px;
     padding: 2pt 10px 2pt 10px;
     margin: 0px;
+    background: gray;
     display: inline-block;
     list-style: none;
     cursor: pointer;
   }
 
   .tabsel {
-    background: lightgrey;
+    background: lightgrey !important;
   }
 /****************/
 
 /*The top menu*/
     .topMenu {
-      padding: 0;
+      padding: 10px 0;
       top: 0;
-      margin-bottom: 5px;
+      margin: 0;
+      margin-top: -1px;
+      min-width: 560px;
     }
 
     .topMenu>div {
       display: inline-block;
-      margin-top: 5px;
     }
 
     .topMenu li {
@@ -82,13 +83,11 @@ body {
       margin-bottom: 0px;
     }
 
-    #saveLoadDiv {
-      display: inline-block;
-      background: lightgrey;
-      border: 1px solid black;
-      padding: 4px;
-      border-radius: 10px;
+    #modeSelection {
+      position: relative;
+      top:  -1px;
     }
+
 
     .topMenu li a {
       color: black;
@@ -127,9 +126,6 @@ body {
           position: relative;
           top: 4px;
         }
-        #boundaryMin {
-            margin-left: 5px;
-        }
         .boundaryNone {
           background-position: 0px 0px;
         }
@@ -164,24 +160,22 @@ body {
     }
 
     #refresh {
-      background:url(/images/refresh.png) no-repeat;
+      position: absolute;
+      top:  14px;
+      right:  14px;
+      background-image: url(/images/refresh.png);
+      background-size: contain;
+      background-repeat: no-repeat;
       cursor: pointer;
-      border: solid 1px darkgray;
-      border-radius: 5px;
-      margin: 0px;
-      padding: 0px;
-      width: 24px;
-      height: 24px;
+      width: 25px;
+      height: 25px;
     }
 
     #wsstatus {
-      margin: 0px;
-      padding: 0px;
-      padding-right: 10px;
-      padding-top: 5px;
-      height: 24px;
-      font-size: 8pt;
-      color: gray;
+      position: fixed;
+      bottom: 12px;
+      right: 14px;
+      z-index: 9; 
     }
     .signalControl {
       z-index: 1;
@@ -189,27 +183,43 @@ body {
     }
   
     .modesDiv {
-      border: 1px solid black;
-      border-radius: 10px;
       padding: 0 10px;
-      background-color: lightgrey;
-
+      margin-left: 30px;
     }
     .modesDiv div {
-      padding: 5pt;
+      padding: 3pt;
       cursor: pointer;
       display: inline-block;
     }
     .modesel {
-      background: darkgrey;
+      background: #9CC2CF;
     }
 
     div.range {
-    border: 1px solid black;
-    margin-left: 10px;
-    border-radius: 10px;
-    padding: 3px 3px;
-    background-color: lightgray;
+      margin-left: 10px;
+      padding: 3px 3px;
+    }
+    input.range {
+      border: 1px solid darkgrey;
+      text-align: center;
+      margin: 0;
+    }
+    input.range.Min {
+      border-right: 0;
+    }
+    input.range, input.expression {
+      height: 19px;
+      font-size: 9pt;
+    }
+
+    /* For proper spacing of text of range divs */
+    #boundaryMin, #rangeSrcMin, input.expression {
+      margin-left: 5px
+    }
+
+    #saveLoadDiv {
+      display: inline-block;
+      padding: 4px;
     }
 /****************/
 
@@ -229,9 +239,10 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 96px);
+    height: calc(100% - 87px);
     background: white;
-    border: solid 1px black;
+    /*border: solid 1px black;*/
+    border-bottom: 0;
   }
 
   /* The table itself */
@@ -244,12 +255,16 @@ body {
     }
     #rightTable {
       left: 60%;
+      border-left: 0;
+    }
+    #leftTable {
+      border-right: 0;
     }
 
       /* Rows and headers */
       thead {
         background-color: lightgray;
-        border-bottom: 1px solid black;
+        /*border-bottom: 1px solid black;*/
         cursor: pointer;
       }
 
@@ -261,6 +276,10 @@ body {
         border-left: 0px;
       }
 
+      .tablesorter-headerAsc, .tablesorter-headerDesc {
+        background-color: #9CC2CF;
+      }
+
       .invisible {
         display: none;
       }
@@ -268,7 +287,7 @@ body {
       .displayTable tr td {
         margin: 3pt;
         height: 13pt;
-        vertical-align: top;
+        vertical-align: middle;
         border: solid 0px black;
         padding-left: 5px;
         cursor: default;
@@ -301,7 +320,7 @@ body {
     background-color: lightgray;
     padding-left: 10px;
     padding-top: 3px;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
   }
 
   .status.middle {
@@ -321,15 +340,15 @@ body {
   .svgDiv {
     position: absolute;
     background-color: white;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
+    border-bottom: 0;
     left: 40%;
-    height: calc(100% - 96px);
+    height: calc(100% - 87px);
     width: 20%;
   }
   #svgTop {
     width: 100%;
-    height: 18px;
-    border-bottom: 1px solid black;
+    /*border-bottom: 1px solid black;*/
     background-color: lightgray;
     position: absolute;
     top: 0px;
@@ -346,13 +365,14 @@ body {
 /* Make sure inputs are not obscured*/
     #titleSearchDiv input{
       z-index: 1;
-      margin-top: 16px;
+      margin-top: 12px;
     }
     #titleSearchDiv {
-      height: 50px;
+      height: 41px;
+      background: lightgray;
     }
     #titleSearchDiv h2 {
-      margin-top: 11px;
+      margin-top: 9px;
       font-weight: normal;
     }
     #svgTitle {
@@ -367,7 +387,7 @@ body {
       left: 10px;
     }
     #leftSearch {
-      right: 60%;
+      right: 61%;
     }
     #rightTitle {
       left: 60%;
@@ -380,7 +400,7 @@ body {
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
-  background-color: lightgrey;
+  background-color: inherit;
   float: left;
   position: relative;
 }

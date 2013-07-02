@@ -49,6 +49,7 @@ function switch_mode(newMode)
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
         	viewIndex = 1;
+            $('#saveLoadDiv').removeClass('disabled');
         	view.update_display();
         	break;
         default:
@@ -123,12 +124,37 @@ function on_load()
     });
 
     form.firstChild.onchange = function(){
+
         var fn = document.createElement('input');
         fn.type = 'hidden';
         fn.name = 'filename';
         fn.value = form.firstChild.value;
-        console.log(form.firstChild.value);
         form.appendChild(fn);
+
+        // The devices currently in focused
+        var devs = view.get_focused_devices();
+        // Split them into sources and destinations
+        var srcdevs = [];
+        var destdevs = [];
+        for (var i in devs.contents) {
+            if( devs.contents[i].n_outputs )
+                srcdevs.push( devs.contents[i].name );
+            if( devs.contents[i].n_inputs )
+                destdevs.push( devs.contents[i].name );
+        }
+
+        //So that the monitor can see which devices are being looked at
+        var srcs = document.createElement('input');
+        srcs.type = 'hidden';
+        srcs.name = 'sources';
+        srcs.value = srcdevs.join(); 
+        form.appendChild(srcs);
+        var dests = document.createElement('input');
+        dests.type = 'hidden';
+        dests.name = 'destinations';
+        dests.value = destdevs.join(); 
+        form.appendChild(dests);
+
         form.submit();
     };
     return false;
@@ -157,7 +183,8 @@ function update_connection_properties()
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
-        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
     };
 
@@ -169,13 +196,21 @@ function update_connection_properties()
     }
     if (conns.length == 1) {
         var c = conns[0];
+        var mode = connectionModes[c.mode];
         clear_props();
         $('.signalControl').removeClass('disabled');
-        $(".mode"+connectionModes[c.mode]).addClass("modesel");
-        if(connectionModes[c.mode] == "Expr") 
-            $('.expression').removeClass('disabled');
-        else
+        $('.signalControl').children('*').removeClass('disabled');
+        $(".mode"+mode).addClass("modesel");
+
+        if(mode != "Expr") 
             $('.expression').addClass('disabled');
+
+        if(mode != "Line")
+            $('#srcRange').addClass('disabled');
+
+        if(mode == "Expr" || mode == "Byp")
+            $('#destRange input.range').addClass('disabled');
+
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
@@ -452,8 +487,6 @@ function main()
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            //Naming collision between this and list, should figure it out
-            //(maybe add_UI_handlers can be a method of list)
             add_handlers();
         },
         100);
@@ -490,7 +523,7 @@ function add_signal_control_bar()
 
     //Add the range controls
     $('.topMenu').append(
-        "<div id='srcRange' class='range signalControl disabled'>Source Range:</div>"+
+        "<div id='srcRange' class='range signalControl disabled'>Src Range:</div>"+
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
@@ -502,25 +535,22 @@ function add_signal_control_bar()
             'maxLength': 15,
             "size": 5,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
-            'class': 'range',   
+            'class': 'range '+minOrMax,   
             'id': 'range'+srcOrDest+minOrMax,
             'index': i
         })
     });
 
-    $("<input id='boundaryMin' class='boundary' type='button'></input>").insertBefore('#rangeDestMin');
-    $("<input id='boundaryMax' class='boundary' type='button'></input>").insertAfter('#rangeDestMax');
+    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#rangeDestMin');
+    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#rangeDestMax');
 
 }
 
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='extratoolsDiv'>"+
-            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-            "<input id='refresh' class='extratools' type='button'>"+
-        "</div>"
-    );
+        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+        "<div id='refresh' class='extratools'>");
 }
 
 /**

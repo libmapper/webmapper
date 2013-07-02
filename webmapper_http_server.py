@@ -13,6 +13,7 @@ import sys
 import struct
 import hashlib
 from cStringIO import StringIO
+import pdb
 
 message_pipe = Queue.Queue()
 tracing = False
@@ -52,7 +53,10 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             er = 1
             if cmd_handlers.has_key('load'):
                 er = 2
-                cmd_handlers['load'](query['mapping_json'][0])
+                sources = query['sources'][0].split(',')
+                destinations = query['destinations'][0].split(',')
+                devices = {'sources': sources, 'destinations': destinations}
+                cmd_handlers['load'](query['mapping_json'][0], devices)
             print >>self.wfile, "Success: %s loaded successfully."%fn
         except Exception, e:
             print >>self.wfile, "Error: loading %s (%d)."%(fn,er)
