@@ -78,6 +78,7 @@ a:hover { color: #036; }
 
 .cell_connected{
 	fill: #04C4D9;
+	/* fill: #86def8; */
 	animation-name: connected;
 	animation-duration: 300ms;
 	animation-timing-function: linear;
@@ -150,8 +151,6 @@ a:hover { color: #036; }
 	background-color: #eeeeee;
 	border: 1px solid #dddddd;
 	width: 100%;
-}
-.buttonBar button{
 }
 
 #actionBar button, .buttonBar button{
