@@ -18,6 +18,12 @@ input {
   user-select: text;
 }
 
+ul {
+  -webkit-padding-start: 0;
+  -moz-padding-start: 0;
+  -o-padding-start: 0;
+}
+
 body {
   font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
@@ -28,12 +34,16 @@ body {
 
     /* Main color */
     body {
-      background: pink;
+      background: white;
     }
 
     /* light grays */
-    thead,#statusBar,#svgTop,#titleSearchDiv,.topTabs li.tabsel {
-      background: lightgray;
+    #statusBar,#titleSearchDiv,.topTabs li.tabsel {
+      background: rgb(134,222,248);
+    }
+
+    thead, #svgTop {
+      background: #EEE;
     }
 
     /* highlights */
@@ -47,7 +57,7 @@ body {
     }
 
     /* tertiary highlight selection */
-    .displayTable tr.even {
+    .displayTable tr.even, .displayTable tbody tr:only-child:not(.invisible) {
       background: #EDF5FF;
     }
 
@@ -92,14 +102,9 @@ body {
   }
 
   .topTabs li {
-    /*border-left: solid 1px black;*/
-    /*border-right: solid 1px black;*/
-    /*border-top: solid 1px black;*/
-    border-top-right-radius: 12px;
-    border-top-left-radius: 5px;
-    padding: 2pt 10px 2pt 10px;
-    margin: 0px;
-    background: gray;
+    border-radius: 12px 12px 0 0;
+    padding: 5px 15px;
+    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(224, 224, 224) 100%);
     display: inline-block;
     list-style: none;
     cursor: pointer;
@@ -279,7 +284,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 87px);
+    height: calc(100% - 85px);
     /*border: solid 1px black;*/
     border-bottom: 0;
   }
@@ -301,17 +306,14 @@ body {
     }
 
       /* Rows and headers */
-      thead {
-        /*border-bottom: 1px solid black;*/
-        cursor: pointer;
-      }
-
       .tableDiv th, #svgTop {
+        cursor: pointer;
         font-weight: normal;
         text-align: left;
-        padding-left: 5px;
         border-top: 0px;
         border-left: 0px;
+        padding: 4px 0;
+        font-size: 11pt;
       }
 
       .invisible {
@@ -319,13 +321,23 @@ body {
       }
 
       .displayTable tr td {
-        margin: 3pt;
-        height: 13pt;
         vertical-align: middle;
         border: solid 0px black;
-        padding-left: 5px;
         cursor: default;
       }
+
+      .displayTable td, .displayTable th, #svgTop {
+        padding-left: 10px;
+      }
+
+      /*
+      .displayTable td:first-child {
+        border-radius: 10px 0 0 10px;
+      }
+
+      .displayTable td:last-child {
+        border-radius: 0 10px 10px 0;
+      }*/
       /*****************/
     /****************/
 
@@ -359,15 +371,13 @@ body {
     position: absolute;
     border-bottom: 0;
     left: 40%;
-    height: calc(100% - 87px);
+    height: calc(100% - 85px);
     width: 20%;
   }
   #svgTop {
     width: 100%;
-    /*border-bottom: 1px solid black;*/
     position: absolute;
     top: 0px;
-    text-align: center;
     cursor: pointer;
   }
   .incompatible {
@@ -379,7 +389,6 @@ body {
 /* Title and search bar */
 /* Make sure inputs are not obscured*/
     #titleSearchDiv input{
-      z-index: 1;
       margin-top: 12px;
     }
     #titleSearchDiv {
@@ -390,21 +399,25 @@ body {
       font-weight: normal;
     }
     #svgTitle {
-      width: 100%;
-      text-align: center;
+      left: calc(40% + 10px);
     }
     .searchBar {
       position: absolute;
       margin: 0px;
+      
+    }
+    input.searchBar {
+      width: 200px;
+      text-align: right;
     }
     #leftTitle {
       left: 10px;
     }
     #leftSearch {
-      right: 61%;
+      right: calc(60% + 10px);
     }
     #rightTitle {
-      left: 60%;
+      left: calc(60% + 10px);
     }
     #rightSearch {
       right: 10px;
