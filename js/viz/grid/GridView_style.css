@@ -9,9 +9,9 @@
 
 
 
-#hZoomSlider0 {margin-left: 29px; height: 18px }
+#hZoomSlider0 {height: 18px }
 #hZoomSlider0 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
-#hZoomSlider1 {margin-left: 29px; height: 18px }
+#hZoomSlider1 {height: 18px }
 #hZoomSlider1 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
 
 #vZoomSlider0 {width: 18px;}
@@ -30,15 +30,22 @@
 [id*='hZoomSlider-'] .ui-state-focus, [id*='vZoomSlider'] .ui-state-focus{background: #f6f6f6; border: 1px solid #cccccc;}
 [id*='hZoomSlider-'] .ui-state-focus.ui-state-hover, [id*='vZoomSlider'] .ui-state-focus.ui-state-hover{background: #fdf5ee; border: 1px solid #fcbc09;}
 
-.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr { border-radius: 0;}
+#hZoomSlider0 .ui-corner-all, .ui-corner-top, .ui-corner-bottom, .ui-corner-right, .ui-corner-left, .ui-corner-tr { 
+	border-radius: 0;
+}
 
-
+.activeGridIndicator{
+	background: #555; border: 1px solid #000;
+}
+.inactiveGridIndicator{
+	background: #fff; border: 1px solid #cccccc;
+}
 
 a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -moz-use-text-color; outline-style: none; outline-width: medium; }
 a:hover { color: #036; }
 
 .cell_up{
-	fill: #dddddd;	
+	fill: #dfdfdf;	
 }
 
 .cell_disabled{
@@ -51,13 +58,24 @@ a:hover { color: #036; }
 	fill: #0076b0;
 }
 .row_over{
-	fill: #AAAAAA;
+	fill: #999999;
 }
 
 .cell_selected{
 	stroke-width:2;
-	stroke: #000000;
+	stroke: #ff0000;
 }
+
+.includedSrc {
+	fill: url(#Pattern_IncludedSrc);
+}
+.includedDst {
+	fill: url(#Pattern_IncludedDst);
+}
+.includedSrc.includedDst {
+	fill: url(#Pattern_IncludedSrcDst);
+}
+
 .cell_connected{
 	fill: #04C4D9;
 	animation-name: connected;
@@ -111,4 +129,76 @@ a:hover { color: #036; }
 	fill: #EEEEEE;
 }
 	
+	
+
+#actionBar{
+	margin-top: 10px;
+	padding: 2px 5px;
+	width: 99%;
+	clear: both;
+	position: relative;
+	
+	background-color: #eeeeee;
+	border: 1px solid #dddddd;
+}
+
+.buttonBar{
+	padding: 2px 0px;
+	margin-top: 20px; 
+	float: right;
+	text-align: center;
+	background-color: #eeeeee;
+	border: 1px solid #dddddd;
+	width: 100%;
+}
+.buttonBar button{
+}
+
+#actionBar button, .buttonBar button{
+	font-size: 14px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #F2FFDE;
+	padding: 10px 15px;
+}
+#actionBar button:hover, .buttonBar button:hover{
+	background-color: #EEE8AA;
+}
+#actionBar button:active, .buttonBar button:active{
+	background-color: #FFFFF0;
+}
+
+
+
+#actionBar .styled-select 
+{
+   width: 200px;
+   overflow: hidden;
+   border: 0px solid #ccc;
+   margin-top: 2px;
+   margin-right: 3px;
+   padding: 1px 5px 0px 5px;
+   background: url(dropdown_arrow.png) no-repeat right #F2FFDE;
+   	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+}
+#actionBar .styled-select:hover {
+	background-color: #EEE8AA;
+}
+
+	
+.styled-select select {
+   background: transparent;
+   width: 228px;
+   padding: 5px;
+   font-size: 14px;
+   line-height: 1;
+   border: 0;
+   border-radius: 0;
+   height: 36px;
+   -webkit-appearance: none;
+   }
 	

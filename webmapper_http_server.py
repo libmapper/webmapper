@@ -301,7 +301,9 @@ def handler_page(out, args):
 
 <!-- Grid View includes -->
 <script type="text/javascript" src="js/viz/grid.js"></script>
-<script type="text/javascript" src="js/viz/grid/SvgGrid.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridSVG.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridSignals.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridDevices.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
 
