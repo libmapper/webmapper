@@ -146,7 +146,7 @@ function listView(model)
 //A function to make sure that rows fill up the available space, in testing for now
 function update_row_heights()
 {
-    var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+    var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height() - 1;
     var leftHeight = tableHeight/leftTable.nVisibleRows;
     var rightHeight = tableHeight/rightTable.nVisibleRows;
 
@@ -566,11 +566,9 @@ function create_arrow(left, right, sel, muted)
     line.border.attr({"path": path});
 
     if (sel)
-        line.attr({"stroke": "red"});
-    else
-        line.attr({"stroke": "black"});
+        line.node.classList.add('selected');
     if (muted)
-        line.node.setAttribute("stroke-dasharray", 4);
+        line.node.classList.add('muted');
 
     line.attr({
         "fill": "none",
@@ -596,7 +594,7 @@ function create_arrow(left, right, sel, muted)
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
-            line.attr('stroke','red');
+            line.node.classList.add('selected');
         }
         e.stopPropagation();
     });

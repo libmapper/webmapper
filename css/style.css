@@ -21,9 +21,60 @@ input {
 body {
   font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
-  background: pink;
   margin-top: 3px;
 }
+
+/* Color scheme! */
+
+    /* Main color */
+    body {
+      background: pink;
+    }
+
+    /* light grays */
+    thead,#statusBar,#svgTop,#titleSearchDiv,.topTabs li.tabsel {
+      background: lightgray;
+    }
+
+    /* highlights */
+    .tablesorter-headerAsc, .tablesorter-headerDesc, .modesel, .displayTable tr.trsel.even {
+      background-color: #9CC2CF;
+    }
+
+    /* secondary highlight */
+    .trsel.odd {
+      background: lightblue !important;
+    }
+
+    /* tertiary highlight selection */
+    .displayTable tr.even {
+      background: #EDF5FF;
+    }
+
+    /* whites */
+    .svgDiv, .tableDiv {
+      background: white;
+    }
+
+    /* others */
+    .waiting {
+      background: #EEEEEE;
+    }
+    input.range {
+      border: 1px solid darkgrey;
+    }
+
+    /* paths */
+    path {
+      stroke: black;
+    }
+    path.selected {
+      stroke: red;
+    }
+    path.muted {
+      stroke-dasharray: 4;
+    }
+/******************/
 
 /* Used to position the tables and connection area. */
 #spacerTable {
@@ -54,9 +105,6 @@ body {
     cursor: pointer;
   }
 
-  .tabsel {
-    background: lightgrey !important;
-  }
 /****************/
 
 /*The top menu*/
@@ -146,10 +194,6 @@ body {
         }
     /****************/
 
-    .waiting {
-      background: #EEEEEE;
-    }
-
     .extratools {
       float: right;
     }
@@ -191,16 +235,12 @@ body {
       cursor: pointer;
       display: inline-block;
     }
-    .modesel {
-      background: #9CC2CF;
-    }
 
     div.range {
       margin-left: 10px;
       padding: 3px 3px;
     }
     input.range {
-      border: 1px solid darkgrey;
       text-align: center;
       margin: 0;
     }
@@ -240,7 +280,6 @@ body {
     overflow: auto;
     width: 40%;
     height: calc(100% - 87px);
-    background: white;
     /*border: solid 1px black;*/
     border-bottom: 0;
   }
@@ -263,7 +302,6 @@ body {
 
       /* Rows and headers */
       thead {
-        background-color: lightgray;
         /*border-bottom: 1px solid black;*/
         cursor: pointer;
       }
@@ -274,10 +312,6 @@ body {
         padding-left: 5px;
         border-top: 0px;
         border-left: 0px;
-      }
-
-      .tablesorter-headerAsc, .tablesorter-headerDesc {
-        background-color: #9CC2CF;
       }
 
       .invisible {
@@ -292,32 +326,18 @@ body {
         padding-left: 5px;
         cursor: default;
       }
-
-      .displayTable tr.even {
-        background: #EDF5FF;
-      }
-
-      .trsel.even{
-        background: #9CC2CF !important; /*Exactly 1 shade darker than lightblue*/
-      }
-
-      .trsel.odd{
-        background: lightblue !important;
-      }
       /*****************/
     /****************/
 
   #statusBar {
     position: absolute;
     width: 100%;
-    background-color: lightgray;
     bottom: 0px;
     border-collapse: collapse;
   }
 
   .status {
     width: 40%;
-    background-color: lightgray;
     padding-left: 10px;
     padding-top: 3px;
     /*border: 1px solid black;*/
@@ -333,14 +353,10 @@ body {
 /****************/
 
 
-
-
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
   .svgDiv {
     position: absolute;
-    background-color: white;
-    /*border: 1px solid black;*/
     border-bottom: 0;
     left: 40%;
     height: calc(100% - 87px);
@@ -349,7 +365,6 @@ body {
   #svgTop {
     width: 100%;
     /*border-bottom: 1px solid black;*/
-    background-color: lightgray;
     position: absolute;
     top: 0px;
     text-align: center;
@@ -369,7 +384,6 @@ body {
     }
     #titleSearchDiv {
       height: 41px;
-      background: lightgray;
     }
     #titleSearchDiv h2 {
       margin-top: 9px;
@@ -404,12 +418,6 @@ body {
   float: left;
   position: relative;
 }
-
-/* Quick fix to get #container out of the way for loading form
-#container.onLoad {
-  height: calc(100% - 85px);
-  margin-top: 85px;
-}*/
 
 /* For disabled elements */
 .disabled {
