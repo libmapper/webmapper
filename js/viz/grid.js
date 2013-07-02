@@ -682,11 +682,12 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = $(this._container).width() ;
-		if(this.viewMode == 0)
-			w = Math.floor($(this._container).width()/2) ;
+		var w = $(this._container).width() - 18;
 		
-		var h = $(this._container).height() - $("#actionBar").height() - 2;
+		if(this.viewMode == 0)
+			w = Math.floor(w/2);
+		
+		var h = $(this._container).height() - $("#actionBar").height() - $(".topMenu").height() - 2;
 		
 		document.getElementById("devGrid").style.width = w + "px";
 		document.getElementById("devGrid").style.height = h + "px";
@@ -760,6 +761,7 @@ GridView.prototype = {
 		this.viewPresetIndex = data[5];
 		this.viewPresetCounter = data[6];
 		this.init();
+		this.loadViewPreset(this.viewPresetIndex);
 	},
 	
 	save_view_settings : function ()
