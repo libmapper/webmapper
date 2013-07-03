@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>LibMapper Matrix View</title>
+
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/LibMapperModel.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script><!-- JQuery -->
+<script type="text/javascript" src="js/viz/hive.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
+
+<script>
+
+var nSrcDevices = 0;
+var nDstDevices = 0;
+
+var model, view;
+
+function init(){
+
+	$('#container').css('height', ($(window).height() - 40) + 'px' );
+    window.onresize = function (e) {
+    	$('#container').css('height', ($(window).height() - 40) + 'px' );
+    	view.on_resize();
+    };
+	
+	model = new LibMapperModel();
+	view  = new  HivePlotView(document.getElementById("container"), model);
+	view.on_resize();
+
+	initData();
+}
+
+// init with fake data for now
+function initData()
+{
+	var nIn = 4, nOut = 12;
+	for(var i=0; i<nIn;i++)
+		addDevice("/Source " + nSrcDevices++, 0, i);
+	for(var i=0; i<nOut;i++)
+		addDevice("/Destination " + nDstDevices++, i, 0);
+	view.update_display();
+}
+
+function addDevice(name, nIn, nOut)
+{
+/*
+	var args = new Array();
+	args['name'] = name;
+	args['n_inputs'] = 2;
+	args['n_outputs'] = 0;
+	var device = model.new_device(args);
+*/
+	var args = new Object();
+	args.name = name;
+	args.n_inputs = nIn;
+	args.n_outputs = nOut;
+	model.devices.add(name, args);
+
+	for(var j=0; j<nIn;j++)
+		addDevSignal("/Sig " + j, name);	
+	for(var j=0; j<nOut;j++)
+		addDevSignal("/Sig " + j, name);	
+}
+
+function addDevSignal(name, device_name)
+{
+	/*
+	var args = new Array(); 
+	args['device_name'] = device_name;
+	args['name'] = name;
+	var signal = model.new_signal(args);
+	*/
+	var args = new Object(); 
+	args.device_name = device_name;
+	args.name = name;
+	model.signals.add(device_name+name, args);
+
+}
+
+function btnHandler(val)
+{
+		if(val=="dst"){
+			addDevice("Destination " + nDstDevices++, 2, 0);
+		}else if(val=="src"){
+			addDevice("Source " + nSrcDevices++, 0, 2);		
+		}else if(val=="init"){
+			initData();		
+		}
+		view.update_display();
+}
+
+</script>
+
+</head>
+
+
+<body onload="init()">
+<div style="margin: 0 auto; class: topMenu">
+	<button onclick="btnHandler('init')">Add 5x5 Devices</button>
+	<button onclick="btnHandler('src')">Add Source Device</button>
+	<button onclick="btnHandler('dst')">Add Destination Device</button>
+</div> 
+
+	<div id="container">
+
+
+</div>
+
+</body>
+</html>

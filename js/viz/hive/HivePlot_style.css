@@ -1,0 +1,27 @@
+svg{
+	background: #fff;
+}
+
+body{
+	margin: 0;
+	}
+	
+.Line_SRC{
+	stroke: #333;
+	stroke-width: 2px;
+}
+
+.Line_DST{
+	stroke: #000;
+	stroke-width: 2px;
+}
+
+.Node_SRC{
+	stroke: none;
+	fill: Orange;		
+}
+
+.Node_DST{
+	stroke: none;
+	fill: #04C4D9;		
+}
