@@ -9,6 +9,20 @@
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
 }
+/*
+@-webkit-keyframes myfirst 
+{
+from {background: default;}
+to {background: yellow;}
+}
+
+.displayTable tbody tr {
+  -webkit-transition: background .5s;
+}
+
+path.selected {
+  -webkit-transition: stroke .5s;
+}*/
 
 input {
   -webkit-user-select: text;
@@ -108,6 +122,10 @@ body {
     display: inline-block;
     list-style: none;
     cursor: pointer;
+  }
+
+  .topTabs li:hover {
+    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(238, 238, 238) 100%);
   }
 
 /****************/
@@ -249,7 +267,7 @@ body {
       text-align: center;
       margin: 0;
     }
-    input.range.Min {
+    #rangeSrcMin, #rangeDestMin {
       border-right: 0;
     }
     input.range, input.expression {
