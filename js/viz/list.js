@@ -214,8 +214,8 @@ function listTable(id)
         $(this.tbody).empty();
         for(var row in tableData) 
         {
-            //If there is only one row, make it of odd class for styling
-            var newRow = "<tr class='odd'>"
+            //If there is only one row, make it of even class for styling
+            var newRow = "<tr>"
             for(var col in tableData[row]) {
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
@@ -235,6 +235,10 @@ function listTable(id)
         else name = "signals";
         this.nVisibleRows = $(this.tbody).children('tr').length - $(this.tbody).children('tr.invisible').length;
         $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
+    
+        // For styling purposes when there is only a single row
+        if (this.nVisibleRows == 1) 
+            $(this.tbody).children('tr').addClass('even');
     }
 
 }

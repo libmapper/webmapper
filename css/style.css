@@ -53,7 +53,7 @@ body {
 
     /* light grays */
     #statusBar,#titleSearchDiv,.topTabs li.tabsel {
-      background: rgb(134,222,248);
+      background: rgb(134,222,248) !important;
     }
 
     thead, #svgTop {
@@ -71,7 +71,7 @@ body {
     }
 
     /* tertiary highlight selection */
-    .displayTable tr.even, .displayTable tbody tr:only-child:not(.invisible) {
+    .displayTable tr.even {
       background: #EDF5FF;
     }
 
@@ -125,7 +125,7 @@ body {
   }
 
   .topTabs li:hover {
-    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(238, 238, 238) 100%);
+    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(224, 224, 224) 100%);
   }
 
 /****************/
