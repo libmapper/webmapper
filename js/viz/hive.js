@@ -84,19 +84,19 @@ HivePlotView.prototype = {
 	    defs.appendChild(linearGradient);
 	    stop = document.createElementNS(this.svgNS, 'stop');
 	    stop.setAttribute('offset', '0%');
-	    stop.setAttribute('style', 'stop-color:rgb(255,255,255); stop-opacity:1');
+	    stop.setAttribute('class', 'bkTop');
 	    linearGradient.appendChild(stop);
 	    stop = document.createElementNS(this.svgNS, 'stop');
 	    stop.setAttribute('offset', '50%');
-	    stop.setAttribute('style', 'stop-color:rgb(255,255,255); stop-opacity:1');
+	    stop.setAttribute('class', 'bkTop');
 	    linearGradient.appendChild(stop);
 	    stop = document.createElementNS(this.svgNS, 'stop');
 	    stop.setAttribute('offset', '50%');
-	    stop.setAttribute('style', 'stop-color:rgb(220,220,220); stop-opacity:1');
+	    stop.setAttribute('class', 'bkBot');
 	    linearGradient.appendChild(stop);
 	    stop = document.createElementNS(this.svgNS, 'stop');
 	    stop.setAttribute('offset', '100%');
-	    stop.setAttribute('style', 'stop-color:rgb(220,220,220); stop-opacity:1');
+	    stop.setAttribute('class', 'bkBot');
 	    linearGradient.appendChild(stop);
 	    this.svg.appendChild(linearGradient);
 	
@@ -287,8 +287,10 @@ HivePlotView.prototype = {
 					var x2 = node2.getAttribute("cx");
 					var y2 = node2.getAttribute("cy");
 					
-					var ctX1 = this.svgDim[0];
-					var ctX2 = this.svgDim[0];
+//					var ctX1 = this.svgDim[0];
+//					var ctX2 = this.svgDim[0];
+					var ctX1 = x2;
+					var ctX2 = x2;
 					var ctY1 = y1;
 					var ctY2 = y2;
 					

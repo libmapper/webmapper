@@ -37,3 +37,12 @@ svg{
 	stroke-width: 4px;
 	fill: none;
 }
+
+.bkTop{
+	stop-color: #fff; 
+	stop-opacity:1;
+}
+.bkBot{
+	stop-color: #fafafa; 
+	stop-opacity:1;
+}
