@@ -208,9 +208,6 @@ function update_connection_properties()
         if(mode != "Line")
             $('#srcRange').addClass('disabled');
 
-        if(mode == "Expr" || mode == "Byp")
-            $('#destRange input.range').addClass('disabled');
-
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
@@ -537,7 +534,7 @@ function add_signal_control_bar()
             'maxLength': 15,
             "size": 5,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
-            'class': 'range '+minOrMax,   
+            'class': 'range',   
             'id': 'range'+srcOrDest+minOrMax,
             'index': i
         })
