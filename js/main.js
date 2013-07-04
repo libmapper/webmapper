@@ -288,6 +288,9 @@ function selected_connection_set_input(what,field,idx)
 
     if( !args ) return;
 
+    // Return if there is no change
+    if ( args[what][idx] == parseFloat(field.value) || args[what] == field.value) return;
+
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
     var modecmd = connectionModeCommands[connectionModes[args['mode']]];
@@ -562,10 +565,10 @@ function add_handlers()
         keydown: function(e) {
             e.stopPropagation();
             if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
+                selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );
         },
         click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
+        blur: function() {selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );}
     }, 'input');
 
     //For the mode buttons
