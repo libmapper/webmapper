@@ -682,7 +682,7 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = $(this._container).width() - 18;
+		var w = $(this._container).width();
 		
 		if(this.viewMode == 0)
 			w = Math.floor(w/2);

@@ -492,18 +492,20 @@ function main()
 function add_container_elements()
 {
     $('body').append(
-        "<ul class='topMenu'>"+
-            "<div id='saveLoadDiv'>"+
-                "<li><a id='loadButton'>Load</a></li>"+
-                "<li><a id='saveButton'>Save</a></li>"+
-            "</div>"+
-            "<select id='modeSelection'>"+
-                "<option value='none'>None</option>"+
-                "<option value='list' selected>List</option>"+
-                "<option value='grid'>Grid</option>"+
-            "</select>"+
-        "</ul>"+
-        "<div id='container'></div>"
+    	"<table id='logoWrapper'><tr><td width='60px'><img alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
+        "<td>" +
+	        "<ul class='topMenu'>"+
+	            "<div id='saveLoadDiv'>"+
+	                "<li><a id='loadButton'>Load</a></li>"+
+	                "<li><a id='saveButton'>Save</a></li>"+
+	            "</div>"+
+	            "<select id='modeSelection'>"+
+	                "<option value='none'>None</option>"+
+	                "<option value='list' selected>List</option>"+
+	                "<option value='grid'>Grid</option>"+
+	            "</select>"+
+	    "</ul></tr></table>"+
+	    "<div id='container'></div>"
     );
 }
 
