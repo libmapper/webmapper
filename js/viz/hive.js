@@ -9,13 +9,16 @@ function HivePlotView(container, model)
 	this.model = model;
 	this.includedSrcs = [];
 	this.includedDsts = [];
-
+	this.srcSigs = [];
+	this.dstSigs = [];
+	this.srcNodes = [];
+	this.dstNodes = [];
 	this.svgNS = "http://www.w3.org/2000/svg";
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 
-	this.init();
+	//this.init();
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
@@ -42,6 +45,9 @@ HivePlotView.prototype = {
 	{ 
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
+		
+		this.srcSigs = [];
+		this.dstSigs = [];
 		
 		$(this._container).empty();
 		
@@ -112,23 +118,7 @@ HivePlotView.prototype = {
 		
 		this.drawLines(srcDevs, true);
 		this.drawLines(dstDevs, false);
-		
-		
-		/*
-		// add links
-		
-		var links = new Array();
-		var l = this.model.links.keys();
-		for (var i=0; i<l.length; i++)			
-		{
-			var src = this.model.links.get(l[i]).src_name;
-			var dst = this.model.links.get(l[i]).dest_name;
-			links.push([src,dst]);
-		}
-		
-		this.devGrid.updateDisplayData(srcDevs, dstDevs, links);
-		this.devGrid.refresh();
-	*/	
+		this.drawConnections();
 	},
 	
 	drawLines : function (srcData, isSources)
@@ -141,6 +131,8 @@ HivePlotView.prototype = {
 		var n = srcData.length;
 		var range = Math.PI - (2*rangeLimiter);	// x2 or each end
 		var angleInc = range / (n-1);
+		if(n==1)
+			angleInc = Math.PI/4;
 		for (var i=0; i<n; i++)
 		{
 			
@@ -172,8 +164,9 @@ HivePlotView.prototype = {
 			// its signals
 			$(this._container).trigger("getSignalsByDevice", dev.name);
 			
-			var sigs = [];
 			
+			// get signals from model	
+			var sigs = [];
 			var keys = this.model.signals.keys();
 		    for (var s in keys) {
 		        var k = keys[s];
@@ -186,7 +179,6 @@ HivePlotView.prototype = {
 		    }
 		    
 		    var padding = 30;
-		    
 		    var m = sigs.length;
 		    var lineLen = (line.getTotalLength() - (2*padding));
 		    var lineInc = lineLen / (m-1);
@@ -194,40 +186,62 @@ HivePlotView.prototype = {
 		    	lineInc = 0;	// handle divide by zero when there's only 1 signal
 		    for (var j=0; j<m; j++)
 			{
+		    	var sig = sigs[j];
+		    	
 		    	var pt = line.getPointAtLength( (j*lineInc) + padding);
 		    	var node = document.createElementNS(this.svgNS,"circle");
 		    	node.setAttribute("cx", pt.x);
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
 		    	node.setAttribute("class", (isSources) ? "Node_SRC" : "Node_DST");
-				this.svg.appendChild(node);
+		    	this.svg.appendChild(node);
+				
+		    	if(isSources){
+					this.srcSigs.push(sig);
+					this.srcNodes.push(node);
+				}
+				else{
+					this.dstSigs.push(sig);
+					this.dstNodes.push(node);
+				}
 			}
 		}
 	},
 	
-	updateSignalsGrid : function(){
-	/*	
-		// show signals for included srcs/destinations
-		var srcSigs = new Array();
-		var dstSigs = new Array();
-		var connections = new Array();
-		
-		var keys = this.model.signals.keys();
-	    for (var s in keys) {
-	        var k = keys[s];
-	        var sig = this.model.signals.get(k);
-	        
-	        //var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
-
-			for (var i=0; i<this.includedSrcs.length; i++){
-				if(sig.device_name == this.includedSrcs[i])
-					srcSigs.push(sig);
+	drawConnections : function()
+	{
+		for(var i=0; i<this.srcSigs.length; i++)
+		{
+			for(var j=0; j<this.dstSigs.length; j++)
+			{
+				var s = this.srcSigs[i];
+				var d = this.dstSigs[j];
+				
+				var src = s.device_name + s.name;
+				var dst = d.device_name + d.name;
+				if(this.model.isConnected(src, dst))
+				{
+					
+					var node1 = this.srcNodes[i];
+					var node2 = this.dstNodes[j];
+					
+					var x1 = node1.getAttribute("cx");
+					var y1 = node1.getAttribute("cy");
+					var x2 = node2.getAttribute("cx");
+					var y2 = node2.getAttribute("cy");
+					
+					var line = document.createElementNS(this.svgNS,"path");
+					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
+					line.setAttribute("class", "hiveLine_connected");
+					this.svg.appendChild(line);
+				}
 			}
-			for (var i=0; i<this.includedDsts.length; i++){
-				if(sig.device_name == this.includedDsts[i])
-					dstSigs.push(sig);
-			}
-	    }
+		}
+	},
+	
+	updateSignalsGrid : function()
+	{
+	
 	    
 	    // add connections
 		
@@ -240,9 +254,7 @@ HivePlotView.prototype = {
 			connections.push([src,dst]);
 		}
 	    
-		this.sigGrid.updateDisplayData(srcSigs, dstSigs, connections);
-		this.sigGrid.refresh();
-		*/
+	
 	},
 	
 	on_resize : function ()

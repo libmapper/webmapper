@@ -307,6 +307,10 @@ def handler_page(out, args):
 <link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
 
+<!-- HivePlot View includes -->
+<script type="text/javascript" src="js/viz/hive.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css"></link>
+
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
