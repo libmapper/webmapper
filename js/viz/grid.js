@@ -25,7 +25,7 @@ function GridView(container, model)
 	this.setActiveGrid(this.activeGridIndex);
 
 	//Keyboard handlers
-	document.onkeyup = function(e){
+	document.onkeydown = function(e){
 		_self.keyboardHandler(e);
 	};
 	/**
