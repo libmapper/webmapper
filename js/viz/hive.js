@@ -13,6 +13,7 @@ function HivePlotView(container, model)
 	this.dstSigs = [];
 	this.srcNodes = [];
 	this.dstNodes = [];
+	this.connectionsLines = [];
 	this.svgNS = "http://www.w3.org/2000/svg";
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 	this.svg;					// holding <SVG> elements for easy reference
@@ -48,6 +49,9 @@ HivePlotView.prototype = {
 		
 		this.srcSigs = [];
 		this.dstSigs = [];
+		this.srcNodes = [];
+		this.dstNodes = [];
+		this.connectionsLines = [];
 		
 		$(this._container).empty();
 		
@@ -66,6 +70,35 @@ HivePlotView.prototype = {
 //		this.svg.setAttribute("preserveAspectRatio", "none");
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 		wrapper.appendChild(this.svg);	
+		
+		
+		// bk gradient
+		var defs = document.createElementNS(this.svgNS, "defs");
+		var linearGradient, stop;
+	    linearGradient = document.createElementNS(this.svgNS, "linearGradient");
+	    linearGradient.setAttribute('id', "bkGradient");
+	    linearGradient.setAttribute('x1', '0%');
+	    linearGradient.setAttribute('y1', '0%');
+	    linearGradient.setAttribute('x2', '0%');
+	    linearGradient.setAttribute('y2', '100%');
+	    defs.appendChild(linearGradient);
+	    stop = document.createElementNS(this.svgNS, 'stop');
+	    stop.setAttribute('offset', '0%');
+	    stop.setAttribute('style', 'stop-color:rgb(255,255,255); stop-opacity:1');
+	    linearGradient.appendChild(stop);
+	    stop = document.createElementNS(this.svgNS, 'stop');
+	    stop.setAttribute('offset', '50%');
+	    stop.setAttribute('style', 'stop-color:rgb(255,255,255); stop-opacity:1');
+	    linearGradient.appendChild(stop);
+	    stop = document.createElementNS(this.svgNS, 'stop');
+	    stop.setAttribute('offset', '50%');
+	    stop.setAttribute('style', 'stop-color:rgb(220,220,220); stop-opacity:1');
+	    linearGradient.appendChild(stop);
+	    stop = document.createElementNS(this.svgNS, 'stop');
+	    stop.setAttribute('offset', '100%');
+	    stop.setAttribute('style', 'stop-color:rgb(220,220,220); stop-opacity:1');
+	    linearGradient.appendChild(stop);
+	    this.svg.appendChild(linearGradient);
 	
 		this.draw();
 	},
@@ -99,6 +132,15 @@ HivePlotView.prototype = {
 	
 	draw : function()
 	{
+		// draw background
+		var bk = document.createElementNS(this.svgNS,"rect");
+		bk.setAttribute("x", 0);
+		bk.setAttribute("x", 0);
+		bk.setAttribute("width", this.svgDim[0]);
+		bk.setAttribute("height", this.svgDim[1]);
+    	bk.setAttribute("style", "fill: url(#bkGradient");
+    	this.svg.appendChild(bk);
+		
 		//divide devices into sources and destinations
 		var srcDevs = new Array();
 		var dstDevs = new Array();
@@ -123,42 +165,57 @@ HivePlotView.prototype = {
 	
 	drawLines : function (srcData, isSources)
 	{
-		var originX = this.svgDim[0]/2;
+		var _self = this;
+		
+		// origin of ellipses
+		var originX = 0;
 		var originY = this.svgDim[1]/2;
-		var rangeLimiter = 30 * Math.PI / 180;	// degrees to radians
+		// inner radius ellipse
+		var w1 = this.svgDim[0]/10;	// width of ellipse
+		var h1 = this.svgDim[1]/10;	// height of ellipse
+		// outer radius ellipse
+		var w2 = (this.svgDim[0]) - 15;	// width of ellipse
+		var h2 = (this.svgDim[1]/2) - 15;	// height of ellipse
+		
+		var angleFrom = 25 * Math.PI / 180;		// offset from zero
+		var angleTo = 105 * Math.PI / 180;		// offset from 180
+		var range = Math.PI - angleFrom - angleTo;	// total range
 
 		// SRC Devices
 		var n = srcData.length;
-		var range = Math.PI - (2*rangeLimiter);	// x2 or each end
-		var angleInc = range / (n-1);
-		if(n==1)
-			angleInc = Math.PI/4;
+		var angleInc = (n==1)? Math.PI/4 : range/(n-1);
+
 		for (var i=0; i<n; i++)
 		{
-			
-			// inner radius ellipse
-			var w1 = this.svgDim[0]/10;	// width of ellipse
-			var h1 = this.svgDim[1]/10;	// height of ellipse
-			var x1 = ( w1 * Math.cos((i*angleInc) + (rangeLimiter) ) ) + (originX);
-			var y1 = ( h1 * Math.sin((i*angleInc) + (rangeLimiter) ) ) + (originY);
-			if(isSources)
-				y1 = this.svgDim[1] - y1;
-			
-			// outer radius ellipse
-			var w2 = (this.svgDim[0]/2) - 15;	// width of ellipse
-			var h2 = (this.svgDim[1]/2) - 15;	// height of ellipse
-			var x2 = ( w2 * Math.cos((i*angleInc) + (rangeLimiter) ) ) + originX;
-			var y2 = ( h2 * Math.sin((i*angleInc) + (rangeLimiter) ) ) + originY;
-			if(isSources)
-				y2 = this.svgDim[1] - y2;
-			
 			var dev = srcData[i];
+			
+			var nAngle = angleFrom + (i*angleInc);
+			var x1 = ( w1 * Math.cos(nAngle) ) + (originX);
+			var y1 = ( h1 * Math.sin(nAngle) ) + (originY);
+			var x2 = ( w2 * Math.cos(nAngle) ) + originX;
+			var y2 = ( h2 * Math.sin(nAngle) ) + originY;
+
+			if(isSources){
+				y1 = this.svgDim[1] - y1;
+				y2 = this.svgDim[1] - y2;
+			}
+			
 			var line = document.createElementNS(this.svgNS,"path");
 			line.setAttribute("data-src", dev.name);
 			
 			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 			line.setAttribute("d", pathDefn);
 			line.setAttribute("class", (isSources) ? "Line_SRC" : "Line_DST");
+			if(isSources)
+			{
+				line.setAttribute("data-src", dev.name);
+				line.addEventListener("mouseover", function(evt){
+					_self.onLineMouseOver(evt);
+				});
+				line.addEventListener("mouseout", function(evt){
+					_self.onLineMouseOut(evt);
+				});
+			}
 			this.svg.appendChild(line);
 			
 			// its signals
@@ -230,11 +287,50 @@ HivePlotView.prototype = {
 					var x2 = node2.getAttribute("cx");
 					var y2 = node2.getAttribute("cy");
 					
+					var ctX1 = this.svgDim[0];
+					var ctX2 = this.svgDim[0];
+					var ctY1 = y1;
+					var ctY2 = y2;
+					
 					var line = document.createElementNS(this.svgNS,"path");
-					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
+					line.setAttribute("data-src", s.device_name);
+//					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
+					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
 					line.setAttribute("class", "hiveLine_connected");
+					line.addEventListener("mouseover", function(evt){
+						this.setAttribute("class", "hiveLine_over");
+					});
+					line.addEventListener("mouseout", function(evt){
+						this.setAttribute("class", "hiveLine_connected");
+					});
+					
+					this.connectionsLines.push(line);
 					this.svg.appendChild(line);
 				}
+			}
+		}
+	},
+	
+	onLineMouseOver : function(e)
+	{
+		var line = e.target;
+		for (var i=0; i<this.connectionsLines.length; i++)
+		{
+			var con = this.connectionsLines[i];
+			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
+			{
+				con.setAttribute("class", "hiveLine_over");
+			}
+		}
+	},
+	onLineMouseOut : function(e){
+		var line = e.target;
+		for (var i=0; i<this.connectionsLines.length; i++)
+		{
+			var con = this.connectionsLines[i];
+			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
+			{
+				con.setAttribute("class", "hiveLine_connected");
 			}
 		}
 	},

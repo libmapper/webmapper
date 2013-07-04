@@ -1,28 +1,39 @@
 svg{
-	background: #fff;
+	fill: url(#bkGradient);
 }
 	
 .Line_SRC{
 	stroke: #333;
 	stroke-width: 2px;
+	stroke-linecap: round;
 }
 
 .Line_DST{
 	stroke: #000;
 	stroke-width: 2px;
+	stroke-linecap: round;
 }
 
 .Node_SRC{
-	stroke: none;
+	stroke: #000;
+	stroke-width: 1px;
 	fill: Orange;		
 }
 
 .Node_DST{
-	stroke: none;
+	stroke: #000;
+	stroke-width: 1px;
 	fill: #04C4D9;		
 }
 
 .hiveLine_connected{
-	stroke: #ff0000;
+	stroke: #ffaaaa;
 	stroke-width: 2px;
+	fill: none;
+}
+
+.hiveLine_over{
+	stroke: blue;
+	stroke-width: 4px;
+	fill: none;
 }
