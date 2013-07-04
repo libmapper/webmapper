@@ -239,24 +239,6 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	updateSignalsGrid : function()
-	{
-	
-	    
-	    // add connections
-		
-		var c = this.model.connections.keys();
-		for (var i=0; i<c.length; i++)			
-		{
-			var con = this.model.connections.get(c[i]);
-			var src = this.model.connections.get(c[i]).src_name;
-			var dst = this.model.connections.get(c[i]).dest_name;
-			connections.push([src,dst]);
-		}
-	    
-	
-	},
-	
 	on_resize : function ()
 	{
 		var w = $(this._container).width() - 10;
