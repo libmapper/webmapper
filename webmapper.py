@@ -37,7 +37,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-monitor = mapper.monitor(enable_autorequest=0)
+monitor = mapper.monitor(autorequest=0)
 
 def on_device(dev, action):
     if action == mapper.MDB_NEW:
@@ -82,7 +82,7 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    monitor = mapper.monitor(enable_autorequest=0)
+    monitor = mapper.monitor(autorequest=0)
     init_monitor()
 
 def on_save(arg):
