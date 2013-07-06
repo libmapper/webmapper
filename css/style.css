@@ -9,6 +9,20 @@
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
 }
+/*
+@-webkit-keyframes myfirst 
+{
+from {background: default;}
+to {background: yellow;}
+}
+
+.displayTable tbody tr {
+  -webkit-transition: background .5s;
+}
+
+path.selected {
+  -webkit-transition: stroke .5s;
+}*/
 
 input {
   -webkit-user-select: text;
@@ -16,15 +30,72 @@ input {
   -moz-user-select: text;
   -o-user-select: text;
   user-select: text;
-  border-radius: 5px;
+}
+
+ul {
+  -webkit-padding-start: 0;
+  -moz-padding-start: 0;
+  -o-padding-start: 0;
 }
 
 body {
-  font-family: sans, helv, helvetica, Arial;
+  font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
-  background: pink;
   margin-top: 3px;
 }
+
+/* Color scheme! */
+
+    /* Main color */
+    body, .svgDiv, .tableDiv {
+      background: white;
+    }
+
+    /* blues */
+    #statusBar,#titleSearchDiv, .topTabs li.tabsel {
+      background: rgb(134,222,248) !important;
+    }
+
+    /* Header Bars */
+    thead, #svgTop {
+      background: #EEE;
+    }
+    .displayTable th:hover, #svgTop:hover {
+      background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(238, 238, 238) 100%);
+    }
+
+    /* highlights */
+    .modesel, .displayTable tr.trsel.even {
+      background-color: #9CC2CF;
+    }
+    /* secondary highlight */
+    .trsel.odd {
+      background: lightblue !important;
+    }
+    /* tertiary highlight selection */
+    .displayTable tr.even {
+      background: #EDF5FF;
+    }
+
+    /* others */
+    .waiting {
+      background: #EEEEEE;
+    }
+    input.range {
+      border: 1px solid darkgrey;
+    }
+
+    /* paths */
+    path {
+      stroke: black;
+    }
+    path.selected {
+      stroke: red;
+    }
+    path.muted {
+      stroke-dasharray: 4;
+    }
+/******************/
 
 /* Used to position the tables and connection area. */
 #spacerTable {
@@ -38,37 +109,35 @@ body {
   .topTabs {
     margin: 0px;
     border-radius: 0px;
-    background: darkgrey;
+    background: inherit;
   }
 
   .topTabs li {
-    border-left: solid 1px black;
-    border-right: solid 1px black;
-    border-top: solid 1px black;
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
-    padding: 2pt 10px 2pt 10px;
-    margin: 0px;
+    border-radius: 12px 12px 0 0;
+    padding: 5px 15px;
+    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(224, 224, 224) 100%);
     display: inline-block;
     list-style: none;
     cursor: pointer;
   }
 
-  .tabsel {
-    background: lightgrey;
+  .topTabs li:hover {
+    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(224, 224, 224) 100%);
   }
+
 /****************/
 
 /*The top menu*/
     .topMenu {
-      padding: 0;
+      padding: 10px 0;
       top: 0;
-      margin-bottom: 5px;
+      margin: 0;
+      margin-top: -1px;
+      min-width: 560px;
     }
 
     .topMenu>div {
       display: inline-block;
-      margin-top: 5px;
     }
 
     .topMenu li {
@@ -82,13 +151,11 @@ body {
       margin-bottom: 0px;
     }
 
-    #saveLoadDiv {
-      display: inline-block;
-      background: lightgrey;
-      border: 1px solid black;
-      padding: 4px;
-      border-radius: 10px;
+    #modeSelection {
+      position: relative;
+      top:  -1px;
     }
+
 
     .topMenu li a {
       color: black;
@@ -127,9 +194,6 @@ body {
           position: relative;
           top: 4px;
         }
-        #boundaryMin {
-            margin-left: 5px;
-        }
         .boundaryNone {
           background-position: 0px 0px;
         }
@@ -150,10 +214,6 @@ body {
         }
     /****************/
 
-    .waiting {
-      background: #EEEEEE;
-    }
-
     .extratools {
       float: right;
     }
@@ -164,24 +224,23 @@ body {
     }
 
     #refresh {
-      background:url(/images/refresh.png) no-repeat;
+      position: absolute;
+      top:  18px;
+      right:  14px;
+      background-image: url(/images/refresh.png);
+      background-size: contain;
+      background-repeat: no-repeat;
       cursor: pointer;
-      border: solid 1px darkgray;
-      border-radius: 5px;
-      margin: 0px;
-      padding: 0px;
-      width: 24px;
-      height: 24px;
+      width: 25px;
+      height: 25px;
     }
 
     #wsstatus {
-      margin: 0px;
-      padding: 0px;
-      padding-right: 10px;
-      padding-top: 5px;
-      height: 24px;
-      font-size: 8pt;
-      color: gray;
+      position: fixed;
+      bottom: 5px;
+      right: 14px;
+      z-index: 9;
+      opacity: 0.5; 
     }
     .signalControl {
       z-index: 1;
@@ -189,27 +248,39 @@ body {
     }
   
     .modesDiv {
-      border: 1px solid black;
-      border-radius: 10px;
       padding: 0 10px;
-      background-color: lightgrey;
-
+      margin-left: 30px;
     }
     .modesDiv div {
-      padding: 5pt;
+      padding: 3pt;
       cursor: pointer;
       display: inline-block;
     }
-    .modesel {
-      background: darkgrey;
-    }
 
     div.range {
-    border: 1px solid black;
-    margin-left: 10px;
-    border-radius: 10px;
-    padding: 3px 3px;
-    background-color: lightgray;
+      margin-left: 10px;
+      padding: 3px 3px;
+    }
+    input.range {
+      text-align: center;
+      margin: 0;
+    }
+    #rangeSrcMin, #rangeDestMin {
+      border-right: 0;
+    }
+    input.range, input.expression {
+      height: 19px;
+      font-size: 9pt;
+    }
+
+    /* For proper spacing of text of range divs */
+    #boundaryMin, #rangeSrcMin, input.expression {
+      margin-left: 5px
+    }
+
+    #saveLoadDiv {
+      display: inline-block;
+      padding: 4px;
     }
 /****************/
 
@@ -229,9 +300,9 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 96px);
-    background: white;
-    border: solid 1px black;
+    height: calc(100% - 85px);
+    /*border: solid 1px black;*/
+    border-bottom: 0;
   }
 
   /* The table itself */
@@ -244,21 +315,21 @@ body {
     }
     #rightTable {
       left: 60%;
+      border-left: 0;
+    }
+    #leftTable {
+      border-right: 0;
     }
 
       /* Rows and headers */
-      thead {
-        background-color: lightgray;
-        border-bottom: 1px solid black;
-        cursor: pointer;
-      }
-
       .tableDiv th, #svgTop {
+        cursor: pointer;
         font-weight: normal;
         text-align: left;
-        padding-left: 5px;
         border-top: 0px;
         border-left: 0px;
+        padding: 4px 0;
+        font-size: 11pt;
       }
 
       .invisible {
@@ -266,42 +337,38 @@ body {
       }
 
       .displayTable tr td {
-        margin: 3pt;
-        height: 13pt;
-        vertical-align: top;
+        vertical-align: middle;
         border: solid 0px black;
-        padding-left: 5px;
         cursor: default;
       }
 
-      .displayTable tr.even {
-        background: #EDF5FF;
+      .displayTable td, .displayTable th, #svgTop {
+        padding-left: 10px;
       }
 
-      .trsel.even{
-        background: #9CC2CF !important; /*Exactly 1 shade darker than lightblue*/
+      /*
+      .displayTable td:first-child {
+        border-radius: 10px 0 0 10px;
       }
 
-      .trsel.odd{
-        background: lightblue !important;
-      }
+      .displayTable td:last-child {
+        border-radius: 0 10px 10px 0;
+      }*/
       /*****************/
     /****************/
 
   #statusBar {
     position: absolute;
     width: 100%;
-    background-color: lightgray;
     bottom: 0px;
     border-collapse: collapse;
   }
 
   .status {
     width: 40%;
-    background-color: lightgray;
     padding-left: 10px;
     padding-top: 3px;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
   }
 
   .status.middle {
@@ -314,26 +381,19 @@ body {
 /****************/
 
 
-
-
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
   .svgDiv {
     position: absolute;
-    background-color: white;
-    border: 1px solid black;
+    border-bottom: 0;
     left: 40%;
-    height: calc(100% - 96px);
+    height: calc(100% - 85px);
     width: 20%;
   }
   #svgTop {
     width: 100%;
-    height: 18px;
-    border-bottom: 1px solid black;
-    background-color: lightgray;
     position: absolute;
     top: 0px;
-    text-align: center;
     cursor: pointer;
   }
   .incompatible {
@@ -345,32 +405,35 @@ body {
 /* Title and search bar */
 /* Make sure inputs are not obscured*/
     #titleSearchDiv input{
-      z-index: 1;
-      margin-top: 16px;
+      margin-top: 12px;
     }
     #titleSearchDiv {
-      height: 50px;
+      height: 41px;
     }
     #titleSearchDiv h2 {
-      margin-top: 11px;
+      margin-top: 9px;
       font-weight: normal;
     }
     #svgTitle {
-      width: 100%;
-      text-align: center;
+      left: calc(40% + 10px);
     }
     .searchBar {
       position: absolute;
       margin: 0px;
+      
+    }
+    input.searchBar {
+      width: 200px;
+      text-align: right;
     }
     #leftTitle {
       left: 10px;
     }
     #leftSearch {
-      right: 60%;
+      right: calc(60% + 10px);
     }
     #rightTitle {
-      left: 60%;
+      left: calc(60% + 10px);
     }
     #rightSearch {
       right: 10px;
@@ -380,17 +443,10 @@ body {
 /* The overall container of elements not in skeleton*/
 #container {
   width: 100%;
-  background-color: lightgrey;
+  background-color: inherit;
   float: left;
   position: relative;
-  min-width: 700px;
 }
-
-/* Quick fix to get #container out of the way for loading form
-#container.onLoad {
-  height: calc(100% - 85px);
-  margin-top: 85px;
-}*/
 
 /* For disabled elements */
 .disabled {

@@ -1,0 +1,203 @@
+@CHARSET "UTF-8";
+
+
+#gridWrapper{margin: 0 auto;}
+#view{}
+
+#devGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
+#sigGrid{position: relative; float: left; background: #fff; font-family: sans-serif;}
+
+
+
+#hZoomSlider0 {height: 18px }
+#hZoomSlider0 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+#hZoomSlider1 {height: 18px }
+#hZoomSlider1 .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+
+#vZoomSlider0 {width: 18px;}
+#vZoomSlider0 .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+#vZoomSlider1 {width: 18px;}
+#vZoomSlider1 .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+
+/*
+[id^='hZoomSlider'] {margin-left: 29px; height: 18px;  }
+[id^='hZoomSlider'] .ui-slider-handle {height:18px; width: 18px; top: -1px; border-radius: 0;}
+[id*='vZoomSlider'] {width: 18px;}
+[id*='vZoomSlider'] .ui-slider-handle {height: 18px; width:18px; left: -1px; border-radius: 0;}
+*/
+
+[id*='hZoomSlider'] .ui-widget-header, [id*='vZoomSlider'] .ui-widget-header  {background: darkgray;}
+[id*='hZoomSlider-'] .ui-state-focus, [id*='vZoomSlider'] .ui-state-focus{background: #f6f6f6; border: 1px solid #cccccc;}
+[id*='hZoomSlider-'] .ui-state-focus.ui-state-hover, [id*='vZoomSlider'] .ui-state-focus.ui-state-hover{background: #fdf5ee; border: 1px solid #fcbc09;}
+
+#hZoomSlider0 .ui-corner-all, .ui-corner-top, .ui-corner-bottom, .ui-corner-right, .ui-corner-left, .ui-corner-tr { 
+	border-radius: 0;
+}
+
+.activeGridIndicator{
+	background: #555; border: 1px solid #000;
+}
+.inactiveGridIndicator{
+	background: #fff; border: 1px solid #cccccc;
+}
+
+a, a:active, a:visited { color: #607890; text-decoration: none; outline-color: -moz-use-text-color; outline-style: none; outline-width: medium; }
+a:hover { color: #036; }
+
+.cell_up{
+	fill: #dfdfdf;	
+}
+
+.cell_disabled{
+	/*fill: url(pattern.png) top left repeat;*/
+	fill: #dddddd;
+	fill-opacity: 0.3;
+}
+
+.cell_over{
+	fill: #0076b0;
+}
+.row_over{
+	fill: #999999;
+}
+
+.cell_selected{
+	stroke-width:2;
+	stroke: #ff0000;
+}
+
+.includedSrc {
+	fill: url(#Pattern_IncludedSrc);
+}
+.includedDst {
+	fill: url(#Pattern_IncludedDst);
+}
+.includedSrc.includedDst {
+	fill: url(#Pattern_IncludedSrcDst);
+}
+
+.cell_connected{
+	fill: #04C4D9;
+	/* fill: #86def8; */
+	animation-name: connected;
+	animation-duration: 300ms;
+	animation-timing-function: linear;
+	animation-delay: 0s; 
+	animation-iteration-count: 1;
+	
+	/* Safari and Chrome: */
+	-webkit-animation-name: connected;
+	-webkit-animation-duration: 300ms;
+	-webkit-animation-timing-function: linear;
+	-webkit-animation-delay: 0s;
+	-webkit-animation-iteration-count: 1;
+}
+
+@keyframes connected
+{
+	0%  {fill:#EEEEEE;}
+	100%  {fill:#04C4D9;}
+}
+
+@-webkit-keyframes connected /* Safari and Chrome */
+{
+	0%  {fill:#EEEEEE;}
+	100%  {fill:#04C4D9;}
+}
+
+.label{
+	fill: #3e3e3e;
+}
+.label_over{
+	font-weight: bold;		
+}
+.label_selected{
+	fill: red;		
+}
+
+.pen{
+	stroke: #00FF00;
+	stroke-width: 2; 
+	stroke:rgb(0,0,255);
+	stroke-dasharray: "1,0,5,0";	
+}
+
+
+#hScroll{
+	background-color: #444444;
+}
+#hScrollButton{
+	fill: #EEEEEE;
+}
+	
+	
+
+#actionBar{
+	
+	padding: 2px 5px;
+	width: 100%;
+	clear: both;
+	position: relative;
+	
+	background-color: #eeeeee;
+	border: 1px solid #dddddd;
+}
+
+.buttonBar{
+	padding: 2px 0px;
+	margin-top: 20px; 
+	float: right;
+	text-align: center;
+	background-color: #eeeeee;
+	border: 1px solid #dddddd;
+	width: 100%;
+}
+
+#actionBar button, .buttonBar button{
+	font-size: 14px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #F2FFDE;
+	padding: 10px 15px;
+}
+#actionBar button:hover, .buttonBar button:hover{
+	background-color: #EEE8AA;
+}
+#actionBar button:active, .buttonBar button:active{
+	background-color: #FFFFF0;
+}
+
+
+
+#actionBar .styled-select 
+{
+   width: 200px;
+   overflow: hidden;
+   border: 0px solid #ccc;
+   margin-top: 2px;
+   margin-right: 3px;
+   padding: 1px 5px 0px 5px;
+   background: url(dropdown_arrow.png) no-repeat right #F2FFDE;
+   	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+}
+#actionBar .styled-select:hover {
+	background-color: #EEE8AA;
+}
+
+	
+.styled-select select {
+   background: transparent;
+   width: 228px;
+   padding: 5px;
+   font-size: 14px;
+   line-height: 1;
+   border: 0;
+   border-radius: 0;
+   height: 36px;
+   -webkit-appearance: none;
+   }
+	

@@ -13,6 +13,7 @@ import sys
 import struct
 import hashlib
 from cStringIO import StringIO
+import pdb
 
 message_pipe = Queue.Queue()
 tracing = False
@@ -52,7 +53,10 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
             er = 1
             if cmd_handlers.has_key('load'):
                 er = 2
-                cmd_handlers['load'](query['mapping_json'][0])
+                sources = query['sources'][0].split(',')
+                destinations = query['destinations'][0].split(',')
+                devices = {'sources': sources, 'destinations': destinations}
+                cmd_handlers['load'](query['mapping_json'][0], devices)
             print >>self.wfile, "Success: %s loaded successfully."%fn
         except Exception, e:
             print >>self.wfile, "Error: loading %s (%d)."%(fn,er)
@@ -280,17 +284,33 @@ def handler_page(out, args):
 <head>
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<script type="text/javascript" src="js/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="js/raphael.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+
+<script type="text/javascript" src="js/jquery.min.js"></script> <!-- JQuery -->
+<script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI-->
+
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
+<script type="text/javascript" src="js/LibMapperModel.js"></script>
 
+<!-- List View includes -->
 <script type="text/javascript" src="js/viz/list.js"></script>
+<script type="text/javascript" src="js/raphael.js"></script>
+<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+
+
+<!-- Grid View includes -->
+<script type="text/javascript" src="js/viz/grid.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridSVG.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridSignals.js"></script>
+<script type="text/javascript" src="js/viz/grid/GridDevices.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
+<link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
+
+<!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
+
 </head>
 <body></body>
 </html>"""

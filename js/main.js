@@ -1,9 +1,5 @@
 "use strict";
-
-var devices = new Assoc();
-var signals = new Assoc();
-var links = new Assoc();
-var connections = new Assoc();
+var model = new LibMapperModel();
 
 var all_devices = 'All Devices';
 
@@ -19,30 +15,60 @@ var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 
 //A global variable storing which display mode is currently in use
 var view;
+var viewIndex;					// to index into viewData 
+var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+
+
 //Where the network will be saved
 var saveLocation = '';
 var selectedTab;
+window.saveLocation = '';
+/* Kick things off. */
+window.onload = main;
 
 function switch_mode(newMode)
 {
+	if(view)
+	{
+		// save view settings
+		if(typeof view.save_view_settings == 'function')
+			viewData[viewIndex] = view.save_view_settings();
+		
+		// tell the view to cleanup (ex: removing event listeners)
+		view.cleanup();
+	}
+	
     $('#container').empty();
     switch(newMode)
     {
         case 'list':
-            view = new listView();
+            view = new listView(model);
+            viewIndex = 0;
+            view.init();
             break;
+        case 'grid':
+        	view = new GridView(document.getElementById('container'), model);
+        	viewIndex = 1;
+            $('#saveLoadDiv').removeClass('disabled');
+        	view.update_display();
+        	break;
         default:
             //console.log(newMode);
     }
-    view.init();
+    
+    // load view settings if any
+    if(viewData[viewIndex]){
+	    if(typeof view.load_view_settings == 'function')
+	    		view.load_view_settings(viewData[viewIndex]);
+    }
 }
 
 function refresh_all()
 {
-    devices = new Assoc();
-    signals = new Assoc();
-    links = new Assoc();
-    connections = new Assoc();
+    model.devices = new Assoc();
+    model.signals = new Assoc();
+    model.links = new Assoc();
+    model.connections = new Assoc();
     view.update_display();
     command.send('refresh');
 }
@@ -98,12 +124,37 @@ function on_load()
     });
 
     form.firstChild.onchange = function(){
+
         var fn = document.createElement('input');
         fn.type = 'hidden';
         fn.name = 'filename';
         fn.value = form.firstChild.value;
-        console.log(form.firstChild.value);
         form.appendChild(fn);
+
+        // The devices currently in focused
+        var devs = view.get_focused_devices();
+        // Split them into sources and destinations
+        var srcdevs = [];
+        var destdevs = [];
+        for (var i in devs.contents) {
+            if( devs.contents[i].n_outputs )
+                srcdevs.push( devs.contents[i].name );
+            if( devs.contents[i].n_inputs )
+                destdevs.push( devs.contents[i].name );
+        }
+
+        //So that the monitor can see which devices are being looked at
+        var srcs = document.createElement('input');
+        srcs.type = 'hidden';
+        srcs.name = 'sources';
+        srcs.value = srcdevs.join(); 
+        form.appendChild(srcs);
+        var dests = document.createElement('input');
+        dests.type = 'hidden';
+        dests.name = 'destinations';
+        dests.value = destdevs.join(); 
+        form.appendChild(dests);
+
         form.submit();
     };
     return false;
@@ -132,24 +183,31 @@ function update_connection_properties()
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
-        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
-    }
+    };
 
-    var conns = view.get_selected(connections);
+    var conns = view.get_selected_connections(model.connections);
+	// if there is one connection selected, display its properties on top
     if (conns.length > 1) {
-        // TODO
+        // Figure out what the heck to do for multiple connections
         clear_props();
     }
-    else if (conns.length == 1) {
+    if (conns.length == 1) {
         var c = conns[0];
+        var mode = connectionModes[c.mode];
         clear_props();
         $('.signalControl').removeClass('disabled');
-        $(".mode"+connectionModes[c.mode]).addClass("modesel");
-        if(connectionModes[c.mode] == "Expr") 
-            $('.expression').removeClass('disabled');
-        else
+        $('.signalControl').children('*').removeClass('disabled');
+        $(".mode"+mode).addClass("modesel");
+
+        if(mode != "Expr") 
             $('.expression').addClass('disabled');
+
+        if(mode != "Line")
+            $('#srcRange').addClass('disabled');
+
         $(".expression").val(c.expression);
         if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
         if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
@@ -199,7 +257,7 @@ function set_boundary(boundaryElement, value, ismax)
 
 function copy_selected_connection()
 {
-    var conns = view.get_selected(connections);
+    var conns = view.get_selected_connections(model.connections);
     if (conns.length!=1) return;
     var args = {};
 
@@ -229,6 +287,9 @@ function selected_connection_set_input(what,field,idx)
     var args = copy_selected_connection();
 
     if( !args ) return;
+
+    // Return if there is no change
+    if ( args[what][idx] == parseFloat(field.value) || args[what] == field.value) return;
 
     // TODO: this is a bit out of hand, need to simplify the mode
     // strings and indexes.
@@ -299,7 +360,7 @@ function on_boundary(e)
 function on_mute(conns)
 {
     for ( var i in conns ) {
-        var args = conns[i]
+        var args = conns[i];
         if ( args.muted == 0 ) {
             args.muted = 1;
         }
@@ -318,118 +379,115 @@ function on_mute(conns)
 function main()
 {
 
-    command.register("all_devices", function(cmd, args) {
-        //console.log(cmd, args);
-        for (var d in args)
-            devices.add(args[d].name, args[d]);
-        view.update_display();
-    });
-    command.register("new_device", function(cmd, args) {
-        //console.log(cmd, args);
-        devices.add(args.name, args);
-        view.update_display();
-    });
-    command.register("del_device", function(cmd, args) {
-        //console.log(cmd, args);
-        devices.remove(args.name);
-        if (selectedTab==args.name)
-            select_tab(tabDevices);
-        else
-            view.update_display();
-    });
-
-    command.register("all_signals", function(cmd, args) {
-        //console.log(cmd, args);
-        for (var d in args)
-            signals.add(args[d].device_name+args[d].name
-                        +'/_dir_'+args[d].direction,
-                        args[d]);
-        view.update_display();
-    });
-    command.register("new_signal", function(cmd, args) {
-        //console.log(cmd, args);
-        signals.add(args.device_name+args.name
-                    +'/_dir_'+args.direction, args);
-        view.update_display();
-    });
-    command.register("del_signal", function(cmd, args) {
-        //console.log(cmd, args);
-        signals.remove(args.device_name+args.name
-                       +'/_dir_'+args.direction);
-        view.update_display();
-    });
-
-    command.register("all_links", function(cmd, args) {
-        //console.log(cmd, args);
-        for (var l in args)
-            links.add(args[l].src_name+'>'+args[l].dest_name,
-                      args[l]);
-        view.update_display();
-    });
-    command.register("new_link", function(cmd, args) {
-        //console.log(cmd, args);
-        links.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
-    });
-    command.register("del_link", function(cmd, args) {
-        //console.log(cmd, args);
-        links.remove(args.src_name+'>'+args.dest_name);
-        view.update_display();
-    });
-
-    command.register("all_connections", function(cmd, args) {
-        //console.log(cmd, args);
-        for (var d in args)
-            connections.add(args[d].src_name+'>'+args[d].dest_name,
-                            args[d]);
-        view.update_display();
-        for (d in args)
-            update_connection_properties_for(args[d],
-                                             view.get_selected(connections));
-    });
-    command.register("new_connection", function(cmd, args) {
-        //console.log(cmd, args);
-        connections.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
-        update_connection_properties_for(args, view.get_selected(connections));
-    });
-    command.register("mod_connection", function(cmd, args) {
-        //console.log(cmd, args);
-        connections.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
-        update_connection_properties_for(args, view.get_selected(connections));
-    });
-    command.register("del_connection", function(cmd, args) {
-        //console.log(cmd, args);
-        var conns = view.get_selected(connections);
-        connections.remove(args.src_name+'>'+args.dest_name);
-        view.update_display();
-        update_connection_properties_for(args, conns);
-    });
-
     //Create the page elements
     add_container_elements();
     add_signal_control_bar();
     add_extra_tools();
 
+    command.register("all_devices", function(cmd, args) {
+        for (var d in args)
+            model.devices.add(args[d].name, args[d]);
+        view.update_display();
+    });
+    command.register("new_device", function(cmd, args) {
+        model.devices.add(args.name, args);
+        view.update_display();
+    });
+    command.register("del_device", function(cmd, args) {
+        model.devices.remove(args.name);
+        view.update_display();
+    });
+    command.register("all_signals", function(cmd, args) {
+        for (var d in args)
+            model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
+        view.update_display();
+    });
+    command.register("new_signal", function(cmd, args) {
+        model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
+        view.update_display();
+    });
+    command.register("del_signal", function(cmd, args) {
+        model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
+        view.update_display();
+    });
+    command.register("all_links", function(cmd, args) {
+        for (var l in args)
+            model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
+        view.update_display();
+    });
+    command.register("new_link", function(cmd, args) {
+        model.links.add(args.src_name+'>'+args.dest_name, args);
+        view.update_display();
+    });
+    command.register("del_link", function(cmd, args) {
+        model.links.remove(args.src_name+'>' + args.dest_name);
+        view.update_display();
+    });
+
+    command.register("all_connections", function(cmd, args) {
+        for (var d in args)
+            model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
+        view.update_display();
+        for (var d in args)
+            update_connection_properties_for(args[d], view.get_selected_connections(model.connections));
+    });
+    command.register("new_connection", function(cmd, args) {
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected_connections(model.connections));
+    });
+    command.register("mod_connection", function(cmd, args) {
+        model.connections.add(args.src_name + '>' + args.dest_name, args);
+        view.update_display();
+        update_connection_properties_for(args, view.get_selected_connections(model.connections));
+    });
+    command.register("del_connection", function(cmd, args) {
+        var conns = view.get_selected_connections(model.connections);
+        model.connections.remove(args.src_name+'>'+args.dest_name);
+        view.update_display();
+        update_connection_properties_for(args, conns);
+    });
+    
+    // actions from VIEW
+
+    $("#container").on("tab", function(e, selectedTab){
+    	command.send('tab', selectedTab);
+    });
+    
+    $("#container").on("getSignalsByDevice", function(e, deviceName){
+        command.send('get_signals_by_device_name', deviceName);
+    });
+    
+    $("#container").on("link", function(e, src, dst){
+        command.send('link', [src, dst]);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+        command.send('unlink', [src, dst]);
+    });
+    $("#container").on("connect", function(e, src, dst){
+        command.send('connect', [src, dst]);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+        command.send('disconnect', [src, dst]);
+    });
+    
+    $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    window.onresize = function (e) {
+    	$('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    	view.on_resize();
+    };
+    
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
-            switch_mode('list');
+        	switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
-            //Naming collision between this and list, should figure it out
-            //(maybe add_UI_handlers can be a method of list)
             add_handlers();
-            $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
-            window.onresize = function (e) {
-                view.on_resize();
-                $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
-            };
         },
         100);
 }
@@ -437,18 +495,20 @@ function main()
 function add_container_elements()
 {
     $('body').append(
-        "<ul class='topMenu'>"+
-            "<div id='saveLoadDiv'>"+
-                "<li><a id='loadButton'>Load</a></li>"+
-                "<li><a id='saveButton'>Save</a></li>"+
-            "</div>"+
-            "<select id='modeSelection'>"+
-                "<option value='none'>None</option>"+
-                "<option value='list' selected>List</option>"+
-                "<option value='grid'>Grid</option>"+
-            "</select>"+
-        "</ul>"+
-        "<div id='container'></div>"
+    	"<table id='logoWrapper'><tr><td width='60px'><img alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
+        "<td>" +
+	        "<ul class='topMenu'>"+
+	            "<div id='saveLoadDiv'>"+
+	                "<li><a id='loadButton'>Load</a></li>"+
+	                "<li><a id='saveButton'>Save</a></li>"+
+	            "</div>"+
+	            "<select id='modeSelection'>"+
+	                "<option value='none'>None</option>"+
+	                "<option value='list' selected>List</option>"+
+	                "<option value='grid'>Grid</option>"+
+	            "</select>"+
+	    "</ul></tr></table>"+
+	    "<div id='container'></div>"
     );
 }
 
@@ -465,7 +525,7 @@ function add_signal_control_bar()
 
     //Add the range controls
     $('.topMenu').append(
-        "<div id='srcRange' class='range signalControl disabled'>Source Range:</div>"+
+        "<div id='srcRange' class='range signalControl disabled'>Src Range:</div>"+
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
@@ -483,21 +543,21 @@ function add_signal_control_bar()
         })
     });
 
-    $("<input id='boundaryMin' class='boundary' type='button'></input>").insertBefore('#rangeDestMin');
-    $("<input id='boundaryMax' class='boundary' type='button'></input>").insertAfter('#rangeDestMax');
+    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#rangeDestMin');
+    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#rangeDestMax');
 
 }
 
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='extratoolsDiv'>"+
-            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-            "<input id='refresh' class='extratools' type='button'>"+
-        "</div>"
-    );
+        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
+        "<div id='refresh' class='extratools'>");
 }
 
+/**
+ * handlers for items in the top menu 
+ */
 function add_handlers()
 {
     //The expression and range input handlers
@@ -505,10 +565,10 @@ function add_handlers()
         keydown: function(e) {
             e.stopPropagation();
             if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );
+                selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );
         },
         click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('class'), this, $(this).attr('index') );}
+        blur: function() {selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );}
     }, 'input');
 
     //For the mode buttons
@@ -529,8 +589,7 @@ function add_handlers()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        if (selectedTab != all_devices)
-            on_load();
+        on_load();
     });
 
     $('.boundary').on('click', function(e) {
@@ -539,7 +598,7 @@ function add_handlers()
 
     $(document).keydown( function(e) {
         if( e.which == 77 ) { // mute on 'm'
-            var conns = view.get_selected(connections);
+            var conns = view.get_selected_connections(model.connections);
             if ( conns ) 
                 on_mute(conns);
         }
@@ -552,5 +611,4 @@ function add_handlers()
 }
 
 
-/* Kick things off. */
-window.onload = main;
+

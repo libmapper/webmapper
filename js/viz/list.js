@@ -1,7 +1,9 @@
 //An object for the overall display
-function listView()
+function listView(model)
 {
 
+	this.model = model;
+	
     var svgns = 'http://www.w3.org/2000/svg';
 
     var tabList = null;
@@ -34,7 +36,16 @@ function listView()
         add_status_bar();
         this.add_handlers();
         select_tab(tabDevices);
+        $('#container').css({
+            'min-width': '700px',
+            'min-height': '150px'
+        });
         this.update_display();
+    }
+
+    this.cleanup = function() {
+        // Remove view specific handlers
+        $('*').off('.list');
     }
 
     var updateCallable = true;
@@ -72,7 +83,9 @@ function listView()
             filter_view();
 
             //Because svg keeps getting nudged left for some reason
-            $('svg').css('left', '0px');
+            //$('svg').css('left', '0px');
+            update_row_heights();
+            //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
 
             updateCallable = true;
 
@@ -81,7 +94,7 @@ function listView()
 
     }
 
-    this.get_selected = function(list)
+    this.get_selected_connections = function(list)
     {
         var L = $('.trsel', leftTable.table);
         var R = $('.trsel', rightTable.table);
@@ -100,12 +113,46 @@ function listView()
         return vals;
     }
 
+    this.get_focused_devices = function()
+    {
+        if (selectedTab == all_devices) {
+            return null;
+        }
+
+        var focusedDevices = new Assoc();
+        var sourceDevice = model.devices.get(selectedTab);
+
+        focusedDevices.add(sourceDevice.name, sourceDevice);
+
+        var links = model.links.keys();
+        for (var i in links) {
+            var devs = links[i].split('>');
+            if (devs[0] == sourceDevice.name) {
+                var destD = model.devices.get(devs[1]);
+                focusedDevices.add(destD.name, destD);
+            }
+        }
+
+        return focusedDevices;
+    }
+
     this.on_resize = function() 
     {
         update_arrows();
+        update_row_heights();
+        //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
     }
 
+//A function to make sure that rows fill up the available space, in testing for now
+function update_row_heights()
+{
+    var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+    var leftHeight = Math.floor(tableHeight/leftTable.nVisibleRows);
+    var rightHeight = Math.floor(tableHeight/rightTable.nVisibleRows);
 
+    $('#leftTable tbody tr').css('height', leftHeight+'px');
+    $('#rightTable tbody tr').css('height', rightHeight+'px');
+}
 
 //An object for the left and right tables, listing devices and signals
 function listTable(id)
@@ -167,8 +214,8 @@ function listTable(id)
         $(this.tbody).empty();
         for(var row in tableData) 
         {
-            //If there is only one row, make it of odd class for styling
-            var newRow = "<tr class='odd'>"
+            //If there is only one row, make it of even class for styling
+            var newRow = "<tr>"
             for(var col in tableData[row]) {
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
@@ -188,13 +235,17 @@ function listTable(id)
         else name = "signals";
         this.nVisibleRows = $(this.tbody).children('tr').length - $(this.tbody).children('tr.invisible').length;
         $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
+    
+        // For styling purposes when there is only a single row
+        if (this.nVisibleRows == 1) 
+            $(this.tbody).children('tr').addClass('even');
     }
 
 }
 
 function update_devices()
 {
-    var keys = devices.keys();
+    var keys = this.model.devices.keys();
 
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -204,7 +255,7 @@ function update_devices()
     
     for (var d in keys) {
         var k = keys[d];
-        var dev = devices.get(k);
+        var dev = this.model.devices.get(k);
 
         if (dev.n_outputs){
             leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
@@ -223,15 +274,15 @@ function update_devices()
 
 function update_signals()
 {
-    var keys = signals.keys();
+    var keys = this.model.signals.keys();
     
     var leftBodyContent = [];
     var rightBodyContent = [];
     
     for (var s in keys) {
         var k = keys[s];
-        var sig = signals.get(k);
-        var lnk = links.get(selectedTab+'>'+sig.device_name);
+        var sig = this.model.signals.get(k);
+        var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1){
             leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
@@ -251,10 +302,10 @@ function update_signals()
 function update_tabs()
 {
     var t = tabDevices;
-    var keys = links.keys();
+    var keys = this.model.links.keys();
     var srcs = {};
     for (var l in keys)
-        srcs[links.get(keys[l]).src_name] = null;
+        srcs[this.model.links.get(keys[l]).src_name] = null;
     for (var s in srcs) {
         if (t.nextSibling)
             t = t.nextSibling;
@@ -321,9 +372,9 @@ function update_links()
     // How many are actually being displayed?
     var n_visibleLinks = 0;
 
-    var keys = links.keys();
+    var keys = this.model.links.keys();
     for (var k in keys) {
-        var l = links.get(keys[k]);
+        var l = this.model.links.get(keys[k]);
         $('td:endswith('+l.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -342,7 +393,7 @@ function update_links()
     }
 
     $('.status.middle').text(
-        n_visibleLinks + " of " + links.keys().length + " links"
+        n_visibleLinks + " of " + this.model.links.keys().length + " links"
     );
 
 }
@@ -380,9 +431,9 @@ function update_connections()
     var n_connections = 0;
     var n_visibleConnections = 0;
 
-    var keys = connections.keys();
+    var keys = this.model.connections.keys();
     for (var k in keys) {
-        var c = connections.get(keys[k]);
+        var c = model.connections.get(keys[k]);
         var muted = c.muted;
         $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
@@ -418,12 +469,16 @@ function filter_view()
             $(this).addClass('invisible');
     });
 
+
+
     update_arrows();
     $(leftTable.table).trigger('update');
     $(rightTable.table).trigger('update');
 
     rightTable.set_status();
     leftTable.set_status();
+
+    update_row_heights();
 }
 
 function filter_match(row)
@@ -465,9 +520,9 @@ function is_connected(row)
     var destNames = [];     // All dest names as strings
 
     if ( selectedTab == all_devices ) {
-        linkConList = links.keys();
+        linkConList = model.links.keys();
     }
-    else linkConList = connections.keys();
+    else linkConList = model.connections.keys();
 
     for (var i in linkConList) {
         var sd = linkConList[i].split('>');
@@ -515,15 +570,13 @@ function create_arrow(left, right, sel, muted)
     line.border.attr({"path": path});
 
     if (sel)
-        line.attr({"stroke": "red"});
-    else
-        line.attr({"stroke": "black"});
+        line.node.classList.add('selected');
     if (muted)
-        line.node.setAttribute("stroke-dasharray", 4);
+        line.node.classList.add('muted');
 
     line.attr({
         "fill": "none",
-        "stroke-width": 2,
+        "stroke-width": 1.5,
         "cursor": "pointer"
     });
 
@@ -545,7 +598,7 @@ function create_arrow(left, right, sel, muted)
                 select_tr(left);
             if( ! $(right).hasClass('trsel') )
                 select_tr(right);
-            line.attr('stroke','red');
+            line.node.classList.add('selected');
         }
         e.stopPropagation();
     });
@@ -981,7 +1034,7 @@ function fade_incompatible_signals(row, targetTableBody)
 
 this.add_handlers = function()
 {
-    $('body').on('click', function() {
+    $('#container').on('click.list', function() {
         deselect_all();
     });
 
@@ -1004,7 +1057,7 @@ this.add_handlers = function()
     });
 
     // Various keyhandlers
-    $(document).keydown( function(e) {
+    $('body').on('keydown.list', function(e) {
         if (e.which == 67) { // connect on 'c'
             if (selectedTab == all_devices) 
                 on_link(e);
@@ -1028,7 +1081,7 @@ this.add_handlers = function()
         }
         else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'
             e.preventDefault();
-            var n_tabs = $(tabList).children().length;
+            var n_tabs = $('.topTabs li').length;
             var currentTabIndex = $('li.tabsel').index() + 1;
             var nextTabIndex;
             if (e.shiftKey == false) { //Tabbing forwards
@@ -1078,7 +1131,7 @@ this.add_handlers = function()
     });
 
     $('.status.left').on('click', function(e) {
-
+        console.log('a');
     });
 
     drawing_handlers();
