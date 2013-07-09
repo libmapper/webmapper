@@ -101,15 +101,15 @@ function listView(model)
         var vals = [];
 
         L.map(function() {
-                var left = this;
-                R.map(function() {
-                        var right = this;
-                        var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
-                        var v = list.get(key);
-                        if (v)
-                            vals.push(v);
-                    });
+            var left = this;
+            R.map(function() {
+                var right = this;
+                var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+                var v = list.get(key);
+                if (v)
+                    vals.push(v);
             });
+        });
         return vals;
     }
 
@@ -600,6 +600,7 @@ function create_arrow(left, right, sel, muted)
                 select_tr(right);
             line.node.classList.add('selected');
         }
+        update_connection_properties();
         e.stopPropagation();
     });
 }
@@ -664,7 +665,6 @@ function select_tr(tr)
         lastSelectedTr.right = tr;
 
     selectLists[selectedTab][i] = l;
-    update_connection_properties();
 }
 
 //For selecting multiple rows with the 'shift' key
@@ -683,8 +683,10 @@ function full_select_tr(tr)
     var endIndex = Math.max(index1, index2);
 
     $(''+targetTable+' tbody tr').each( function(i, e) {
-        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') )
+        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') ) {
             select_tr(e);
+            update_connection_properties();
+        }
     });
 }
 
@@ -717,6 +719,7 @@ function select_all()
         if( ! $(arrows[i].rightTr).hasClass('trsel') )
             select_tr(arrows[i].rightTr);
     }
+    update_connection_properties();
 }
 
 function on_table_scroll()
@@ -948,16 +951,20 @@ function drawing_curve(sourceRow)
 
     this.checkTarget = function( mousedOverRow ) {
         if(this.targetRow != mousedOverRow ) {
-            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible'));
+            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible')) {
+                update_connection_properties();
                 select_tr(this.targetRow);
+            }
 
             if( !$(mousedOverRow).hasClass('incompatible') )
                 this.targetRow = mousedOverRow;
             else
                 this.targetRow = null;
 
-            if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
+            if(this.targetRow && !$(this.targetRow).hasClass('incompatible') ) {
+                update_connection_properties();
                 select_tr(this.targetRow);
+            }
         }
     }
 }
@@ -978,6 +985,7 @@ function drawing_handlers()
             // Make sure only the proper row is selected
             deselect_all();
             select_tr(curve.sourceRow);
+            update_connection_properties();
 
             // Fade out incompatible signals
             if( selectedTab != all_devices )
@@ -1043,6 +1051,7 @@ this.add_handlers = function()
             if(e.shiftKey == true)    // For selecting multiple rows at once
                 full_select_tr(this);
             select_tr(this);
+            update_connection_properties();
             update_arrows(); 
         },
         click: function(e) { e.stopPropagation(); }
