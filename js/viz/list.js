@@ -375,6 +375,8 @@ function update_links()
     var keys = this.model.links.keys();
     for (var k in keys) {
         var l = this.model.links.get(keys[k]);
+        // TODO: need to use exact match instead of endswith here since
+        // names are arbitrary and could have substring matches
         $('td:endswith('+l.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -435,6 +437,8 @@ function update_connections()
     for (var k in keys) {
         var c = model.connections.get(keys[k]);
         var muted = c.muted;
+        // TODO: need to use exact match instead of endswith here since
+        // names are arbitrary and could have substring matches
         $('td:endswith('+c.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
