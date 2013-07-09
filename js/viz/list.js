@@ -735,7 +735,7 @@ function on_table_scroll()
         update_connections();
 }
 
-function apply_selected_pairs(f)
+function apply_selected(f)
 {
     $('tr.trsel', leftTable.table).each(
     function(i,e){
@@ -748,13 +748,31 @@ function apply_selected_pairs(f)
     });
 }
 
+function apply_selected_pairs(f, list)
+{
+    var L = $('.trsel', leftTable.table);
+    var R = $('.trsel', rightTable.table);
+
+    L.map(function() {
+        var left = this;
+        R.map(function() {
+            var right = this;
+            var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+            var v = list.get(key);
+            if (v) {
+                f(left, right);
+            }
+        });
+    });
+}
+
 function on_link(e)
 {
     function do_link(l, r) {
         command.send('link', [l.firstChild.innerHTML,
                               r.firstChild.innerHTML]);
     }
-    apply_selected_pairs(do_link);
+    apply_selected(do_link);
     e.stopPropagation();
 }
 
@@ -764,7 +782,7 @@ function on_unlink(e)
         command.send('unlink', [l.firstChild.innerHTML,
                                 r.firstChild.innerHTML]);
     }
-    apply_selected_pairs(do_unlink);
+    apply_selected_pairs(do_unlink, model.links);
     e.stopPropagation();
 }
 
@@ -774,7 +792,7 @@ function on_connect(e)
         command.send('connect', [l.firstChild.innerHTML,
                                  r.firstChild.innerHTML]);
     }
-    apply_selected_pairs(do_connect);
+    apply_selected(do_connect);
     e.stopPropagation();
 }
 
@@ -784,7 +802,7 @@ function on_disconnect(e)
         command.send('disconnect', [l.firstChild.innerHTML,
                                     r.firstChild.innerHTML]);
     }
-    apply_selected_pairs(do_disconnect);
+    apply_selected_pairs(do_disconnect, model.connections);
     e.stopPropagation();
 }
 
