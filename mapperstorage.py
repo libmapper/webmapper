@@ -24,7 +24,7 @@ def serialise(monitor, device):
                mapper.BA_FOLD: 'fold',
                mapper.BA_WRAP: 'wrap'}
 
-    for c in monitor.db.get_connections_by_device_name(device):
+    for c in monitor.db.connections_by_device_name(device):
       
         this_connection = {
           'src': [ c['src_name'] ],
@@ -142,7 +142,7 @@ def deserialise(monitor, mapping_json, devices):
 
                     # If connection already exists, use 'modify', otherwise 'connect'.
                     # Assumes 1 to 1, again
-                    cs = list(monitor.db.get_connections_by_device_and_signal_names(
+                    cs = list(monitor.db.connections_by_device_and_signal_names(
                         (l[0]).split('/')[1], srcsig,
                         (l[1]).split('/')[1], destsig) )
                     if len(cs) > 0:
