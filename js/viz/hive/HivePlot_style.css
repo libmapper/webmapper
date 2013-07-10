@@ -7,7 +7,8 @@
 	stop-opacity:1;
 }
 .bkBot{
-	stop-color: #fafafa; 
+	stop-color: #fff; 
+	/*stop-color: #fafafa*/; 
 	stop-opacity:1;
 }
 
@@ -25,8 +26,9 @@
 
 
 .hive_connection{
-	stroke: #ffaaaa;
+	stroke: #ccc;
 	stroke-width: 2px;
+	stroke-opacity: 0.6;
 	fill: none;
 }
 

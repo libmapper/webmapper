@@ -155,6 +155,7 @@ HivePlotView.prototype = {
 				dstDevs.push(dev);
 		}
 		
+		
 		this.drawLines(srcDevs, true);
 		this.drawLines(dstDevs, false);
 		this.drawConnections();
@@ -165,73 +166,84 @@ HivePlotView.prototype = {
 		var _self = this;
 		
 		// origin of ellipses
-		var originX = 100;
+		var originX = 0;
 		var originY = this.svgDim[1]/2;
-		
 		// inner radius ellipse
-		var w1 = this.svgDim[0]/12;	// width of ellipse
-		var h1 = this.svgDim[1]/12;	// height of ellipse
-		
+		var w1 = this.svgDim[0]/10;	// width of ellipse
+		var h1 = this.svgDim[1]/10;	// height of ellipse
 		// outer radius ellipse
 		var w2 = (this.svgDim[0]) - 15;	// width of ellipse
 		var h2 = (this.svgDim[1]/2) - 15;	// height of ellipse
 		
-		var angleSrcs = 270 * Math.PI / 180;		// offset from zero
-		var angleDsts = 30 * Math.PI / 180;		// offset from 180
-		
-		// draw axis
-		var angle = (isSources) ? angleSrcs : angleDsts;
-		var x1 = ( w1 * Math.cos(angle) ) + (originX);
-		var y1 = ( h1 * Math.sin(angle) ) + (originY);
-		var x2 = ( w2 * Math.cos(angle) ) + originX;
-		var y2 = ( h2 * Math.sin(angle) ) + originY;
-		
-		var line = document.createElementNS(this.svgNS,"path");
-		var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
-		line.setAttribute("d", pathDefn);
-		line.setAttribute("class", (isSources) ? "hive_axis_SRC" : "hive_axis_DST");
-		this.svg.appendChild(line);
-		
-		// get signals
-		var sigsArray = new Array();
-		var nTotalSigs = 0;
-		var nTotalDevs = srcData.length;
-		for (var i=0; i<nTotalDevs; i++)
+		var angleFrom = 25 * Math.PI / 180;		// offset from zero
+		var angleTo = 105 * Math.PI / 180;		// offset from 180
+		var range = Math.PI - angleFrom - angleTo;	// total range
+
+		// SRC Devices
+		var n = srcData.length;
+		var angleInc = (n==1)? Math.PI/4 : range/(n-1);
+
+		for (var i=0; i<n; i++)
 		{
 			var dev = srcData[i];
+			
+			var nAngle = angleFrom + (i*angleInc);
+			var x1 = ( w1 * Math.cos(nAngle) ) + (originX);
+			var y1 = ( h1 * Math.sin(nAngle) ) + (originY);
+			var x2 = ( w2 * Math.cos(nAngle) ) + originX;
+			var y2 = ( h2 * Math.sin(nAngle) ) + originY;
+
+			if(isSources){
+				y1 = this.svgDim[1] - y1;
+				y2 = this.svgDim[1] - y2;
+			}
+			
+			var line = document.createElementNS(this.svgNS,"path");
+			line.setAttribute("data-src", dev.name);
+			
+			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
+			line.setAttribute("d", pathDefn);
+			line.setAttribute("class", (isSources) ? "hive_axis_SRC" : "hive_axis_DST");
+			if(isSources)
+			{
+				line.setAttribute("data-src", dev.name);
+				line.addEventListener("mouseover", function(evt){
+					_self.onLineMouseOver(evt);
+				});
+				line.addEventListener("mouseout", function(evt){
+					_self.onLineMouseOut(evt);
+				});
+			}
+			this.svg.appendChild(line);
+			
+			// its signals
 			$(this._container).trigger("getSignalsByDevice", dev.name);
 			
+			
 			// get signals from model	
-			var sigs = new Array();
+			var sigs = [];
 			var keys = this.model.signals.keys();
-		    for (var s in keys) 
-		    {
+		    for (var s in keys) {
 		        var k = keys[s];
 		        var sig = this.model.signals.get(k);
+
 				if(sig.device_name == dev.name){
 					sigs.push(sig);
-					nTotalSigs++;
 				}
 					
 		    }
-		    sigsArray.push(sigs);
-		}
-		
-		// draw signals grouped by device
-		var l = line.getTotalLength();
-		var axisPadding = 10;
-		var nodeGroupPadding = 15;
-		var nodePadding = (l - (nodeGroupPadding*(nTotalDevs-1)) - (2*axisPadding)) / nTotalSigs;
-		
-		var d = axisPadding;
-		for (var i=0; i<sigsArray.length; i++)
-		{
-			var signals = sigsArray[i];
-			for (var j=0; j<signals.length; j++)
+		    
+		    var padding = 30;
+		    var m = sigs.length;
+		    var lineLen = (line.getTotalLength() - (2*padding));
+		    var lineInc = lineLen / (m-1);
+		    if(m==1) 
+		    	lineInc = 0;	// handle divide by zero when there's only 1 signal
+		    for (var j=0; j<m; j++)
 			{
-				var sig = signals[j];
+		    	var sig = sigs[j];
 		    	
-		    	var pt = line.getPointAtLength(d);
+		    	var pt = line.getPointAtLength( (j*lineInc) + padding);
 		    	var node = document.createElementNS(this.svgNS,"circle");
 		    	node.setAttribute("cx", pt.x);
 		    	node.setAttribute("cy", pt.y);
@@ -247,10 +259,7 @@ HivePlotView.prototype = {
 					this.dstSigs.push(sig);
 					this.dstNodes.push(node);
 				}
-		    	d += nodePadding;
-		    	
 			}
-			d += nodeGroupPadding;
 		}
 	},
 	
@@ -279,14 +288,13 @@ HivePlotView.prototype = {
 //					var ctX1 = this.svgDim[0];
 //					var ctX2 = this.svgDim[0];
 					var ctX1 = x2;
-					var ctY1 = y1;
 					var ctX2 = x2;
+					var ctY1 = y1;
 					var ctY2 = y2;
 					
 					var line = document.createElementNS(this.svgNS,"path");
 					line.setAttribute("data-src", s.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
-//					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
 					line.setAttribute("class", "hive_connection");
 					line.addEventListener("mouseover", function(evt){
