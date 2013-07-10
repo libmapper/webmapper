@@ -19,6 +19,9 @@ function HivePlotView(container, model)
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 
+	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
+	this.initColorPointers();
+	
 	//Keyboard handlers
 	document.onkeyup = function(e){
 		_self.keyboardHandler(e);
@@ -39,7 +42,7 @@ function HivePlotView(container, model)
 }
 
 HivePlotView.prototype = {
-		
+	
 	init : function () 
 	{ 
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
@@ -52,6 +55,7 @@ HivePlotView.prototype = {
 		this.connectionsLines = [];
 		
 		$(this._container).empty();
+		this.initColorPointers();
 		
 //		$(this._container).css("min-width", "880px");
 //		$(this._container).css("min-height", "580px");
@@ -101,7 +105,11 @@ HivePlotView.prototype = {
 		this.draw();
 	},
 	
-	
+	initColorPointers : function ()
+	{
+		this.nColor1 = 0;
+		this.nColor2 = this.groupColors.length -1;
+	},
 	
 	keyboardHandler: function (e)
 	{
@@ -158,6 +166,7 @@ HivePlotView.prototype = {
 		this.drawLines(srcDevs, true);
 		this.drawLines(dstDevs, false);
 		this.drawConnections();
+		this.drawNodes();
 	},
 
 	drawLines : function (srcData, isSources)
@@ -165,26 +174,27 @@ HivePlotView.prototype = {
 		var _self = this;
 		
 		// origin of ellipses
-		var originX = 100;
-		var originY = this.svgDim[1]/2;
+		var heightOffset = 50;
+		var originX = 145;
+		var originY = this.svgDim[1]/2 + heightOffset;
 		
 		// inner radius ellipse
-		var w1 = this.svgDim[0]/12;	// width of ellipse
-		var h1 = this.svgDim[1]/12;	// height of ellipse
+		var w1 = this.svgDim[0]/14;	// width of ellipse
+		var h1 = this.svgDim[1]/16;	// height of ellipse
 		
 		// outer radius ellipse
 		var w2 = (this.svgDim[0]) - 15;	// width of ellipse
 		var h2 = (this.svgDim[1]/2) - 15;	// height of ellipse
 		
 		var angleSrcs = 270 * Math.PI / 180;		// offset from zero
-		var angleDsts = 30 * Math.PI / 180;		// offset from 180
+		var angleDsts = 40 * Math.PI / 180;		// offset from 180
 		
 		// draw axis
 		var angle = (isSources) ? angleSrcs : angleDsts;
 		var x1 = ( w1 * Math.cos(angle) ) + (originX);
 		var y1 = ( h1 * Math.sin(angle) ) + (originY);
 		var x2 = ( w2 * Math.cos(angle) ) + originX;
-		var y2 = ( h2 * Math.sin(angle) ) + originY;
+		var y2 = ( h2 * Math.sin(angle) ) + originY - heightOffset;
 		
 		var line = document.createElementNS(this.svgNS,"path");
 		var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
@@ -220,8 +230,9 @@ HivePlotView.prototype = {
 		// draw signals grouped by device
 		var l = line.getTotalLength();
 		var axisPadding = 10;
-		var nodeGroupPadding = 15;
-		var nodePadding = (l - (nodeGroupPadding*(nTotalDevs-1)) - (2*axisPadding)) / nTotalSigs;
+		var nodeGroupPadding = 10;
+//		var nodePadding = (l - (nodeGroupPadding*(nTotalDevs-1)) - (2*axisPadding)) / nTotalSigs;
+		var nodePadding = 4;
 		
 		var d = axisPadding;
 		for (var i=0; i<sigsArray.length; i++)
@@ -237,20 +248,47 @@ HivePlotView.prototype = {
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
 		    	node.setAttribute("class", (isSources) ? "Node_SRC" : "Node_DST");
-		    	this.svg.appendChild(node);
-				
+		    	
+		    	node.setAttribute("data-src", dev.name);
+				node.addEventListener("mouseover", function(evt){
+					_self.onNodeMouseOver(evt);
+				});
+				node.addEventListener("mouseout", function(evt){
+					_self.onNodeMouseOut(evt);
+				});
+		    	
+		    	
 		    	if(isSources){
 					this.srcSigs.push(sig);
 					this.srcNodes.push(node);
+					node.setAttribute("style", "fill: " + this.groupColors[this.nColor1] );
+					node.setAttribute("data-src", sig.device_name);
 				}
 				else{
 					this.dstSigs.push(sig);
 					this.dstNodes.push(node);
+					node.setAttribute("style", "fill: " + this.groupColors[this.nColor2] );
+					node.setAttribute("data-dst", sig.device_name);
 				}
 		    	d += nodePadding;
 		    	
 			}
 			d += nodeGroupPadding;
+
+			if(isSources){
+				this.nColor1++;
+				if(this.nColor1 >= this.groupColors.length){
+					this.nColor1 = 0;
+				}
+			}
+			else{
+				this.nColor2--;
+				if(this.nColor2 < 0){
+					this.nColor2 =  this.groupColors.length -1;
+				}
+			}
+			
+			
 		}
 	},
 	
@@ -278,16 +316,18 @@ HivePlotView.prototype = {
 					
 //					var ctX1 = this.svgDim[0];
 //					var ctX2 = this.svgDim[0];
-					var ctX1 = x2;
-					var ctY1 = y1;
+					var ctX1 =  parseInt(x2) - 20;
+					var ctY1 = parseInt(y1) + 20;
+					
 					var ctX2 = x2;
 					var ctY2 = y2;
 					
 					var line = document.createElementNS(this.svgNS,"path");
 					line.setAttribute("data-src", s.device_name);
+					line.setAttribute("data-dst", d.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
-					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
+					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 					line.setAttribute("class", "hive_connection");
 					line.addEventListener("mouseover", function(evt){
 						this.setAttribute("class", "hive_connection_over");
@@ -300,6 +340,19 @@ HivePlotView.prototype = {
 					this.svg.appendChild(line);
 				}
 			}
+		}
+	},
+	
+	/*
+	 * done at end so z-index is above all other graphics
+	 */
+	drawNodes : function()
+	{
+		for(var i=0; i< this.srcNodes.length; i++){
+			this.svg.appendChild(this.srcNodes[i]);
+		}
+		for(var i=0; i< this.dstNodes.length; i++){
+			this.svg.appendChild(this.dstNodes[i]);
 		}
 	},
 	
@@ -324,6 +377,35 @@ HivePlotView.prototype = {
 			{
 				con.setAttribute("class", "hive_connection");
 			}
+		}
+	},
+	
+	onNodeMouseOver : function(e)
+	{
+		var node = e.target;
+		var type;
+		if(node.hasAttribute("data-src"))
+			type = 1;
+		else
+			type = 0;
+		
+		for (var i=0; i<this.connectionsLines.length; i++)
+		{
+			var con = this.connectionsLines[i];
+			if(type == 1 && con.getAttribute("data-src") == node.getAttribute("data-src"))
+					con.setAttribute("class", "hive_connection_over");
+			else{
+				if(con.getAttribute("data-dst") == node.getAttribute("data-dst"))
+					con.setAttribute("class", "hive_connection_over");
+			}
+		}
+	},
+	onNodeMouseOut : function(e){
+		var line = e.target;
+		for (var i=0; i<this.connectionsLines.length; i++)
+		{
+			var con = this.connectionsLines[i];
+			con.setAttribute("class", "hive_connection");
 		}
 	},
 	
