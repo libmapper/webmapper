@@ -232,7 +232,7 @@ HivePlotView.prototype = {
 		var axisPadding = 10;
 		var nodeGroupPadding = 10;
 //		var nodePadding = (l - (nodeGroupPadding*(nTotalDevs-1)) - (2*axisPadding)) / nTotalSigs;
-		var nodePadding = 4;
+		var nodePadding = 5;
 		
 		var d = axisPadding;
 		for (var i=0; i<sigsArray.length; i++)

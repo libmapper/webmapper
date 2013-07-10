@@ -486,7 +486,7 @@ function main()
     // cursor in the browser.
     setTimeout(
         function(){
-        	switch_mode('hive');
+        	switch_mode('list');
             command.start();
             command.send('all_devices');
             command.send('all_signals');
