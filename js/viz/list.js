@@ -1057,7 +1057,7 @@ this.add_handlers = function()
     });
 
     // Various keyhandlers
-    $(document).keydown( function(e) {
+    $('body').on('keydown.list', function(e) {
         if (e.which == 67) { // connect on 'c'
             if (selectedTab == all_devices) 
                 on_link(e);
@@ -1081,7 +1081,7 @@ this.add_handlers = function()
         }
         else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'
             e.preventDefault();
-            var n_tabs = $(tabList).children().length;
+            var n_tabs = $('.topTabs li').length;
             var currentTabIndex = $('li.tabsel').index() + 1;
             var nextTabIndex;
             if (e.shiftKey == false) { //Tabbing forwards

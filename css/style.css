@@ -47,37 +47,34 @@ body {
 /* Color scheme! */
 
     /* Main color */
-    body {
+    body, .svgDiv, .tableDiv {
       background: white;
     }
 
-    /* light grays */
-    #statusBar,#titleSearchDiv,.topTabs li.tabsel {
+    /* blues */
+    #statusBar,#titleSearchDiv, .topTabs li.tabsel {
       background: rgb(134,222,248) !important;
     }
 
+    /* Header Bars */
     thead, #svgTop {
       background: #EEE;
     }
-
-    /* highlights */
-    .tablesorter-headerAsc, .tablesorter-headerDesc, .modesel, .displayTable tr.trsel.even {
-      background-color: #9CC2CF;
+    .displayTable th:hover, #svgTop:hover {
+      background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(238, 238, 238) 100%);
     }
 
+    /* highlights */
+    .modesel, .displayTable tr.trsel.even {
+      background-color: #9CC2CF;
+    }
     /* secondary highlight */
     .trsel.odd {
       background: lightblue !important;
     }
-
     /* tertiary highlight selection */
     .displayTable tr.even {
       background: #EDF5FF;
-    }
-
-    /* whites */
-    .svgDiv, .tableDiv {
-      background: white;
     }
 
     /* others */
@@ -228,7 +225,7 @@ body {
 
     #refresh {
       position: absolute;
-      top:  14px;
+      top:  18px;
       right:  14px;
       background-image: url(/images/refresh.png);
       background-size: contain;
@@ -240,9 +237,10 @@ body {
 
     #wsstatus {
       position: fixed;
-      bottom: 12px;
+      bottom: 5px;
       right: 14px;
-      z-index: 9; 
+      z-index: 9;
+      opacity: 0.5; 
     }
     .signalControl {
       z-index: 1;
