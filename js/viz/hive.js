@@ -1,5 +1,5 @@
 //+++++++++++++++++++++++++++++++++++++++++++ //
-//		  	     Grid View Class		  	  //		 
+//		  	     Hive View Class		  	  //		 
 //+++++++++++++++++++++++++++++++++++++++++++ //
 
 function HivePlotView(container, model)
@@ -18,8 +18,6 @@ function HivePlotView(container, model)
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
-
-	//this.init();
 
 	//Keyboard handlers
 	document.onkeyup = function(e){
@@ -138,7 +136,7 @@ HivePlotView.prototype = {
 		bk.setAttribute("x", 0);
 		bk.setAttribute("width", this.svgDim[0]);
 		bk.setAttribute("height", this.svgDim[1]);
-    	bk.setAttribute("style", "fill: url(#bkGradient");
+    	bk.setAttribute("class", "hive_svg");
     	this.svg.appendChild(bk);
 		
 		//divide devices into sources and destinations
@@ -162,7 +160,7 @@ HivePlotView.prototype = {
 		this.drawLines(dstDevs, false);
 		this.drawConnections();
 	},
-	
+
 	drawLines : function (srcData, isSources)
 	{
 		var _self = this;
@@ -205,7 +203,7 @@ HivePlotView.prototype = {
 			
 			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 			line.setAttribute("d", pathDefn);
-			line.setAttribute("class", (isSources) ? "Line_SRC" : "Line_DST");
+			line.setAttribute("class", (isSources) ? "hive_axis_SRC" : "hive_axis_DST");
 			if(isSources)
 			{
 				line.setAttribute("data-src", dev.name);
@@ -298,12 +296,12 @@ HivePlotView.prototype = {
 					line.setAttribute("data-src", s.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
-					line.setAttribute("class", "hiveLine_connected");
+					line.setAttribute("class", "hive_connection");
 					line.addEventListener("mouseover", function(evt){
-						this.setAttribute("class", "hiveLine_over");
+						this.setAttribute("class", "hive_connection_over");
 					});
 					line.addEventListener("mouseout", function(evt){
-						this.setAttribute("class", "hiveLine_connected");
+						this.setAttribute("class", "hive_connection");
 					});
 					
 					this.connectionsLines.push(line);
@@ -321,7 +319,7 @@ HivePlotView.prototype = {
 			var con = this.connectionsLines[i];
 			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
 			{
-				con.setAttribute("class", "hiveLine_over");
+				con.setAttribute("class", "hive_connection_over");
 			}
 		}
 	},
@@ -332,7 +330,7 @@ HivePlotView.prototype = {
 			var con = this.connectionsLines[i];
 			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
 			{
-				con.setAttribute("class", "hiveLine_connected");
+				con.setAttribute("class", "hive_connection");
 			}
 		}
 	},
