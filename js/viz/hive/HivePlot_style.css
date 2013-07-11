@@ -49,3 +49,16 @@
 	stroke-width: 1px;
 	fill: #04C4D9;		
 }
+
+#HivePlotSVG{
+	position: absolute;
+	left: 0;
+	
+}
+	
+#hive_inclusionTable{
+	background-color: #222222;	
+	position: absolute;
+	right: 0;
+}
+

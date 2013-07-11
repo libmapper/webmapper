@@ -18,6 +18,7 @@ function HivePlotView(container, model)
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
+	this.inclusionTableWidth = 210;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
 	this.initColorPointers();
@@ -67,7 +68,7 @@ HivePlotView.prototype = {
 		this.svg.setAttribute("id", "HivePlotSVG");
 		this.svg.setAttribute("xmlns", this.svgNS);
 		this.svg.setAttribute("xmlns:xlink", this.svgNSxlink);
-		this.svg.setAttribute("width", this.svgDim[0]);
+		this.svg.setAttribute("width", this.svgDim[0] - this.inclusionTableWidth);
 		this.svg.setAttribute("height", this.svgDim[1]);
 //		this.svg.setAttribute("preserveAspectRatio", "none");
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
@@ -102,6 +103,12 @@ HivePlotView.prototype = {
 	    linearGradient.appendChild(stop);
 	    this.svg.appendChild(linearGradient);
 	
+	    var div = document.createElement("div");
+		div.setAttribute("id", "hive_inclusionTable");
+		div.setAttribute("style", "width: "+ this.inclusionTableWidth + "px; height: "+ this.svgDim[1] + "px; overflow-y: scroll ");
+		this._container.appendChild(div);
+	    
+	    
 		this.draw();
 	},
 	
@@ -423,7 +430,7 @@ HivePlotView.prototype = {
 	
 };
 
-function GridViewPreset(name, includedSrcs, includedDsts)
+function HiveViewPreset(name, includedSrcs, includedDsts)
 {
 	this.name = name;
 	this.includedSrcs = includedSrcs;
