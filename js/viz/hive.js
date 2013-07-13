@@ -79,8 +79,8 @@ HivePlotView.prototype = {
 		this.initDevices();
 		if(this.mode == 0)
 		{
-			this.drawLines(this.devs[0], true);
-			this.drawLines(this.devs[1], false);
+			this.drawLines(this.devs[0], 0);
+			this.drawLines(this.devs[1], 1);
 		}
 		else if(this.mode == 1)
 		{
@@ -245,7 +245,7 @@ HivePlotView.prototype = {
 		this.update_display();
 	},
 	
-	drawLines : function (srcData, isSources)
+	drawLines : function (srcData, ind)
 	{
 		var _self = this;
 		
@@ -261,20 +261,18 @@ HivePlotView.prototype = {
 		var w2 = (this.svgDim[0]) - 15;	// width of ellipse
 		var h2 = (this.svgDim[1]/2) - 15;	// height of ellipse
 		
-		var angleSrcs = 270 * Math.PI / 180;		// offset from zero
-		var angleDsts = 40 * Math.PI / 180;		// offset from 180
+		var angles = [270 * Math.PI / 180 , 40 * Math.PI / 180];
 		
 		// draw axis
-		var angle = (isSources) ? angleSrcs : angleDsts;
-		var x1 = ( w1 * Math.cos(angle) ) + (originX);
-		var y1 = ( h1 * Math.sin(angle) ) + (originY);
-		var x2 = ( w2 * Math.cos(angle) ) + originX;
-		var y2 = ( h2 * Math.sin(angle) ) + originY;
+		var x1 = ( w1 * Math.cos(angles[ind]) ) + (originX);
+		var y1 = ( h1 * Math.sin(angles[ind]) ) + (originY);
+		var x2 = ( w2 * Math.cos(angles[ind]) ) + originX;
+		var y2 = ( h2 * Math.sin(angles[ind]) ) + originY;
 		
 		var line = document.createElementNS(this.svgNS,"path");
 		var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 		line.setAttribute("d", pathDefn);
-		line.setAttribute("class", (isSources) ? "hive_axis_SRC" : "hive_axis_DST");
+		line.setAttribute("class", (ind==0) ? "hive_axis_SRC" : "hive_axis_DST");
 		this.svg.appendChild(line);
 		
 		// get signals
@@ -339,27 +337,17 @@ HivePlotView.prototype = {
 				});
 		    	
 		    	
-		    	if(isSources){
-					this.sigs[0].push(sig);
-					this.nodes[0].push(node);
-					node.setAttribute("style", "fill: " + this.groupColors[this.pColors[0]] );
-					node.setAttribute("data-src", sig.device_name);
-				}
-				else{
-					this.sigs[1].push(sig);
-					this.nodes[1].push(node);
-					node.setAttribute("style", "fill: " + this.groupColors[this.pColors[1]] );
-					node.setAttribute("data-dst", sig.device_name);
-				}
-		    	d += nodePadding;
+				this.sigs[ind].push(sig);
+				this.nodes[ind].push(node);
+				node.setAttribute("style", "fill: " + this.groupColors[this.pColors[ind]] );
+				node.setAttribute("data-src", sig.device_name);
+
+				d += nodePadding;
 		    	
 			}
 			d += nodeGroupPadding;
 
-			if(isSources)
-				this.setNextColor(0);
-			else
-				this.setNextColor(1);
+			this.setNextColor(ind);
 			
 			
 		}
