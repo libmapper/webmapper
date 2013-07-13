@@ -7,6 +7,8 @@ function HivePlotView(container, model)
 	var _self = this;
 	this._container = container;
 	this.model = model;
+	var srcDevs = [];
+	var dstDevs = [];
 	this.includedSrcs = [];
 	this.includedDsts = [];
 	this.srcSigs = [];
@@ -19,6 +21,7 @@ function HivePlotView(container, model)
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 	this.inclusionTableWidth = 210;
+	this.inclusionTablePadding = 8;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
 	this.initColorPointers();
@@ -49,6 +52,8 @@ HivePlotView.prototype = {
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
 		
+		this.srcDevs = [];
+		this.dstDevs = [];
 		this.srcSigs = [];
 		this.dstSigs = [];
 		this.srcNodes = [];
@@ -105,7 +110,7 @@ HivePlotView.prototype = {
 	
 	    var div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
-		div.setAttribute("style", "width: "+ this.inclusionTableWidth + "px; height: "+ this.svgDim[1] + "px; overflow-y: scroll ");
+		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: "+ this.svgDim[1] + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
 		this._container.appendChild(div);
 	    
 	    
@@ -145,6 +150,7 @@ HivePlotView.prototype = {
 	
 	draw : function()
 	{
+				
 		// draw background
 		var bk = document.createElementNS(this.svgNS,"rect");
 		bk.setAttribute("x", 0);
@@ -155,9 +161,6 @@ HivePlotView.prototype = {
     	this.svg.appendChild(bk);
 		
 		//divide devices into sources and destinations
-		var srcDevs = new Array();
-		var dstDevs = new Array();
-		
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
 		{
@@ -165,17 +168,72 @@ HivePlotView.prototype = {
 			var dev = this.model.devices.get(k);
 			
 			if (dev.n_outputs)
-				srcDevs.push(dev);
+			{
+				this.srcDevs.push(dev);
+//				this.includedSrcs.push(dev.name);
+			}
 			if (dev.n_inputs)
-				dstDevs.push(dev);
+			{
+				this.dstDevs.push(dev);
+//				this.includedDsts.push(dev.name);
+			}
 		}
 		
-		this.drawLines(srcDevs, true);
-		this.drawLines(dstDevs, false);
+		this.drawLines(this.srcDevs, true);
+		this.drawLines(this.dstDevs, false);
+
+		this.drawInclusionTable();
+		
 		this.drawConnections();
 		this.drawNodes();
 	},
 
+	drawInclusionTable : function ()
+	{
+		var _self = this;
+		var table = document.getElementById("hive_inclusionTable");
+		
+		for(var i=0; i<this.srcDevs.length; i++)
+		{
+			var dev = this.srcDevs[i];
+			var label = dev.name;
+
+			var checkbox = document.createElement('input');
+			checkbox.type = "checkbox";
+			checkbox.name = label;
+			checkbox.value = label;
+			checkbox.checked = (arrIsUnique(label, this.includedSrcs));
+			//checkbox.Attributes.Add("onclick", "enableField();");
+			checkbox.addEventListener("click", function(evt){
+				_self.onInclusionTableChecked(evt);
+			});
+			
+			table.appendChild(checkbox);
+			table.appendChild(document.createTextNode(label));
+			table.appendChild(document.createElement('br'));
+		}
+	},
+	
+	onInclusionTableChecked : function(e)
+	{
+		var item = e.target;
+		var devName = item.value;
+		// add include
+		if(item.checked)
+		{
+			var ind = this.includedSrcs.indexOf(devName);
+			if(ind >= 0)
+				this.includedSrcs.splice(ind, 1);
+		}
+		// exclude 
+		else
+		{
+			arrPushIfUnique(devName, this.includedSrcs);
+		}
+		
+		this.update_display();
+	},
+	
 	drawLines : function (srcData, isSources)
 	{
 		var _self = this;
@@ -215,6 +273,7 @@ HivePlotView.prototype = {
 		var nTotalDevs = srcData.length;
 		for (var i=0; i<nTotalDevs; i++)
 		{
+//			var dev = this.model.devices.get(srcData[i]);
 			var dev = srcData[i];
 			$(this._container).trigger("getSignalsByDevice", dev.name);
 			
@@ -254,7 +313,12 @@ HivePlotView.prototype = {
 		    	node.setAttribute("cx", pt.x);
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
-		    	node.setAttribute("class", (isSources) ? "Node_SRC" : "Node_DST");
+		    	
+		    	if(arrIsUnique(sig.device_name, this.includedSrcs))
+		    		node.setAttribute("class", "Node");
+		    	else
+		    		node.setAttribute("class", "Node_hidden");
+		    	
 		    	
 		    	node.setAttribute("data-src", dev.name);
 				node.addEventListener("mouseover", function(evt){
@@ -321,8 +385,6 @@ HivePlotView.prototype = {
 					var x2 = node2.getAttribute("cx");
 					var y2 = node2.getAttribute("cy");
 					
-//					var ctX1 = this.svgDim[0];
-//					var ctX2 = this.svgDim[0];
 					var ctX1 =  parseInt(x2) - 20;
 					var ctY1 = parseInt(y1) + 20;
 					
@@ -333,9 +395,12 @@ HivePlotView.prototype = {
 					line.setAttribute("data-src", s.device_name);
 					line.setAttribute("data-dst", d.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
-//					line.setAttribute("d", "M " + x1 + " " + y1 + " C " + ctX1 + " " + ctY1 + " " + ctX2 + " " + ctY2 + " " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-					line.setAttribute("class", "hive_connection");
+					if(arrIsUnique(s.device_name, this.includedSrcs))
+						line.setAttribute("class", "hive_connection");
+					else
+						line.setAttribute("class", "hive_connection_hidden");
+					
 					line.addEventListener("mouseover", function(evt){
 						this.setAttribute("class", "hive_connection_over");
 					});
@@ -381,9 +446,7 @@ HivePlotView.prototype = {
 		{
 			var con = this.connectionsLines[i];
 			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
-			{
 				con.setAttribute("class", "hive_connection");
-			}
 		}
 	},
 	
@@ -412,7 +475,10 @@ HivePlotView.prototype = {
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			con.setAttribute("class", "hive_connection");
+			if(arrIsUnique(con.getAttribute("data-src"), this.includedSrcs))
+				con.setAttribute("class", "hive_connection");
+			else
+				con.setAttribute("class", "hive_connection_hidden");
 		}
 	},
 	

@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
 
 
-<script>
+<script><!--
 
 var nSrcDevices = 0;
 var nDstDevices = 0;
@@ -97,10 +97,12 @@ function disconnect(src, dst){
 function initData()
 {
 	var nIn = 4, nOut = 4;
+	var nSigs = 2;
 	for(var i=0; i<nIn;i++)
-		addDevice("/Source " + nSrcDevices++, 0, 2);
+		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
-		addDevice("/Destination " + nDstDevices++, 2, 0);
+		addDevice("/Destination " + nDstDevices++, nSigs, 0);
+	
 	view.update_display();
 }
 

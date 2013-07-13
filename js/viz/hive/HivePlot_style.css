@@ -28,26 +28,30 @@
 .hive_connection{
 	stroke: #ccc;
 	stroke-width: 1px;
-	stroke-opacity: 0.8;
+	stroke-opacity: 0.4;
 	fill: none;
 }
 
 .hive_connection_over{
-	stroke: #333;
-	stroke-width: 2px;
+	stroke: #ff0000;
+	stroke-opacity: 1;
+	stroke-width: 1px;
 	fill: none;
 }
 
-.Node_SRC{
-	stroke: #000;
-	stroke-width: 1px;
-	fill: Orange;		
+.hive_connection_hidden{
+	display: none;
 }
 
-.Node_DST{
+.Node{
 	stroke: #000;
 	stroke-width: 1px;
-	fill: #04C4D9;		
+}
+
+.Node_hidden{
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-dasharray: 2,2;
 }
 
 #HivePlotSVG{
@@ -57,8 +61,10 @@
 }
 	
 #hive_inclusionTable{
-	background-color: #222222;	
+	background-color: #eee;	
 	position: absolute;
 	right: 0;
+	font-family: helvetica, arial, sans-serif;
+	font-size: 12px;
 }
 

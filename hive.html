@@ -10,7 +10,7 @@
 <script type="text/javascript" src="js/viz/hive.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
 
-<script>
+<script><!--
 
 var nSrcDevices = 0;
 var nDstDevices = 0;
@@ -35,12 +35,53 @@ function init(){
 // init with fake data for now
 function initData()
 {
-	var nIn = 4, nOut = 12;
+	var nIn = 4, nOut = 12, nSigs = 5;
 	for(var i=0; i<nIn;i++)
-		addDevice("/Source " + nSrcDevices++, 0, i);
+		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
-		addDevice("/Destination " + nDstDevices++, i, 0);
+		addDevice("/Destination " + nDstDevices++, nSigs, 0);
+	
+	// connect everything
+	for(var i=0; i<nSrcDevices; i++){
+		for(var j=0; j<nDstDevices; j++){
+			link("/Source " + i, "/Destination " + j);
+			
+			for(var k=0; k<nSigs; k++){
+				for(var l=0; l<nSigs; l++){
+					connect("/Source " + i + "/Sig " + k, "/Destination " + j + "/Sig " + l);
+				}
+			}
+			
+		}
+	}
+	
+	
 	view.update_display();
+}
+
+function connect(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	args.bound_min = 0;
+	args.dest_length = 1;
+	args.src_length = 1;
+	args.bound_max = 0;
+	args.muted = 0;
+	args.range = [0.0, 10.0, 0.0, 1.0];
+	args.mode = 2;
+	args.src_type = 'f';
+	args.dest_type = 'f';
+	args.expression = 'y=x';
+	model.connections.add(key, args);
+}
+function link(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	model.links.add(key, args);
 }
 
 function addDevice(name, nIn, nOut)
@@ -82,16 +123,16 @@ function addDevSignal(name, device_name)
 function btnHandler(val)
 {
 		if(val=="dst"){
-			addDevice("Destination " + nDstDevices++, 2, 0);
+			addDevice("/Destination " + nDstDevices++, 2, 0);
 		}else if(val=="src"){
-			addDevice("Source " + nSrcDevices++, 0, 2);		
+			addDevice("/Source " + nSrcDevices++, 0, 2);		
 		}else if(val=="init"){
 			initData();		
 		}
 		view.update_display();
 }
 
-</script>
+--></script>
 
 </head>
 
