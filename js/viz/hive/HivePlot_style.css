@@ -1,5 +1,6 @@
 .hive_svg{
-	fill: url(#bkGradient);
+	/*fill: url(#bkGradient);*/
+	fill: #fff;
 }
 
 .bkTop{

@@ -4,45 +4,33 @@
 
 function HivePlotView(container, model)
 {
+	this.svgNS = "http://www.w3.org/2000/svg";
+	this.svgNSxlink = "http://www.w3.org/1999/xlink";
+
 	var _self = this;
 	this._container = container;
 	this.model = model;
-	var srcDevs = [];
-	var dstDevs = [];
-	this.includedSrcs = [];
-	this.includedDsts = [];
-	this.srcSigs = [];
-	this.dstSigs = [];
-	this.srcNodes = [];
-	this.dstNodes = [];
+
+	// 0 for sources, 1 for destinations
+	this.devs = [new Array(), new Array()];
+	this.excludedDevs = [new Array(), new Array()];
+	this.sigs = [new Array(), new Array()];
+	this.nodes = [new Array(), new Array()];
 	this.connectionsLines = [];
-	this.svgNS = "http://www.w3.org/2000/svg";
-	this.svgNSxlink = "http://www.w3.org/1999/xlink";
+
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 	this.inclusionTableWidth = 210;
 	this.inclusionTablePadding = 8;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
+	this.pColors;
 	this.initColorPointers();
 	
 	//Keyboard handlers
 	document.onkeyup = function(e){
 		_self.keyboardHandler(e);
 	};
-	/**
-	 * Disables my keyboard shortcuts from moving the browser's scroll bar 
-	 http://stackoverflow.com/questions/2020414/how-to-disable-page-scrolling-in-ff-with-arrow-keys
-	 */
-	/*
-	document.onkeydown = function(e) {
-	    var k = e.keyCode;
-	    if((k >= 37 && k <= 40) || k == 32) {
-	        return false;
-	    }
-	};
-	*/
-		
 }
 
 HivePlotView.prototype = {
@@ -52,12 +40,9 @@ HivePlotView.prototype = {
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
 		var div, btn;		// to instantiate items
 		
-		this.srcDevs = [];
-		this.dstDevs = [];
-		this.srcSigs = [];
-		this.dstSigs = [];
-		this.srcNodes = [];
-		this.dstNodes = [];
+		this.devs = [[],[]];
+		this.sigs = [[],[]];
+		this.srcNodes = [[],[]];
 		this.connectionsLines = [];
 		
 		$(this._container).empty();
@@ -75,52 +60,27 @@ HivePlotView.prototype = {
 		this.svg.setAttribute("xmlns:xlink", this.svgNSxlink);
 		this.svg.setAttribute("width", this.svgDim[0] - this.inclusionTableWidth);
 		this.svg.setAttribute("height", this.svgDim[1]);
-//		this.svg.setAttribute("preserveAspectRatio", "none");
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 		wrapper.appendChild(this.svg);	
 		
-		
-		// bk gradient
-		var defs = document.createElementNS(this.svgNS, "defs");
-		var linearGradient, stop;
-	    linearGradient = document.createElementNS(this.svgNS, "linearGradient");
-	    linearGradient.setAttribute('id', "bkGradient");
-	    linearGradient.setAttribute('x1', '0%');
-	    linearGradient.setAttribute('y1', '0%');
-	    linearGradient.setAttribute('x2', '0%');
-	    linearGradient.setAttribute('y2', '100%');
-	    defs.appendChild(linearGradient);
-	    stop = document.createElementNS(this.svgNS, 'stop');
-	    stop.setAttribute('offset', '0%');
-	    stop.setAttribute('class', 'bkTop');
-	    linearGradient.appendChild(stop);
-	    stop = document.createElementNS(this.svgNS, 'stop');
-	    stop.setAttribute('offset', '50%');
-	    stop.setAttribute('class', 'bkTop');
-	    linearGradient.appendChild(stop);
-	    stop = document.createElementNS(this.svgNS, 'stop');
-	    stop.setAttribute('offset', '50%');
-	    stop.setAttribute('class', 'bkBot');
-	    linearGradient.appendChild(stop);
-	    stop = document.createElementNS(this.svgNS, 'stop');
-	    stop.setAttribute('offset', '100%');
-	    stop.setAttribute('class', 'bkBot');
-	    linearGradient.appendChild(stop);
-	    this.svg.appendChild(linearGradient);
-	
 	    var div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
 		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: "+ this.svgDim[1] + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
 		this._container.appendChild(div);
 	    
-	    
 		this.draw();
 	},
 	
-	initColorPointers : function ()
+	initColorPointers : function(){
+		this.pColors = [0, Math.floor(this.groupColors.length/2)];
+	},
+	
+	setNextColor : function (ind)
 	{
-		this.nColor1 = 0;
-		this.nColor2 = this.groupColors.length -1;
+		this.pColors[ind]++;
+		if(this.pColors[ind] >= this.groupColors.length){
+			this.pColors[ind] = 0;
+		}
 	},
 	
 	keyboardHandler: function (e)
@@ -168,19 +128,13 @@ HivePlotView.prototype = {
 			var dev = this.model.devices.get(k);
 			
 			if (dev.n_outputs)
-			{
-				this.srcDevs.push(dev);
-//				this.includedSrcs.push(dev.name);
-			}
+				this.devs[0].push(dev);
 			if (dev.n_inputs)
-			{
-				this.dstDevs.push(dev);
-//				this.includedDsts.push(dev.name);
-			}
+				this.devs[1].push(dev);
 		}
 		
-		this.drawLines(this.srcDevs, true);
-		this.drawLines(this.dstDevs, false);
+		this.drawLines(this.devs[0], true);
+		this.drawLines(this.devs[1], false);
 
 		this.drawInclusionTable();
 		
@@ -192,25 +146,30 @@ HivePlotView.prototype = {
 	{
 		var _self = this;
 		var table = document.getElementById("hive_inclusionTable");
-		
-		for(var i=0; i<this.srcDevs.length; i++)
-		{
-			var dev = this.srcDevs[i];
-			var label = dev.name;
+		var labels = ["Source Devices", "Destination Devices"];
 
-			var checkbox = document.createElement('input');
-			checkbox.type = "checkbox";
-			checkbox.name = label;
-			checkbox.value = label;
-			checkbox.checked = (arrIsUnique(label, this.includedSrcs));
-			//checkbox.Attributes.Add("onclick", "enableField();");
-			checkbox.addEventListener("click", function(evt){
-				_self.onInclusionTableChecked(evt);
-			});
+		// repeat for source and destination devices
+		for(var ind=0; ind<2; ind++){
 			
-			table.appendChild(checkbox);
-			table.appendChild(document.createTextNode(label));
-			table.appendChild(document.createElement('br'));
+			for(var i=0; i<this.devs[0].length; i++)
+			{
+				var dev = this.devs[0][i];
+				var label = dev.name;
+				
+				var checkbox = document.createElement('input');
+				checkbox.type = "checkbox";
+				checkbox.name = label;
+				checkbox.value = label;
+				checkbox.checked = (arrIsUnique(label, this.excludedDevs[0]));
+				//checkbox.Attributes.Add("onclick", "enableField();");
+				checkbox.addEventListener("click", function(evt){
+					_self.onInclusionTableChecked(evt);
+				});
+				
+				table.appendChild(checkbox);
+				table.appendChild(document.createTextNode(label));
+				table.appendChild(document.createElement('br'));
+			}
 		}
 	},
 	
@@ -221,14 +180,14 @@ HivePlotView.prototype = {
 		// add include
 		if(item.checked)
 		{
-			var ind = this.includedSrcs.indexOf(devName);
+			var ind = this.excludedDevs[0].indexOf(devName);
 			if(ind >= 0)
-				this.includedSrcs.splice(ind, 1);
+				this.excludedDevs[0].splice(ind, 1);
 		}
 		// exclude 
 		else
 		{
-			arrPushIfUnique(devName, this.includedSrcs);
+			arrPushIfUnique(devName, this.excludedDevs[0]);
 		}
 		
 		this.update_display();
@@ -314,7 +273,7 @@ HivePlotView.prototype = {
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
 		    	
-		    	if(arrIsUnique(sig.device_name, this.includedSrcs))
+		    	if(arrIsUnique(sig.device_name, this.excludedDevs[0]))
 		    		node.setAttribute("class", "Node");
 		    	else
 		    		node.setAttribute("class", "Node_hidden");
@@ -330,15 +289,15 @@ HivePlotView.prototype = {
 		    	
 		    	
 		    	if(isSources){
-					this.srcSigs.push(sig);
-					this.srcNodes.push(node);
-					node.setAttribute("style", "fill: " + this.groupColors[this.nColor1] );
+					this.sigs[0].push(sig);
+					this.nodes[0].push(node);
+					node.setAttribute("style", "fill: " + this.groupColors[this.pColors[0]] );
 					node.setAttribute("data-src", sig.device_name);
 				}
 				else{
-					this.dstSigs.push(sig);
-					this.dstNodes.push(node);
-					node.setAttribute("style", "fill: " + this.groupColors[this.nColor2] );
+					this.sigs[1].push(sig);
+					this.nodes[1].push(node);
+					node.setAttribute("style", "fill: " + this.groupColors[this.pColors[1]] );
 					node.setAttribute("data-dst", sig.device_name);
 				}
 		    	d += nodePadding;
@@ -346,18 +305,10 @@ HivePlotView.prototype = {
 			}
 			d += nodeGroupPadding;
 
-			if(isSources){
-				this.nColor1++;
-				if(this.nColor1 >= this.groupColors.length){
-					this.nColor1 = 0;
-				}
-			}
-			else{
-				this.nColor2--;
-				if(this.nColor2 < 0){
-					this.nColor2 =  this.groupColors.length -1;
-				}
-			}
+			if(isSources)
+				this.setNextColor(0);
+			else
+				this.setNextColor(1);
 			
 			
 		}
@@ -365,20 +316,20 @@ HivePlotView.prototype = {
 	
 	drawConnections : function()
 	{
-		for(var i=0; i<this.srcSigs.length; i++)
+		for(var i=0; i<this.sigs[0].length; i++)
 		{
-			for(var j=0; j<this.dstSigs.length; j++)
+			for(var j=0; j<this.sigs[1].length; j++)
 			{
-				var s = this.srcSigs[i];
-				var d = this.dstSigs[j];
+				var s = this.sigs[0][i];
+				var d = this.sigs[1][j];
 				
 				var src = s.device_name + s.name;
 				var dst = d.device_name + d.name;
 				if(this.model.isConnected(src, dst))
 				{
 					
-					var node1 = this.srcNodes[i];
-					var node2 = this.dstNodes[j];
+					var node1 = this.nodes[0][i];
+					var node2 = this.nodes[1][j];
 					
 					var x1 = node1.getAttribute("cx");
 					var y1 = node1.getAttribute("cy");
@@ -396,7 +347,7 @@ HivePlotView.prototype = {
 					line.setAttribute("data-dst", d.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-					if(arrIsUnique(s.device_name, this.includedSrcs))
+					if(arrIsUnique(s.device_name, this.excludedDevs[0]))
 						line.setAttribute("class", "hive_connection");
 					else
 						line.setAttribute("class", "hive_connection_hidden");
@@ -420,11 +371,11 @@ HivePlotView.prototype = {
 	 */
 	drawNodes : function()
 	{
-		for(var i=0; i< this.srcNodes.length; i++){
-			this.svg.appendChild(this.srcNodes[i]);
+		for(var i=0; i< this.nodes[0].length; i++){
+			this.svg.appendChild(this.nodes[0][i]);
 		}
-		for(var i=0; i< this.dstNodes.length; i++){
-			this.svg.appendChild(this.dstNodes[i]);
+		for(var i=0; i< this.nodes[1].length; i++){
+			this.svg.appendChild(this.nodes[1][i]);
 		}
 	},
 	
@@ -475,7 +426,7 @@ HivePlotView.prototype = {
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			if(arrIsUnique(con.getAttribute("data-src"), this.includedSrcs))
+			if(arrIsUnique(con.getAttribute("data-src"), this.excludedDevs[0]))
 				con.setAttribute("class", "hive_connection");
 			else
 				con.setAttribute("class", "hive_connection_hidden");
@@ -499,8 +450,8 @@ HivePlotView.prototype = {
 function HiveViewPreset(name, includedSrcs, includedDsts)
 {
 	this.name = name;
-	this.includedSrcs = includedSrcs;
-	this.includedDsts = includedDsts;
+	this.excludedDevs[0] = includedSrcs;
+	this.excludedDevs[1] = includedDsts;
 };
 
 
