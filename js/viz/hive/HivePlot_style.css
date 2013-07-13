@@ -15,13 +15,13 @@
 
 .hive_axis_SRC{
 	stroke: #333;
-	stroke-width: 2px;
+	stroke-width: 1px;
 	stroke-linecap: round;
 }
 
 .hive_axis_DST{
 	stroke: #000;
-	stroke-width: 2px;
+	stroke-width: 1px;
 	stroke-linecap: round;
 }
 

@@ -10,6 +10,8 @@ function HivePlotView(container, model)
 	var _self = this;
 	this._container = container;
 	this.model = model;
+	
+	this.mode = 0;
 
 	// 0 for sources, 1 for destinations
 	this.devs = [new Array(), new Array()];
@@ -42,15 +44,15 @@ HivePlotView.prototype = {
 		
 		this.devs = [[],[]];
 		this.sigs = [[],[]];
-		this.srcNodes = [[],[]];
+		this.nodes = [[],[]];
 		this.connectionsLines = [];
 		
 		$(this._container).empty();
-		this.initColorPointers();
-		
 //		$(this._container).css("min-width", "880px");
 //		$(this._container).css("min-height", "580px");
-//		
+
+		this.initColorPointers();
+		
 		var wrapper = document.createElement("div");
 		this._container.appendChild(wrapper);
 		
@@ -58,7 +60,7 @@ HivePlotView.prototype = {
 		this.svg.setAttribute("id", "HivePlotSVG");
 		this.svg.setAttribute("xmlns", this.svgNS);
 		this.svg.setAttribute("xmlns:xlink", this.svgNSxlink);
-		this.svg.setAttribute("width", this.svgDim[0] - this.inclusionTableWidth);
+		this.svg.setAttribute("width", this.svgDim[0]);
 		this.svg.setAttribute("height", this.svgDim[1]);
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 		wrapper.appendChild(this.svg);	
@@ -69,6 +71,37 @@ HivePlotView.prototype = {
 		this._container.appendChild(div);
 	    
 		this.draw();
+	},
+	
+	draw : function()
+	{
+		this.drawBackground();
+		this.initDevices();
+		if(this.mode == 0)
+		{
+			this.drawLines(this.devs[0], true);
+			this.drawLines(this.devs[1], false);
+		}
+		else if(this.mode == 1)
+		{
+			var origin = [15, this.svgDim[1]/2];				// origin of ellipses
+			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
+			var outerDim = [this.svgDim[0] - 15, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
+			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 285, 345);
+			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
+		}
+		else if(this.mode == 2)
+		{
+			var origin = [(this.svgDim[0]/2) + 10, this.svgDim[1]/2];				// origin of ellipses
+			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
+			var outerDim = [this.svgDim[0]/2, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
+			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 195, 345);
+			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 165);
+		}
+		this.drawInclusionTable();
+		this.drawConnections();
+		this.drawNodes();
+		
 	},
 	
 	initColorPointers : function(){
@@ -108,18 +141,8 @@ HivePlotView.prototype = {
 		this.init();
 	},
 	
-	draw : function()
+	initDevices : function ()
 	{
-				
-		// draw background
-		var bk = document.createElementNS(this.svgNS,"rect");
-		bk.setAttribute("x", 0);
-		bk.setAttribute("x", 0);
-		bk.setAttribute("width", this.svgDim[0]);
-		bk.setAttribute("height", this.svgDim[1]);
-    	bk.setAttribute("class", "hive_svg");
-    	this.svg.appendChild(bk);
-		
 		//divide devices into sources and destinations
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
@@ -132,39 +155,67 @@ HivePlotView.prototype = {
 			if (dev.n_inputs)
 				this.devs[1].push(dev);
 		}
-		
-		this.drawLines(this.devs[0], true);
-		this.drawLines(this.devs[1], false);
 
-		this.drawInclusionTable();
-		
-		this.drawConnections();
-		this.drawNodes();
 	},
-
+	
+	drawBackground : function ()
+	{
+		// draw background
+		var bk = document.createElementNS(this.svgNS,"rect");
+		bk.setAttribute("x", 0);
+		bk.setAttribute("x", 0);
+		bk.setAttribute("width", this.svgDim[0]);
+		bk.setAttribute("height", this.svgDim[1]);
+    	bk.setAttribute("class", "hive_svg");
+    	this.svg.appendChild(bk);
+		
+	},
 	drawInclusionTable : function ()
 	{
 		var _self = this;
 		var table = document.getElementById("hive_inclusionTable");
-		var labels = ["Source Devices", "Destination Devices"];
 
+		// switch mode button
+		var btn = document.createElement("button");
+		btn.innerHTML = "Switch Mode";
+		//btn.setAttribute("style", "float: left;");
+		btn.title = "switch hive plot style";
+		btn.addEventListener("click", function(evt){
+			_self.mode++;
+			if(_self.mode == 3)
+				_self.mode = 0;
+			_self.update_display();
+		});
+		table.appendChild(btn);
+		table.appendChild(document.createElement('br'));
+		
 		// repeat for source and destination devices
-		for(var ind=0; ind<2; ind++){
+		var labels = ["Source Devices", "Destination Devices"];
+		for(var ind=0; ind<2; ind++)
+		{
+			table.appendChild(document.createElement('br'));
+			table.appendChild(document.createTextNode(labels[ind]));
+			table.appendChild(document.createElement('br'));
 			
-			for(var i=0; i<this.devs[0].length; i++)
+			for(var i=0; i<this.devs[ind].length; i++)
 			{
-				var dev = this.devs[0][i];
+				var dev = this.devs[ind][i];
 				var label = dev.name;
 				
 				var checkbox = document.createElement('input');
 				checkbox.type = "checkbox";
 				checkbox.name = label;
 				checkbox.value = label;
-				checkbox.checked = (arrIsUnique(label, this.excludedDevs[0]));
-				//checkbox.Attributes.Add("onclick", "enableField();");
-				checkbox.addEventListener("click", function(evt){
-					_self.onInclusionTableChecked(evt);
-				});
+				checkbox.checked = (arrIsUnique(label, this.excludedDevs[ind]));
+				if(ind==0){
+					checkbox.addEventListener("click", function(evt){
+						_self.onInclusionTableChecked(evt, 0);
+					});
+				}else if(ind==1){
+					checkbox.addEventListener("click", function(evt){
+						_self.onInclusionTableChecked(evt, 1);
+					});
+				}
 				
 				table.appendChild(checkbox);
 				table.appendChild(document.createTextNode(label));
@@ -173,21 +224,22 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	onInclusionTableChecked : function(e)
+	onInclusionTableChecked : function(e, ind)
 	{
 		var item = e.target;
 		var devName = item.value;
-		// add include
+		
+		// include
 		if(item.checked)
 		{
-			var ind = this.excludedDevs[0].indexOf(devName);
-			if(ind >= 0)
-				this.excludedDevs[0].splice(ind, 1);
+			var index = this.excludedDevs[ind].indexOf(devName);
+			if(index >= 0)
+				this.excludedDevs[ind].splice(index, 1);
 		}
 		// exclude 
 		else
 		{
-			arrPushIfUnique(devName, this.excludedDevs[0]);
+			arrPushIfUnique(devName, this.excludedDevs[ind]);
 		}
 		
 		this.update_display();
@@ -198,9 +250,8 @@ HivePlotView.prototype = {
 		var _self = this;
 		
 		// origin of ellipses
-		var heightOffset = 50;
 		var originX = 145;
-		var originY = this.svgDim[1]/2 + heightOffset;
+		var originY = this.svgDim[1]/2 + 50;
 		
 		// inner radius ellipse
 		var w1 = this.svgDim[0]/14;	// width of ellipse
@@ -218,7 +269,7 @@ HivePlotView.prototype = {
 		var x1 = ( w1 * Math.cos(angle) ) + (originX);
 		var y1 = ( h1 * Math.sin(angle) ) + (originY);
 		var x2 = ( w2 * Math.cos(angle) ) + originX;
-		var y2 = ( h2 * Math.sin(angle) ) + originY - heightOffset;
+		var y2 = ( h2 * Math.sin(angle) ) + originY;
 		
 		var line = document.createElementNS(this.svgNS,"path");
 		var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
@@ -314,6 +365,92 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	drawLines2 : function (srcData, ind, originX, originY, w1, h1, w2, h2, angle1, angle2)
+	{
+		var _self = this;
+		
+		var angleFrom = angle1 * Math.PI / 180;		
+		var angleTo = angle2 * Math.PI / 180;		
+		var range = Math.abs(angle2 - angle1) * Math.PI / 180;
+
+		// for each device
+		var n = srcData.length;
+		var angleInc = (n==1)? Math.PI/4 : range/(n-1);
+		for (var i=0; i<n; i++)
+		{
+			var dev = srcData[i];
+			
+			var nAngle = angleFrom + (i*angleInc);
+			var x1 = ( w1 * Math.cos(nAngle) ) + originX;
+			var y1 = ( h1 * Math.sin(nAngle) ) + originY;
+			var x2 = ( w2 * Math.cos(nAngle) ) + originX;
+			var y2 = ( h2 * Math.sin(nAngle) ) + originY;
+
+			var line = document.createElementNS(this.svgNS,"path");
+			line.setAttribute("data-src", dev.name);
+			
+			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
+			line.setAttribute("d", pathDefn);
+			line.setAttribute("class", (ind==0) ? "hive_axis_SRC" : "hive_axis_DST");
+			if(ind==0)
+			{
+				line.setAttribute("data-src", dev.name);
+				line.addEventListener("mouseover", function(evt){
+					_self.onLineMouseOver(evt);
+				});
+				line.addEventListener("mouseout", function(evt){
+					_self.onLineMouseOut(evt);
+				});
+			}
+			this.svg.appendChild(line);
+			
+			// its signals
+			$(this._container).trigger("getSignalsByDevice", dev.name);
+			
+			
+			// get signals from model	
+			var sigs = [];
+			var keys = this.model.signals.keys();
+		    for (var s in keys) {
+		        var k = keys[s];
+		        var sig = this.model.signals.get(k);
+
+				if(sig.device_name == dev.name){
+					sigs.push(sig);
+				}
+					
+		    }
+		    
+		    var padding = 30;
+		    var m = sigs.length;
+		    var lineLen = (line.getTotalLength() - (2*padding));
+		    var lineInc = lineLen / (m-1);
+		    if(m==1) 
+		    	lineInc = 0;	// handle divide by zero when there's only 1 signal
+		    for (var j=0; j<m; j++)
+			{
+		    	var sig = sigs[j];
+		    	var pt = line.getPointAtLength( (j*lineInc) + padding);
+		    	var node = document.createElementNS(this.svgNS,"circle");
+		    	node.setAttribute("cx", pt.x);
+		    	node.setAttribute("cy", pt.y);
+		    	node.setAttribute("r", 5);
+		    	node.setAttribute("style", "fill: " + this.groupColors[this.pColors[ind]] );
+		    	
+		    	if(arrIsUnique(sig.device_name, this.excludedDevs[ind]))
+		    		node.setAttribute("class", "Node");
+		    	else
+		    		node.setAttribute("class", "Node_hidden");
+
+		    	
+				this.sigs[ind].push(sig);
+				this.nodes[ind].push(node);
+			}
+		    
+		    this.setNextColor(ind);
+		}
+	},
+	
 	drawConnections : function()
 	{
 		for(var i=0; i<this.sigs[0].length; i++)
@@ -327,7 +464,6 @@ HivePlotView.prototype = {
 				var dst = d.device_name + d.name;
 				if(this.model.isConnected(src, dst))
 				{
-					
 					var node1 = this.nodes[0][i];
 					var node2 = this.nodes[1][j];
 					
@@ -347,7 +483,7 @@ HivePlotView.prototype = {
 					line.setAttribute("data-dst", d.device_name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-					if(arrIsUnique(s.device_name, this.excludedDevs[0]))
+					if( arrIsUnique(s.device_name, this.excludedDevs[0]) && arrIsUnique(d.device_name, this.excludedDevs[1]))
 						line.setAttribute("class", "hive_connection");
 					else
 						line.setAttribute("class", "hive_connection_hidden");
@@ -437,14 +573,13 @@ HivePlotView.prototype = {
 	{
 		var w = $(this._container).width() - 10;
 		var h = $(this._container).height() - 10;
-		this.svgDim = [w, h];
+		this.svgDim = [w - this.inclusionTableWidth - (2*this.inclusionTablePadding), h];
 		this.init();
 	},
 	
 	cleanup : function ()
 	{
 	}
-	
 };
 
 function HiveViewPreset(name, includedSrcs, includedDsts)
