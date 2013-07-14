@@ -217,8 +217,21 @@ HivePlotView.prototype = {
 					});
 				}
 				
+				
+				var textLabel = document.createElement("p");
+				textLabel.setAttribute("data-src", dev.name);
+				textLabel.setAttribute("style", "display: inline");
+				textLabel.appendChild(document.createTextNode(label));
+				
+				textLabel.addEventListener("mouseover", function(evt){
+					_self.onDevMouseOver(evt.target.getAttribute("data-src"));
+				});
+				textLabel.addEventListener("mouseout", function(evt){
+					_self.onDevMouseOut(evt.target.getAttribute("data-src"));
+				});
+				
 				table.appendChild(checkbox);
-				table.appendChild(document.createTextNode(label));
+				table.appendChild(textLabel);
 				table.appendChild(document.createElement('br'));
 			}
 		}
@@ -527,8 +540,12 @@ HivePlotView.prototype = {
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			if(con.getAttribute("data-src") == devName || con.getAttribute("data-dst") == devName )
-				con.setAttribute("class", "hive_connection");
+			if(con.getAttribute("data-src") == devName || con.getAttribute("data-dst") == devName ){
+				if(arrIsUnique(devName, this.excludedDevs[0]) && arrIsUnique(devName, this.excludedDevs[1]) )
+					con.setAttribute("class", "hive_connection");
+				else
+					con.setAttribute("class", "hive_connection_hidden");
+			}
 		}
 	},
 	
