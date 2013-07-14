@@ -541,7 +541,7 @@ HivePlotView.prototype = {
 		{
 			var con = this.connectionsLines[i];
 			if(con.getAttribute("data-src") == devName || con.getAttribute("data-dst") == devName ){
-				if(arrIsUnique(devName, this.excludedDevs[0]) && arrIsUnique(devName, this.excludedDevs[1]) )
+				if(arrIsUnique(con.getAttribute("data-src"), this.excludedDevs[0]) && arrIsUnique(con.getAttribute("data-dst"), this.excludedDevs[1]) )
 					con.setAttribute("class", "hive_connection");
 				else
 					con.setAttribute("class", "hive_connection_hidden");
