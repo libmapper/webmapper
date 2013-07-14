@@ -312,23 +312,26 @@ HivePlotView.prototype = {
 		for (var i=0; i<sigsArray.length; i++)
 		{
 			var signals = sigsArray[i];
+			
 			for (var j=0; j<signals.length; j++)
 			{
 				var sig = signals[j];
 		    	
 		    	var pt = line.getPointAtLength(d);
 		    	var node = document.createElementNS(this.svgNS,"circle");
+		    	node.setAttribute("data-src", dev.name);
+		    	node.setAttribute("data-srcSignal", sig.name);
 		    	node.setAttribute("cx", pt.x);
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
 		    	
-		    	if(arrIsUnique(sig.device_name, this.excludedDevs[0]))
+		    	// check if node is in the EXCLUSION list
+		    	if(arrIsUnique(sig.device_name, this.excludedDevs[ind]))
 		    		node.setAttribute("class", "Node");
 		    	else
 		    		node.setAttribute("class", "Node_hidden");
 		    	
-		    	
-		    	node.setAttribute("data-src", dev.name);
+		    	// mouse over event handlers
 				node.addEventListener("mouseover", function(evt){
 					_self.onNodeMouseOver(evt);
 				});
@@ -380,23 +383,19 @@ HivePlotView.prototype = {
 			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 			line.setAttribute("d", pathDefn);
 			line.setAttribute("class", (ind==0) ? "hive_axis_SRC" : "hive_axis_DST");
-			if(ind==0)
-			{
-				line.setAttribute("data-src", dev.name);
-				line.addEventListener("mouseover", function(evt){
-					_self.onLineMouseOver(evt);
-				});
-				line.addEventListener("mouseout", function(evt){
-					_self.onLineMouseOut(evt);
-				});
-			}
+			line.setAttribute("data-src", dev.name);
+			line.addEventListener("mouseover", function(evt){
+				_self.onDevMouseOver(evt.target.getAttribute("data-src"));
+			});
+			line.addEventListener("mouseout", function(evt){
+				_self.onDevMouseOut(evt.target.getAttribute("data-src"));
+			});
+
 			this.svg.appendChild(line);
-			
-			// its signals
-			$(this._container).trigger("getSignalsByDevice", dev.name);
 			
 			
 			// get signals from model	
+			$(this._container).trigger("getSignalsByDevice", dev.name);
 			var sigs = [];
 			var keys = this.model.signals.keys();
 		    for (var s in keys) {
@@ -420,6 +419,8 @@ HivePlotView.prototype = {
 		    	var sig = sigs[j];
 		    	var pt = line.getPointAtLength( (j*lineInc) + padding);
 		    	var node = document.createElementNS(this.svgNS,"circle");
+		    	node.setAttribute("data-src", dev.name);
+		    	node.setAttribute("data-srcSignal", sig.name);
 		    	node.setAttribute("cx", pt.x);
 		    	node.setAttribute("cy", pt.y);
 		    	node.setAttribute("r", 5);
@@ -429,7 +430,13 @@ HivePlotView.prototype = {
 		    		node.setAttribute("class", "Node");
 		    	else
 		    		node.setAttribute("class", "Node_hidden");
-
+		    	
+		    	node.addEventListener("mouseover", function(evt){
+					_self.onNodeMouseOver(evt);
+				});
+				node.addEventListener("mouseout", function(evt){
+					_self.onNodeMouseOut(evt);
+				});
 		    	
 				this.sigs[ind].push(sig);
 				this.nodes[ind].push(node);
@@ -469,6 +476,8 @@ HivePlotView.prototype = {
 					var line = document.createElementNS(this.svgNS,"path");
 					line.setAttribute("data-src", s.device_name);
 					line.setAttribute("data-dst", d.device_name);
+					line.setAttribute("data-srcSignal", s.name);
+					line.setAttribute("data-dstSignal", d.name);
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 					if( arrIsUnique(s.device_name, this.excludedDevs[0]) && arrIsUnique(d.device_name, this.excludedDevs[1]))
@@ -503,24 +512,22 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	onLineMouseOver : function(e)
+	onDevMouseOver : function(devName)
 	{
-		var line = e.target;
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
+			if(con.getAttribute("data-src") == devName ||  con.getAttribute("data-dst") == devName )
 			{
 				con.setAttribute("class", "hive_connection_over");
 			}
 		}
 	},
-	onLineMouseOut : function(e){
-		var line = e.target;
+	onDevMouseOut : function(devName){
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			if(con.getAttribute("data-src") == line.getAttribute("data-src"))
+			if(con.getAttribute("data-src") == devName || con.getAttribute("data-dst") == devName )
 				con.setAttribute("class", "hive_connection");
 		}
 	},
@@ -528,20 +535,17 @@ HivePlotView.prototype = {
 	onNodeMouseOver : function(e)
 	{
 		var node = e.target;
-		var type;
-		if(node.hasAttribute("data-src"))
-			type = 1;
-		else
-			type = 0;
-		
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
-			if(type == 1 && con.getAttribute("data-src") == node.getAttribute("data-src"))
-					con.setAttribute("class", "hive_connection_over");
-			else{
-				if(con.getAttribute("data-dst") == node.getAttribute("data-dst"))
-					con.setAttribute("class", "hive_connection_over");
+			if( (con.getAttribute("data-src") == node.getAttribute("data-src") && 
+					con.getAttribute("data-srcSignal") == node.getAttribute("data-srcSignal"))
+					||
+					(con.getAttribute("data-dst") == node.getAttribute("data-src") && 
+							con.getAttribute("data-dstSignal") == node.getAttribute("data-srcSignal"))
+			  )
+			{
+				con.setAttribute("class", "hive_connection_over");
 			}
 		}
 	},
@@ -556,6 +560,7 @@ HivePlotView.prototype = {
 				con.setAttribute("class", "hive_connection_hidden");
 		}
 	},
+	
 	
 	on_resize : function ()
 	{
