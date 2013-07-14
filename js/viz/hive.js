@@ -170,23 +170,43 @@ HivePlotView.prototype = {
     	this.svg.appendChild(bk);
 		
 	},
+	
 	drawInclusionTable : function ()
 	{
 		var _self = this;
 		var table = document.getElementById("hive_inclusionTable");
 
+		var btn;
+		
 		// switch mode button
-		var btn = document.createElement("button");
-		btn.innerHTML = "Switch Mode";
-		//btn.setAttribute("style", "float: left;");
+		btn = document.createElement("button");
+		btn.innerHTML = "Mode";
 		btn.title = "switch hive plot style";
 		btn.addEventListener("click", function(evt){
-			_self.mode++;
-			if(_self.mode == 3)
-				_self.mode = 0;
+			_self.switchMode();
+		});
+		table.appendChild(btn);
+
+		// switch mode button
+		btn = document.createElement("button");
+		btn.innerHTML = "Show All";
+		btn.title = "show all devices";
+		btn.addEventListener("click", function(evt){
+			_self.includeAllDevices();
 			_self.update_display();
 		});
 		table.appendChild(btn);
+		
+		// switch mode button
+		btn = document.createElement("button");
+		btn.innerHTML = "Hide All";
+		btn.title = "hide all devices";
+		btn.addEventListener("click", function(evt){
+			_self.excludeAllDevices();
+			_self.update_display();
+		});
+		table.appendChild(btn);
+		
 		table.appendChild(document.createElement('br'));
 		
 		// repeat for source and destination devices
@@ -210,10 +230,12 @@ HivePlotView.prototype = {
 				if(ind==0){
 					checkbox.addEventListener("click", function(evt){
 						_self.onInclusionTableChecked(evt, 0);
+						_self.update_display();
 					});
 				}else if(ind==1){
 					checkbox.addEventListener("click", function(evt){
 						_self.onInclusionTableChecked(evt, 1);
+						_self.update_display();
 					});
 				}
 				
@@ -251,11 +273,7 @@ HivePlotView.prototype = {
 		}
 		// exclude 
 		else
-		{
 			arrPushIfUnique(devName, this.excludedDevs[ind]);
-		}
-		
-		this.update_display();
 	},
 	
 	drawLines : function (srcData, ind)
@@ -578,6 +596,34 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	includeAllDevices : function ()
+	{
+		this.excludedDevs = [[],[]]; 
+	},
+	
+	excludeAllDevices : function ()
+	{
+		this.excludedDevs = [[],[]]; 
+		
+		//divide devices into sources and destinations
+		var keys = this.model.devices.keys();
+		for (var d in keys) 
+		{
+			var dev = this.model.devices.get(keys[d]);
+			if(dev.n_outputs)
+				this.excludedDevs[0].push(dev.name);
+			if(dev.n_inputs)
+				this.excludedDevs[1].push(dev.name);
+		}
+	},
+	
+	switchMode : function ()
+	{
+		this.mode++;
+		if(this.mode == 3)
+			this.mode = 0;
+		this.update_display();
+	},
 	
 	on_resize : function ()
 	{
