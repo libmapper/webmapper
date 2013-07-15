@@ -74,12 +74,13 @@ HivePlotView.prototype = {
 		
 		div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
-		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: 100%; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] + this.actionBarHeight + (2*this.actionBarPadding) +4) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+//		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + this.svgDim[1] + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
 		this._container.appendChild(div);
 		
 	    div = document.createElement("div");
 		div.setAttribute("id", "hive_actionBar");
-		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) - 5) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px;");
+		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) + 10) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px;");
 		this._container.appendChild(div);
 	    
 		this.draw();
@@ -321,21 +322,33 @@ HivePlotView.prototype = {
 	drawActionBar : function()
 	{
 		var table = document.getElementById("hive_actionBar");
-
-		for(var ind=0; ind<2; ind++)
-		{
-			if(this.selectedCells[ind].length > 0)
-			{
-				var label = document.createElement("p");
-				var src = this.selectedCells[ind][0];
-				var text = src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
-				label.appendChild(document.createTextNode(text));
-				label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");
-				table.appendChild(label);
-			}			
-		}
 		
-
+		if(this.selectedConnections.length > 0)
+		{
+			var label = document.createElement("p");
+			var l = this.selectedConnections[0].split(">");
+			var text = "Connection: " + l[0] + " > " + l[1];
+			label.appendChild(document.createTextNode(text));
+			label.setAttribute("class", "hive_conLabel");
+			table.appendChild(label);
+		}
+		else
+		{
+			for(var ind=0; ind<2; ind++)
+			{
+				if(this.selectedCells[ind].length > 0)
+				{
+					var label = document.createElement("p");
+					var src = this.selectedCells[ind][0];
+					var text = (ind==0)? "Source: " : "Destination: ";
+					text += src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
+					label.appendChild(document.createTextNode(text));
+					label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");
+					table.appendChild(label);
+				}			
+			}
+			
+		}
 	},
 	
 	drawLines : function (srcData, ind)
