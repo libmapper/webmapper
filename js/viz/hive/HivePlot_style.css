@@ -88,13 +88,13 @@
 	font-size: 12px;
 }
 
-.hive_conLabel, .hive_srcLabel, .hive_dstLabel{
+.hive_srcLabel, .hive_dstLabel{
 	color: #fff;
 	position: absolute;
 }
 .hive_srcLabel{ left: 10px; }
 .hive_dstLabel{ right: 10px; }
-.hive_conLabel{ left: 10px; }
+.hive_conLabel{ color: #fff; float: middle; position: relative }
 
 
 

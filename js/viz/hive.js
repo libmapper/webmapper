@@ -232,24 +232,6 @@ HivePlotView.prototype = {
 		});
 		table.appendChild(btn);
 		
-		// connect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Connect";
-		btn.title = "connect the selected node(s) (C)";
-		btn.addEventListener("click", function(evt){
-			_self.connect();
-		});
-		table.appendChild(btn);
-		
-		// disconnect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Disconnect";
-		btn.title = "disconnect the selected connection) (D)";
-		btn.addEventListener("click", function(evt){
-			_self.disconnect();
-		});
-		table.appendChild(btn);
-
 		table.appendChild(document.createElement('br'));
 		
 		// repeat for source and destination devices
@@ -319,6 +301,8 @@ HivePlotView.prototype = {
 			arrPushIfUnique(devName, this.excludedDevs[ind]);
 	},
 	
+	
+	
 	drawActionBar : function()
 	{
 		var table = document.getElementById("hive_actionBar");
@@ -331,6 +315,27 @@ HivePlotView.prototype = {
 			label.appendChild(document.createTextNode(text));
 			label.setAttribute("class", "hive_conLabel");
 			table.appendChild(label);
+			
+			/*
+			// connect button
+			btn = document.createElement("button");
+			btn.innerHTML = "Connect";
+			btn.title = "connect the selected node(s) (C)";
+			btn.addEventListener("click", function(evt){
+				_self.connect();
+			});
+			table.appendChild(btn);
+			*/
+			
+			// disconnect button
+			btn = document.createElement("button");
+			btn.innerHTML = "Disconnect";
+			btn.title = "disconnect the selected connection) (D)";
+			btn.addEventListener("click", function(evt){
+				_self.disconnect();
+			});
+			table.appendChild(btn);
+			
 		}
 		else
 		{
@@ -843,6 +848,8 @@ HivePlotView.prototype = {
 			this.selectedConnections_clearAll();
 		
 		this.update_display();
+		//$(this._container).trigger("updateConnectionProperties");
+		update_connection_properties();
 	},
 	
 	selectedConnections_clearAll : function ()
@@ -925,6 +932,44 @@ HivePlotView.prototype = {
 		var h = $(this._container).height() - 10;
 		this.svgDim = [w - this.inclusionTableWidth - (2*this.inclusionTablePadding), h - this.actionBarHeight - (2*this.actionBarPadding)];
 		this.init();
+	},
+	
+	load_view_settings : function (data)
+	{
+		this.excludedDevs = data[0];		
+		this.mode = data[1];				
+		this.update_display();
+	},
+	
+	save_view_settings : function ()
+	{
+		var data = [];
+		data.push(this.excludedDevs);		// 0
+		data.push(this.mode);				// 1
+		return data;
+	},
+	
+	get_selected_connections: function(list)
+	{
+		var vals =[];
+		
+		if(this.selectedConnections.length > 0)
+		{
+			var con = this.selectedConnections[0].split(">");
+			var src = con[0];
+			var dst = con[1];
+			if(this.model.isConnected(src, dst))
+				vals.push(this.model.getConnection(src, dst));
+		}	
+		return vals;
+	},
+	
+	/**
+	 * returns an assoc containing the devices included in the signals grid
+	 */
+	get_focused_devices : function()
+	{
+		return this.model.devices;
 	},
 	
 	cleanup : function ()
