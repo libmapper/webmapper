@@ -27,6 +27,8 @@ function HivePlotView(container, model)
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 	this.inclusionTableWidth = 210;
 	this.inclusionTablePadding = 8;
+	this.actionBarHeight = 50;
+	this.actionBarPadding = 8;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
 	this.pColors;
@@ -68,9 +70,16 @@ HivePlotView.prototype = {
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 		wrapper.appendChild(this.svg);	
 		
-	    var div = document.createElement("div");
+		var div;
+		
+		div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
-		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: "+ this.svgDim[1] + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: 100%; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+		this._container.appendChild(div);
+		
+	    div = document.createElement("div");
+		div.setAttribute("id", "hive_actionBar");
+		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) - 5) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px;");
 		this._container.appendChild(div);
 	    
 		this.draw();
@@ -104,6 +113,7 @@ HivePlotView.prototype = {
 		this.drawInclusionTable();
 		this.drawConnections();
 		this.drawNodes();
+		this.drawActionBar();
 		
 	},
 	
@@ -306,6 +316,26 @@ HivePlotView.prototype = {
 		// exclude 
 		else
 			arrPushIfUnique(devName, this.excludedDevs[ind]);
+	},
+	
+	drawActionBar : function()
+	{
+		var table = document.getElementById("hive_actionBar");
+
+		for(var ind=0; ind<2; ind++)
+		{
+			if(this.selectedCells[ind].length > 0)
+			{
+				var label = document.createElement("p");
+				var src = this.selectedCells[ind][0];
+				var text = src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
+				label.appendChild(document.createTextNode(text));
+				label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");
+				table.appendChild(label);
+			}			
+		}
+		
+
 	},
 	
 	drawLines : function (srcData, ind)
@@ -880,7 +910,7 @@ HivePlotView.prototype = {
 	{
 		var w = $(this._container).width() - 10;
 		var h = $(this._container).height() - 10;
-		this.svgDim = [w - this.inclusionTableWidth - (2*this.inclusionTablePadding), h];
+		this.svgDim = [w - this.inclusionTableWidth - (2*this.inclusionTablePadding), h - this.actionBarHeight - (2*this.actionBarPadding)];
 		this.init();
 	},
 	

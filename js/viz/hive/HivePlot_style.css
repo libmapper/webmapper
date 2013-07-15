@@ -68,15 +68,33 @@
 
 #HivePlotSVG{
 	position: absolute;
-	left: 0;
+	right: 0;
 	
 }
 	
 #hive_inclusionTable{
 	background-color: #eee;	
 	position: absolute;
+	left: 0;
+	font-family: helvetica, arial, sans-serif;
+	font-size: 12px;
+}
+#hive_actionBar{
+	background-color: #555;	
+	position: absolute;
+	bottom: 0;
 	right: 0;
 	font-family: helvetica, arial, sans-serif;
 	font-size: 12px;
 }
 
+.hive_srcLabel{
+	color: #fff;
+	position: absolute;
+	left: 10px;
+}
+.hive_dstLabel{
+	color: #fff;
+	position: absolute;
+	right: 10px;
+}
