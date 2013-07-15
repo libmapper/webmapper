@@ -29,6 +29,20 @@ function init(){
 	view  = new  HivePlotView(document.getElementById("container"), model);
 	view.on_resize();
 
+	// controller (from view)  
+    $("#container").on("link", function(e, src, dst){
+        link(src, dst);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+        unlink(src, dst);
+    });
+    $("#container").on("connect", function(e, src, dst){
+        connect(src, dst);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+        disconnect(src, dst);
+    });
+	
 	initData();
 }
 
@@ -46,19 +60,29 @@ function initData()
 		for(var j=0; j<nDstDevices; j++){
 			link("/Source " + i, "/Destination " + j);
 			
-			for(var k=0; k<nSigs; k++){
-				for(var l=0; l<nSigs; l++){
-					connect("/Source " + i + "/Sig " + k, "/Destination " + j + "/Sig " + l);
+			for(var k=0; k<nSigs; k+=2){
+				for(var l=0; l<nSigs; l+=3, k+=1){
+					//connect("/Source " + i + "/Sig " + k, "/Destination " + j + "/Sig " + l);					
 				}
 			}
-			
 		}
 	}
-	
-	
 	view.update_display();
 }
 
+function link(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	model.links.add(key, args);
+	view.update_display();
+}
+function unlink(src, dst){
+	var key = src + ">" + dst;
+	model.links.remove(key);
+	view.update_display();
+}
 function connect(src, dst){
 	var key = src + ">" + dst;
 	var args = new Object(); 
@@ -74,14 +98,12 @@ function connect(src, dst){
 	args.src_type = 'f';
 	args.dest_type = 'f';
 	args.expression = 'y=x';
-	model.connections.add(key, args);
+	model.connections.add(key, args);	
 }
-function link(src, dst){
+function disconnect(src, dst){
 	var key = src + ">" + dst;
-	var args = new Object(); 
-	args.src_name = src;
-	args.dest_name = dst;
-	model.links.add(key, args);
+	model.connections.remove(key);
+	view.update_display();
 }
 
 function addDevice(name, nIn, nOut)
