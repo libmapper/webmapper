@@ -540,7 +540,8 @@ HivePlotView.prototype = {
 			{
 				var label = document.createElement("p");
 				var src = this.selectedCells[ind][0];
-				var text = (ind==0)? "Source: " : "Destination: ";
+//				var text = (ind==0)? "Source: " : "Destination: ";
+				var text = "";
 				text += src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
 				label.appendChild(document.createTextNode(text));
 				label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");

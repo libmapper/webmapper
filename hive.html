@@ -49,7 +49,7 @@ function init(){
 // init with fake data for now
 function initData()
 {
-	var nIn = 4, nOut = 12, nSigs = 2;
+	var nIn = 4, nOut = 12, nSigs = 10;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
@@ -60,9 +60,13 @@ function initData()
 		for(var j=0; j<nDstDevices; j++){
 			link("/Source " + i, "/Destination " + j);
 			
-			for(var k=0; k<nSigs; k+=2){
+			for(var k=0; k<nSigs; k+=1){
 				for(var l=0; l<nSigs; l+=3, k+=1){
-					connect("/Source " + i + "/Signal" + k, "/Destination " + j + "/Signal" + l);					
+					var rand = Math.random() * 10;
+					if(rand<2){
+						connect("/Source " + i + "/Signal" + k, "/Destination " + j + "/Signal" + l);
+						k+=3;
+					}
 				}
 			}
 		}
