@@ -438,12 +438,16 @@ HivePlotView.prototype = {
 				
 				this.CollapsibleLists.applyTo(devList, this.expandedDevices[ind], true);
 				
+				// mouse event handlers
 				devList.addEventListener("click", function(evt){
 					var target = evt.target;
+
+					// signal under mouse
 					if(target.hasAttribute("data-srcSignal"))
 					{
 						_self.onNodeClick(target);
 					}
+					// device under mouse
 					else if(target.hasAttribute("data-src"))
 					{
 						var src = target.getAttribute("data-src");
@@ -455,6 +459,27 @@ HivePlotView.prototype = {
 							_self.expandedDevices[n].splice(index, 1);
 					}
 				});
+				
+				devList.addEventListener("mouseover", function(evt){
+					var target = evt.target;
+
+					// signal under mouse
+					if(target.hasAttribute("data-srcSignal"))
+					{
+						_self.onNodeMouseOver(evt.target);
+					}
+					// device under mouse
+					else if(target.hasAttribute("data-src"))
+					{
+						_self.onDevMouseOver(evt.target.getAttribute("data-src"));
+					}
+				});
+				
+				devList.addEventListener("mouseout", function(evt){
+					_self.onDevMouseOut(evt.target.getAttribute("data-src"));
+				});
+				
+				
 			}
 		}
 		
@@ -481,6 +506,7 @@ HivePlotView.prototype = {
 	
 	drawActionBar : function()
 	{
+		var _self = this;
 		var table = document.getElementById("hive_actionBar");
 		
 		if(this.selectedConnections.length > 0)
@@ -624,10 +650,10 @@ HivePlotView.prototype = {
 		    	
 		    	// mouse handlers
 				node.addEventListener("mouseover", function(evt){
-					_self.onNodeMouseOver(evt);
+					_self.onNodeMouseOver(evt.target);
 				});
 				node.addEventListener("mouseout", function(evt){
-					_self.onNodeMouseOut(evt);
+					_self.onNodeMouseOut(evt.target);
 				});
 				node.addEventListener("click", function(evt){
 					_self.onNodeClick(evt.target);
@@ -730,10 +756,10 @@ HivePlotView.prototype = {
 		    	
 		    	// mouse event handlers
 		    	node.addEventListener("mouseover", function(evt){
-					_self.onNodeMouseOver(evt);
+					_self.onNodeMouseOver(evt.target);
 				});
 				node.addEventListener("mouseout", function(evt){
-					_self.onNodeMouseOut(evt);
+					_self.onNodeMouseOut(evt.target);
 				});
 				node.addEventListener("click", function(evt){
 					_self.onNodeClick(evt.target);
@@ -863,9 +889,8 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	onNodeMouseOver : function(e)
+	onNodeMouseOver : function(node)
 	{
-		var node = e.target;
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
@@ -884,8 +909,7 @@ HivePlotView.prototype = {
 			}
 		}
 	},
-	onNodeMouseOut : function(e){
-		var line = e.target;
+	onNodeMouseOut : function(node){
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
@@ -981,6 +1005,16 @@ HivePlotView.prototype = {
 			}
 		}
 
+		// if there's a connection, select is also
+		if(this.selectedCells[0].length == 1 && this.selectedCells[1].length == 1){
+			
+			var src = this.selectedCells[0][0].getAttribute("data-src") + this.selectedCells[0][0].getAttribute("data-srcSignal");
+			var dst = this.selectedCells[1][0].getAttribute("data-src") + this.selectedCells[1][0].getAttribute("data-srcSignal");
+			if(this.model.isConnected(src, dst))
+			{
+				this.selectedConnections.push(src+">"+dst);
+			}
+		}
 		this.update_display();
 		
 	},
@@ -1026,8 +1060,15 @@ HivePlotView.prototype = {
 			this.selectedCells = cells;
 	},
 	
+	selectConnection : function()
+	{
+		this.selectedConnections_clearAll();
+		
+	},
+	
 	onConnectionClick : function(con)
 	{
+		
 		this.selectedCells_clearAll(0);
 		this.selectedCells_clearAll(1);
 		
@@ -1037,23 +1078,30 @@ HivePlotView.prototype = {
 		{
 			this.selectedConnections_clearAll();
 			this.selectedConnections.push(name);
+			
 			con.classList.add("hive_connection_selected");
 		}
 		else
 			this.selectedConnections_clearAll();
 		
+		
+		// select corresponding nodes as well
+		var fakeSrc = document.createElement("p");
+		fakeSrc.setAttribute("data-src", con.getAttribute("data-src"));
+		fakeSrc.setAttribute("data-srcSignal", con.getAttribute("data-srcSignal"));
+		this.selectedCells_addCell(fakeSrc, 0);
+		
+		var fakeDst = document.createElement("p");
+		fakeDst.setAttribute("data-src", con.getAttribute("data-dst"));
+		fakeDst.setAttribute("data-srcSignal", con.getAttribute("data-dstSignal"));
+		this.selectedCells_addCell(fakeDst, 1);
+		
 		this.update_display();
-		//$(this._container).trigger("updateConnectionProperties");
 		update_connection_properties();
 	},
 	
 	selectedConnections_clearAll : function ()
 	{
-		for(var i=0; i<this.selectedConnections.length; i++)
-		{
-//			var old = this.selectedConnections[i];
-//			old.classList.remove("hive_connection_selected");
-		}
 		this.selectedConnections = [];
 	},
 	selectedConnections_getIndex : function (fullname)

@@ -118,13 +118,14 @@
 	font-size: 12px;
 }
 
-.hive_srcLabel, .hive_dstLabel{
+.hive_srcLabel, .hive_dstLabel, .hive_conLabel{
 	color: #fff;
 	position: absolute;
+	font-size: 14px;
 }
 .hive_srcLabel{ left: 10px; }
 .hive_dstLabel{ right: 10px; }
-.hive_conLabel{ color: #fff; float: middle; position: relative }
+.hive_conLabel{ left: 0; right: 0 }
 
 /*
 
@@ -175,7 +176,7 @@
         padding:0;
         list-style-position:inside;
         list-style-image:url('button-open.png');
-        cursor:auto;
+        cursor:pointer;
       }
 
       .treeView li.collapsibleListOpen{
