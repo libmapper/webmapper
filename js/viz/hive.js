@@ -22,11 +22,12 @@ function HivePlotView(container, model)
 	this.excludedDevs = [new Array(), new Array()];
 	this.selectedCells = [[],[]];
 	this.selectedConnections = [];
+	this.expandedDevices = [[],[]];
 
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 	this.inclusionTableWidth = 210;
-	this.inclusionTablePadding = 8;
+	this.inclusionTablePadding = 10;
 	this.actionBarHeight = 50;
 	this.actionBarPadding = 8;
 
@@ -38,6 +39,109 @@ function HivePlotView(container, model)
 	document.onkeyup = function(e){
 		_self.keyboardHandler(e);
 	};
+	
+	// http://code.stephenmorley.org/javascript/collapsible-lists/
+	this.CollapsibleLists = new function()
+	{
+	      /* Makes the specified list collapsible. The parameters are:
+	       * node         - the list element
+	       * doNotRecurse - true if sub-lists should not be made collapsible
+	       */
+	      this.applyTo = function(node, expandedList, doNotRecurse)
+	      {
+	        // loop over the list items within this node
+	        var lis = node.getElementsByTagName('li');
+	        for (var index = 0; index < lis.length; index ++){
+
+	          // check whether this list item should be collapsible
+	          if (!doNotRecurse || node == lis[index].parentNode){
+
+	            // prevent text from being selected unintentionally
+	            if (lis[index].addEventListener){
+	              lis[index].addEventListener(
+	                  'mousedown', function (e){ e.preventDefault(); }, false);
+	            }else{
+	              lis[index].attachEvent(
+	                  'onselectstart', function(){ event.returnValue = false; });
+	            }
+
+	            // add the click listener
+	            if (lis[index].addEventListener){
+	              lis[index].addEventListener(
+	                  'click', createClickListener(lis[index]), false);
+	            }else{
+	              lis[index].attachEvent(
+	                  'onclick', createClickListener(lis[index]));
+	            }
+
+	            // close the unordered lists within this list item
+	            if(arrIsUnique(lis[index].getAttribute("data-src"), expandedList))
+	            	toggle(lis[index]);
+
+	          }
+	        }
+
+	      };
+
+	      /* Returns a function that toggles the display status of any unordered
+	       * list elements within the specified node. The parameter is:
+	       *
+	       * node - the node containing the unordered list elements
+	       */
+	      function createClickListener(node){
+
+	        // return the function
+	        return function(e){
+
+	          // ensure the event object is defined
+	          if (!e) e = window.event;
+
+	          // find the list item containing the target of the event
+	          var li = (e.target ? e.target : e.srcElement);
+	          while (li.nodeName != 'LI') li = li.parentNode;
+
+	          // toggle the state of the node if it was the target of the event
+	          if (li == node) toggle(node);
+
+	        };
+
+	      }
+
+	      /* Opens or closes the unordered list elements directly within the
+	       * specified node. The parameter is:
+	       *
+	       * node - the node containing the unordered list elements
+	       */
+	      function toggle(node)
+	      {
+	        // determine whether to open or close the unordered lists
+	        var open = node.className.match(/(^| )collapsibleListClosed( |$)/);
+
+	        // loop over the unordered list elements with the node
+	        var uls = node.getElementsByTagName('ul');
+	        for (var index = 0; index < uls.length; index ++){
+
+	          // find the parent list item of this unordered list
+	          var li = uls[index];
+	          while (li.nodeName != 'LI') li = li.parentNode;
+
+	          // style the unordered list if it is directly within this node
+	          if (li == node) uls[index].style.display = (open ? 'block' : 'none');
+
+	        }
+
+	        // remove the current class from the node
+	        node.className =
+	            node.className.replace(
+	                /(^| )collapsibleList(Open|Closed)( |$)/, '');
+
+	        // if the node contains unordered lists, set its class
+	        if (uls.length > 0){
+	          node.className += ' collapsibleList' + (open ? 'Open' : 'Closed');
+	        }
+
+	      }
+	    }();
 }
 
 HivePlotView.prototype = {
@@ -97,19 +201,19 @@ HivePlotView.prototype = {
 		}
 		else if(this.mode == 1)
 		{
-			var origin = [15, this.svgDim[1]/2];				// origin of ellipses
-			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
-			var outerDim = [this.svgDim[0] - 15, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
-			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 285, 345);
-			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
-		}
-		else if(this.mode == 2)
-		{
 			var origin = [(this.svgDim[0]/2) + 10, this.svgDim[1]/2];				// origin of ellipses
 			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
 			var outerDim = [this.svgDim[0]/2, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
 			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 195, 345);
 			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 165);
+		}
+		else if(this.mode == 2)
+		{
+			var origin = [15, this.svgDim[1]/2];				// origin of ellipses
+			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
+			var outerDim = [this.svgDim[0] - 15, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
+			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 285, 345);
+			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
 		}
 		this.drawInclusionTable();
 		this.drawConnections();
@@ -232,6 +336,26 @@ HivePlotView.prototype = {
 		});
 		table.appendChild(btn);
 		
+		// expand all button
+		btn = document.createElement("button");
+		btn.innerHTML = "Expand All";
+		btn.title = "expand all devices";
+		btn.addEventListener("click", function(evt){
+			_self.expandAllDevices();
+			_self.update_display();
+		});
+		table.appendChild(btn);
+		
+		// collapse all button
+		btn = document.createElement("button");
+		btn.innerHTML = "Collapse All";
+		btn.title = "collapse all devices";
+		btn.addEventListener("click", function(evt){
+			_self.collapseAllDevices();
+			_self.update_display();
+		});
+		table.appendChild(btn);
+		
 		table.appendChild(document.createElement('br'));
 		
 		// repeat for source and destination devices
@@ -239,49 +363,89 @@ HivePlotView.prototype = {
 		for(var ind=0; ind<2; ind++)
 		{
 			table.appendChild(document.createElement('br'));
-			table.appendChild(document.createTextNode(labels[ind]));
-			table.appendChild(document.createElement('br'));
 			
+			var l = document.createElement("p");
+			l.innerHTML = labels[ind];
+			l.setAttribute("class", "inclusionTableH2");
+			table.appendChild(l);
+			
+			// for each device
 			for(var i=0; i<this.devs[ind].length; i++)
 			{
 				var dev = this.devs[ind][i];
 				var label = dev.name;
+				var devItem;
+				devItem = document.createElement("li");
+				devItem.setAttribute("data-src", dev.name);
+				devItem.setAttribute("data-ind", ind);
 				
+				// ul for the device
+				var devList = document.createElement("ul");
+//				devList.setAttribute("class", "collapsibleList");
+				devList.setAttribute("class", "treeView");
+				
+				// include/exclude checkbox
 				var checkbox = document.createElement('input');
 				checkbox.type = "checkbox";
+				checkbox.setAttribute("data-check", "yes");
 				checkbox.name = label;
 				checkbox.value = label;
 				checkbox.checked = (arrIsUnique(label, this.excludedDevs[ind]));
 				if(ind==0){
 					checkbox.addEventListener("click", function(evt){
+						evt.preventDefault();
+						evt.stopPropagation();
 						_self.onInclusionTableChecked(evt, 0);
 						_self.update_display();
 					});
 				}else if(ind==1){
 					checkbox.addEventListener("click", function(evt){
+						evt.preventDefault();
+						evt.stopPropagation();
 						_self.onInclusionTableChecked(evt, 1);
 						_self.update_display();
 					});
 				}
+				devItem.appendChild(checkbox);
+				devItem.appendChild(document.createTextNode(label));
 				
+				// ul for signals of the device
+				var sigList = document.createElement("ul");
+				var keys = this.model.signals.keys();
+				for (var s in keys) 
+				{
+					var k = keys[s];
+					var sig = this.model.signals.get(k);
+					if(sig.device_name == dev.name)
+					{
+						var sigItem = document.createElement("li");
+						sigItem.innerHTML = sig.name;
+						sigList.appendChild(sigItem);
+					}
+					
+				}
+				devItem.appendChild(sigList);
+				devList.appendChild(devItem);
 				
-				var textLabel = document.createElement("p");
-				textLabel.setAttribute("data-src", dev.name);
-				textLabel.setAttribute("style", "display: inline");
-				textLabel.appendChild(document.createTextNode(label));
+				table.appendChild(devList);
 				
-				textLabel.addEventListener("mouseover", function(evt){
-					_self.onDevMouseOver(evt.target.getAttribute("data-src"));
+				this.CollapsibleLists.applyTo(devList, this.expandedDevices[ind], true);
+				
+				devList.addEventListener("click", function(evt){
+					var src = evt.target.getAttribute("data-src");
+					if(src)
+					{
+						var n = evt.target.getAttribute("data-ind");
+						var index = _self.expandedDevices[n].indexOf(src);
+						if(index == -1)
+							_self.expandedDevices[n].push(src);
+						else
+							_self.expandedDevices[n].splice(index, 1);
+					}
 				});
-				textLabel.addEventListener("mouseout", function(evt){
-					_self.onDevMouseOut(evt.target.getAttribute("data-src"));
-				});
-				
-				table.appendChild(checkbox);
-				table.appendChild(textLabel);
-				table.appendChild(document.createElement('br'));
 			}
 		}
+		
 	},
 	
 	onInclusionTableChecked : function(e, ind)
@@ -746,6 +910,27 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	collapseAllDevices : function ()
+	{
+		this.expandedDevices = [[],[]]; 
+	},
+	
+	expandAllDevices : function ()
+	{
+		this.expandedDevices = [[],[]]; 
+		
+		//divide devices into sources and destinations
+		var keys = this.model.devices.keys();
+		for (var d in keys) 
+		{
+			var dev = this.model.devices.get(keys[d]);
+			if(dev.n_outputs)
+				this.expandedDevices[0].push(dev.name);
+			if(dev.n_inputs)
+				this.expandedDevices[1].push(dev.name);
+		}
+	},
+	
 	onNodeClick : function(e)
 	{
 		this.selectedConnections_clearAll();
@@ -921,7 +1106,7 @@ HivePlotView.prototype = {
 	switchMode : function ()
 	{
 		this.mode++;
-		if(this.mode == 3)
+		if(this.mode == 2)
 			this.mode = 0;
 		this.update_display();
 	},

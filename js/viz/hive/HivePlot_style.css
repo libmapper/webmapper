@@ -79,6 +79,30 @@
 	font-family: helvetica, arial, sans-serif;
 	font-size: 12px;
 }
+
+#hive_inclusionTable .inclusionTableH2{
+	font-weight: bold;
+}
+
+#hive_inclusionTable button {
+	font-size: 12px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #F2FFDE;
+	padding: 5px 5px;
+}
+#hive_inclusionTable button:hover{
+	background-color: #EEE8AA;
+}
+#hive_inclusionTable button:active{
+	background-color: #FFFFF0;
+}
+
+
+
+
 #hive_actionBar{
 	background-color: #555;	
 	position: absolute;
@@ -96,6 +120,83 @@
 .hive_dstLabel{ right: 10px; }
 .hive_conLabel{ color: #fff; float: middle; position: relative }
 
+/*
+
+.collapsibleList li li{
+  list-style-image:url('button2.png');
+  cursor:auto;
+}
+
+.collapsibleList li.collapsibleListOpen{
+  list-style-image:url('button-open.png');
+  cursor:pointer;
+}
+
+.collapsibleList li.collapsibleListClosed{
+  list-style-image:url('button-closed.png');
+  cursor:pointer;
+}
+
+.collapsibleList ul.collapsibleList{
+	padding: 0 0 0 20px;	
+	margin: 0;
+}
+
+*/
 
 
+.treeView{
+        
+      margin: 0;
+      padding: 0;
+        
+      }
 
+      .treeView ul{
+     	padding: 0 0 0 20px;	
+		margin: 0;
+      }
+
+      .treeView ul ul{
+      }
+
+      .treeView li.lastChild > ul{
+        background-image:none;
+      }
+
+      .treeView li{
+        margin:0;
+        padding:0;
+        list-style-position:inside;
+        list-style-image:url('button-open.png');
+        cursor:auto;
+      }
+
+      .treeView li.collapsibleListOpen{
+        list-style-image:url('button-open.png');
+        cursor:pointer;
+      }
+
+      .treeView li.collapsibleListClosed{
+        list-style-image:url('button-closed.png');
+        cursor:pointer;
+      }
+
+      .treeView li li{
+        padding-left:1.5em;
+        list-style-image:url('button2.png');
+      }
+
+      .treeView li.lastChild{
+      }
+
+      .treeView li.collapsibleListOpen{
+      }
+
+      .treeView li.collapsibleListOpen.lastChild{
+      }
+      
+      
+      
+      
+      
