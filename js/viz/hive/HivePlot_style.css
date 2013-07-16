@@ -83,6 +83,12 @@
 #hive_inclusionTable .inclusionTableH2{
 	font-weight: bold;
 }
+#hive_inclusionTable .signalLabel{
+}
+#hive_inclusionTable li .signalLabel_selected{
+	color: white;
+	background-color: #ff0000;
+}
 
 #hive_inclusionTable button {
 	font-size: 12px;

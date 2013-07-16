@@ -381,7 +381,6 @@ HivePlotView.prototype = {
 				
 				// ul for the device
 				var devList = document.createElement("ul");
-//				devList.setAttribute("class", "collapsibleList");
 				devList.setAttribute("class", "treeView");
 				
 				// include/exclude checkbox
@@ -419,8 +418,16 @@ HivePlotView.prototype = {
 					if(sig.device_name == dev.name)
 					{
 						var sigItem = document.createElement("li");
+						sigItem.setAttribute("data-src", dev.name);
+						sigItem.setAttribute("data-srcSignal", sig.name);
+						sigItem.setAttribute("data-ind", ind);
 						sigItem.innerHTML = sig.name;
 						sigList.appendChild(sigItem);
+						// check if selected and style
+						if(this.selectedCells_getCellIndex(sigItem, ind) == -1)
+							sigItem.setAttribute("class", "signalLabel");
+						else
+							sigItem.setAttribute("class", "signalLabel_selected");
 					}
 					
 				}
@@ -432,10 +439,15 @@ HivePlotView.prototype = {
 				this.CollapsibleLists.applyTo(devList, this.expandedDevices[ind], true);
 				
 				devList.addEventListener("click", function(evt){
-					var src = evt.target.getAttribute("data-src");
-					if(src)
+					var target = evt.target;
+					if(target.hasAttribute("data-srcSignal"))
 					{
-						var n = evt.target.getAttribute("data-ind");
+						_self.onNodeClick(target);
+					}
+					else if(target.hasAttribute("data-src"))
+					{
+						var src = target.getAttribute("data-src");
+						var n = target.getAttribute("data-ind");
 						var index = _self.expandedDevices[n].indexOf(src);
 						if(index == -1)
 							_self.expandedDevices[n].push(src);
@@ -618,7 +630,7 @@ HivePlotView.prototype = {
 					_self.onNodeMouseOut(evt);
 				});
 				node.addEventListener("click", function(evt){
-					_self.onNodeClick(evt);
+					_self.onNodeClick(evt.target);
 				});
 		    	
 				this.sigs[ind].push(sig);
@@ -724,7 +736,7 @@ HivePlotView.prototype = {
 					_self.onNodeMouseOut(evt);
 				});
 				node.addEventListener("click", function(evt){
-					_self.onNodeClick(evt);
+					_self.onNodeClick(evt.target);
 				});
 		    	
 				this.sigs[ind].push(sig);
@@ -931,16 +943,16 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	onNodeClick : function(e)
+	onNodeClick : function(node)
 	{
-		this.selectedConnections_clearAll();
+		this.selectedConnections_clearAll();	// nodes and connections can't be selected at the same time
 		
-		var node = e.target;
 		var ind = node.getAttribute("data-ind");
 		
 		// if COMMAND key is pressed, user is adding/removing to selection
 		
-		if(e.metaKey)	// COMMAND key on MAC, CONTROL key on PC
+		//if(e.metaKey)	// COMMAND key on MAC, CONTROL key on PC
+		if(false)	// disabling selecting multiple nodes for now
 		{
 			if(this.selectedCells_getCellIndex(node, ind) == -1)	// not already selected
 				this.selectedCells_addCell(node, ind);
@@ -969,8 +981,6 @@ HivePlotView.prototype = {
 			}
 		}
 
-		//FIX: really inefficient, but fixed the following bug 
-		// 1. select src and dst cell, 2. click connect, 3. click a new cell -> old selected cells still has selected style
 		this.update_display();
 		
 	},
