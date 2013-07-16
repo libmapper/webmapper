@@ -99,58 +99,35 @@
 	background: #F2FFDE;
 	padding: 5px 5px;
 }
-#hive_inclusionTable button:hover{
+#hive_inclusionTable button:hover{ 
 	background-color: #EEE8AA;
 }
 #hive_inclusionTable button:active{
 	background-color: #FFFFF0;
 }
 
-
-
-
 #hive_actionBar{
-	background-color: #555;	
+	background-color: #04C4D9;	
 	position: absolute;
 	bottom: 0;
 	right: 0;
 	font-family: helvetica, arial, sans-serif;
 	font-size: 12px;
+	cursor:pointer;
 }
+
+#hive_actionBar:hover{background-color: #05d4e9}
+#hive_actionBar:active{background-color: #06e4f9}
 
 .hive_srcLabel, .hive_dstLabel, .hive_conLabel{
 	color: #fff;
-	position: absolute;
+	position: relative;
 	font-size: 14px;
+	bottom: 9px;
+	padding: 0 10px;
 }
-.hive_srcLabel{ left: 10px; }
-.hive_dstLabel{ right: 10px; }
-.hive_conLabel{ left: 0; right: 0 }
-
-/*
-
-.collapsibleList li li{
-  list-style-image:url('button2.png');
-  cursor:auto;
-}
-
-.collapsibleList li.collapsibleListOpen{
-  list-style-image:url('button-open.png');
-  cursor:pointer;
-}
-
-.collapsibleList li.collapsibleListClosed{
-  list-style-image:url('button-closed.png');
-  cursor:pointer;
-}
-
-.collapsibleList ul.collapsibleList{
-	padding: 0 0 0 20px;	
-	margin: 0;
-}
-
-*/
-
+.hive_srcLabel{ float: left; }
+.hive_dstLabel{ float: right; }
 
 .treeView{
         

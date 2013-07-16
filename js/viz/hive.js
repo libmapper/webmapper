@@ -28,7 +28,7 @@ function HivePlotView(container, model)
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
 	this.inclusionTableWidth = 210;
 	this.inclusionTablePadding = 10;
-	this.actionBarHeight = 50;
+	this.actionBarHeight = 40;
 	this.actionBarPadding = 8;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
@@ -184,7 +184,11 @@ HivePlotView.prototype = {
 		
 	    div = document.createElement("div");
 		div.setAttribute("id", "hive_actionBar");
-		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) + 10) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px;");
+		div.title = "click to toggle a connection";
+		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) + 10) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
+		div.addEventListener("click", function(evt){
+			_self.toggleConnection();
+		});
 		this._container.appendChild(div);
 	    
 		this.draw();
@@ -509,52 +513,39 @@ HivePlotView.prototype = {
 		var _self = this;
 		var table = document.getElementById("hive_actionBar");
 		
-		if(this.selectedConnections.length > 0)
+		/*
+		// connect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Connect";
+		btn.title = "connect the selected node(s) (C)";
+		btn.addEventListener("click", function(evt){
+			_self.connect();
+		});
+		table.appendChild(btn);
+		
+		// disconnect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Disconnect";
+		btn.title = "disconnect the selected connection) (D)";
+		btn.addEventListener("click", function(evt){
+			_self.disconnect();
+		});
+		table.appendChild(btn);
+		 */
+
+		
+		for(var ind=0; ind<2; ind++)
 		{
-			var label = document.createElement("p");
-			var l = this.selectedConnections[0].split(">");
-			var text = "Connection: " + l[0] + " > " + l[1];
-			label.appendChild(document.createTextNode(text));
-			label.setAttribute("class", "hive_conLabel");
-			table.appendChild(label);
-			
-			/*
-			// connect button
-			btn = document.createElement("button");
-			btn.innerHTML = "Connect";
-			btn.title = "connect the selected node(s) (C)";
-			btn.addEventListener("click", function(evt){
-				_self.connect();
-			});
-			table.appendChild(btn);
-			*/
-			
-			// disconnect button
-			btn = document.createElement("button");
-			btn.innerHTML = "Disconnect";
-			btn.title = "disconnect the selected connection) (D)";
-			btn.addEventListener("click", function(evt){
-				_self.disconnect();
-			});
-			table.appendChild(btn);
-			
-		}
-		else
-		{
-			for(var ind=0; ind<2; ind++)
+			if(this.selectedCells[ind].length > 0)
 			{
-				if(this.selectedCells[ind].length > 0)
-				{
-					var label = document.createElement("p");
-					var src = this.selectedCells[ind][0];
-					var text = (ind==0)? "Source: " : "Destination: ";
-					text += src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
-					label.appendChild(document.createTextNode(text));
-					label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");
-					table.appendChild(label);
-				}			
-			}
-			
+				var label = document.createElement("p");
+				var src = this.selectedCells[ind][0];
+				var text = (ind==0)? "Source: " : "Destination: ";
+				text += src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
+				label.appendChild(document.createTextNode(text));
+				label.setAttribute("class", (ind==0)? "hive_srcLabel" : "hive_dstLabel");
+				table.appendChild(label);
+			}			
 		}
 	},
 	
@@ -1060,12 +1051,6 @@ HivePlotView.prototype = {
 			this.selectedCells = cells;
 	},
 	
-	selectConnection : function()
-	{
-		this.selectedConnections_clearAll();
-		
-	},
-	
 	onConnectionClick : function(con)
 	{
 		
@@ -1079,22 +1064,23 @@ HivePlotView.prototype = {
 			this.selectedConnections_clearAll();
 			this.selectedConnections.push(name);
 			
+			// select corresponding nodes as well
+			var fakeSrc = document.createElement("p");
+			fakeSrc.setAttribute("data-src", con.getAttribute("data-src"));
+			fakeSrc.setAttribute("data-srcSignal", con.getAttribute("data-srcSignal"));
+			this.selectedCells_addCell(fakeSrc, 0);
+			
+			var fakeDst = document.createElement("p");
+			fakeDst.setAttribute("data-src", con.getAttribute("data-dst"));
+			fakeDst.setAttribute("data-srcSignal", con.getAttribute("data-dstSignal"));
+			this.selectedCells_addCell(fakeDst, 1);
+			
 			con.classList.add("hive_connection_selected");
 		}
-		else
+		else{
 			this.selectedConnections_clearAll();
+		}
 		
-		
-		// select corresponding nodes as well
-		var fakeSrc = document.createElement("p");
-		fakeSrc.setAttribute("data-src", con.getAttribute("data-src"));
-		fakeSrc.setAttribute("data-srcSignal", con.getAttribute("data-srcSignal"));
-		this.selectedCells_addCell(fakeSrc, 0);
-		
-		var fakeDst = document.createElement("p");
-		fakeDst.setAttribute("data-src", con.getAttribute("data-dst"));
-		fakeDst.setAttribute("data-srcSignal", con.getAttribute("data-dstSignal"));
-		this.selectedCells_addCell(fakeDst, 1);
 		
 		this.update_display();
 		update_connection_properties();
@@ -1139,6 +1125,7 @@ HivePlotView.prototype = {
 				if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
 					$(this._container).trigger("link", [srcDev, dstDev]);		// trigger link event
 				$(this._container).trigger("connect", [srcDev+srcSig, dstDev+dstSig]);	// trigger connect event
+				this.selectedConnections.push(srcDev+srcSig+">"+dstDev+dstSig);
 			}
 		}
 		this.update_display();
@@ -1159,6 +1146,19 @@ HivePlotView.prototype = {
 			$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 		
 		this.selectedConnections_clearAll();
+	},
+	
+	toggleConnection : function ()
+	{
+		// need to have a selected src and dst
+		if(this.selectedCells[0].length != 1 || this.selectedCells[1].length != 1 )
+			return;
+			
+		if(this.selectedConnections.length == 1)
+			this.disconnect();
+		else
+			this.connect();
+				
 	},
 	
 	switchMode : function ()
