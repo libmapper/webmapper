@@ -781,7 +781,7 @@ GridView.prototype = {
 	
 	cleanup : function ()
 	{
-		
+		document.onkeydown = null;
 	}
 	
 };
