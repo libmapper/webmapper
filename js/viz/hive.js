@@ -568,7 +568,7 @@ HivePlotView.prototype = {
 		var line = document.createElementNS(this.svgNS,"path");
 		var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 		line.setAttribute("d", pathDefn);
-		line.setAttribute("class", (ind==0) ? "hive_axis_SRC" : "hive_axis_DST");
+		line.setAttribute("class", "hive_axis");
 		this.svg.appendChild(line);
 		
 		// get signals
@@ -680,7 +680,7 @@ HivePlotView.prototype = {
 			
 			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
 			line.setAttribute("d", pathDefn);
-			line.setAttribute("class", (ind==0) ? "hive_axis_SRC" : "hive_axis_DST");
+			line.setAttribute("class", "hive_axis");
 			line.setAttribute("data-src", dev.name);
 			line.addEventListener("mouseover", function(evt){
 				_self.onDevMouseOver(evt.target.getAttribute("data-src"));

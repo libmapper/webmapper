@@ -13,15 +13,15 @@
 	stop-opacity:1;
 }
 
-.hive_axis_SRC{
+.hive_axis{
 	stroke: #333;
 	stroke-width: 1px;
 	stroke-linecap: round;
 }
 
-.hive_axis_DST{
+.hive_axis_over{
 	stroke: #000;
-	stroke-width: 1px;
+	stroke-width: 2px;
 	stroke-linecap: round;
 }
 
@@ -64,6 +64,10 @@
 
 .Node_selected{
 	stroke-width: 3px; 	
+}
+
+.Node_over{
+	stroke-width: 2px; 	
 }
 
 #HivePlotSVG{
