@@ -26,7 +26,7 @@ function HivePlotView(container, model)
 
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
-	this.inclusionTableWidth = 220;
+	this.inclusionTableWidth = 228;
 	this.inclusionTablePadding = 10;
 	this.actionBarHeight = 50;
 	this.actionBarPadding = 8;
