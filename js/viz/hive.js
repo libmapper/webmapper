@@ -26,9 +26,9 @@ function HivePlotView(container, model)
 
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
-	this.inclusionTableWidth = 210;
+	this.inclusionTableWidth = 220;
 	this.inclusionTablePadding = 10;
-	this.actionBarHeight = 40;
+	this.actionBarHeight = 50;
 	this.actionBarPadding = 8;
 
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
@@ -252,7 +252,12 @@ HivePlotView.prototype = {
 		else if(e.keyCode == 68)	
 		{
 				this.disconnect();
-		}	
+		}
+		// 'ctrl' + '1 / 2' to change view modes
+		else if(e.keyCode == 49 && e.ctrlKey)
+			this.switchView(0);
+		else if(e.keyCode == 50 && e.ctrlKey)
+			this.switchView(1);
 		
 	},
 	
@@ -1170,11 +1175,21 @@ HivePlotView.prototype = {
 		this.update_display();
 	},
 	
+	switchView : function (mode)
+	{
+		if(this.mode != mode)
+		{
+			this.mode = mode;
+			this.update_display();
+		}
+	},
+	
 	on_resize : function ()
 	{
 		var w = $(this._container).width() - 10;
 		var h = $(this._container).height() - 10;
-		this.svgDim = [w - this.inclusionTableWidth - (2*this.inclusionTablePadding), h - this.actionBarHeight - (2*this.actionBarPadding)];
+		this.svgDim[0] = w - this.inclusionTableWidth;// - (2*this.inclusionTablePadding);
+		this.svgDim[1] = h - this.actionBarHeight - (2*this.actionBarPadding);
 		this.init();
 	},
 	
@@ -1182,6 +1197,7 @@ HivePlotView.prototype = {
 	{
 		this.excludedDevs = data[0];		
 		this.mode = data[1];				
+		this.expandedDevices = data[2];
 		this.update_display();
 	},
 	
@@ -1190,6 +1206,7 @@ HivePlotView.prototype = {
 		var data = [];
 		data.push(this.excludedDevs);		// 0
 		data.push(this.mode);				// 1
+		data.push(this.expandedDevices);	// 2
 		return data;
 	},
 	

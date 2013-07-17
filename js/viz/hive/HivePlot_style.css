@@ -111,7 +111,7 @@
 #hive_actionBar{
 	background-color: #04C4D9;	
 	position: absolute;
-	bottom: 0;
+	bottom: 6px;
 	right: 0;
 	font-family: helvetica, arial, sans-serif;
 	font-size: 12px;
@@ -124,8 +124,8 @@
 .hive_srcLabel, .hive_dstLabel, .hive_conLabel{
 	color: #fff;
 	position: relative;
-	font-size: 14px;
-	bottom: 9px;
+	font-size: 16px;
+	bottom: 14px;
 	padding: 0 10px;
 }
 .hive_srcLabel{ float: left; }
