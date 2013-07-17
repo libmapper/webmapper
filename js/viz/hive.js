@@ -36,7 +36,7 @@ function HivePlotView(container, model)
 	this.initColorPointers();
 	
 	//Keyboard handlers
-	document.onkeyup = function(e){
+	document.onkeydown = function(e){
 		_self.keyboardHandler(e);
 	};
 	
@@ -1235,6 +1235,7 @@ HivePlotView.prototype = {
 	
 	cleanup : function ()
 	{
+		document.onkeydown = null;
 	}
 };
 
