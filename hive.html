@@ -43,13 +43,12 @@ function init(){
         disconnect(src, dst);
     });
 	
-	initData();
+	initData(4, 12, 10);
 }
 
 // init with fake data for now
-function initData()
+function initData(nIn, nOut, nSigs)
 {
-	var nIn = 4, nOut = 12, nSigs = 10;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
@@ -153,7 +152,7 @@ function btnHandler(val)
 		}else if(val=="src"){
 			addDevice("/Source " + nSrcDevices++, 0, 2);		
 		}else if(val=="init"){
-			initData();		
+			initData(5,5, 5);		
 		}
 		view.update_display();
 }

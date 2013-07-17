@@ -11,7 +11,7 @@ function HivePlotView(container, model)
 	this._container = container;
 	this.model = model;
 	
-	this.mode = 0;
+	this.mode = 1;
 
 	// 0 for sources, 1 for destinations
 	this.devs = [new Array(), new Array()];
@@ -200,8 +200,8 @@ HivePlotView.prototype = {
 		// hive plot
 		if(this.mode == 0)
 		{
-			this.drawLines(this.devs[0], 0);
-			this.drawLines(this.devs[1], 1);
+			this.drawAxes(this.devs[0], 0);
+			this.drawAxes(this.devs[1], 1);
 		}
 		// adapted hive plot
 		else if(this.mode == 1)
@@ -209,8 +209,8 @@ HivePlotView.prototype = {
 			var origin = [(this.svgDim[0]/2) + 10, this.svgDim[1]/2];				// origin of ellipses
 			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
 			var outerDim = [this.svgDim[0]/2, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
-			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 195, 345);
-			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 165);
+			this.drawAxes2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 195, 345);
+			this.drawAxes2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 165);
 		}
 		// not used anymore (adapted hive plot with a different center)
 		else if(this.mode == 2)
@@ -218,8 +218,8 @@ HivePlotView.prototype = {
 			var origin = [15, this.svgDim[1]/2];				// origin of ellipses
 			var innerDim = [this.svgDim[0]/10, this.svgDim[1]/10] ;										// inner ellipse dimensions
 			var outerDim = [this.svgDim[0] - 15, (this.svgDim[1]/2) - 15];	// outer ellipse dimensions
-			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 285, 345);
-			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
+			this.drawAxes2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 285, 345);
+			this.drawAxes2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
 		}
 		this.drawInclusionTable();
 		this.drawConnections();
@@ -240,6 +240,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// handler for keyboard events
 	keyboardHandler: function (e)
 	{
 		console.log(e.keyCode);
@@ -263,9 +264,9 @@ HivePlotView.prototype = {
 		
 	},
 	
+	// divide devices from model into sources and destinations
 	initDevices : function ()
 	{
-		//divide devices into sources and destinations
 		var keys = this.model.devices.keys();
 		for (var d in keys) 
 		{
@@ -279,9 +280,9 @@ HivePlotView.prototype = {
 
 	},
 	
+	// draw background for SVG, can be styles as a gradient in the CSS
 	drawBackground : function ()
 	{
-		// draw background
 		var bk = document.createElementNS(this.svgNS,"rect");
 		bk.setAttribute("x", 0);
 		bk.setAttribute("x", 0);
@@ -291,6 +292,7 @@ HivePlotView.prototype = {
     	this.svg.appendChild(bk);
 	},
 	
+	// draw bar with the action buttons and list of devices
 	drawInclusionTable : function ()
 	{
 		var _self = this;
@@ -476,6 +478,7 @@ HivePlotView.prototype = {
 		
 	},
 	
+	// handler for clicking on a checkbox in the list of devices
 	onInclusionTableChecked : function(e, ind)
 	{
 		var item = e.target;
@@ -494,7 +497,8 @@ HivePlotView.prototype = {
 	},
 	
 	
-	
+	// bar on bottom showing the names of the selected nodes
+	// bar can also be clicked on to toggle a connection
 	drawActionBar : function()
 	{
 		var _self = this;
@@ -520,14 +524,13 @@ HivePlotView.prototype = {
 		table.appendChild(btn);
 		 */
 
-		
 		for(var ind=0; ind<2; ind++)
 		{
 			if(this.selectedCells[ind].length > 0)
 			{
 				var label = document.createElement("p");
 				var src = this.selectedCells[ind][0];
-//				var text = (ind==0)? "Source: " : "Destination: ";
+				//var text = (ind==0)? "Source: " : "Destination: ";
 				var text = "";
 				text += src.getAttribute("data-src") + src.getAttribute("data-srcSignal");
 				label.appendChild(document.createTextNode(text));
@@ -537,7 +540,8 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	drawLines : function (srcData, ind)
+	// plot for mode 1 (hive plot, 2 axes consisting of 1 for the source and 1 for the destination)
+	drawAxes : function (srcData, ind)
 	{
 		var _self = this;
 		
@@ -624,9 +628,6 @@ HivePlotView.prototype = {
 		    	else
 		    		node.setAttribute("class", "Node_hidden");
 		    	
-		    	
-		    	
-		    	
 		    	// mouse handlers
 				node.addEventListener("mouseover", function(evt){
 					_self.onNodeMouseOver(evt.target);
@@ -649,12 +650,11 @@ HivePlotView.prototype = {
 			d += nodeGroupPadding;
 
 			this.setNextColor(ind);
-			
-			
 		}
 	},
 	
-	drawLines2 : function (srcData, ind, originX, originY, w1, h1, w2, h2, angle1, angle2)
+	// plot for mode 2 (adapted hive plot, one axis per device) 
+	drawAxes2 : function (srcData, ind, originX, originY, w1, h1, w2, h2, angle1, angle2)
 	{
 		var _self = this;
 		
@@ -752,6 +752,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// draw all connections as lines connecting from source node to destination node
 	drawConnections : function()
 	{
 		var _self = this;
@@ -835,6 +836,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// handler for mouse over of a device in the devices list
 	onDevMouseOver : function(devName)
 	{
 		for (var i=0; i<this.connectionsLines.length; i++)
@@ -850,6 +852,8 @@ HivePlotView.prototype = {
 			}
 		}
 	},
+	
+	// handler for mouse out of a device (in devices list or plot)
 	onDevMouseOut : function(devName){
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
@@ -868,6 +872,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// handler for mouse over of a signal (in devices list or plot)
 	onNodeMouseOver : function(node)
 	{
 		for (var i=0; i<this.connectionsLines.length; i++)
@@ -888,6 +893,8 @@ HivePlotView.prototype = {
 			}
 		}
 	},
+	
+	//handler for mouse out of a signal (in devices list or plot)
 	onNodeMouseOut : function(node){
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
@@ -904,11 +911,13 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// show all devices in view
 	includeAllDevices : function ()
 	{
 		this.excludedDevs = [[],[]]; 
 	},
 	
+	// hide all devices in view
 	excludeAllDevices : function ()
 	{
 		this.excludedDevs = [[],[]]; 
@@ -925,11 +934,13 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// collapse all nodes in the list of devices
 	collapseAllDevices : function ()
 	{
 		this.expandedDevices = [[],[]]; 
 	},
 	
+	// expand all nodes in the list of devices
 	expandAllDevices : function ()
 	{
 		this.expandedDevices = [[],[]]; 
@@ -946,6 +957,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// methods for storing selected nodes
 	onNodeClick : function(node)
 	{
 		this.selectedConnections_clearAll();	// nodes and connections can't be selected at the same time
@@ -1033,12 +1045,9 @@ HivePlotView.prototype = {
 		}
 		this.selectedCells[ind] = [];	//clears the array
 	},
-	selectedCells_restore : function (cells)
-	{
-		if(cells)
-			this.selectedCells = cells;
-	},
+	// END methods for storing selected nodes
 	
+	// methods for storing selected connections
 	onConnectionClick : function(con)
 	{
 		
@@ -1073,7 +1082,6 @@ HivePlotView.prototype = {
 		this.update_display();
 		update_connection_properties();
 	},
-	
 	selectedConnections_clearAll : function ()
 	{
 		this.selectedConnections = [];
@@ -1092,6 +1100,7 @@ HivePlotView.prototype = {
 		}
 		return index;
 	},
+	// END methods for storing selected connections
 	
 	// create a new connection
 	connect : function()
@@ -1223,6 +1232,7 @@ HivePlotView.prototype = {
 		return this.model.devices;
 	},
 	
+	// called to update data and redraw everything
 	update_display : function ()
 	{
 		this.init();
@@ -1234,11 +1244,13 @@ HivePlotView.prototype = {
 	}
 };
 
-function HiveViewPreset(name, includedSrcs, includedDsts)
+// not used yet
+function HiveViewPreset(name, data)
 {
 	this.name = name;
-	this.excludedDevs[0] = includedSrcs;
-	this.excludedDevs[1] = includedDsts;
+	this.excludedDevs = data[0];		
+	this.mode = data[1];				
+	this.expandedDevices = data[2];
 };
 
 
