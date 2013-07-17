@@ -107,6 +107,7 @@ a:hover { color: #036; }
 
 .label{
 	fill: #3e3e3e;
+	cursor: pointer;
 }
 .label_over{
 	font-weight: bold;		
