@@ -149,22 +149,21 @@ HivePlotView.prototype = {
 	init : function () 
 	{ 
 		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
-		var div, btn;		// to instantiate items
+		var div, btn, wrapper;		// to instantiate items
 		
+		// clear the previous data
 		this.devs = [[],[]];
 		this.sigs = [[],[]];
 		this.nodes = [[],[]];
 		this.connectionsLines = [];
-		
-		$(this._container).empty();
-//		$(this._container).css("min-width", "880px");
-//		$(this._container).css("min-height", "580px");
-
 		this.initColorPointers();
 		
-		var wrapper = document.createElement("div");
+		// remove all previous DOM elements
+		$(this._container).empty();
+
+		// add SVG canvas
+		wrapper = document.createElement("div");
 		this._container.appendChild(wrapper);
-		
 		this.svg = document.createElementNS(this.svgNS,"svg");
 		this.svg.setAttribute("id", "HivePlotSVG");
 		this.svg.setAttribute("xmlns", this.svgNS);
@@ -174,14 +173,13 @@ HivePlotView.prototype = {
 		this.svg.setAttribute("style", "float:left;margin-left: 5px; margin-bottom: 5px");
 		wrapper.appendChild(this.svg);	
 		
-		var div;
-		
+		// add list of devices on left
 		div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
 		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] + this.actionBarHeight + (2*this.actionBarPadding) +4) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
-//		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + this.svgDim[1] + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
 		this._container.appendChild(div);
 		
+		// add display bar 
 	    div = document.createElement("div");
 		div.setAttribute("id", "hive_actionBar");
 		div.title = "click to toggle a connection";
@@ -198,11 +196,14 @@ HivePlotView.prototype = {
 	{
 		this.drawBackground();
 		this.initDevices();
+		
+		// hive plot
 		if(this.mode == 0)
 		{
 			this.drawLines(this.devs[0], 0);
 			this.drawLines(this.devs[1], 1);
 		}
+		// adapted hive plot
 		else if(this.mode == 1)
 		{
 			var origin = [(this.svgDim[0]/2) + 10, this.svgDim[1]/2];				// origin of ellipses
@@ -211,6 +212,7 @@ HivePlotView.prototype = {
 			this.drawLines2(this.devs[0], 0, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 195, 345);
 			this.drawLines2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 165);
 		}
+		// not used anymore (adapted hive plot with a different center)
 		else if(this.mode == 2)
 		{
 			var origin = [15, this.svgDim[1]/2];				// origin of ellipses
@@ -221,7 +223,7 @@ HivePlotView.prototype = {
 		}
 		this.drawInclusionTable();
 		this.drawConnections();
-		this.drawNodes();
+		this.drawNodes();	// drawn separately and later for z-index
 		this.drawActionBar();
 		
 	},
@@ -259,26 +261,6 @@ HivePlotView.prototype = {
 		else if(e.keyCode == 50 && e.ctrlKey)
 			this.switchView(1);
 		
-	},
-	
-	get_selected_connections: function(list)
-	{
-		var vals =[];
-		return vals;
-	},
-	
-	/**
-	 * returns an assoc containing the devices included in the signals grid
-	 */
-	get_focused_devices : function()
-	{
-		var list = new Assoc();
-		return list;
-	},
-	
-	update_display : function ()
-	{
-		this.init();
 	},
 	
 	initDevices : function ()
@@ -1111,6 +1093,7 @@ HivePlotView.prototype = {
 		return index;
 	},
 	
+	// create a new connection
 	connect : function()
 	{
 		if(this.selectedCells[0].length == 0 || this.selectedCells[1].length == 0 )	
@@ -1136,7 +1119,8 @@ HivePlotView.prototype = {
 		}
 		this.update_display();
 	},
-	
+
+	// remove an existing connection
 	disconnect : function (e)
 	{
 		if(this.selectedConnections.length == 0)
@@ -1154,6 +1138,7 @@ HivePlotView.prototype = {
 		this.selectedConnections_clearAll();
 	},
 	
+	// toggle a connection
 	toggleConnection : function ()
 	{
 		// need to have a selected src and dst
@@ -1167,6 +1152,7 @@ HivePlotView.prototype = {
 				
 	},
 	
+	// for cycling between view modes
 	switchMode : function ()
 	{
 		this.mode++;
@@ -1175,6 +1161,7 @@ HivePlotView.prototype = {
 		this.update_display();
 	},
 	
+	// for setting a specific view mode
 	switchView : function (mode)
 	{
 		if(this.mode != mode)
@@ -1184,6 +1171,7 @@ HivePlotView.prototype = {
 		}
 	},
 	
+	// when browser window gets resized
 	on_resize : function ()
 	{
 		var w = $(this._container).width() - 10;
@@ -1193,14 +1181,7 @@ HivePlotView.prototype = {
 		this.init();
 	},
 	
-	load_view_settings : function (data)
-	{
-		this.excludedDevs = data[0];		
-		this.mode = data[1];				
-		this.expandedDevices = data[2];
-		this.update_display();
-	},
-	
+	// returns to the main view the view-specific varibles before switching to another view
 	save_view_settings : function ()
 	{
 		var data = [];
@@ -1210,6 +1191,17 @@ HivePlotView.prototype = {
 		return data;
 	},
 	
+	// reloads from the main view the view-specific varibles we stored previously 
+	load_view_settings : function (data)
+	{
+		this.excludedDevs = data[0];		
+		this.mode = data[1];				
+		this.expandedDevices = data[2];
+		this.update_display();
+	},
+	
+	
+	// returns to the main view an assoc containing the selected connection
 	get_selected_connections: function(list)
 	{
 		var vals =[];
@@ -1224,13 +1216,16 @@ HivePlotView.prototype = {
 		}	
 		return vals;
 	},
-	
-	/**
-	 * returns an assoc containing the devices included in the signals grid
-	 */
+
+	//returns to the main view an assoc containing the devices included in view (all of them)
 	get_focused_devices : function()
 	{
 		return this.model.devices;
+	},
+	
+	update_display : function ()
+	{
+		this.init();
 	},
 	
 	cleanup : function ()
