@@ -876,7 +876,7 @@ function drawing_curve(sourceRow)
 
     this.findrow = function ( y ) {
         var svgTop = $('.svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
-        var ttleft = $(this.targetTable.tbody).offset().left; // Left edge of the target table
+        var ttleft = $(this.targetTable.tbody).offset().left + 5; // Left edge of the target table
         var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
         var row = $(td).parents('tr')[0]; 
         var incompatible = $(row).hasClass('incompatible');
@@ -931,8 +931,12 @@ function drawing_curve(sourceRow)
             var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
-            end[1] = this.clamptorow(target);
-            c1 = end[1] + moveEvent.offsetY - rowHeight/2;
+            if( !$(target).hasClass('incompatible') ) {
+                end[1] = this.clamptorow(target);
+                c1 = end[1] + moveEvent.offsetY - rowHeight/2;
+            }
+            else
+                end[1] = moveEvent.pageY - fullOffset($('.svgDiv')[0]).top;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
@@ -946,6 +950,7 @@ function drawing_curve(sourceRow)
         self.line.remove();
     }
 
+    //Sees if we have a new target row, selects it if necessary
     this.checkTarget = function( mousedOverRow ) {
         if(this.targetRow != mousedOverRow ) {
             if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible'));
