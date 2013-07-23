@@ -52,6 +52,11 @@ GridDevices.prototype.refresh = function ()
 	this.contentDim[0] = this.filteredData[0].length*(this.cellDim[0]+this.cellMargin);
 	this.contentDim[1] = this.filteredData[1].length*(this.cellDim[1]+this.cellMargin);
 
+	// sort devices
+	this.filteredData[0].sort(this.compareLabel);
+	this.filteredData[1].sort(this.compareLabel);
+	
+	
 	// when autozoom is on, strech to fit into canvas
 	// must be done first to set the font size
 	if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
@@ -293,7 +298,15 @@ GridDevices.prototype.filterData = function ()
 			}
 		}
 	}
-}
+};
+
+//functions used for sorting alphabetically
+GridDevices.prototype.compareLabel = function (devA, devB) 
+{
+	var a = devA.name.toUpperCase();
+	var b = devB.name.toUpperCase();
+	return a.localeCompare(b);
+};
 
 /**
  * Handlers for manipulating the array of selected cells

@@ -989,10 +989,6 @@ GridSVG.prototype = {
 				 target.fireEvent('onmouseover');
 		     }
 		}
-		
-		
-		
-		
 };
 
 
