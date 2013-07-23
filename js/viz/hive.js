@@ -196,8 +196,37 @@ HivePlotView.prototype = {
 		this.draw();
 	},
 	
+	initDefinitions: function ()
+	{
+		/*
+        <marker id = "StartMarker" viewBox = "0 0 12 12" refX = "12" refY = "6" markerWidth = "3" markerHeight = "3" stroke = "green" stroke-width = "2" fill = "none" orient = "auto">
+            <circle cx = "6" cy = "6" r = "5"/>
+        </marker>
+        */
+		var defs = document.createElementNS(this.svgNS, "defs");
+		
+		var marker = document.createElementNS(this.svgNS, "marker");
+		marker.setAttribute('id', "hive_connectionMarker");
+		marker.setAttribute('markerWidth', 7);
+		marker.setAttribute('markerHeight', 7);
+		marker.setAttribute('refX', 5);
+		marker.setAttribute('refY', 5);
+		marker.setAttribute('viewBox', "0 0 12 12 ");
+		
+		var node = document.createElementNS(this.svgNS,"circle");
+    	node.setAttribute("cx", 5);
+    	node.setAttribute("cy", 5);
+    	node.setAttribute("r", 4);
+    	node.setAttribute("fill", "#000000");
+    	marker.appendChild(node);
+		defs.appendChild(marker);
+		
+		this.svg.appendChild(defs);
+	},
+	
 	draw : function()
 	{
+		this.initDefinitions();
 		this.drawBackground();
 		this.initDevices();
 		
@@ -226,8 +255,8 @@ HivePlotView.prototype = {
 			this.drawAxes2(this.devs[1], 1, origin[0], origin[1], innerDim[0], innerDim[1], outerDim[0], outerDim[1], 15, 85);
 		}
 		this.drawInclusionTable();
-		this.drawConnections();
 		this.drawNodes();	// drawn separately and later for z-index
+		this.drawConnections();
 		this.drawActionBar();
 		
 	},
@@ -814,6 +843,10 @@ HivePlotView.prototype = {
 					line.setAttribute("data-srcSignal", s.name);
 					line.setAttribute("data-dstSignal", d.name);
 					line.setAttribute("data-fullname", s.device_name + s.name + ">" + d.device_name + d.name);
+					if(this.mode == 1){
+						line.setAttribute("marker-start" , "url(#hive_connectionMarker)");
+						line.setAttribute("marker-end" , "url(#hive_connectionMarker)");
+					}
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 					if( arrIsUnique(s.device_name, this.excludedDevs[0]) && arrIsUnique(d.device_name, this.excludedDevs[1]))
