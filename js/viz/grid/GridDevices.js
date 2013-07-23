@@ -49,8 +49,8 @@ GridDevices.prototype.refresh = function ()
 	this.nRows = 0;
 	this.nCols = 0;
 
-	this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
-	this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+	this.contentDim[0] = this.filteredData[0].length*(this.cellDim[0]+this.cellMargin);
+	this.contentDim[1] = this.filteredData[1].length*(this.cellDim[1]+this.cellMargin);
 
 	// when autozoom is on, strech to fit into canvas
 	// must be done first to set the font size
@@ -76,9 +76,9 @@ GridDevices.prototype.refresh = function ()
 	
 	
 	// create column labels
-	for (var index=0; index< this.colsArray.length; index++)
+	for (var index=0; index< this.filteredData[0].length; index++)
 	{
-		var dev = this.colsArray[index];
+		var dev = this.filteredData[0][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
@@ -105,9 +105,9 @@ GridDevices.prototype.refresh = function ()
 	}
 	
 	// create row labels
-	for (var index=0; index< this.rowsArray.length; index++)
+	for (var index=0; index< this.filteredData[1].length; index++)
 	{	
-		var dev = this.rowsArray[index];
+		var dev = this.filteredData[1][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;

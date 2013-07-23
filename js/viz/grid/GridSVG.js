@@ -10,9 +10,13 @@ function GridSVG()
 	this.svgRowLabels;
 	this.svgColLabels;	 
 	this.cells = new Array();
+	this.filters = [];
+	//this.colsArray = new Array();
+	//this.rowsArray = new Array();
 	
-	this.colsArray = new Array();
-	this.rowsArray = new Array();
+	this.filteredData = [[],[]];	// [col, rows]
+	this.data = [[],[]];			// [col, rows]
+	
 	this.connectionsArray = new Array();
 	
 	this.scrollBarDim = [30,30];
@@ -186,7 +190,7 @@ GridSVG.prototype = {
 			
 			//connection buttons
 			btn = document.createElement("button");
-			btn.innerHTML = "Connect";
+			btn.innerHTML = "Con";
 			btn.title = "connect the selected cell(s) (C)";
 			btn.addEventListener("click", function(evt){
 				_self.connect();
@@ -194,7 +198,7 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			btn = document.createElement("button");
-			btn.innerHTML = "Disconnect";
+			btn.innerHTML = "Dis";
 			btn.title = "disconnect the selected cell(s) (D)";
 			btn.addEventListener("click", function(evt){
 				_self.disconnect();
@@ -202,12 +206,33 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			btn = document.createElement("button");
-			btn.innerHTML = "Toggle";
+			btn.innerHTML = "Tog";
 			btn.title = "toggle the selected cell(s)  (ENTER)";
 			btn.addEventListener("click", function(evt){
 				_self.toggleConnection();
 			});
 			div.appendChild(btn);
+			
+			var filter; 
+			filter = document.createElement("input");
+			filter.setAttribute("class", "namespaceFilter");
+			filter.setAttribute("data-ind", 0);
+			filter.addEventListener("keyup", function(evt){
+				_self.filterData();
+				_self.refresh();
+			});
+			this.filters.push(filter);
+			div.appendChild(filter);
+
+			filter = document.createElement("input");
+			filter.setAttribute("class", "namespaceFilter");
+			filter.setAttribute("data-ind", 1);
+			filter.addEventListener("keyup", function(evt){
+				_self.filterData();
+				_self.refresh();
+			});
+			this.filters.push(filter);
+			div.appendChild(filter);
 			
 			this._container.appendChild(div);
 			// END button bar
@@ -218,7 +243,7 @@ GridSVG.prototype = {
 			
 			
 		},
-
+		
 		initHorizontalZoomSlider : function ()
 		{
 			var _self = this;
@@ -848,11 +873,30 @@ GridSVG.prototype = {
 			}
 		},
 		
-		updateDisplayData: function (colsArray, rowsArray, connectionsArray)
+		updateDisplayData: function (cols, rows, connections)
 		{
-			this.colsArray = colsArray;
-			this.rowsArray = rowsArray;
-			this.connectionsArray = connectionsArray;
+			this.data = [cols, rows];
+			this.connectionsArray = connections;
+			this.filterData();
+		},
+		
+		filterData : function ()
+		{
+			this.filteredData = [[],[]];
+			for(var ind=0; ind<2; ind++)
+			{
+				var filterText = this.filters[ind].value;
+				var regExp = new RegExp(filterText, 'i');
+				
+				for(var i=0; i<this.data[ind].length; i++)
+				{
+					var dev = this.data[ind][i];
+					if( regExp.test(dev.name) ) { 
+						this.filteredData[ind].push(dev);
+					}
+				}
+			}
+			this.refresh();
 		},
 		
 		refresh : function ()

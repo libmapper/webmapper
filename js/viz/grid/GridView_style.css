@@ -131,7 +131,7 @@ a:hover { color: #036; }
 	fill: #EEEEEE;
 }
 	
-	
+
 
 #actionBar{
 	
@@ -170,6 +170,16 @@ a:hover { color: #036; }
 	background-color: #FFFFF0;
 }
 
+.buttonBar button{
+	font-size: 12px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #04C4D9;
+	padding: 6px 8px;
+	color: #fff;
+}
 
 
 #actionBar .styled-select 
@@ -202,3 +212,10 @@ a:hover { color: #036; }
    -webkit-appearance: none;
    }
 	
+	
+.buttonBar .btn_zin{
+	width: 30px;
+	height: 30px;
+	padding: 5;
+	background: url('icons/zin.png') #04C4D9;
+}
