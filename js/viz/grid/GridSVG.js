@@ -217,7 +217,8 @@ GridSVG.prototype = {
 			filter = document.createElement("input");
 			filter.setAttribute("class", "namespaceFilter");
 			filter.setAttribute("data-ind", 0);
-			filter.addEventListener("keyup", function(evt){
+			filter.addEventListener("keydown", function(evt){
+				evt.stopPropagation();
 				_self.filterData();
 				_self.refresh();
 			});
@@ -227,7 +228,8 @@ GridSVG.prototype = {
 			filter = document.createElement("input");
 			filter.setAttribute("class", "namespaceFilter");
 			filter.setAttribute("data-ind", 1);
-			filter.addEventListener("keyup", function(evt){
+			filter.addEventListener("keydown", function(evt){
+				evt.stopPropagation();
 				_self.filterData();
 				_self.refresh();
 			});

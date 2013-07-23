@@ -199,7 +199,16 @@
       .treeView li.collapsibleListOpen.lastChild{
       }
       
+#hive_filtersBar {
+	background-color: #eee;	
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	padding: 5px 10px;
+}
       
-      
-      
+#hive_filtersBar {
+	font-size:  10px;
+	font-family: sans-serif;
+}      
       

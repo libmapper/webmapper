@@ -34,7 +34,7 @@ function HivePlotView(container, model)
 	this.selectedCells = [[],[]];
 	this.selectedConnections = [];
 	this.expandedDevices = [[],[]];
-
+	this.filters = ["", ""];
 
 	this.initColorPointers();
 	
@@ -193,6 +193,33 @@ HivePlotView.prototype = {
 		});
 		this._container.appendChild(div);
 	    
+		// add filters
+		wrapper = document.createElement("div");
+		wrapper.setAttribute("id", "hive_filtersBar");
+		var l = document.createElement("span");
+		l.innerHTML = "Source/Destination Filters";
+		l.setAttribute("class", "inclusionFiltersH2");
+		wrapper.appendChild(l);
+		wrapper.appendChild(document.createElement("br"));
+		for(var ind=0; ind<2; ind++)
+		{
+			var filter; 
+			filter = document.createElement("input");
+			filter.value = this.filters[ind]; 
+			filter.setAttribute("class", "namespaceFilter");
+			filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
+			filter.setAttribute("data-ind", ind);
+			filter.addEventListener("keyup", function(evt){
+				evt.stopPropagation();
+				_self.filters[evt.target.getAttribute("data-ind")] = evt.target.value;
+				_self.redrawInclusionTable();
+			});
+			wrapper.appendChild(filter);
+			if(ind == 0)
+				wrapper.appendChild(document.createElement("br"));
+		}
+		this._container.appendChild(wrapper);
+		
 		this.draw();
 	},
 	
@@ -272,7 +299,7 @@ HivePlotView.prototype = {
 	// handler for keyboard events
 	keyboardHandler: function (e)
 	{
-		console.log(e.keyCode);
+		//console.log(e.keyCode);
 		
 		// 'c' to connect
 		if(e.keyCode == 67)	
@@ -319,6 +346,15 @@ HivePlotView.prototype = {
 		bk.setAttribute("height", this.svgDim[1]);
     	bk.setAttribute("class", "hive_svg");
     	this.svg.appendChild(bk);
+	},
+	
+	redrawInclusionTable : function ()
+	{
+		var table = document.getElementById("hive_inclusionTable");
+		while (table.hasChildNodes()) {
+			table.removeChild(table.lastChild);
+		}
+		this.drawInclusionTable();
 	},
 	
 	// draw bar with the action buttons and list of devices
@@ -381,7 +417,7 @@ HivePlotView.prototype = {
 		table.appendChild(document.createElement('br'));
 		
 		// repeat for source and destination devices
-		var labels = ["Source Devices", "Destination Devices"];
+		var labels = ["Sources", "Destinations"];
 		for(var ind=0; ind<2; ind++)
 		{
 			table.appendChild(document.createElement('br'));
@@ -391,19 +427,30 @@ HivePlotView.prototype = {
 			l.setAttribute("class", "inclusionTableH2");
 			table.appendChild(l);
 			
+			// prep filter
+			var filterText = this.filters[ind];
+			var regExp = new RegExp(filterText, 'i');
+
 			// for each device
 			for(var i=0; i<this.devs[ind].length; i++)
 			{
 				var dev = this.devs[ind][i];
 				var label = dev.name;
-				var devItem;
-				devItem = document.createElement("li");
-				devItem.setAttribute("data-src", dev.name);
-				devItem.setAttribute("data-ind", ind);
+				
+				// if filter matches device, include device and all its signals
+				// if not matched, below we check for signals that match and include the device only if there's atleast 1 matched signal
+				var deviceMatched = false;
+				if( regExp.test(dev.name) ) 
+					deviceMatched = true;
 				
 				// ul for the device
 				var devList = document.createElement("ul");
 				devList.setAttribute("class", "treeView");
+				
+				var devItem;
+				devItem = document.createElement("li");
+				devItem.setAttribute("data-src", dev.name);
+				devItem.setAttribute("data-ind", ind);
 				
 				// include/exclude checkbox
 				var checkbox = document.createElement('input');
@@ -431,6 +478,8 @@ HivePlotView.prototype = {
 				devItem.appendChild(document.createTextNode(label));
 				
 				// ul for signals of the device
+				
+				var sigMatched = false;
 				var sigList = document.createElement("ul");
 				var keys = this.model.signals.keys();
 				for (var s in keys) 
@@ -444,7 +493,16 @@ HivePlotView.prototype = {
 						sigItem.setAttribute("data-srcSignal", sig.name);
 						sigItem.setAttribute("data-ind", ind);
 						sigItem.innerHTML = sig.name;
-						sigList.appendChild(sigItem);
+						
+						// set the flas to add the device if a signal is matched
+						if(regExp.test(sig.name))
+							sigMatched = true;
+						
+						// if device was matched we include all its signals
+						// if device not matched we only include signals matching the regex
+						if(deviceMatched || regExp.test(sig.name))
+							sigList.appendChild(sigItem);
+						
 						// check if selected and style
 						if(this.selectedCells_getCellIndex(sigItem, ind) == -1)
 							sigItem.setAttribute("class", "signalLabel");
@@ -454,7 +512,9 @@ HivePlotView.prototype = {
 					
 				}
 				devItem.appendChild(sigList);
-				devList.appendChild(devItem);
+				
+				if(deviceMatched || sigMatched)
+					devList.appendChild(devItem);
 				
 				table.appendChild(devList);
 				
@@ -536,7 +596,6 @@ HivePlotView.prototype = {
 		else
 			arrPushIfUnique(devName, this.excludedDevs[ind]);
 	},
-	
 	
 	// bar on bottom showing the names of the selected nodes
 	// bar can also be clicked on to toggle a connection
@@ -1288,6 +1347,7 @@ HivePlotView.prototype = {
 		data.push(this.excludedDevs);		// 0
 		data.push(this.mode);				// 1
 		data.push(this.expandedDevices);	// 2
+		data.push(this.filters);			// 3
 		return data;
 	},
 	
@@ -1297,6 +1357,8 @@ HivePlotView.prototype = {
 		this.excludedDevs = data[0];		
 		this.mode = data[1];				
 		this.expandedDevices = data[2];
+		this.filters = data[3];
+		
 		this.update_display();
 	},
 	
