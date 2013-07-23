@@ -730,7 +730,6 @@ HivePlotView.prototype = {
 				if(sig.device_name == dev.name){
 					sigs.push(sig);
 				}
-					
 		    }
 		    
 		    var padding = 30;
@@ -916,6 +915,7 @@ HivePlotView.prototype = {
 	// handler for mouse over of a signal (in devices list or plot)
 	onNodeMouseOver : function(node)
 	{
+		// set mouseover style of node
 		var ind = node.getAttribute("data-ind");
 		for (var i=0; i<this.nodes[ind].length; i++)
 		{
@@ -923,6 +923,8 @@ HivePlotView.prototype = {
 			if(node.getAttribute("data-src") == node2.getAttribute("data-src") && node.getAttribute("data-srcSignal") == node2.getAttribute("data-srcSignal"))
 				node2.classList.add("hive_node_over");
 		}
+		
+		// set mouseover style of connection
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
