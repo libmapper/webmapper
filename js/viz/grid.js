@@ -693,11 +693,13 @@ GridView.prototype = {
 	calculateSizes : function ()
 	{
 		var w = $(this._container).width();
+		document.getElementById("actionBar").style.width = (w-12) + "px";
 		
 		if(this.viewMode == 0)
 			w = Math.floor(w/2);
 		
 		var h = $(this._container).height() - $("#actionBar").height() - $(".topMenu").height() - 2;
+		
 		
 		document.getElementById("devGrid").style.width = w + "px";
 		document.getElementById("devGrid").style.height = h + "px";

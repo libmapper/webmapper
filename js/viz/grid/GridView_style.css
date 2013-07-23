@@ -136,7 +136,7 @@ a:hover { color: #036; }
 #actionBar{
 	
 	padding: 2px 5px;
-	width: 100%;
+	/*width: 100%;*/
 	clear: both;
 	position: relative;
 	
@@ -145,11 +145,11 @@ a:hover { color: #036; }
 }
 
 .buttonBar{
-	padding: 2px 0px;
+	padding: 2px 0px 4px;
 	margin-top: 20px; 
 	float: right;
 	text-align: center;
-	background-color: #eeeeee;
+	background-color: #fff;
 	border: 1px solid #dddddd;
 	width: 100%;
 }
