@@ -6,33 +6,36 @@ function HivePlotView(container, model)
 {
 	this.svgNS = "http://www.w3.org/2000/svg";
 	this.svgNSxlink = "http://www.w3.org/1999/xlink";
-
 	var _self = this;
-	this._container = container;
-	this.model = model;
-	
-	this.mode = 1;
-
-	// 0 for sources, 1 for destinations
-	this.devs = [new Array(), new Array()];
-	this.sigs = [new Array(), new Array()];
-	this.nodes = [new Array(), new Array()];
-	this.connectionsLines = [];
-	
-	this.excludedDevs = [new Array(), new Array()];
-	this.selectedCells = [[],[]];
-	this.selectedConnections = [];
-	this.expandedDevices = [[],[]];
 
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
+	this.mode = 1;
 	this.inclusionTableWidth = 228;
 	this.inclusionTablePadding = 10;
 	this.actionBarHeight = 50;
 	this.actionBarPadding = 8;
-
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
 	this.pColors;
+
+	this._container = container;
+	this.model = model;
+	
+	// 0 for sources, 1 for destinations
+	this.devs = [[],[]];
+	this.sigs = [[],[]];
+	
+	// SVG display items
+	this.nodes = [[],[]];
+	this.connectionsLines = [];
+	this.deviceLines = [];
+	
+	this.excludedDevs = [[],[]];
+	this.selectedCells = [[],[]];
+	this.selectedConnections = [];
+	this.expandedDevices = [[],[]];
+
+
 	this.initColorPointers();
 	
 	//Keyboard handlers
@@ -156,6 +159,7 @@ HivePlotView.prototype = {
 		this.sigs = [[],[]];
 		this.nodes = [[],[]];
 		this.connectionsLines = [];
+		this.deviceLines = [];
 		this.initColorPointers();
 		
 		// remove all previous DOM elements
@@ -431,7 +435,7 @@ HivePlotView.prototype = {
 				
 				this.CollapsibleLists.applyTo(devList, this.expandedDevices[ind], true);
 				
-				// mouse event handlers
+				// click mouse event handler
 				devList.addEventListener("click", function(evt){
 					var target = evt.target;
 
@@ -453,6 +457,7 @@ HivePlotView.prototype = {
 					}
 				});
 				
+				// mouse over event handler
 				devList.addEventListener("mouseover", function(evt){
 					var target = evt.target;
 
@@ -468,8 +473,19 @@ HivePlotView.prototype = {
 					}
 				});
 				
+				// mouse out event handler
 				devList.addEventListener("mouseout", function(evt){
-					_self.onDevMouseOut(evt.target.getAttribute("data-src"));
+					
+					// signal under mouse
+					if(evt.target.hasAttribute("data-srcSignal"))
+					{
+						_self.onNodeMouseOut(evt.target);
+					}
+					// device under mouse
+					else if(evt.target.hasAttribute("data-src"))
+					{
+						_self.onDevMouseOut(evt.target.getAttribute("data-src"));
+					}
 				});
 				
 				
@@ -675,12 +691,24 @@ HivePlotView.prototype = {
 			var x2 = ( w2 * Math.cos(nAngle) ) + originX;
 			var y2 = ( h2 * Math.sin(nAngle) ) + originY;
 
-			var line = document.createElementNS(this.svgNS,"path");
-			line.setAttribute("data-src", dev.name);
+			var line, pathDefn;
 			
-			var pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
+			// axis for device
+			pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
+			line = document.createElementNS(this.svgNS,"path");
+			line.setAttribute("data-src", dev.name);
 			line.setAttribute("d", pathDefn);
 			line.setAttribute("class", "hive_axis");
+			line.setAttribute("data-src", dev.name);
+			this.deviceLines.push(line);
+			this.svg.appendChild(line);
+			
+			// invisible axis for easier mouseover
+			pathDefn = "M " + x1 + " " + y1 + " L " + x2 + " " + y2; 
+			line = document.createElementNS(this.svgNS,"path");
+			line.setAttribute("data-src", dev.name);
+			line.setAttribute("d", pathDefn);
+			line.setAttribute("class", "hive_axis_forMouseOver");
 			line.setAttribute("data-src", dev.name);
 			line.addEventListener("mouseover", function(evt){
 				_self.onDevMouseOver(evt.target.getAttribute("data-src"));
@@ -688,7 +716,6 @@ HivePlotView.prototype = {
 			line.addEventListener("mouseout", function(evt){
 				_self.onDevMouseOut(evt.target.getAttribute("data-src"));
 			});
-
 			this.svg.appendChild(line);
 			
 			
@@ -839,6 +866,14 @@ HivePlotView.prototype = {
 	// handler for mouse over of a device in the devices list
 	onDevMouseOver : function(devName)
 	{
+		for (var i=0; i<this.deviceLines.length; i++)
+		{
+			var line = this.deviceLines[i];
+			if(line.getAttribute("data-src") == devName)
+			{
+				line.setAttribute("class", "hive_axis_over");
+			}
+		}
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
@@ -854,7 +889,13 @@ HivePlotView.prototype = {
 	},
 	
 	// handler for mouse out of a device (in devices list or plot)
-	onDevMouseOut : function(devName){
+	onDevMouseOut : function(devName)
+	{
+		for (var i=0; i<this.deviceLines.length; i++)
+		{
+			var line = this.deviceLines[i];
+			line.setAttribute("class", "hive_axis");
+		}
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
@@ -875,6 +916,13 @@ HivePlotView.prototype = {
 	// handler for mouse over of a signal (in devices list or plot)
 	onNodeMouseOver : function(node)
 	{
+		var ind = node.getAttribute("data-ind");
+		for (var i=0; i<this.nodes[ind].length; i++)
+		{
+			var node2 = this.nodes[ind][i];
+			if(node.getAttribute("data-src") == node2.getAttribute("data-src") && node.getAttribute("data-srcSignal") == node2.getAttribute("data-srcSignal"))
+				node2.classList.add("hive_node_over");
+		}
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];
@@ -895,7 +943,19 @@ HivePlotView.prototype = {
 	},
 	
 	//handler for mouse out of a signal (in devices list or plot)
-	onNodeMouseOut : function(node){
+	onNodeMouseOut : function(node)
+	{
+		// set mouseover style of node
+		var ind = node.getAttribute("data-ind");
+		for (var i=0; i<this.nodes[ind].length; i++)
+		{
+			var node2 = this.nodes[ind][i];
+			node2.classList.remove("hive_node_over");
+			if(this.selectedCells_getCellIndex(node2, ind) > -1)
+				node2.classList.add('Node_selected');
+		}
+		
+		// set mouseover style of connection
 		for (var i=0; i<this.connectionsLines.length; i++)
 		{
 			var con = this.connectionsLines[i];

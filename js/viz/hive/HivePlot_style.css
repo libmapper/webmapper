@@ -18,10 +18,15 @@
 	stroke-width: 1px;
 	stroke-linecap: round;
 }
+.hive_axis_forMouseOver{
+	stroke: #333;
+	stroke-width: 8px;
+	opacity: 0;
+}
 
 .hive_axis_over{
 	stroke: #000;
-	stroke-width: 2px;
+	stroke-width: 3px;
 	stroke-linecap: round;
 }
 
@@ -30,6 +35,13 @@
 	stroke: #04C4D9;
 	stroke-width: 1px;
 	stroke-opacity: 0.6;
+	fill: none;
+}
+
+.hive_connection_forMouseOver{
+	stroke: #04C4D9;
+	stroke-width: 3px;
+	stroke-opacity: 0;
 	fill: none;
 }
 
@@ -47,7 +59,7 @@
 .hive_connection_selected{
 	stroke: #ff0000;
 	stroke-opacity: 1;
-	stroke-width: 2px;
+	stroke-width: 3px;
 	fill: none;
 }
 
@@ -58,15 +70,17 @@
 
 .Node_hidden{
 	stroke: #000;
-	stroke-width: 1px;
-	stroke-dasharray: 2,2;
+	stroke-width: 0px;
+	/*stroke-dasharray: 2,2;*/
 }
 
 .Node_selected{
 	stroke-width: 3px; 	
+	stroke: #000;
 }
 
-.Node_over{
+.hive_node_over{
+	stroke: #000;
 	stroke-width: 2px; 	
 }
 
