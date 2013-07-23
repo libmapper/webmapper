@@ -198,13 +198,10 @@ HivePlotView.prototype = {
 	
 	initDefinitions: function ()
 	{
-		/*
-        <marker id = "StartMarker" viewBox = "0 0 12 12" refX = "12" refY = "6" markerWidth = "3" markerHeight = "3" stroke = "green" stroke-width = "2" fill = "none" orient = "auto">
-            <circle cx = "6" cy = "6" r = "5"/>
-        </marker>
-        */
+
 		var defs = document.createElementNS(this.svgNS, "defs");
 		
+		// circle marker for endpoints of connection line
 		var marker = document.createElementNS(this.svgNS, "marker");
 		marker.setAttribute('id', "hive_connectionMarker");
 		marker.setAttribute('markerWidth', 7);
@@ -212,13 +209,12 @@ HivePlotView.prototype = {
 		marker.setAttribute('refX', 5);
 		marker.setAttribute('refY', 5);
 		marker.setAttribute('viewBox', "0 0 12 12 ");
-		
-		var node = document.createElementNS(this.svgNS,"circle");
-    	node.setAttribute("cx", 5);
-    	node.setAttribute("cy", 5);
-    	node.setAttribute("r", 4);
-    	node.setAttribute("fill", "#000000");
-    	marker.appendChild(node);
+		var mark = document.createElementNS(this.svgNS,"circle");
+		mark.setAttribute("cx", 5);
+		mark.setAttribute("cy", 5);
+		mark.setAttribute("r", 4);
+		mark.setAttribute("fill", "#000000");
+		marker.appendChild(mark);
 		defs.appendChild(marker);
 		
 		this.svg.appendChild(defs);
