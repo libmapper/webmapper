@@ -333,6 +333,10 @@ HivePlotView.prototype = {
 			if (dev.n_inputs)
 				this.devs[1].push(dev);
 		}
+		
+		// sort devices
+		this.devs[0].sort(this.compareDeviceLabel);
+		this.devs[1].sort(this.compareDeviceLabel);
 
 	},
 	
@@ -482,18 +486,15 @@ HivePlotView.prototype = {
 				var sigMatched = false;
 				var sigList = document.createElement("ul");
 				var keys = this.model.signals.keys();
+				
+				// adding signals of the device that match the regex to a temp array for sorting
+				var sigsTemp = [];
 				for (var s in keys) 
 				{
 					var k = keys[s];
 					var sig = this.model.signals.get(k);
 					if(sig.device_name == dev.name)
 					{
-						var sigItem = document.createElement("li");
-						sigItem.setAttribute("data-src", dev.name);
-						sigItem.setAttribute("data-srcSignal", sig.name);
-						sigItem.setAttribute("data-ind", ind);
-						sigItem.innerHTML = sig.name;
-						
 						// set the flas to add the device if a signal is matched
 						if(regExp.test(sig.name))
 							sigMatched = true;
@@ -501,18 +502,35 @@ HivePlotView.prototype = {
 						// if device was matched we include all its signals
 						// if device not matched we only include signals matching the regex
 						if(deviceMatched || regExp.test(sig.name))
-							sigList.appendChild(sigItem);
-						
-						// check if selected and style
-						if(this.selectedCells_getCellIndex(sigItem, ind) == -1)
-							sigItem.setAttribute("class", "signalLabel");
-						else
-							sigItem.setAttribute("class", "signalLabel_selected");
+						sigsTemp.push(sig);
 					}
-					
 				}
+				
+				// sort the signals
+				sigsTemp.sort(this.compareSignalLabel);
+				
+				// create the list elements for the sorted signals
+				for (var k=0; k<sigsTemp.length; k++) 
+				{
+					var sig = sigsTemp[k];
+
+					var sigItem = document.createElement("li");
+					sigItem.setAttribute("data-src", dev.name);
+					sigItem.setAttribute("data-srcSignal", sig.name);
+					sigItem.setAttribute("data-ind", ind);
+					sigItem.innerHTML = sig.name;
+					sigList.appendChild(sigItem);
+					
+					// check if selected and style
+					if(this.selectedCells_getCellIndex(sigItem, ind) == -1)
+						sigItem.setAttribute("class", "signalLabel");
+					else
+						sigItem.setAttribute("class", "signalLabel_selected");
+				}
+				
 				devItem.appendChild(sigList);
 				
+				// only add if device or atleast one signal is included 
 				if(deviceMatched || sigMatched)
 					devList.appendChild(devItem);
 				
@@ -1059,6 +1077,20 @@ HivePlotView.prototype = {
 				con.classList.add("hive_connection_selected");
 			}
 		}
+	},
+	
+	//functions used for sorting alphabetically
+	compareDeviceLabel : function (devA, devB) 
+	{
+		var a = devA.name.toUpperCase();
+		var b = devB.name.toUpperCase();
+		return a.localeCompare(b);
+	},
+	compareSignalLabel : function (devA, devB) 
+	{
+		var a = devA.device_name.toUpperCase() + devA.name.toUpperCase();
+		var b = devB.device_name.toUpperCase() + devB.name.toUpperCase();
+		return a.localeCompare(b);
 	},
 	
 	// show all devices in view

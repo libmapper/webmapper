@@ -81,6 +81,7 @@ function initFakeData(nIn, nOut, nSigs)
 	// add sources
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source" + nSrcDevices++, 0, nSigs);
+		//addDevice("/Source" + Math.floor(Math.random()*50), 0, nSigs);
 
 	// add destinations
 	for(var i=0; i<nOut;i++)
