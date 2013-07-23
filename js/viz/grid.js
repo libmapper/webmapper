@@ -23,6 +23,7 @@ function GridView(container, model)
 	
 	this.init();
 	this.setActiveGrid(this.activeGridIndex);
+	this.filters = [ ["",""] , ["", ""]];
 
 	//Keyboard handlers
 	document.onkeydown = function(e){
@@ -257,6 +258,10 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.toggleLink(e, cell);
 		});
+		$("#devGrid").on("filterChanged", function(e, filters){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.filters[0] = filters;
+		});
 
 		
 		$("#sigGrid").on("connect", function(e, cell){
@@ -271,6 +276,11 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.toggleConnection(e, cell);
 		});
+		$("#sigGrid").on("filterChanged", function(e, filters){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.filters[1] = filters;
+		});
+
 
 		
 		$("#devGrid").on("updateConnectionProperties", function(e){

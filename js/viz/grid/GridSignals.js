@@ -182,3 +182,20 @@ GridSignals.prototype.refresh = function ()
 	this.updateZoomBars();
 };
 
+GridSignals.prototype.filterData = function ()
+{
+	this.filteredData = [[],[]];
+	for(var ind=0; ind<2; ind++)
+	{
+		var filterText = this.filters[ind];
+		var regExp = new RegExp(filterText, 'i');
+		
+		for(var i=0; i<this.data[ind].length; i++)
+		{
+			var sig = this.data[ind][i];
+			if( regExp.test(sig.name) || regExp.test(sig.device_name)) { 
+				this.filteredData[ind].push(sig);
+			}
+		}
+	}
+};

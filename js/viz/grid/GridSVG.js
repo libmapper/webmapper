@@ -10,7 +10,7 @@ function GridSVG()
 	this.svgRowLabels;
 	this.svgColLabels;	 
 	this.cells = new Array();
-	this.filters = [];
+	this.filters = ["", ""];
 	//this.colsArray = new Array();
 	//this.rowsArray = new Array();
 	
@@ -181,7 +181,7 @@ GridSVG.prototype = {
 
 			//zoom to fit button
 			btn = document.createElement("button");
-			btn.innerHTML = "Zoom to fit";
+			btn.innerHTML = "&#9643;";
 			btn.title = "Zoom to fit content (CTRL + 0)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomToFit();
@@ -213,28 +213,27 @@ GridSVG.prototype = {
 			});
 			div.appendChild(btn);
 			
-			var filter; 
-			filter = document.createElement("input");
-			filter.setAttribute("class", "namespaceFilter");
-			filter.setAttribute("data-ind", 0);
-			filter.addEventListener("keydown", function(evt){
-				evt.stopPropagation();
-				_self.filterData();
-				_self.refresh();
-			});
-			this.filters.push(filter);
-			div.appendChild(filter);
-
-			filter = document.createElement("input");
-			filter.setAttribute("class", "namespaceFilter");
-			filter.setAttribute("data-ind", 1);
-			filter.addEventListener("keydown", function(evt){
-				evt.stopPropagation();
-				_self.filterData();
-				_self.refresh();
-			});
-			this.filters.push(filter);
-			div.appendChild(filter);
+			for(var ind=0; ind<2; ind++)
+			{
+				var filter = document.createElement("input");
+				filter.value = this.filters[ind]; 
+				filter.setAttribute("class", "namespaceFilter");
+//				filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
+				filter.setAttribute("data-ind", ind);
+				filter.addEventListener("keydown", function(evt){
+					// don't know why but filter not working on keydown
+					// and causing problems... 
+					evt.stopPropagation();
+				});
+				filter.addEventListener("keyup", function(evt){
+					evt.stopPropagation();
+					_self.filters[evt.target.getAttribute("data-ind")] = evt.target.value;
+					$(this._container).trigger("filterChanged", _self.filters);		// send to parent Grid.js to store
+					_self.filterData();
+					_self.refresh();
+				});
+				div.appendChild(filter);
+			}
 			
 			this._container.appendChild(div);
 			// END button bar
@@ -880,25 +879,6 @@ GridSVG.prototype = {
 			this.data = [cols, rows];
 			this.connectionsArray = connections;
 			this.filterData();
-		},
-		
-		filterData : function ()
-		{
-			this.filteredData = [[],[]];
-			for(var ind=0; ind<2; ind++)
-			{
-				var filterText = this.filters[ind].value;
-				var regExp = new RegExp(filterText, 'i');
-				
-				for(var i=0; i<this.data[ind].length; i++)
-				{
-					var dev = this.data[ind][i];
-					if( regExp.test(dev.name) ) { 
-						this.filteredData[ind].push(dev);
-					}
-				}
-			}
-			this.refresh();
 		},
 		
 		refresh : function ()

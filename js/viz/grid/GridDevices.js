@@ -277,6 +277,24 @@ GridDevices.prototype.onLabelClick = function (evt, _self)
 	}
 };
 
+GridDevices.prototype.filterData = function ()
+{
+	this.filteredData = [[],[]];
+	for(var ind=0; ind<2; ind++)
+	{
+		var filterText = this.filters[ind];
+		var regExp = new RegExp(filterText, 'i');
+		
+		for(var i=0; i<this.data[ind].length; i++)
+		{
+			var dev = this.data[ind][i];
+			if( regExp.test(dev.name) ) { 
+				this.filteredData[ind].push(dev);
+			}
+		}
+	}
+}
+
 /**
  * Handlers for manipulating the array of selected cells
  */

@@ -209,7 +209,7 @@ HivePlotView.prototype = {
 			filter.setAttribute("class", "namespaceFilter");
 			filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
 			filter.setAttribute("data-ind", ind);
-			filter.addEventListener("keyup", function(evt){
+			filter.addEventListener("keydown", function(evt){
 				evt.stopPropagation();
 				_self.filters[evt.target.getAttribute("data-ind")] = evt.target.value;
 				_self.redrawInclusionTable();
