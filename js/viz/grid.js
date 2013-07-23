@@ -802,19 +802,3 @@ function GridViewPreset(name, includedSrcs, includedDsts)
 	this.includedSrcs = includedSrcs;
 	this.includedDsts = includedDsts;
 };
-
-
-
-function arrPushIfUnique(item, arr){
-	if(arrIsUnique(item, arr))
-		arr.push(item);
-}
-
-function arrIsUnique(item, arr){
-	for(var i=0; i<arr.length; i++){
-		if(arr[i] == item)
-			return false;
-	}	
-	return true;
-}
-
