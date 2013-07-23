@@ -210,6 +210,11 @@ HivePlotView.prototype = {
 			filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
 			filter.setAttribute("data-ind", ind);
 			filter.addEventListener("keydown", function(evt){
+				// don't know why but filter not working on keydown
+				// and causing problems... 
+				evt.stopPropagation();
+			});
+			filter.addEventListener("keyup", function(evt){
 				evt.stopPropagation();
 				_self.filters[evt.target.getAttribute("data-ind")] = evt.target.value;
 				_self.redrawInclusionTable();
