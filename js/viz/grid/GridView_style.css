@@ -181,6 +181,16 @@ a:hover { color: #036; }
 	color: #fff;
 }
 
+.buttonBar .filterWrapper{
+	background-color: #04C4D9;
+	padding: 5px 5px 6px 5px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	margin-right: 4px;
+}
+
 
 #actionBar .styled-select 
 {

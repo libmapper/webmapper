@@ -159,7 +159,14 @@ GridSVG.prototype = {
 			div = document.createElement("div");
 			div.setAttribute("class", "buttonBar");
 			
-			var btn;
+			var btn, img;
+			
+			img = document.createElement("img");
+			img.setAttribute("src", "js/viz/grid/icons/zoom.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "position: relative; top: 5px; right: 4px; opacity: 0.5;");
+			div.appendChild(img);
 			
 			//zoom in button
 			btn = document.createElement("button");
@@ -181,40 +188,26 @@ GridSVG.prototype = {
 
 			//zoom to fit button
 			btn = document.createElement("button");
-			btn.innerHTML = "&#9643;";
+			btn.innerHTML = "&#9632;";
+			btn.setAttribute("style", "font-size: 22px; padding: 0px 6px 1px; position: relative; top: 3px;");
 			btn.title = "Zoom to fit content (CTRL + 0)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomToFit();
 			});
 			div.appendChild(btn);
 			
-			//connection buttons
-			btn = document.createElement("button");
-			btn.innerHTML = "Con";
-			btn.title = "connect the selected cell(s) (C)";
-			btn.addEventListener("click", function(evt){
-				_self.connect();
-			});
-			div.appendChild(btn);
-			
-			btn = document.createElement("button");
-			btn.innerHTML = "Dis";
-			btn.title = "disconnect the selected cell(s) (D)";
-			btn.addEventListener("click", function(evt){
-				_self.disconnect();
-			});
-			div.appendChild(btn);
-			
-			btn = document.createElement("button");
-			btn.innerHTML = "Tog";
-			btn.title = "toggle the selected cell(s)  (ENTER)";
-			btn.addEventListener("click", function(evt){
-				_self.toggleConnection();
-			});
-			div.appendChild(btn);
+			img = document.createElement("img");
+			img.setAttribute("src", "js/viz/grid/icons/filter.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "position: relative; top: 5px; right: 5px; opacity: 0.5; padding-left: 15px;");
+			div.appendChild(img);
 			
 			for(var ind=0; ind<2; ind++)
 			{
+				var wrap = document.createElement("span");
+				wrap.setAttribute("class", "filterWrapper");
+				
 				var filter = document.createElement("input");
 				filter.value = this.filters[ind]; 
 				filter.setAttribute("class", "namespaceFilter");
@@ -232,8 +225,44 @@ GridSVG.prototype = {
 					_self.filterData();
 					_self.refresh();
 				});
-				div.appendChild(filter);
+				
+				wrap.appendChild(filter);
+				div.appendChild(wrap);
 			}
+			
+			img = document.createElement("img");
+			img.setAttribute("src", "js/viz/grid/icons/connect.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "position: relative; top: 5px; right: 3px; opacity: 0.5; padding-left: 10px;");
+			div.appendChild(img);
+			
+			//connection buttons
+			btn = document.createElement("button");
+			btn.innerHTML = "O";
+			btn.title = "connect the selected cell(s) (C)";
+			btn.addEventListener("click", function(evt){
+				_self.connect();
+			});
+			div.appendChild(btn);
+			
+			btn = document.createElement("button");
+			btn.innerHTML = "X";
+			btn.title = "disconnect the selected cell(s) (D)";
+			btn.addEventListener("click", function(evt){
+				_self.disconnect();
+			});
+			div.appendChild(btn);
+			
+			btn = document.createElement("button");
+			btn.innerHTML = "O|X";
+			btn.title = "toggle the selected cell(s)  (ENTER)";
+			btn.addEventListener("click", function(evt){
+				_self.toggleConnection();
+			});
+			div.appendChild(btn);
+			
+			
 			
 			this._container.appendChild(div);
 			// END button bar
