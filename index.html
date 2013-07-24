@@ -28,6 +28,26 @@
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
 
 
+<style type="text/css">
+body{ font-family: helvetica, arial, sans-serif}
+
+#logoWrapper button{
+font-size: 12px;
+border-radius: 3px; 
+-moz-border-radius: 3px; 
+-webkit-border-radius: 3px; 
+border: 0px solid #eeeeee;
+background: #ccc;
+padding: 6px 8px;
+color: #fff;
+}
+#logoWrapper button:hover {
+	background-color: #EEE8AA;
+}
+#logoWrapper button:active{
+	background-color: #FFFFF0;
+}
+</style>
 
 <script><!--
 
@@ -239,24 +259,34 @@ function btnHandler(val)
 </head>
 
 
+
+
 <body onload="init()">
-
-<div style="margin: 0 auto;" class="topMenu">
-
+<div style="margin: 0 auto; class: topMenu">
+	<table id='logoWrapper' width="100%">
+	<tr width="100%">
+		<td width="40%" align="left">
+			<img alt="webmapper logo" src="images/webmapperlogo.png" width="44"
+					style="vertical-align: middle; position:relative; top: -3px" />
+			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
 	<select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">
 		<option value='none'>None</option>
 		<option value='grid' selected>Grid Demo</option>"+
 		<option value='hive' selected>Hive Demo</option>"+
 	</select>
-	            
-	<button onclick="btnHandler('init')">Add 5x5 Devices</button>
-	<button onclick="btnHandler('src')">Add Source Device</button>
-	<button onclick="btnHandler('dst')">Add Destination Device</button>
+			
+		</td>
+		
+		<td align="right">
+			<button onclick="btnHandler('src')">Add Source Device</button>
+			<button onclick="btnHandler('dst')">Add Destination Device</button>
+			<button onclick="btnHandler('init')">Add 5x5 Devices</button>
+		</td>
+	</table>
 </div> 
 
-<div id="container">
-	
-	<!--  VIEW GOES HERE -->
+	<div id="container">
+
 
 </div>
 
