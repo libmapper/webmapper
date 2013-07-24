@@ -62,9 +62,9 @@ var nDstDevices = 0;	// used for labels of fake dst devices
 
 function init()
 {
-	$('#container').css('height', ($(window).height() - 100) + 'px' );
+	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
     window.onresize = function (e) {
-    	$('#container').css('height', ($(window).height() - 100) + 'px' );
+    	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
     	view.on_resize();
     };
 
@@ -262,7 +262,7 @@ function btnHandler(val)
 
 
 <body onload="init()">
-<div style="margin: 0 auto; class: topMenu">
+<div style="margin: 0 auto;" id="logoWrapper">
 	<table id='logoWrapper' width="100%">
 	<tr width="100%">
 		<td width="40%" align="left">

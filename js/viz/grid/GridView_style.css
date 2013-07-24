@@ -145,13 +145,14 @@ a:hover { color: #036; }
 }
 
 .buttonBar{
-	padding: 2px 0px 4px;
+	padding: 2px 0px 4px 0;
 	margin-top: 20px; 
-	float: right;
 	text-align: center;
 	background-color: #fff;
 	border: 1px solid #dddddd;
 	width: 100%;
+	position: relative;
+	float: left;
 }
 
 #actionBar button, .buttonBar button{
@@ -170,6 +171,12 @@ a:hover { color: #036; }
 	background-color: #FFFFF0;
 }
 
+.buttonBar img{
+	position: relative;
+	float: center;
+	opacity: 0.5;
+}
+
 .buttonBar button{
 	font-size: 12px;
 	border-radius: 3px; 
@@ -179,16 +186,18 @@ a:hover { color: #036; }
 	background: #04C4D9;
 	padding: 6px 8px;
 	color: #fff;
+	float: center;
 }
 
 .buttonBar .filterWrapper{
 	background-color: #04C4D9;
-	padding: 5px 5px 6px 5px;
+	padding: 4px 6px 6px 6px;
 	border-radius: 3px; 
 	-moz-border-radius: 3px; 
 	-webkit-border-radius: 3px; 
 	border: 0px solid #eeeeee;
-	margin-right: 4px;
+	position: relative;
+	float: center;
 }
 
 

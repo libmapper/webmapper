@@ -165,7 +165,7 @@ GridSVG.prototype = {
 			img.setAttribute("src", "js/viz/grid/icons/zoom.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
-			img.setAttribute("style", "position: relative; top: 5px; right: 4px; opacity: 0.5;");
+			img.setAttribute("style", "top: 5px; margin: 0 5px 0 0");
 			div.appendChild(img);
 			
 			//zoom in button
@@ -200,7 +200,7 @@ GridSVG.prototype = {
 			img.setAttribute("src", "js/viz/grid/icons/filter.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
-			img.setAttribute("style", "position: relative; top: 5px; right: 5px; opacity: 0.5; padding-left: 15px;");
+			img.setAttribute("style", "top: 4px; margin: 0 4px 0 15px;");
 			div.appendChild(img);
 			
 			var filterTooltips = ["filter columns by regular expression", "filter rows by regular expression"];
@@ -213,7 +213,7 @@ GridSVG.prototype = {
 				filter.value = this.filters[ind]; 
 				filter.title = filterTooltips[ind]; 
 				filter.setAttribute("class", "namespaceFilter");
-//				filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
+				filter.setAttribute("style", "position: relative; width: 100px");
 				filter.setAttribute("data-ind", ind);
 				filter.addEventListener("keydown", function(evt){
 					// don't know why but filter not working on keydown
@@ -236,7 +236,7 @@ GridSVG.prototype = {
 			img.setAttribute("src", "js/viz/grid/icons/connect.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
-			img.setAttribute("style", "position: relative; top: 5px; right: 3px; opacity: 0.5; padding-left: 10px;");
+			img.setAttribute("style", "position: relative; top: 4px; right: 3px; opacity: 0.5; margin: 0 -2px 0 18px;");
 			div.appendChild(img);
 			
 			//connection buttons
