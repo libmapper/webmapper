@@ -70,14 +70,14 @@ Hive view Command keys:
 	c: connect selected cell(s)
 	d: disconnect selected cell(s)
 
-	CTRL 1: switch to view mode 1 (Hive plot)
-	CTRL 2: switch to view mode 2 (adapted Hive plot)
+	CTRL 1: switch to view mode 1 (adapted Hive plot)
+	CTRL 2: switch to view mode 2 (Hive plot)
 
 Hive View Instructions: 
 
-- The hive plot is a visualization technique for drawing networks. In this view, the upper half is designated for source devices, and the lower half for destination. In view mode 1, source/destination devices are grouped along a single axis. In view mode 2, each device is given its own axis.
+- The hive plot is a method for visualizing networks. In this view, the upper half of the plot is designated for source devices, and the lower for destinations. In view mode 1, an adapted hive plot, each device is given its own axis. In view mode 2, a traditional hive plot, source/destination devices are grouped along a single axis. 
 
-- Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure connections. Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. Select signals by clicking its name in the list (or its node in the plot). Once a source and destination signal is selected, you can create or destroy the connection by clicking on the blue bar at the bottom or by using the keyboard shortcuts. 
+- Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure connections. Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. Select signals by clicking its name in the list (or its node in the plot). Once a source and destination signal is selected, you can create or remove the connection by clicking on the blue bar at the bottom (or by using the keyboard shortcuts). 
 
 - Connections on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.
 
