@@ -13,7 +13,7 @@ function HivePlotView(container, model)
 	this.mode = 1;
 	this.inclusionTableWidth = 228;
 	this.inclusionTablePadding = 10;
-	this.actionBarHeight = 50;
+	this.actionBarHeight = 68;
 	this.actionBarPadding = 8;
 	this.groupColors = ["Cyan", "Orange", "Yellow", "Red", "DodgerBlue", "PeachPuff", "BlanchedAlmond", "DarkViolet", "PaleGreen", "Silver", "AntiqueWhite", "LightSteelBlue" ];
 	this.pColors;
@@ -180,14 +180,16 @@ HivePlotView.prototype = {
 		// add list of devices on left
 		div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
-		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] + this.actionBarHeight + (2*this.actionBarPadding) +4) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+//		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] + this.actionBarHeight + (2*this.actionBarPadding) +4) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] - (this.inclusionTablePadding)) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
 		this._container.appendChild(div);
 		
 		// add display bar 
 	    div = document.createElement("div");
 		div.setAttribute("id", "hive_actionBar");
 		div.title = "click to toggle a connection";
-		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding) + 10) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
+//		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding)) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
+		div.setAttribute("style", "width: "+ (this.svgDim[0] ) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
 		div.addEventListener("click", function(evt){
 			_self.toggleConnection();
 		});
@@ -207,7 +209,7 @@ HivePlotView.prototype = {
 			filter = document.createElement("input");
 			filter.value = this.filters[ind]; 
 			filter.setAttribute("class", "namespaceFilter");
-			filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
+			filter.setAttribute("style", "width: " + (this.inclusionTableWidth - 26) + "px");
 			filter.setAttribute("data-ind", ind);
 			filter.addEventListener("keydown", function(evt){
 				// don't know why but filter not working on keydown

@@ -129,7 +129,7 @@
 #hive_actionBar{
 	background-color: #04C4D9;	
 	position: absolute;
-	bottom: 6px;
+	bottom: 0px;
 	right: 0;
 	font-family: helvetica, arial, sans-serif;
 	font-size: 12px;

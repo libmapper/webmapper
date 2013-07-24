@@ -107,7 +107,7 @@ GridSVG.prototype = {
 			div.setAttribute("id", "activeIndicator" + this.gridIndex);
 			div.setAttribute("style", "width: 14px; height: 14px; position: relative; float: left; margin: 2px 12px 2px " + (this.rowLabelsW+17).toString() + "px");
 			div.setAttribute("class", "inactiveGridIndicator");
-			div.title = "active grid indicator (ALT + left/right arrow to switch)";
+			div.title = "a black square indicates grid is active and will receive keyboard shortcuts (ALT + left/right arrow to switch)";
 			wrapper0.appendChild(div);
 			
 			//horizontal scrollbar 
@@ -203,6 +203,7 @@ GridSVG.prototype = {
 			img.setAttribute("style", "position: relative; top: 5px; right: 5px; opacity: 0.5; padding-left: 15px;");
 			div.appendChild(img);
 			
+			var filterTooltips = ["filter columns by regular expression", "filter rows by regular expression"];
 			for(var ind=0; ind<2; ind++)
 			{
 				var wrap = document.createElement("span");
@@ -210,6 +211,7 @@ GridSVG.prototype = {
 				
 				var filter = document.createElement("input");
 				filter.value = this.filters[ind]; 
+				filter.title = filterTooltips[ind]; 
 				filter.setAttribute("class", "namespaceFilter");
 //				filter.setAttribute("style", "width: " + (this.inclusionTableWidth-40) + "px");
 				filter.setAttribute("data-ind", ind);

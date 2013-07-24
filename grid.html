@@ -11,14 +11,32 @@
 <script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
 
 <script type="text/javascript" src="js/viz/grid.js"></script>
-
 <script type="text/javascript" src="js/viz/grid/GridSVG.js"></script>
 <script type="text/javascript" src="js/viz/grid/GridSignals.js"></script>
 <script type="text/javascript" src="js/viz/grid/GridDevices.js"></script>
-
 <link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link><!-- Grid CSS -->
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
 
+<style type="text/css">
+body{ font-family: helvetica, arial, sans-serif}
+
+#logoWrapper button{
+font-size: 12px;
+border-radius: 3px; 
+-moz-border-radius: 3px; 
+-webkit-border-radius: 3px; 
+border: 0px solid #eeeeee;
+background: #ccc;
+padding: 6px 8px;
+color: #fff;
+}
+#logoWrapper button:hover {
+	background-color: #EEE8AA;
+}
+#logoWrapper button:active{
+	background-color: #FFFFF0;
+}
+</style>
 
 <script><!--
 
@@ -122,9 +140,9 @@ function addDevice(name, nIn, nOut)
 	model.devices.add(name, args);
 
 	for(var j=0; j<nIn;j++)
-		addDevSignal("/Sig " + j, name);	
+		addDevSignal("/Sig" + j, name);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/Sig " + j, name);	
+		addDevSignal("/Sig" + j, name);	
 }
 
 function addDevSignal(name, device_name)
@@ -145,9 +163,9 @@ function addDevSignal(name, device_name)
 function btnHandler(val)
 {
 		if(val=="dst"){
-			addDevice("Destination " + nDstDevices++, 2, 0);
+			addDevice("Destination" + nDstDevices++, 2, 0);
 		}else if(val=="src"){
-			addDevice("Source " + nSrcDevices++, 0, 2);		
+			addDevice("Source" + nSrcDevices++, 0, 2);		
 		}else if(val=="init"){
 			initData();		
 		}
@@ -160,9 +178,19 @@ function btnHandler(val)
 
 <body onload="init()">
 <div style="margin: 0 auto; class: topMenu">
-	<button onclick="btnHandler('init')">Add 5x5 Devices</button>
-	<button onclick="btnHandler('src')">Add Source Device</button>
-	<button onclick="btnHandler('dst')">Add Destination Device</button>
+	<table id='logoWrapper' width="100%">
+	<tr width="100%">
+		<td width="40%" align="left">
+			<img alt="webmapper logo" src="images/webmapperlogo.png" width="44"
+					style="vertical-align: middle; position:relative; top: -3px" />
+			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper (Grid Demo)</span>
+		</td>
+		<td align="right">
+			<button onclick="btnHandler('src')">Add Source Device</button>
+			<button onclick="btnHandler('dst')">Add Destination Device</button>
+			<button onclick="btnHandler('init')">Add 5x5 Devices</button>
+		</td>
+	</table>
 </div> 
 
 	<div id="container">
