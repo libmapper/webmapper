@@ -1,3 +1,5 @@
+#hiveWrapper{margin: 0 auto;}
+
 .hive_svg{
 	/*fill: url(#bkGradient);*/
 	fill: #fff;
@@ -102,7 +104,9 @@
 	font-weight: bold;
 	-webkit-margin-after: 3px;	
 }
-#hive_inclusionTable .signalLabel{
+#hive_inclusionTable {
+	padding-left: 10px;
+	padding-right: 10px;
 }
 #hive_inclusionTable li .signalLabel_selected{
 	color: white;
@@ -127,7 +131,7 @@
 }
 
 #hive_actionBar{
-	background-color: #04C4D9;	
+	background-color: rgb(134,222,248);	
 	position: absolute;
 	bottom: 0px;
 	right: 0;
@@ -140,13 +144,13 @@
 #hive_actionBar:active{background-color: #06e4f9}
 
 .hive_srcLabel, .hive_dstLabel, .hive_conLabel{
-	color: #fff;
+	color: #000;
 	position: relative;
 	font-size: 16px;
-	bottom: 14px;
-	padding: 0 10px;
+	top: 10px;
+	padding: 0px 30px 0 15px;
 }
-.hive_srcLabel{ float: left; }
+.hive_srcLabel{ float: left; padding-left: 250px;}
 .hive_dstLabel{ float: right; }
 
 .treeView{
