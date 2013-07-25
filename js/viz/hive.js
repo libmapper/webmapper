@@ -164,10 +164,11 @@ HivePlotView.prototype = {
 		
 		// remove all previous DOM elements
 		$(this._container).empty();
+		wrapper = document.createElement("div");
+		wrapper.setAttribute("id", "hiveWrapper");
+		this._container.appendChild(wrapper);
 
 		// add SVG canvas
-		wrapper = document.createElement("div");
-		this._container.appendChild(wrapper);
 		this.svg = document.createElementNS(this.svgNS,"svg");
 		this.svg.setAttribute("id", "HivePlotSVG");
 		this.svg.setAttribute("xmlns", this.svgNS);
@@ -181,7 +182,8 @@ HivePlotView.prototype = {
 		div = document.createElement("div");
 		div.setAttribute("id", "hive_inclusionTable");
 //		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] + this.actionBarHeight + (2*this.actionBarPadding) +4) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
-		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1] - (this.inclusionTablePadding)) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+//		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1]) + "px; overflow-y: scroll; padding: " + this.inclusionTablePadding + "px;");
+		div.setAttribute("style", "width: "+ (this.inclusionTableWidth-(2*this.inclusionTablePadding)) + "px; height: " + (this.svgDim[1]) + "px; overflow-y: scroll;");
 		this._container.appendChild(div);
 		
 		// add display bar 
@@ -189,7 +191,8 @@ HivePlotView.prototype = {
 		div.setAttribute("id", "hive_actionBar");
 		div.title = "click to toggle a connection";
 //		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding)) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
-		div.setAttribute("style", "width: "+ (this.svgDim[0] ) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
+//		div.setAttribute("style", "width: "+ (this.svgDim[0] ) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
+		div.setAttribute("style", "width: 100%; height: "+ (this.actionBarHeight) + "px;");
 		div.addEventListener("click", function(evt){
 			_self.toggleConnection();
 		});
@@ -209,7 +212,7 @@ HivePlotView.prototype = {
 			filter = document.createElement("input");
 			filter.value = this.filters[ind]; 
 			filter.setAttribute("class", "namespaceFilter");
-			filter.setAttribute("style", "width: " + (this.inclusionTableWidth - 26) + "px");
+			filter.setAttribute("style", "width: " + (this.inclusionTableWidth - 41) + "px");
 			filter.setAttribute("data-ind", ind);
 			filter.addEventListener("keydown", function(evt){
 				// don't know why but filter not working on keydown
@@ -383,7 +386,7 @@ HivePlotView.prototype = {
 		btn.addEventListener("click", function(evt){
 			_self.switchMode();
 		});
-		table.appendChild(btn);
+		//table.appendChild(btn);		// not included for release
 
 		// show all button
 		btn = document.createElement("button");
@@ -1372,10 +1375,10 @@ HivePlotView.prototype = {
 	// when browser window gets resized
 	on_resize : function ()
 	{
-		var w = $(this._container).width() - 10;
-		var h = $(this._container).height() - 10;
-		this.svgDim[0] = w - this.inclusionTableWidth;// - (2*this.inclusionTablePadding);
-		this.svgDim[1] = h - this.actionBarHeight - (2*this.actionBarPadding);
+		var w = $(this._container).width();
+		var h = $(this._container).height();
+		this.svgDim[0] = w - this.inclusionTableWidth;
+		this.svgDim[1] = h - this.actionBarHeight;
 		this.init();
 	},
 	
