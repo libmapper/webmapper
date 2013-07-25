@@ -7,9 +7,7 @@ if 'py2app' in sys.argv: import py2app
 
 data_files = [('',['js']),
               ('css',['css/style.css']),
-              ('images',['images/boundary_icons.png',
-                         'images/range_switch.png',
-                         'images/refresh.png']),
+              ('',['images']),
               ]
 options = {'argv_emulation': True, 'iconfile': 'images/libmapper.icns'}
 
