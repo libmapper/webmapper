@@ -49,9 +49,14 @@ GridDevices.prototype.refresh = function ()
 	this.nRows = 0;
 	this.nCols = 0;
 
-	this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
-	this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+	this.contentDim[0] = this.filteredData[0].length*(this.cellDim[0]+this.cellMargin);
+	this.contentDim[1] = this.filteredData[1].length*(this.cellDim[1]+this.cellMargin);
 
+	// sort devices
+	this.filteredData[0].sort(this.compareLabel);
+	this.filteredData[1].sort(this.compareLabel);
+	
+	
 	// when autozoom is on, strech to fit into canvas
 	// must be done first to set the font size
 	if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
@@ -76,9 +81,9 @@ GridDevices.prototype.refresh = function ()
 	
 	
 	// create column labels
-	for (var index=0; index< this.colsArray.length; index++)
+	for (var index=0; index< this.filteredData[0].length; index++)
 	{
-		var dev = this.colsArray[index];
+		var dev = this.filteredData[0][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
@@ -105,9 +110,9 @@ GridDevices.prototype.refresh = function ()
 	}
 	
 	// create row labels
-	for (var index=0; index< this.rowsArray.length; index++)
+	for (var index=0; index< this.filteredData[1].length; index++)
 	{	
-		var dev = this.rowsArray[index];
+		var dev = this.filteredData[1][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
@@ -275,6 +280,32 @@ GridDevices.prototype.onLabelClick = function (evt, _self)
 			_self.selectedLabels_addLabel(label);
 		}
 	}
+};
+
+GridDevices.prototype.filterData = function ()
+{
+	this.filteredData = [[],[]];
+	for(var ind=0; ind<2; ind++)
+	{
+		var filterText = this.filters[ind];
+		var regExp = new RegExp(filterText, 'i');
+		
+		for(var i=0; i<this.data[ind].length; i++)
+		{
+			var dev = this.data[ind][i];
+			if( regExp.test(dev.name) ) { 
+				this.filteredData[ind].push(dev);
+			}
+		}
+	}
+};
+
+//functions used for sorting alphabetically
+GridDevices.prototype.compareLabel = function (devA, devB) 
+{
+	var a = devA.name.toUpperCase();
+	var b = devB.name.toUpperCase();
+	return a.localeCompare(b);
 };
 
 /**

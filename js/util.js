@@ -93,3 +93,18 @@ function fullOffset(e)
             width:e.offsetWidth,
             height:e.offsetHeight};
 }
+
+/* add an item to an array only if it is unique */
+function arrPushIfUnique(item, arr){
+	if(arrIsUnique(item, arr))
+		arr.push(item);
+}
+
+/* check if an item is unique in an array */
+function arrIsUnique(item, arr){
+	for(var i=0; i<arr.length; i++){
+		if(arr[i] == item)
+			return false;
+	}	
+	return true;
+}

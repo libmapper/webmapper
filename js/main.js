@@ -49,8 +49,13 @@ function switch_mode(newMode)
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
         	viewIndex = 1;
-            $('#saveLoadDiv').removeClass('disabled');
+        	$('#saveLoadDiv').removeClass('disabled');
         	view.update_display();
+        	break;
+        case 'hive':
+        	view = new HivePlotView(document.getElementById('container'), model);
+        	viewIndex = 2;
+            view.on_resize();
         	break;
         default:
             //console.log(newMode);
@@ -506,6 +511,7 @@ function add_container_elements()
 	                "<option value='none'>None</option>"+
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
+	                "<option value='hive'>Hive</option>"+
 	            "</select>"+
 	    "</ul></tr></table>"+
 	    "<div id='container'></div>"
