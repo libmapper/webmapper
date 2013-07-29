@@ -44,6 +44,15 @@
   	checkBrowserSupport();
   	model = new LibMapperModel();
   	switch_mode('grid');
+
+	var e = "s0*(-1)+(1)";
+
+	var patt=/s/gi;
+	var result=patt.exec(e);
+  	console.log(result); 
+
+
+  	
   }
 
 
@@ -130,13 +139,7 @@
   {
 
   	  /*
-  // mapping.connections
-  clipMax: "none"
-  clipMin: "none"
-  expression: "d0=s0*(-1)+(1)"
-  mode: "linear"
-  mute: 0
-  range: Array[4]
+ 
 
   // mapping.destinations
   device: "delaydesigner.1"
@@ -154,7 +157,7 @@
   		return;
   	
   	var devicesTemp = [];
-  	
+  	var signalsArray = [];
   	
   	for (var i=0; i<data.mapping.sources.length; i++)
   	{
@@ -169,12 +172,17 @@
   			devArgs.n_outputs = 0;
   			model.devices.add(source.device, devArgs);
   		}
-  		
+
   		var args = new Object(); 
   		args.device_name = source.device;
   		args.name = source.signal;
   		args.id = source.id;
+  		
+  		// create the object for the model
   		model.signals.add(source.device+source.signal, args);
+  		
+  		// push to my associative array to access later
+  		signalsArray[source.id] = args;
   		
   		// increment
   		var dev = model.devices.get(source.device);
@@ -198,12 +206,61 @@
   		args.device_name = source.device;
   		args.name = source.signal;
   		args.id = source.id;
+
+	  	// create the object for the model
   		model.signals.add(source.device+source.signal, args);
+  		
+  		// push to my associative array to access later
+  		signalsArray[source.id] = args;
   		
   		// increment
   		var dev = model.devices.get(source.device);
   		dev.n_inputs = parseInt(dev.n_inputs) + 1;
   	}
+
+  	/*
+  	 // mapping.destinations
+  device: "delaydesigner.1"
+  id: "d0"
+  signal: "14_channel/control/79/globa
+
+  // mapping.sources
+  device: "71tstick.1"
+  id: "s0"
+  signal: "instrument/grip/tip/touch"
+	  
+  	 // mapping.connections
+    clipMax: "none"
+    clipMin: "none"
+    expression: "d0=s0*(-1)+(1)"
+    mode: "linear"
+    mute: 0
+    range: Array[4]
+    */
+    for (var i=0; i<data.mapping.connections.length; i++)
+  	{
+  		var source = data.mapping.connections[i];
+
+  		var expr = source.expression;
+  		var split = expr.split("=");
+
+  		var y = split[0];
+  		var destDevice = signalsArray[y].device;
+  		var destSignal = signalsArray[y].signal;
+
+  	
+  		
+
+  		var args = new Object(); 
+  		args.device_name = source.device;
+  		args.name = source.signal;
+  		args.id = source.id;
+  		//model.connections.add(source.device+source.signal, args);
+  	}
+
+
+
+    
   	
   	view.update_display();
   }
