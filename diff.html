@@ -6,7 +6,7 @@
   <title>Playground</title>
 
 
-  <!--<script src="diff.js"></script>-->
+<!--<script src="diff.js"></script>-->
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/LibMapperModel.js"></script>
 
@@ -26,7 +26,7 @@
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
   
   
-  <script>
+  <script><!--
   
   var mapA;
   var out;
@@ -44,15 +44,6 @@
   	checkBrowserSupport();
   	model = new LibMapperModel();
   	switch_mode('grid');
-
-	var e = "s0*(-1)+(1)";
-
-	var patt=/s/gi;
-	var result=patt.exec(e);
-  	console.log(result); 
-
-
-  	
   }
 
 
@@ -159,6 +150,7 @@
   	var devicesTemp = [];
   	var signalsArray = [];
   	
+  	// for each source device/signal
   	for (var i=0; i<data.mapping.sources.length; i++)
   	{
   		var source = data.mapping.sources[i];
@@ -188,6 +180,8 @@
   		var dev = model.devices.get(source.device);
   		dev.n_outputs = parseInt(dev.n_outputs) + 1;
   	}
+  	
+ // for each destination device/signal
   	for (var i=0; i<data.mapping.destinations.length; i++)
   	{
   		var source = data.mapping.destinations[i];
@@ -239,23 +233,53 @@
     */
     for (var i=0; i<data.mapping.connections.length; i++)
   	{
-  		var source = data.mapping.connections[i];
+  		var connection = data.mapping.connections[i];
 
-  		var expr = source.expression;
+  		var expr = connection.expression;
   		var split = expr.split("=");
 
   		var y = split[0];
   		var destDevice = signalsArray[y].device;
   		var destSignal = signalsArray[y].signal;
 
-  	
+  		var patt=/s\d+/gi;
+  		var result=patt.exec(split[1]);
+  		var x = result[0];
+  		var newExpr = split[1].replace( patt,"x");
+  	  	
+  		var srcSignal = signalsArray[x].name; 
+  		var srcDevice = signalsArray[x].device_name;
+  		var	dstSignal = signalsArray[y].name;
+  		var dstDevice = signalsArray[y].device_name;
+  		var key = srcDevice + srcSignal + ">" + dstDevice + dstSignal;
   		
-
+  		// create the link if not already linked
+  		if(this.model.isLinked(srcDevice, dstDevice) == false)
+  		{
+  			var linkKey = srcDevice + ">" + dstDevice;
+  			var linkArgs = new Object(); 
+  			linkArgs.src_name = srcDevice;
+  			linkArgs.dest_name = dstDevice;
+  			model.links.add(linkKey, linkArgs);
+  		}
+  		
   		var args = new Object(); 
-  		args.device_name = source.device;
-  		args.name = source.signal;
-  		args.id = source.id;
-  		//model.connections.add(source.device+source.signal, args);
+  		args.src_name = srcDevice + srcSignal;
+  		args.dest_name = dstDevice + dstSignal;
+  		args.muted = connection.mute;
+  		args.range = connection.range;
+  		args.expression = 'y=' + newExpr;
+  		//args.bound_min = 0;
+  		//args.dest_length = 1;
+  		//args.src_length = 1;
+  		//args.bound_max = 0;
+  		//args.src_type = 'f';
+  		//args.dest_type = 'f';
+  		//args.mode = 2;
+  		
+  		
+					
+  		model.connections.add(key, args);
   	}
 
 
@@ -266,7 +290,7 @@
   }
   
   
-  </script>
+  --></script>
   
 </head>
 
