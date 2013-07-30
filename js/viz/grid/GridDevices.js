@@ -99,8 +99,15 @@ GridDevices.prototype.refresh = function ()
 			_self.onLabelClick(evt, _self);
 		});
 		
+		// pad slashes in namespace to make label easier to read
 		var patt = /\//g;
 		var nameFormatted = name.replace(patt, " / ");
+		
+		// tooltip for long names
+		var tooltip = document.createElementNS(this.svgNS,"title");
+		tooltip.textContent = nameFormatted;
+		label.appendChild(tooltip); 	
+
 		
 		label.appendChild(document.createTextNode(nameFormatted));
 		this.svgColLabels.appendChild(label);
@@ -133,8 +140,15 @@ GridDevices.prototype.refresh = function ()
 			_self.onLabelClick(evt, _self);
 		});
 		
+		// pad slashes in namespace to make label easier to read
 		var patt = /\//g;
 		var nameFormatted = name.replace(patt, " / ");
+		
+		// tooltip for long names
+		var tooltip = document.createElementNS(this.svgNS,"title");
+		tooltip.textContent = nameFormatted;
+		label.appendChild(tooltip); 	
+
 		
 		label.appendChild(document.createTextNode(nameFormatted));
 		this.svgRowLabels.appendChild(label);
