@@ -430,6 +430,26 @@ HivePlotView.prototype = {
 		
 		table.appendChild(document.createElement('br'));
 		
+		// connect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Connect";
+		btn.title = "connect the selected node(s) (C)";
+		btn.addEventListener("click", function(evt){
+			_self.connect();
+		});
+		table.appendChild(btn);
+		
+		// disconnect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Disconnect";
+		btn.title = "disconnect the selected connection) (D)";
+		btn.addEventListener("click", function(evt){
+			_self.disconnect();
+		});
+		table.appendChild(btn);
+
+		table.appendChild(document.createElement('br'));
+		
 		// repeat for source and destination devices
 		var labels = ["Sources", "Destinations"];
 		for(var ind=0; ind<2; ind++)
@@ -631,26 +651,6 @@ HivePlotView.prototype = {
 	{
 		var _self = this;
 		var table = document.getElementById("hive_actionBar");
-		
-		/*
-		// connect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Connect";
-		btn.title = "connect the selected node(s) (C)";
-		btn.addEventListener("click", function(evt){
-			_self.connect();
-		});
-		table.appendChild(btn);
-		
-		// disconnect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Disconnect";
-		btn.title = "disconnect the selected connection) (D)";
-		btn.addEventListener("click", function(evt){
-			_self.disconnect();
-		});
-		table.appendChild(btn);
-		 */
 
 		for(var ind=0; ind<2; ind++)
 		{
