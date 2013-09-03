@@ -3,8 +3,11 @@
 import webmapper_http_server as server
 import mapper
 import mapperstorage
+import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re
 from random import randint
+
+networkInterfaces = {'selected': '', 'available': []}   
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -82,7 +85,9 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    monitor = mapper.monitor(enable_autorequest=0)
+    print networkInterfaces['selected']
+    admin = mapper.admin(networkInterfaces['selected'])
+    monitor = mapper.monitor(admin, enable_autorequest=0)
     init_monitor()
 
 def on_save(arg):
@@ -94,6 +99,24 @@ def on_save(arg):
 
 def on_load(mapping_json, devices):
     mapperstorage.deserialise(monitor, mapping_json, devices)
+
+def select_network(newNetwork):
+    print networkInterfaces['selected']
+    networkInterfaces['selected'] = newNetwork
+    on_refresh(False)
+
+def get_networks(arg):
+    print arg
+    location = netifaces.AF_INET    # A computer specific integer for internet addresses
+    totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
+    connectedInterfaces = []
+    for i in totalInterfaces:
+        addrs = netifaces.ifaddresses(i)
+        if location in addrs:       # Test to see if the interface is actually connected
+            connectedInterfaces.append(i)
+    server.send_command("available_interfaces", connectedInterfaces)
+    return connectedInterfaces
+
 
 def init_monitor():
     monitor.db.add_device_callback(on_device)
@@ -178,15 +201,23 @@ server.add_command_handler("refresh", on_refresh)
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
 
+server.add_command_handler("select_network", select_network)
+server.add_command_handler("get_networks", get_networks)
+
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
 except:
     #port = randint(49152,65535)
     port = 50000
 
+networkInterfaces['available'] = get_networks('x')
+
 on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
 
+
+
 server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)
+

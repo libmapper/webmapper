@@ -78,6 +78,11 @@ function refresh_all()
     command.send('refresh');
 }
 
+function select_network()
+{
+    //TODO
+}
+
 function update_save_location()
 {
     if (selectedTab==all_devices) {
@@ -452,6 +457,11 @@ function main()
         view.update_display();
         update_connection_properties_for(args, conns);
     });
+
+    command.register("available_interfaces", function(cmd, args) {
+        model.networkInterfaces.available = args;
+        console.log(args);
+    });
     
     // actions from VIEW
 
@@ -488,6 +498,7 @@ function main()
         function(){
         	switch_mode('list');
             command.start();
+            command.send('get_networks');
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
@@ -495,12 +506,40 @@ function main()
             add_handlers();
         },
         100);
+
+}
+
+function test_dive(){
+    $('body').append('<div id="test"></div>')
+    $('#test').css({
+        'background-color': 'lightgrey',
+        'height': '100px',
+        'width': '100px',
+        'position': 'absolute'
+    });
+
+    for (var i in model.networkInterfaces.available) {
+        var name = 'netOp' + i;
+        $('#test').append(
+            "<ul class='netOp "+name+"'>"+
+            model.networkInterfaces.available[i]+
+            "</ul>"
+        );
+    }
+
+    $('.netOp').on('click', function(e) {
+        e.stopPropagation();
+        var name = $(this).text();
+        console.log(name);
+        model.networkInterfaces.selected = name;
+        command.send('select_nework', name);
+    });
 }
 
 function add_container_elements()
 {
     $('body').append(
-    	"<table id='logoWrapper'><tr><td width='60px'><img alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
+    	"<table id='logoWrapper'><tr><td width='60px'><img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
         "<td>" +
 	        "<ul class='topMenu'>"+
 	            "<div id='saveLoadDiv'>"+
@@ -612,6 +651,11 @@ function add_handlers()
 
     $('#refresh').on('click', function(e) { 
         refresh_all(); 
+    });
+
+    $('#logo').on('click', function(e) {
+        e.stopPropagation();
+        select_network();
     });
 
 }
