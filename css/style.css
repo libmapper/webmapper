@@ -57,7 +57,7 @@ body {
     }
 
     /* Header Bars */
-    thead, #svgTop {
+    thead, #svgTop, #networkMenu {
       background: #EEE;
     }
     .displayTable th:hover, #svgTop:hover {
@@ -282,6 +282,26 @@ body {
       display: inline-block;
       padding: 4px;
     }
+
+    #networkMenu {
+      position: absolute;
+      z-index: 2;
+      left: 37px;
+      top: 30px;
+    }
+
+    #networkMenu td, #networkMenu th {
+      opacity: 1;
+    }
+
+    #networkMenu td, #logo {
+      cursor: pointer;
+    }
+
+    #networkMenu td:hover {
+      background-color: blue;
+    }
+
 /****************/
 
 .notification {

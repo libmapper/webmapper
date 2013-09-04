@@ -78,9 +78,33 @@ function refresh_all()
     command.send('refresh');
 }
 
-function select_network(name)
+function select_network()
 {
-    command.send('select_network', name);
+    $(  "<div id='networkMenu'>"+
+            "<table>"+
+                "<thead><th>Available Networks</th></thead>"+
+                "<tbody></tbody>"+
+            "</table></div>"
+        ).insertAfter('#logo');
+
+    for (var i in model.networkInterfaces.available ) {
+        $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
+    }
+
+    $('#networkMenu td').on('click.networkSelect', function(e) {
+        e.stopPropagation();
+        command.send('select_network', $(this).text() );
+        $('#networkMenu').remove();
+        $('*').off('.select_network');
+    });
+
+    $('body').on('click.networkSelect', function(e) {
+        $('#networkMenu').remove();
+        $('*').off('.select_network');
+    });
+
+    //$('#networkMenu').on('mouseleave.networkSelect')
+    //command.send('select_network', name);
 }
 
 function update_save_location()
