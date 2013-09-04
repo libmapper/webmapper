@@ -85,7 +85,7 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    print networkInterfaces['selected']
+    # print 'on_refresh', networkInterfaces['selected']
     admin = mapper.admin(networkInterfaces['selected'])
     monitor = mapper.monitor(admin, enable_autorequest=0)
     init_monitor()
@@ -101,12 +101,11 @@ def on_load(mapping_json, devices):
     mapperstorage.deserialise(monitor, mapping_json, devices)
 
 def select_network(newNetwork):
-    print networkInterfaces['selected']
+    # print 'select_network', newNetwork
     networkInterfaces['selected'] = newNetwork
-    on_refresh(False)
+    server.send_command('set_network', newNetwork)
 
 def get_networks(arg):
-    print arg
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
     totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
     connectedInterfaces = []
@@ -114,8 +113,8 @@ def get_networks(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             connectedInterfaces.append(i)
-    server.send_command("available_interfaces", connectedInterfaces)
-    return connectedInterfaces
+    server.send_command("available_networks", connectedInterfaces)
+    networkInterfaces['available'] = connectedInterfaces
 
 
 def init_monitor():
@@ -209,8 +208,6 @@ try:
 except:
     #port = randint(49152,65535)
     port = 50000
-
-networkInterfaces['available'] = get_networks('x')
 
 on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:

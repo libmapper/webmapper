@@ -78,9 +78,9 @@ function refresh_all()
     command.send('refresh');
 }
 
-function select_network()
+function select_network(name)
 {
-    //TODO
+    command.send('select_network', name);
 }
 
 function update_save_location()
@@ -458,9 +458,17 @@ function main()
         update_connection_properties_for(args, conns);
     });
 
-    command.register("available_interfaces", function(cmd, args) {
+    command.register("available_networks", function(cmd, args) {
         model.networkInterfaces.available = args;
-        console.log(args);
+        //if ( !model.networkInterfaces.selected ) {// Test to see if there is a network selected
+        //    command.send('select_network', model.networkInterfaces.available[0])
+        //    console.log('sending to select network ' + model.networkInterfaces.available[0])
+        //}
+    });
+
+    command.register("set_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
+        refresh_all();
     });
     
     // actions from VIEW
@@ -504,36 +512,8 @@ function main()
             command.send('all_links');
             command.send('all_connections');
             add_handlers();
-        },
-        100);
+        }, 100);
 
-}
-
-function test_dive(){
-    $('body').append('<div id="test"></div>')
-    $('#test').css({
-        'background-color': 'lightgrey',
-        'height': '100px',
-        'width': '100px',
-        'position': 'absolute'
-    });
-
-    for (var i in model.networkInterfaces.available) {
-        var name = 'netOp' + i;
-        $('#test').append(
-            "<ul class='netOp "+name+"'>"+
-            model.networkInterfaces.available[i]+
-            "</ul>"
-        );
-    }
-
-    $('.netOp').on('click', function(e) {
-        e.stopPropagation();
-        var name = $(this).text();
-        console.log(name);
-        model.networkInterfaces.selected = name;
-        command.send('select_nework', name);
-    });
 }
 
 function add_container_elements()
