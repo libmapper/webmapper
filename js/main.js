@@ -78,43 +78,6 @@ function refresh_all()
     command.send('refresh');
 }
 
-function select_network(clickEvent)
-{
-    command.send('get_networks');
-
-    command.register('available_networks', function(cmd, args){
-        model.networkInterfaces.available = args;
-        $(  "<div id='networkMenu'>"+
-                "<table>"+
-                    "<thead><th>Available Networks</th></thead>"+
-                    "<tbody></tbody>"+
-                "</table></div>"
-            ).insertAfter('#logo');
-        $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
-
-        for (var i in model.networkInterfaces.available ) {
-            $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
-        }
-
-        $('#networkMenu td').on('click.networkSelect', function(e) {
-            e.stopPropagation();
-            command.send('select_network', $(this).text() );
-            cleanup();
-        });
-
-        $('body').on('click.networkSelect', function(e) {cleanup()} );
-        $('#networkMenu').on('mouseleave.networkSelect', function(e) {cleanup()} );
-    });
-
-    function cleanup() {
-        $('#networkMenu').remove();
-        $('*').off('.networkSelect');
-        command.unregister('available_networks');
-    }
-
-    //$('#networkMenu').on('mouseleave.networkSelect')
-    //command.send('select_network', name);
-}
 
 function update_save_location()
 {
@@ -613,6 +576,56 @@ function add_extra_tools()
         "<div id='refresh' class='extratools'>");
 }
 
+
+function network_selection()
+{
+    var menuOpen = false; // A variable storing the state of network selection
+
+    $('body').on('mousedown', function(e) {
+        if(e.which == 3) {              // A right click
+            if(menuOpen) cleanup();     // Removes the menu and handlers if already open (multiple right clicks)
+            select_network(e);
+        }
+    });
+
+    function select_network(clickEvent) {
+        command.send('get_networks');
+        command.register('available_networks', function(cmd, args){
+            model.networkInterfaces.available = args;
+            $(  "<div id='networkMenu'>"+
+                    "<table>"+
+                        "<thead><th>Available Networks</th></thead>"+
+                        "<tbody></tbody>"+
+                    "</table></div>"
+                ).insertAfter('#container');
+            $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
+            menuOpen = true;
+
+            for (var i in model.networkInterfaces.available ) {
+                $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
+            }
+
+            $('#networkMenu td').on('click.networkSelect', function(e) {
+                e.stopPropagation();
+                command.send('select_network', $(this).text() );
+                cleanup();
+            });
+
+            $('body').on('click.networkSelect', function(e) {cleanup()} );
+        });
+    }
+
+    function cleanup() {
+        $('#networkMenu').fadeOut(100);
+        $('*').off('.networkSelect');
+        menuOpen = false;
+        command.unregister('available_networks');
+    }
+
+    //$('#networkMenu').on('mouseleave.networkSelect')
+    //command.send('select_network', name);
+}
+
 /**
  * handlers for items in the top menu 
  */
@@ -673,13 +686,12 @@ function add_handlers()
 
     $('body').attr('oncontextmenu',"return false;");
 
-    $(document).on('mousedown', function(e) {
-        console.log('e.which', e.which);
-        console.log(e);
-        console.log('[page.X, page.Y]', e.pageX, e.pageY)
+    network_selection();
+
+    /*$(document).on('mousedown.networkSelect', function(e) {
         if( e.which == 3 )
             select_network(e);
-    });
+    });*/
 
 }
 

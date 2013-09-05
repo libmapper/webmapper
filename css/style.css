@@ -65,7 +65,7 @@ body {
     }
 
     /* highlights */
-    .modesel, .displayTable tr.trsel.even {
+    .modesel, .displayTable tr.trsel.even, #networkMenu td:hover  {
       background-color: #9CC2CF;
     }
     /* secondary highlight */
@@ -296,10 +296,6 @@ body {
 
     #networkMenu td, #logo {
       cursor: pointer;
-    }
-
-    #networkMenu td:hover {
-      background-color: blue;
     }
 
 /****************/
