@@ -78,7 +78,7 @@ function refresh_all()
     command.send('refresh');
 }
 
-function select_network()
+function select_network(clickEvent)
 {
     command.send('get_networks');
 
@@ -90,6 +90,7 @@ function select_network()
                     "<tbody></tbody>"+
                 "</table></div>"
             ).insertAfter('#logo');
+        $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
 
         for (var i in model.networkInterfaces.available ) {
             $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
@@ -667,10 +668,18 @@ function add_handlers()
 
     $('#logo').on('click', function(e) {
         e.stopPropagation();
-        select_network();
+        //select_network();
     });
 
     $('body').attr('oncontextmenu',"return false;");
+
+    $(document).on('mousedown', function(e) {
+        console.log('e.which', e.which);
+        console.log(e);
+        console.log('[page.X, page.Y]', e.pageX, e.pageY)
+        if( e.which == 3 )
+            select_network(e);
+    });
 
 }
 
