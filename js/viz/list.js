@@ -863,6 +863,7 @@ function drawing_curve(sourceRow)
     var self = this;
     this.sourceRow = sourceRow;
     this.targetRow;
+    if( model.mKey == true ) this.muted = true; // The curve is being drawn mute
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
@@ -944,7 +945,15 @@ function drawing_curve(sourceRow)
 
     this.mouseup = function( mouseUpEvent ) {
         if (selectedTab == all_devices) on_link(mouseUpEvent);
-        else on_connect(mouseUpEvent);
+        else { 
+            on_connect(mouseUpEvent);
+
+            if( this.muted == true ) {
+                setTimeout(function(){
+                    mute_selected();
+                }, 300);
+            }
+        }
         $("*").off('.drawing').removeClass('incompatible');
         //So that the old line is only removed when the actual connection is made
         self.line.remove();

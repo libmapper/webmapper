@@ -363,8 +363,10 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
-function on_mute(conns)
+function mute_selected()
 {
+    var conns = view.get_selected_connections(model.connections);
+
     for ( var i in conns ) {
         var args = conns[i];
         if ( args.muted == 0 ) {
@@ -670,10 +672,15 @@ function add_handlers()
     });
 
     $(document).keydown( function(e) {
-        if( e.which == 77 ) { // mute on 'm'
-            var conns = view.get_selected_connections(model.connections);
-            if ( conns ) 
-                on_mute(conns);
+        if( e.which == 77 && model.mKey == false) { // mute on 'm'
+            model.mKey = true;
+            mute_selected();
+        }
+    });
+
+    $(document).keyup( function(e) {
+        if( e.which == 77) {
+            model.mKey = false;
         }
     });
 
