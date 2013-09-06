@@ -531,6 +531,8 @@ function add_container_elements()
 	    "</ul></tr></table>"+
 	    "<div id='container'></div>"
     );
+
+    $('body').attr('oncontextmenu',"return false;");
 }
 
 function add_signal_control_bar() 
@@ -679,19 +681,7 @@ function add_handlers()
         refresh_all(); 
     });
 
-    $('#logo').on('click', function(e) {
-        e.stopPropagation();
-        //select_network();
-    });
-
-    $('body').attr('oncontextmenu',"return false;");
-
     network_selection();
-
-    /*$(document).on('mousedown.networkSelect', function(e) {
-        if( e.which == 3 )
-            select_network(e);
-    });*/
 
 }
 
