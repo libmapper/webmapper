@@ -4,7 +4,7 @@ import webmapper_http_server as server
 import mapper
 import mapperstorage
 import netifaces # a library to find available network interfaces
-import sys, os, os.path, threading, json, re
+import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
 networkInterfaces = {'selected': '', 'available': []}   
@@ -164,6 +164,12 @@ def select_tab(src_dev):
         sync_device(src_dev, 1)
         monitor.request_connections_by_src_device_name(src_dev)
 
+def new_connection(args):
+    source = str(args[0])
+    dest = str(args[1])
+    options = args[2]
+    monitor.connect(source, dest, options)
+
 server.add_command_handler("tab", lambda x: select_tab(x))
 
 server.add_command_handler("get_signals_by_device_name", lambda x: get_signals_by_device_name(x))
@@ -189,8 +195,7 @@ server.add_command_handler("link",
 server.add_command_handler("unlink",
                            lambda x: monitor.unlink(*map(str,x)))
 
-server.add_command_handler("connect",
-                           lambda x: monitor.connect(*map(str,x)))
+server.add_command_handler("connect", lambda x: new_connection(x))
 
 server.add_command_handler("disconnect",
                            lambda x: monitor.disconnect(*map(str,x)))

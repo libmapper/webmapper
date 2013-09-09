@@ -6,6 +6,8 @@ function LibMapperModel ()
 	this.connections = new Assoc();
 
 	this.networkInterfaces = {'selected': null, 'available': []};		
+
+	this.mKey = false; //Whether the 'm' key is currently depressed
 };
 
 LibMapperModel.prototype = {
