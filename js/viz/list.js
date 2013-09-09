@@ -864,7 +864,7 @@ function drawing_curve(sourceRow)
     this.sourceRow = sourceRow;
     this.targetRow;
     this.muted = false;
-    if( model.mKey == true ) this.muted = true; // The curve is being drawn mute
+    if( model.mKey == true && selectedTab != all_devices ) this.muted = true; // The curve is being drawn mute
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
@@ -904,6 +904,7 @@ function drawing_curve(sourceRow)
 
     // The actual line
     this.line = svgArea.path().attr({'stroke-width': 2});
+    if(this.muted) this.line.node.classList.add('muted');
 
     this.update = function( moveEvent ) {
         var target = moveEvent.currentTarget;
