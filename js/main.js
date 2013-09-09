@@ -456,17 +456,13 @@ function main()
         update_connection_properties_for(args, conns);
     });
 
-    /*command.register("available_networks", function(cmd, args) {
-        model.networkInterfaces.available = args;
-        //if ( !model.networkInterfaces.selected ) {// Test to see if there is a network selected
-        //    command.send('select_network', model.networkInterfaces.available[0])
-        //    console.log('sending to select network ' + model.networkInterfaces.available[0])
-        //}
-    });*/
-
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
         refresh_all();
+    });
+
+    command.register("active_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
     });
     
     // actions from VIEW
@@ -598,6 +594,7 @@ function network_selection()
             model.networkInterfaces.available = args;
             $(  "<div id='networkMenu'>"+
                     "<table>"+
+                        "Current Network: "+model.networkInterfaces.selected+
                         "<thead><th>Available Networks</th></thead>"+
                         "<tbody></tbody>"+
                     "</table></div>"
@@ -620,7 +617,7 @@ function network_selection()
     }
 
     function cleanup() {
-        $('#networkMenu').fadeOut(100);
+        $('#networkMenu').fadeOut(100).remove();
         $('*').off('.networkSelect');
         menuOpen = false;
         command.unregister('available_networks');

@@ -7,7 +7,7 @@ import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
-networkInterfaces = {'selected': '', 'available': []}   
+networkInterfaces = {'active': '', 'available': []}   
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -85,8 +85,7 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    # print 'on_refresh', networkInterfaces['selected']
-    admin = mapper.admin(networkInterfaces['selected'])
+    admin = mapper.admin(networkInterfaces['active'])
     monitor = mapper.monitor(admin, enable_autorequest=0)
     init_monitor()
 
@@ -102,7 +101,7 @@ def on_load(mapping_json, devices):
 
 def select_network(newNetwork):
     # print 'select_network', newNetwork
-    networkInterfaces['selected'] = newNetwork
+    networkInterfaces['active'] = newNetwork
     server.send_command('set_network', newNetwork)
 
 def get_networks(arg):
@@ -115,6 +114,11 @@ def get_networks(arg):
             connectedInterfaces.append(i)
     server.send_command("available_networks", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
+    server.send_command("active_network", networkInterfaces['active'])
+
+def get_active_network(arg):
+    pdb.set_trace()
+    server.send_command("active_network", networkInterfaces['active'])
 
 
 def init_monitor():
@@ -207,6 +211,14 @@ server.add_command_handler("load", on_load)
 
 server.add_command_handler("select_network", select_network)
 server.add_command_handler("get_networks", get_networks)
+
+get_networks(False)
+if ( 'en0' in networkInterfaces['available'] ) :
+    networkInterfaces['active'] = 'en0'
+elif ( 'en1' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'en1'
+elif ( 'lo0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'lo0'
 
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
