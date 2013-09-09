@@ -946,11 +946,10 @@ function drawing_curve(sourceRow)
 
     this.mouseup = function( mouseUpEvent ) {
         if (selectedTab == all_devices) on_link(mouseUpEvent);
-        else { 
+        else if (this.targetRow) {
             command.send('connect', [this.sourceRow.firstChild.innerHTML, this.targetRow.firstChild.innerHTML, {'muted': this.muted}]);
         }
         $("*").off('.drawing').removeClass('incompatible');
-        //So that the old line is only removed when the actual connection is made
         self.line.remove();
     }
 
