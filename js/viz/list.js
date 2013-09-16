@@ -763,9 +763,13 @@ function on_unlink(e)
 
 function on_connect(e)
 {
+    var options = {};
+    if ( model.mKey ) {
+        options['muted'] = true;
+    }
     function do_connect(l, r) {
         command.send('connect', [l.firstChild.innerHTML,
-                                 r.firstChild.innerHTML]);
+                                 r.firstChild.innerHTML, options]);
     }
     apply_selected_pairs(do_connect);
     e.stopPropagation();

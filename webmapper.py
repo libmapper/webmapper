@@ -171,7 +171,10 @@ def select_tab(src_dev):
 def new_connection(args):
     source = str(args[0])
     dest = str(args[1])
-    options = args[2]
+    options = {}
+    if( len(args) > 2 ): # See if the connection message has been supplied with options
+        if( type(args[2]) is dict ): # Make sure they are the proper format
+            options = args[2]  
     monitor.connect(source, dest, options)
 
 server.add_command_handler("tab", lambda x: select_tab(x))
