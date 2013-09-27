@@ -1,0 +1,16 @@
+#balloonWrapper{margin: 0 auto;}
+
+#BalloonSVG{
+	
+}
+
+.BalloonNode_src{
+	fill: #fff;
+	stroke: #ff0000;
+}
+      
+.BalloonNode_dst{
+	fill: #fff;
+	stroke: #000;
+}
+      

@@ -333,21 +333,9 @@ HivePlotView.prototype = {
 	// divide devices from model into sources and destinations
 	initDevices : function ()
 	{
-		var keys = this.model.devices.keys();
-		for (var d in keys) 
-		{
-			var k = keys[d];
-			var dev = this.model.devices.get(k);
-			if (dev.n_outputs)
-				this.devs[0].push(dev);
-			if (dev.n_inputs)
-				this.devs[1].push(dev);
-		}
-		
-		// sort devices
+		this.devs = this.model.getDevices();
 		this.devs[0].sort(this.compareDeviceLabel);
 		this.devs[1].sort(this.compareDeviceLabel);
-
 	},
 	
 	// draw background for SVG, can be styles as a gradient in the CSS
