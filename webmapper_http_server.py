@@ -311,6 +311,10 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/viz/hive.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css"></link>
 
+<!-- Balloon Plot View includes -->
+<script type="text/javascript" src="js/viz/balloon.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/balloon/BalloonPlot_style.css"></link>
+
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>

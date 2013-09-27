@@ -13,4 +13,11 @@
 	fill: #fff;
 	stroke: #000;
 }
-      
+    
+.BalloonNode_over{
+	stroke-width: 4px;     
+}
+
+#output ul{
+	padding-left: 40px;
+}
