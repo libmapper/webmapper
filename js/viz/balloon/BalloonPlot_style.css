@@ -1,8 +1,30 @@
-#balloonWrapper{margin: 0 auto;}
+#balloonWrapper{
+	margin: 0 auto;
+	position: relative;
+	float: left;
+}
 
 #BalloonSVG{
 	
 }
+
+#balloonTable_src, #balloonTable_dst, #BalloonSVG{
+	float: left;
+	position: relative;	
+}
+
+.balloonTable{
+	background-color: #eee;
+}
+
+.balloonTable ul{
+	padding-left: 20px;
+}
+
+.balloonTableLI_inView{
+	background-color: red;
+}
+
 
 .BalloonNode_src{
 	fill: #fff;
@@ -13,6 +35,21 @@
 	fill: #fff;
 	stroke: #000;
 }
+.BalloonLeafNode_src{
+	fill: #ff0000;
+	stroke: #fff;
+}
+      
+.BalloonLeafNode_dst{
+	fill: #000;
+	stroke: #fff;
+}
+
+
+
+
+
+
     
 .BalloonNode_over{
 	stroke-width: 4px;     

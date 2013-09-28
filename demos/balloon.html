@@ -136,12 +136,12 @@ function addDevice(name, nIn, nOut)
 	model.devices.add(name, args);
 
 	for(var j=0; j<nIn;j++)
-		addDevSignal("/Sig/subChil/Subber/head" + j, name);	
+		addDevSignal("/Sig/subChil/Subber/head" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/Sig" + j, name);	
+		addDevSignal("/Sig" + j, name, 1);	
 }
 
-function addDevSignal(name, device_name)
+function addDevSignal(name, device_name, direction)
 {
 	/*
 	var args = new Array(); 
@@ -152,6 +152,7 @@ function addDevSignal(name, device_name)
 	var args = new Object(); 
 	args.device_name = device_name;
 	args.name = name;
+	args.direction = direction;
 	model.signals.add(device_name+name, args);
 
 }
@@ -193,6 +194,5 @@ function btnHandler(val)
 
 
 </div>
-<div id="output">Hi</div>
 </body>
 </html>
