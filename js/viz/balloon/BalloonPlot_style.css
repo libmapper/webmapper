@@ -1,7 +1,9 @@
+
 #balloonWrapper{
 	margin: 0 auto;
 	position: relative;
 	float: left;
+	font-family: helvetica, arial, sans-serif;
 }
 
 #BalloonSVG{
