@@ -14,7 +14,8 @@
 }
 
 .balloonTable{
-	background-color: #eee;
+	background-color: #efefef;
+	overflow: auto;
 }
 
 .balloonTable ul{
@@ -28,31 +29,33 @@
 
 .BalloonNode_src{
 	fill: #fff;
-	stroke: #ff0000;
+	stroke: paleVioletRed ;
+}
+.BalloonLeafNode_src{
+	fill: paleVioletRed ;
+	stroke: #fff;
 }
       
 .BalloonNode_dst{
 	fill: #fff;
-	stroke: #000;
+	stroke: #04C4D9;
 }
-.BalloonLeafNode_src{
-	fill: #ff0000;
-	stroke: #fff;
-}
-      
 .BalloonLeafNode_dst{
-	fill: #000;
+	fill: #04C4D9;
 	stroke: #fff;
 }
 
-
-
-
-
-
-    
 .BalloonNode_over{
 	stroke-width: 4px;     
+}
+.BalloonNode_selected{
+	stroke-width: 8px;     
+}
+
+.BalloonCorner{
+	fill: #000;
+	stroke: #832352;
+	opacity: 0.08;
 }
 
 #output ul{

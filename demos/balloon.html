@@ -74,12 +74,12 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 4, nOut = 2;
-	var nSigs = 2;
+	var nIn = 12, nOut = 6;
+	var nSigs = 5;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
-		addDevice("/Destination " + nDstDevices++, nSigs, 0);
+		addDevice("/Dest " + nDstDevices++, nSigs, 0);
 }
 
 
@@ -136,7 +136,7 @@ function addDevice(name, nIn, nOut)
 	model.devices.add(name, args);
 
 	for(var j=0; j<nIn;j++)
-		addDevSignal("/Sig/subChil/Subber/head" + j, name, 0);	
+		addDevSignal("/Sig/subservient/subsub/head/eye" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
 		addDevSignal("/Sig" + j, name, 1);	
 }
