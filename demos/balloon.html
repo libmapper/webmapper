@@ -74,7 +74,7 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 12, nOut = 6;
+	var nIn = 3, nOut = 15;
 	var nSigs = 5;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
@@ -138,7 +138,7 @@ function addDevice(name, nIn, nOut)
 	for(var j=0; j<nIn;j++)
 		addDevSignal("/Sig/subservient/subsub/head/eye" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/Sig" + j, name, 1);	
+		addDevSignal("/Sig/daSig" + j, name, 1);	
 }
 
 function addDevSignal(name, device_name, direction)

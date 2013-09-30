@@ -14,7 +14,7 @@ function BalloonView(container, model)
 	
 	this.svg;					// holding <SVG> elements for easy reference
 	this.svgDim = [800, 600]; 	// x-y dimensions of the svg canvas
-	this.nodeRadius = 50;
+	this.nodeRadius = 40;
 	this.tableWidth = 200;
 	
 	//this.devs;					// to hold libmapper devices
@@ -159,14 +159,17 @@ BalloonView.prototype = {
 	{
 		var n = nodes.length;
 
+		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
+		r = r * (this.svgDim[1]-50) / 2;
+		
 		var angleFrom = 0 * Math.PI / 180;		
 		var angleTo = 180 * Math.PI / 180;		
 		var range = angleTo - angleFrom;
-		var angleInc = (n==1)? 0 : range/(n-1);
+		var angleInc = (n==1)? 0 : range/(n);
 		
 		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
-		var w = this.svgDim[0]/2 - this.nodeRadius - 100;
-		var h = this.svgDim[1]/2 - this.nodeRadius - 10;
+		var w = this.svgDim[0]/2 - r - 100;
+		var h = this.svgDim[1]/2 - r - 10;
 		
 		var angleFromOffset = (ind==0)? Math.PI/2 : - Math.PI/2;
 		if(n==1)
@@ -177,18 +180,18 @@ BalloonView.prototype = {
 		{
 			var node = nodes[i];
 			
-			var nAngle = angleFrom + angleFromOffset + (i*angleInc);
+			var nAngle = angleFrom + angleInc/2 + angleFromOffset + (i*angleInc);
 			var x = ( w * Math.cos(nAngle) ) + origin[0] + positionOffset;
 			var y = ( h * Math.sin(nAngle) ) + origin[1];
 			
-			this.drawNode(node, ind, x, y, i);
+			this.drawNode(node, ind, x, y, i, r);
 		}
 		
 		
 		
 	},
 	
-	drawNode : function (node, ind, x, y, childIndex)
+	drawNode : function (node, ind, x, y, childIndex, radius)
 	{
 		var _self = this;
 		
@@ -198,7 +201,7 @@ BalloonView.prototype = {
 		node.svg.setAttribute("cy", y);						// y-position
 		node.svg.setAttribute("data-ind", ind);				// src or destination
 		node.svg.setAttribute("data-childIndex", childIndex);	// index into the container array
-		node.svg.setAttribute("r", this.nodeRadius);			// radius of circle
+		node.svg.setAttribute("r", radius);			// radius of circle
 		$(node.svg).data("node", node);
 		
 		var stylename;
@@ -222,12 +225,24 @@ BalloonView.prototype = {
 		if(!node.isLeaf())
 		{
 			var n = node.childNodes.length;
-			var angleInc =  (n==1)? 0 : (360 * Math.PI / 180) / (n);
+			var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
+			var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
 			var childNodeRadius = this.nodeRadius/6;
-			for(var i=0; i<n; i++){
-				var nAngle = i*angleInc;
-				var x2 = ( (this.nodeRadius-childNodeRadius-2) * Math.cos(nAngle) ) + x;
-				var y2 = ( (this.nodeRadius-childNodeRadius-2) * Math.sin(nAngle) ) + y;
+			childNodeRadius = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
+			childNodeRadius = childNodeRadius*radius;
+			
+			
+			for(var i=0; i<n; i++)
+			{
+				var childNode = node.childNodes[i];
+				var childStyle = (childNode.isLeaf()) ? "BalloonLeafNode": "BalloonNode";
+				childStyle += (ind==0)? "_src" : "_dst" ;
+				
+				var nAngle = i*angleInc + offset + angleInc/2;
+				if(n==1)
+					nAngle += Math.PI/2;
+				var x2 = ( (radius-childNodeRadius) * Math.cos(nAngle) ) + x;
+				var y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
 				
 				var childNode = node.childNodes[i];
 				var childSvg = document.createElementNS(this.svgNS,"circle");
@@ -236,7 +251,7 @@ BalloonView.prototype = {
 				childSvg.setAttribute("data-ind", ind);				// src or destination
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
 				childSvg.setAttribute("r", childNodeRadius);
-				childSvg.setAttribute("class", stylename);
+				childSvg.setAttribute("class", childStyle);
 				$(childSvg).data("node", childNode);
 				node.svgChilds.push(childSvg);
 				this.svg.appendChild(childSvg);
