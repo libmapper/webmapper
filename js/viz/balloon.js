@@ -227,9 +227,9 @@ BalloonView.prototype = {
 			var n = node.childNodes.length;
 			var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
 			var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
-			var childNodeRadius = this.nodeRadius/6;
-			childNodeRadius = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
+			var childNodeRadius = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
 			childNodeRadius = childNodeRadius*radius;
+			var childNodeRadiusSmall = childNodeRadius*0.9;
 			
 			
 			for(var i=0; i<n; i++)
@@ -250,7 +250,7 @@ BalloonView.prototype = {
 				childSvg.setAttribute("cy", y2);						// y-position
 				childSvg.setAttribute("data-ind", ind);				// src or destination
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
-				childSvg.setAttribute("r", childNodeRadius);
+				childSvg.setAttribute("r", childNodeRadiusSmall);
 				childSvg.setAttribute("class", childStyle);
 				$(childSvg).data("node", childNode);
 				node.svgChilds.push(childSvg);
