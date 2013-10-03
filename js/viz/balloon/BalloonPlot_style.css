@@ -17,7 +17,15 @@
 
 .balloonTable{
 	background-color: #efefef;
-	overflow: auto;
+	overflow: auto;	
+}
+
+#accordion0, #accordion1{
+	padding: 10px 10px;
+}
+
+#accordion0 div, #accordion1 div{
+	padding: 0px 0px;
 }
 
 .balloonTable ul{

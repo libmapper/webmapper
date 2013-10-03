@@ -335,7 +335,31 @@ BalloonView.prototype = {
     	this.tables[ind].appendChild(p);
 		
 		// print the tree
-    	this.tables[ind].appendChild(this.print(this.trees[ind]));
+    	//this.tables[ind].appendChild(this.print(this.trees[ind]));
+    	
+    	//
+    	var accordion = document.createElement("div");
+    	accordion.id = "accordion" + ind;
+    	for(var i=0; i<this.trees[ind].childNodes.length; i++)
+		{
+    		var node = this.viewNodes[ind].childNodes[i];
+    		
+    		var heading = document.createElement("h3");
+    		heading.innerHTML = node.label;
+    		
+    		var div = document.createElement("div");
+    		var p = document.createElement("p");
+    		p.innerHTML = "hello";
+    		
+    		accordion.appendChild(heading);
+    		div.appendChild(this.print(node, 0));
+    		accordion.appendChild(div);
+		}
+    	this.tables[ind].appendChild(accordion);
+    	$( "#accordion" + ind ).accordion({
+    		heightStyle: "content",
+    		collapsible: true    	    
+    	});
 	},
 	
 	
@@ -390,13 +414,13 @@ BalloonView.prototype = {
 	 * prints out the list of nodes and all child nodes recursively
 	 * returns an unordered list with the hierarchy
 	 */
-	print : function (node)
+	print : function (node, level)
 	{
 		var _self = this;
 		var ul; 
 
-//		if(node.label != "root")
-//		{
+		if(level != 0)
+		{
 			ul = document.createElement("ul");
 			
 			// create a LI for the node
@@ -413,16 +437,16 @@ BalloonView.prototype = {
 				li.setAttribute("class", "balloonTableLI_inView");
 			}
 			ul.appendChild(li);
-//		}
-//		else
-//			ul = document.createElement("div");
+		}
+		else
+			ul = document.createElement("div");
 		
 		// recursively create an UL for its children
 		var n = node.childNodes.length;
 		if(n>0)
 		{
 			for(var i=0; i<n; i++)
-				ul.appendChild(this.print(node.childNodes[i]));
+				ul.appendChild(this.print(node.childNodes[i], level+1));
 		}
 
 		return ul;
