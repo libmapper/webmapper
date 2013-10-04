@@ -268,11 +268,11 @@ BalloonView.prototype = {
 	{
 		var item = evt.currentTarget;
 		var node = $(item).data("node");
-		var childIndex = item.getAttribute("data-childIndex");
+		var childIndex = node.childIndex;
 		var ind = item.getAttribute("data-ind");
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
-		this.updateTables();
+		this.updateTables(ind);
 		
 	},
 	
@@ -284,15 +284,13 @@ BalloonView.prototype = {
 		if(node.isLeaf())
 		{
 			this.viewNodes[ind] = node.parentNode;
-
-			// set it as selected
-			//
 		}
 		else
 		{
 			this.viewNodes[ind] = node;
 		}
 		this.refreshSVG();
+		this.updateTables(ind);
 	},
 	
 	onListOver : function (evt)
@@ -444,16 +442,9 @@ BalloonView.prototype = {
 			var li = document.createElement("li");
 			li.innerHTML = node.label;
 			$(li).data("node", node);
-			li.addEventListener("click", function(evt){ _self.onListClick(evt); 	});
-			
-			if(
-					this.viewNodes[node.direction].signalName == node.signalName &&
-					this.viewNodes[node.direction].label == node.label &&
-					this.viewNodes[node.direction].level == node.level 
-				)
-			{
-				li.setAttribute("class", "balloonTableLI_inView");
-			}
+			li.addEventListener("click", function(evt){ 
+				_self.onListClick(evt); 	
+			});
 			ul.appendChild(li);
 		}
 		else
@@ -529,32 +520,54 @@ BalloonView.prototype = {
 		this.drawTable(1);
 	},
 	
-	updateTables : function ()
+	updateTables : function (ind)
 	{
-		for(var ind=0; ind<2; ind++)
+		_self = this;
+		// the node currently in view in the SVG plot
+		var node = this.viewNodes[ind];
+		
+		// recurse to find the node pertaining to the signal's device
+		// this node will have a child index corresponding also to its position in the accordion list
+		var index = null;
+		while (node.parentNode != null) 
 		{
-			var node = this.viewNodes[ind];
-			var index = null;
-			while (node.parentNode != null) 
-			{
-				if(node.parentNode.label == this.rootLabel[ind]){
-					index = node.childIndex;
-					break;
-				}
-				else
-					node = node.parentNode;
+			// if node is the direct child of the root, then note its index
+			if(node.parentNode.label == this.rootLabel[ind]){
+				index = node.childIndex;
+				break;
 			}
-			if(index != null)
-				$("#accordion" + ind).accordion("option", "active", index);
-			
-			//var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
-			
-			
+			// else recurse to the next upper level
+			else
+				node = node.parentNode;
 		}
 		
+		// open the accordion to the corresponding index
+		if(index != null)
+			$("#accordion" + ind).accordion("option", "active", index);
+			
 		
+		
+		// find the item currently in view and set its style
+		$("#accordion" + ind).find('li').each(function(){
+			var li = this;
+			var liNode = $(li).data("node");
+			if( _self.nodesMatch(_self.viewNodes[ind], liNode))
+				li.classList.add("selected");
+			else
+				li.classList.remove("selected");
+		});
 	},
 	
+	// comparison function for matching two nodes
+	nodesMatch : function (node1, node2)
+	{
+		if(	node1.signalName == node2.signalName &&
+			node1.label == node2.label &&
+			node1.level == node2.level )
+			return true;
+		else
+			return false;
+	},
 	
 	refreshSVG : function ()
 	{

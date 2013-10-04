@@ -21,7 +21,7 @@
 }
 
 .balloonTable{
-	background-color: #efefef;
+	background-color: #aaa;
 	overflow: auto;	
 }
 
@@ -39,7 +39,7 @@
     line-height: 42px;  
     display: block;  
     font-size: 12pt;  
-    width: 200px;  
+    width: 100%;  
     text-indent: 10px;  
 }  
 
@@ -52,13 +52,15 @@
     background-color: #f3f3f3;  
     color: #777;  
     font-size: 10pt;  
-    line-height: 16pt;  
+    line-height: 16pt; 
+    padding: 6px 0; 
 }  
 
 .balloonTable ul{
 	padding-left: 10px;
 	list-style-position: inside;
 	cursor: pointer;
+	list-style-type: circle;
 }
 
 .balloonTable li{
@@ -66,14 +68,15 @@
 	padding-left: 14px;
 }
 
+.balloonTable .selected{
+	color: red;
+}
+
+
 .balloonTable li:hover{
 	color: #333;
 }
-
-.balloonTableLI_inView{
-	background-color: red;
-}
-
+/*
 .BalloonNode_src{
 	fill: #fff;
 	stroke: paleVioletRed ;
@@ -81,13 +84,13 @@
 .BalloonLeafNode_src{
 	fill: paleVioletRed ;
 	stroke: #fff;
-}
+}*/
       
-.BalloonNode_dst{
+.BalloonNode_dst, .BalloonNode_src{
 	fill: #fff;
 	stroke: #04C4D9;
 }
-.BalloonLeafNode_dst{
+.BalloonLeafNode_dst, .BalloonLeafNode_src{
 	fill: #04C4D9;
 	stroke: #fff;
 }
