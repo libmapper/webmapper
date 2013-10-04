@@ -135,10 +135,10 @@ function addDevice(name, nIn, nOut)
 	args.n_outputs = nOut;
 	model.devices.add(name, args);
 
-	for(var j=0; j<nIn;j++)
-		addDevSignal("/Sig/subservient/subsub/head/eye" + j, name, 0);	
+	for(var j=0; j<nIn*2;j++)
+		addDevSignal("/walk/area/panel" + j, name, 1);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/Sig/daSig" + j, name, 1);	
+		addDevSignal("/body/torso/arm/finger" + j, name, 0);	
 }
 
 function addDevSignal(name, device_name, direction)

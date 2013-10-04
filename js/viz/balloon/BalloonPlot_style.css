@@ -1,3 +1,8 @@
+* {
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box
+}
 
 #balloonWrapper{
 	margin: 0 auto;
@@ -21,21 +26,53 @@
 }
 
 #accordion0, #accordion1{
-	padding: 10px 10px;
+	padding: 0;
+	margin: 0;
 }
 
-#accordion0 div, #accordion1 div{
-	padding: 0px 0px;
-}
+#accordion0 .ui-accordion-header, #accordion1 .ui-accordion-header {  
+    background-color: #aaa;  
+    margin: 0px;
+    padding: 15px;  
+    font-weight: normal;
+    color: #fff;  
+    line-height: 42px;  
+    display: block;  
+    font-size: 12pt;  
+    width: 200px;  
+    text-indent: 10px;  
+}  
+
+#accordion0 .ui-accordion-header:hover, #accordion1 .ui-accordion-header:hover {
+	color: #ccc;
+}  
+
+#accordion0 .ui-accordion-content, #accordion1 .ui-accordion-content {  
+    width: 100%;  
+    background-color: #f3f3f3;  
+    color: #777;  
+    font-size: 10pt;  
+    line-height: 16pt;  
+}  
 
 .balloonTable ul{
-	padding-left: 20px;
+	padding-left: 10px;
+	list-style-position: inside;
+	cursor: pointer;
+}
+
+.balloonTable li{
+	cursor: pointer;
+	padding-left: 14px;
+}
+
+.balloonTable li:hover{
+	color: #333;
 }
 
 .balloonTableLI_inView{
 	background-color: red;
 }
-
 
 .BalloonNode_src{
 	fill: #fff;
@@ -71,3 +108,4 @@
 #output ul{
 	padding-left: 40px;
 }
+

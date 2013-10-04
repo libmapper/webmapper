@@ -23,7 +23,7 @@ function BalloonView(container, model)
 	this.trees = [null, null];
 	this.viewNodes = [null, null];
 	this.tables = [null, null];
-	
+	this.rootLabel = ["Sources", "Destinations"];
 	
 	//Keyboard handlers
 	document.onkeydown = function(e){
@@ -36,9 +36,10 @@ BalloonView.prototype = {
 		
 	init : function () 
 	{ 
-		var _self = this;	// to pass to the instance of LibMApperMatrixView to event handlers
+		var _self = this;				// to pass to the instance of balloon.js to event handlers
 		var wrapperDiv, div, btn;		// to instantiate items
 		
+		// clear the container DIV
 		$(this._container).empty();
 		
 		// create the wrapper DIV
@@ -46,7 +47,7 @@ BalloonView.prototype = {
 		wrapperDiv.setAttribute("id", "balloonWrapper");
 		this._container.appendChild(wrapperDiv);
 		
-		// add source table
+		// add source table DIV
 		this.tables[0] = document.createElement("div");
 		this.tables[0].setAttribute("id", "balloonTable_src");
 		this.tables[0].setAttribute("class", "balloonTable");
@@ -63,19 +64,12 @@ BalloonView.prototype = {
 		this.svg.setAttribute("style", "float:left;margin: 0 auto;");
 		wrapperDiv.appendChild(this.svg);	
 		
-		// add destination table
+		// add destination table DIV
 		this.tables[1] = document.createElement("div");
 		this.tables[1].setAttribute("id", "balloonTable_dst");
 		this.tables[1].setAttribute("class", "balloonTable");
 		this.tables[1].setAttribute("style", "width: " + this.tableWidth + "px; height: " + this.svgDim[1] + "px;");
 		wrapperDiv.appendChild(this.tables[1]);
-
-		/*
-		// for debug output
-		wrapper = document.createElement("div");
-		wrapper.setAttribute("id", "output");
-		this._container.appendChild(wrapper);
-		*/
 	},
 	
 	keyboardHandler: function (e)
@@ -103,6 +97,8 @@ BalloonView.prototype = {
 		// get the new window size
 		var w = $(this._container).width();
 		var h = $(this._container).height();
+		
+		// set the new SVG dimensions 
 		this.svgDim[0] = w - this.tableWidth*2;
 		this.svgDim[1] = h;
 		
@@ -157,38 +153,37 @@ BalloonView.prototype = {
 	
 	drawNodes : function (ind, nodes)
 	{
+		// number of nodes
 		var n = nodes.length;
 
-		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
-		r = r * (this.svgDim[1]-50) / 2;
+		// radius of node
+		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );	// Aaron's magical formula for determining largest possible circle to fill the container circle's space
+		r = r * (this.svgDim[1]-50)/2;							// multiply by container's radius
+																// *doesn't work perfectly because container is actually an ellipse
+
+		// calculate angles
+		var angleFrom = 0 * Math.PI / 180;		// start angle		
+		var angleTo = 180 * Math.PI / 180;		// end angle
+		var range = angleTo - angleFrom;		// total arc size
+		var angleInc = (n==1)? 0 : range/(n);	// angle to increment on each step
+		var angleFromOffset = (ind==0)? Math.PI/2 : - Math.PI/2;	// offset sources and destinations to their respective sides
+		if (n==1) angleFromOffset += Math.PI/2;	// special case, if only one node then place it in the center
 		
-		var angleFrom = 0 * Math.PI / 180;		
-		var angleTo = 180 * Math.PI / 180;		
-		var range = angleTo - angleFrom;
-		var angleInc = (n==1)? 0 : range/(n);
-		
+		//  plot helpers
 		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
-		var w = this.svgDim[0]/2 - r - 100;
-		var h = this.svgDim[1]/2 - r - 10;
-		
-		var angleFromOffset = (ind==0)? Math.PI/2 : - Math.PI/2;
-		if(n==1)
-			angleFromOffset += Math.PI/2;
+		var w = this.svgDim[0]/2 - r - 100;		// container ellipse width minus radius of node with extra padding
+		var h = this.svgDim[1]/2 - r - 10;		// container ellipse height minus radius of node with extra padding
 		var positionOffset = (ind==0)?  -this.nodeRadius-10 : this.nodeRadius+10;
 		
+		// draw the nodes
 		for(var i=0; i<n; i++)
 		{
 			var node = nodes[i];
-			
 			var nAngle = angleFrom + angleInc/2 + angleFromOffset + (i*angleInc);
 			var x = ( w * Math.cos(nAngle) ) + origin[0] + positionOffset;
 			var y = ( h * Math.sin(nAngle) ) + origin[1];
-			
 			this.drawNode(node, ind, x, y, i, r);
 		}
-		
-		
-		
 	},
 	
 	drawNode : function (node, ind, x, y, childIndex, radius)
@@ -218,8 +213,8 @@ BalloonView.prototype = {
 		}
 		stylename += (ind==0)? "_src" : "_dst" ;
 		node.svg.setAttribute("class", stylename);
-
 		this.svg.appendChild(node.svg);
+		
 		
 		// draw children nodes one level deep
 		if(!node.isLeaf())
@@ -229,7 +224,7 @@ BalloonView.prototype = {
 			var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
 			var childNodeRadius = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
 			childNodeRadius = childNodeRadius*radius;
-			var childNodeRadiusSmall = childNodeRadius*0.9;
+			var childNodeRadiusPadded = childNodeRadius*0.9;	
 			
 			
 			for(var i=0; i<n; i++)
@@ -250,7 +245,7 @@ BalloonView.prototype = {
 				childSvg.setAttribute("cy", y2);						// y-position
 				childSvg.setAttribute("data-ind", ind);				// src or destination
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
-				childSvg.setAttribute("r", childNodeRadiusSmall);
+				childSvg.setAttribute("r", childNodeRadiusPadded);
 				childSvg.setAttribute("class", childStyle);
 				$(childSvg).data("node", childNode);
 				node.svgChilds.push(childSvg);
@@ -276,7 +271,8 @@ BalloonView.prototype = {
 		var childIndex = item.getAttribute("data-childIndex");
 		var ind = item.getAttribute("data-ind");
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
-		this.update_display();
+		this.refreshSVG();
+		this.updateTables();
 		
 	},
 	
@@ -290,12 +286,13 @@ BalloonView.prototype = {
 			this.viewNodes[ind] = node.parentNode;
 
 			// set it as selected
+			//
 		}
 		else
 		{
 			this.viewNodes[ind] = node;
 		}
-		this.update_display();
+		this.refreshSVG();
 	},
 	
 	onListOver : function (evt)
@@ -308,37 +305,38 @@ BalloonView.prototype = {
 		if(this.viewNodes[ind].parentNode != null)
 		{
 			this.viewNodes[ind] = this.viewNodes[ind].parentNode;
-			this.update_display();
+			this.refreshSVG();
 		}
 	},
 	
 	drawTable : function (ind)
 	{
 		var _self = this;
+		var accordion, btn;
 		
 		// empty the DIV contents
 		$(this.tables[ind]).empty();
 
+		/*
 		// navigation button
-		var btn = document.createElement("button");
+		btn = document.createElement("button");
 		btn.innerHTML = "Back";
-		//btn.setAttribute("style", "float: left;");
 		btn.title = "Go Up a level";
 		btn.addEventListener("click", function(evt){ 
 			_self.onBackClick(ind); 
 		});
 		this.tables[ind].appendChild(btn);
+		*/
 		
+		/*
 		// print the heirarchy trail 
     	var p = document.createElement("p");
     	p.innerHTML = this.printBreadCrumbs(ind, this.viewNodes[ind]);
     	this.tables[ind].appendChild(p);
+		*/
 		
-		// print the tree
-    	//this.tables[ind].appendChild(this.print(this.trees[ind]));
-    	
-    	//
-    	var accordion = document.createElement("div");
+		// create the accordion object
+    	accordion = document.createElement("div");
     	accordion.id = "accordion" + ind;
     	for(var i=0; i<this.trees[ind].childNodes.length; i++)
 		{
@@ -346,20 +344,38 @@ BalloonView.prototype = {
     		
     		var heading = document.createElement("h3");
     		heading.innerHTML = node.label;
-    		
-    		var div = document.createElement("div");
-    		var p = document.createElement("p");
-    		p.innerHTML = "hello";
-    		
+    		$(heading).data("node", node);
     		accordion.appendChild(heading);
-    		div.appendChild(this.print(node, 0));
-    		accordion.appendChild(div);
+    		
+    		var content = document.createElement("div");
+    		content.appendChild(this.print(node, 0));
+    		accordion.appendChild(content);
+
 		}
     	this.tables[ind].appendChild(accordion);
+    	
+    	// initialize the accordion
     	$( "#accordion" + ind ).accordion({
     		heightStyle: "content",
-    		collapsible: true    	    
+    		collapsible: true,
+    		active: 'none',
+    		beforeActivate: function( event, ui ) {
+				var headerNode = $(ui.newHeader).data("node");
+
+				// clicked on a new tab
+				if(headerNode){
+					_self.viewNodes[ind] = headerNode;
+    			}
+    			// clicked on the already open tab
+    			else
+				{
+    				_self.viewNodes[ind] = _self.trees[ind];
+				}
+    			_self.refreshSVG();
+    			
+    		}
     	});
+    	
 	},
 	
 	
@@ -401,8 +417,9 @@ BalloonView.prototype = {
 			currentNode.childNodes.push(node);
 		}
 		
-		// recurse for next level
-		if(namespaces.length > 1){
+		// recurse for next level or return 
+		if(namespaces.length > 1)
+		{
 			namespaces.splice(0,1);					
 			this.addSignal(signalName, namespaces, node, level+1, ind);
 		}
@@ -428,6 +445,7 @@ BalloonView.prototype = {
 			li.innerHTML = node.label;
 			$(li).data("node", node);
 			li.addEventListener("click", function(evt){ _self.onListClick(evt); 	});
+			
 			if(
 					this.viewNodes[node.direction].signalName == node.signalName &&
 					this.viewNodes[node.direction].label == node.label &&
@@ -469,18 +487,19 @@ BalloonView.prototype = {
 	
 	update_display : function ()
 	{
-		// empty SVG canvas
-		$(this.svg).empty();
-		
-		// draw the svg background
-		this.drawCanvas();
-		 
+		this.refreshData();
+		this.refreshSVG();
+		this.refreshTables();
+	},
+	
+	refreshData : function ()
+	{
 		// create root node for the source/destination trees
 		for(var i=0; i<2; i++)
 		{
 			var tree = new BalloonNode();
 			tree.parentNode = null;
-			tree.label = (i==0)? "Sources" : "Destinations";
+			tree.label = this.rootLabel[i];
 			tree.level = -1;
 			tree.direction = i;
 			this.trees[i] = tree;
@@ -501,15 +520,53 @@ BalloonView.prototype = {
 	    	// if view level is not set by user, set it to the root
 	    	if(this.viewNodes[i]==null)
 	    		this.viewNodes[i] = this.trees[i];
-	    	
-	    	// draw balloon plot
-	    	this.drawNodes(i, this.viewNodes[i].childNodes);
-	    	
-	    	// draw tables
-	    	this.drawTable(i);
     	}
-	    
-	   
+	},
+	
+	refreshTables : function ()
+	{
+		this.drawTable(0);
+		this.drawTable(1);
+	},
+	
+	updateTables : function ()
+	{
+		for(var ind=0; ind<2; ind++)
+		{
+			var node = this.viewNodes[ind];
+			var index = null;
+			while (node.parentNode != null) 
+			{
+				if(node.parentNode.label == this.rootLabel[ind]){
+					index = node.childIndex;
+					break;
+				}
+				else
+					node = node.parentNode;
+			}
+			if(index != null)
+				$("#accordion" + ind).accordion("option", "active", index);
+			
+			//var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
+			
+			
+		}
+		
+		
+	},
+	
+	
+	refreshSVG : function ()
+	{
+		// empty SVG canvas
+		$(this.svg).empty();
+		
+		// draw the svg background
+		this.drawCanvas();
+		
+		// draw balloon plot
+		this.drawNodes(0, this.viewNodes[0].childNodes);
+    	this.drawNodes(1, this.viewNodes[1].childNodes);
 	}
 };
 
