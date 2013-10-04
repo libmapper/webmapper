@@ -442,7 +442,7 @@ BalloonView.prototype = {
 	        var sigName = keys[i];
 	        var sig = this.model.signals.get(keys[i]);
 	        var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
-	        this.addSignal(sigName, namespaces, this.trees[sig.direction], 0, sig.direction);	// FIX sig.direction will become an ENUM constant
+	        this.addSignal(sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }
 	
 	    for(var i=0; i<2; i++)
@@ -579,6 +579,25 @@ BalloonView.prototype = {
 		// draw balloon plot
 		this.drawNodes(0, this.viewNodes[0].childNodes);
     	this.drawNodes(1, this.viewNodes[1].childNodes);
+    	
+    	// draw connections
+    	var n = this.viewNodes[0].childNodes.length;
+    	var m = this.viewNodes[1].childNodes.length;
+    	for(var i=0; i<n; i++)
+    	{
+    		for(var j=0; j<m; j++)
+    		{
+    			var a = this.viewNodes[0].childNodes[i].signalName;
+    			var b = this.viewNodes[1].childNodes[j].signalName;
+    			
+    			if(model.isConnected(a, b)){
+    				console.log("connection: " + a + " > " + b);
+    			}
+    			else
+    				console.log("no connect");
+    		}
+    	}
+    	
 	}
 };
 

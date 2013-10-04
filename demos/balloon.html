@@ -75,12 +75,29 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 3, nOut = 15;
-	var nSigs = 5;
+	var nIn = 1, nOut = 1;
+	var nSigs = 2;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
 		addDevice("/Dest " + nDstDevices++, nSigs, 0);
+	// connect everything
+	for(var i=0; i<nIn; i++){
+		for(var j=0; j<nOut; j++){
+			link("/Source " + i, "/Dest " + j);
+
+
+			for(var k=0; k<nSigs; k+=1){
+				for(var l=0; l<nSigs; l+=1){
+					//var rand = Math.random() * 10;
+					//if(rand<2){
+						connect("/Source " + i + "/body/torso/arm/finger" + k, "/Dest " + j + "/walk/area/panel" + l);
+					//	k+=2;
+					//}
+				}
+			}
+		}
+	}
 }
 
 
@@ -90,7 +107,7 @@ function link(src, dst){
 	args.src_name = src;
 	args.dest_name = dst;
 	model.links.add(key, args);
-	view.update_display();
+	//view.update_display();
 }
 function unlink(src, dst){
 	var key = src + ">" + dst;
@@ -113,7 +130,7 @@ function connect(src, dst){
 	args.dest_type = 'f';
 	args.expression = 'y=x';
 	model.connections.add(key, args);
-	view.update_display();
+	//view.update_display();
 }
 function disconnect(src, dst){
 	var key = src + ">" + dst;
@@ -136,10 +153,10 @@ function addDevice(name, nIn, nOut)
 	args.n_outputs = nOut;
 	model.devices.add(name, args);
 
-	for(var j=0; j<nIn*2;j++)
-		addDevSignal("/walk/area/panel" + j, name, 1);	
+	for(var j=0; j<nIn;j++)
+		addDevSignal("/walk/area/panel" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/body/torso/arm/finger" + j, name, 0);	
+		addDevSignal("/body/torso/arm/finger" + j, name, 1);	
 }
 
 function addDevSignal(name, device_name, direction)

@@ -60,7 +60,8 @@ function switch_mode(newMode)
         case 'balloon':
         	view = new BalloonView(document.getElementById('container'), model);
         	viewIndex = 3;
-            view.on_resize();
+            view.init();
+            view.update_display();
         	break;
         default:
             //console.log(newMode);
