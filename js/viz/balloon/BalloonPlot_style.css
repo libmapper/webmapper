@@ -60,15 +60,20 @@
 	padding-left: 10px;
 	list-style-position: inside;
 	cursor: pointer;
-	list-style-type: circle;
+	
 }
 
 .balloonTable li{
 	cursor: pointer;
 	padding-left: 14px;
+	list-style-type: circle;
 }
 
 .balloonTable .selected{
+	color: red;
+	list-style-type: disc;
+}
+.balloonTable .selected:hover{
 	color: red;
 }
 
@@ -76,6 +81,7 @@
 .balloonTable li:hover{
 	color: #333;
 }
+
 /*
 .BalloonNode_src{
 	fill: #fff;
@@ -105,7 +111,10 @@
 .BalloonCorner{
 	fill: #000;
 	stroke: #832352;
-	opacity: 0.08;
+	opacity: 0.1;
+}
+.BalloonCorner:hover{
+	opacity: 0.16;
 }
 
 #output ul{

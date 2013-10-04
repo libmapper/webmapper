@@ -48,10 +48,10 @@ function init(){
     	$('#container').css('height', ($(window).height() - 100) + 'px' );
     	view.on_resize();
     };
-	
+
 	model = new LibMapperModel();
 	view  = new  BalloonView(document.getElementById("container"), model);
-	
+
 	// controller (from view)  
     $("#container").on("link", function(e, src, dst){
         link(src, dst);
@@ -67,7 +67,8 @@ function init(){
     });
 
 	initData();
-	view.on_resize();
+	view.init();
+	view.update_display();
 
 }
 
