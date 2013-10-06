@@ -264,15 +264,18 @@ BalloonView.prototype = {
 	},
 	
 	/**
-	 * The most complicated set of for loops I've ever written...
+	 * The most complicated set of for loops I've ever written... maybe a recursive algorithm could make it simpler but
+	 * I found it easier to follow this way in order to debug and find the corresponding SVG elements
+	 * 
 	 * Connection = connection between leaf nodes
 	 * Link = connection between nodes that have connected child nodes
 	 * We check each source balloon with each destination balloon for a connection
 	 * We must also check each soure balloon's children for links with destination nodes and child nodes
+	 * 
 	 */
 	drawConnections : function()
 	{
-		// for each source node in the display
+		// for each SOURCE node in the display
 		for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
 		{
 			// the source node currently being checked
@@ -291,13 +294,11 @@ BalloonView.prototype = {
 			// signals for each child node is wrapped in an array
 			// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)  
 			else				
-			{
 				for(var a=0; a<src.childNodes.length; a++)
 					srcSignals.push(src.childNodes[a].getDescendantSignals());
-			}
 			
 			
-			// now we must compare to all the destination nodes in the display
+			// now we must compare to all the DESTINATION nodes in the display
 			// process is the same as for sources
 			// for each destination node
 			for(var j=0; j<this.viewNodes[1].childNodes.length; j++)
@@ -312,20 +313,14 @@ BalloonView.prototype = {
 				// if current node is a leaf, there's only one signal
 				// wrap the signal in an array
 				if(dst.isLeaf())
-				{
 					dstSignals.push([dst.signalName]);
-				}
 				
 				// if current node is a branch, must get all descendant signals
 				// signals for each child node is wrapped in an array
 				// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)
 				else
-				{
 					for(var b=0; b<dst.childNodes.length; b++)
-					{
 						dstSignals.push(dst.childNodes[b].getDescendantSignals());
-					}
-				}
 				
 				// now we have a list of all signals or nested signals of the current source and destination node
 				// for each set of signals, we check if there is a connection
@@ -399,8 +394,6 @@ BalloonView.prototype = {
 									// if leafs there's only 1 connection, and if branches, drawing multiple connections is redundant
 									// in the future, can possibly have some data viz (e.g. line width or opacity overlay) for multiple links
 									break;	
-									
-									
 								}
 							}
 						}
