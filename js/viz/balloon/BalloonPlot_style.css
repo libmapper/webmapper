@@ -34,13 +34,17 @@
 	overflow: auto;	
 }
 
-#accordion0, #accordion1{
+[id^='accordion']{
 	padding: 0;
 	margin: 0;
 }
 
-#accordion0 .ui-accordion-header, #accordion1 .ui-accordion-header {  
-    background-color: #aaa;  
+[id^='accordion'] .ui-icon{ background-image: none; }
+
+/* accordion header up state */
+[id^='accordion'] .ui-state-default{ 
+	background: #aaa; 
+	border: none;
     margin: 0px;
     padding: 15px;  
     font-weight: normal;
@@ -49,24 +53,42 @@
     display: block;  
     font-size: 12pt;  
     width: 100%;  
-    text-indent: 10px;  
+    text-indent: 10px; 
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+/* accordion's heading mouse over state */
+[id^='accordion'] .ui-state-hover {
+	color: #fff;
+	background-color: #bbb;
 }  
 
-#accordion0 .ui-accordion-header:hover, #accordion1 .ui-accordion-header:hover {
-	color: #ccc;
-}  
+/* accordion heading selected state */
+[id^='accordion'] .ui-accordion-header-active { background-color: #04C4D9; }	
 
-#accordion0 .ui-accordion-content, #accordion1 .ui-accordion-content {  
+/* accordion contents  */
+[id^='accordion'] .ui-accordion-content {  
+	background: none; 
+	border: none;
     width: 100%;  
     background-color: #f3f3f3;  
     color: #777;  
     font-size: 10pt;  
     line-height: 16pt; 
-    padding: 6px 0; 
+    padding: 16px 0; 
+    border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
 }  
 
+
 .balloonTable ul{
-	padding-left: 10px;
+	padding: 0 10px;
+	margin: 0;
 	list-style-position: inside;
 	cursor: pointer;
 	
@@ -120,9 +142,14 @@
 .balloonConnection{
 	fill: none;
 	stroke: #000;
-	stroke-width: 2px;
-	stroke-linecap: round;	
+	stroke-width: 1px;
+	stroke-linecap: round;
+	/*shape-rendering: crispEdges;*/	
 }
 
 	
-	
+
+
+/*
+http://stackoverflow.com/questions/4287225/jquery-ui-accordion-how-to-remove-style-completly
+*/

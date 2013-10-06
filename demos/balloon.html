@@ -9,6 +9,7 @@
 
 <script type="text/javascript" src="../js/jquery.min.js"></script><!-- JQuery -->
 <script type="text/javascript" src="../js/viz/grid/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
+<link rel="stylesheet" href="../js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
 
 <script type="text/javascript" src="../js/viz/balloon.js"></script>
 <link rel="stylesheet" type="text/css" href="../js/viz/balloon/BalloonPlot_style.css"></link>
@@ -74,8 +75,8 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 1, nOut = 1;
-	var nSigs = 2;
+	var nIn = 2, nOut = 2;
+	var nSigs = 6;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
@@ -90,9 +91,10 @@ function initData()
 				for(var l=0; l<nSigs; l+=1){
 					//var rand = Math.random() * 10;
 					//if(rand<2){
-						connect("/Source " + i + "/body/torso/arm/finger" + k, "/Dest " + j + "/walk/area/panel" + l);
-					//	k+=2;
-					//}
+					if(i+j+k+l == 0){
+						connect("/Source " + i + "/body/arm/finger" + k, "/Dest " + j + "/walk/area/panel" + l);
+						//k+=2;
+					}
 				}
 			}
 		}
@@ -155,7 +157,7 @@ function addDevice(name, nIn, nOut)
 	for(var j=0; j<nIn;j++)
 		addDevSignal("/walk/area/panel" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/body/torso/arm/finger" + j, name, 1);	
+		addDevSignal("/body/arm/finger" + j, name, 1);	
 }
 
 function addDevSignal(name, device_name, direction)

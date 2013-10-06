@@ -256,6 +256,7 @@ BalloonView.prototype = {
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
 				childSvg.setAttribute("r", childNodeRadiusPadded);
 				childSvg.setAttribute("class", childStyle);
+				childSvg.setAttribute("style", "pointer-events: none");
 				$(childSvg).data("node", childNode);
 				node.svgChilds.push(childSvg);
 				this.svg.appendChild(childSvg);

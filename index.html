@@ -27,6 +27,10 @@
 <script type="text/javascript" src="js/viz/hive.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
 
+<!--  Balloon Includes -->
+<script type="text/javascript" src="js/viz/balloon.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/balloon/BalloonPlot_style.css"></link>
+
 
 <style type="text/css">
 body{ font-family: helvetica, arial, sans-serif}
@@ -144,12 +148,12 @@ function addDevice(name, nIn, nOut)
 	model.devices.add(name, args);
 
 	for(var j=0; j<nIn;j++)
-		addDevSignal("/Signal" + j, name);	
+		addDevSignal("/Signal" + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/Signal" + j, name);
+		addDevSignal("/Signal" + j, name, 1);
 }
 
-function addDevSignal(name, device_name)
+function addDevSignal(name, device_name, direction)
 {
 	/*
 	var args = new Array(); 
@@ -160,6 +164,7 @@ function addDevSignal(name, device_name)
 	var args = new Object(); 
 	args.device_name = device_name;
 	args.name = name;
+	args.direction = direction;
 	model.signals.add(device_name+name, args);
 
 }
@@ -229,6 +234,13 @@ function switch_mode(newMode)
         	viewIndex = 2;
             view.on_resize();
         	break;
+        case 'balloon':
+        	view = new BalloonView(document.getElementById('container'), model);
+        	viewIndex = 3;
+            view.init();
+            view.update_display();
+        	break;
+        
         default:
             //console.log(newMode);
     }
@@ -273,6 +285,7 @@ function btnHandler(val)
 		<option value='none'>None</option>
 		<option value='grid' selected>Grid Demo</option>"+
 		<option value='hive' selected>Hive Demo</option>"+
+		<option value='balloon' selected>Balloon Demo</option>"+
 	</select>
 			
 		</td>
