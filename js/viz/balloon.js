@@ -474,9 +474,18 @@ BalloonView.prototype = {
 	 */
 	onListHeaderClick : function (evt, ui,ind)
 	{
+		// clear styles of headers an LI items
+		$("#accordion" + ind).children('h3').each(function(){
+			this.classList.remove("selected");
+		});
+		$("#accordion" + ind).find('li').each(function(){
+			this.classList.remove("selected");
+		});
+		
+		// get the clicked header
 		var headerNode = $(ui.newHeader).data("node");
 		
-		// clicked on a new tab
+		// if clicked on a new tab header node will have a value
 		if(headerNode)
 		{
 			// set the new view node
@@ -488,28 +497,37 @@ BalloonView.prototype = {
 				var h3 = this;
 				if( $(h3).data("node").childIndex == headerNodeIndex )
 					h3.classList.add("selected");
-				else
-					h3.classList.remove("selected");
-			});
-			// update styles of new tab
-			$("#accordion" + ind).find('li').each(function(){
-				this.classList.remove("selected");
 			});
 			
 		}
-		// clicked on the already open tab, close tab and show root
+		// headerNode is null means clicked on the already open tab 
 		else
 		{
-			// set the new view node
-			this.viewNodes[ind] = this.trees[ind];
+			// if header's node is not in view, that means a child is in view
+			// set the view to the header's node and prevent closing the tab
+			if(this.viewNodes[ind].level > 0)
+			{
+				// set the view to the header node
+				this.viewNodes[ind] = $(ui.oldHeader).data("node");
+				
+				// set the style of the header to selected
+				$("#accordion" + ind).find('h3').each(function(){
+					var h3 = this;
+					if( $(h3).data("node").childIndex == $(ui.oldHeader).data("node").childIndex )
+						h3.classList.add("selected");
+				});
+				
+				// prevent the accordion from closing
+				evt.stopImmediatePropagation();
+	            evt.preventDefault();
+			}
 			
-			// update styles of new tab
-			$("#accordion" + ind).children('h3').each(function(){
-				this.classList.remove("selected");
-			});
-			$("#accordion" + ind).find('li').each(function(){
-				this.classList.remove("selected");
-			});
+			// if header's node is in view, then close the tab and show root
+			else
+			{
+				// set the new view node to the root
+				this.viewNodes[ind] = this.trees[ind];
+			}
 		}
 		
 		// refresh the SVG

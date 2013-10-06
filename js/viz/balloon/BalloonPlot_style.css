@@ -100,10 +100,7 @@
 	list-style-type: disc;
 }
 
-.balloonTable .selected{
-	color: rgb(212, 31, 31);
-}
-.balloonTable .selected:hover{
+.balloonTable .selected, .balloonTable .selected:hover{
 	color: rgb(212, 31, 31);
 }
 
