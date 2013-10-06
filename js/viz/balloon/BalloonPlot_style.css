@@ -15,6 +15,15 @@
 	
 }
 
+.BalloonCorner{
+	fill: #000;
+	stroke: #832352;
+	opacity: 0.1;
+}
+.BalloonCorner:hover{
+	opacity: 0.16;
+}
+
 #balloonTable_src, #balloonTable_dst, #BalloonSVG{
 	float: left;
 	position: relative;	
@@ -108,16 +117,10 @@
 	stroke-width: 8px;     
 }
 
-.BalloonCorner{
-	fill: #000;
-	stroke: #832352;
-	opacity: 0.1;
-}
-.BalloonCorner:hover{
-	opacity: 0.16;
+.balloonConnection{
+	fill: none;
+	stroke: #000;	
 }
 
-#output ul{
-	padding-left: 40px;
-}
-
+	
+	
