@@ -263,6 +263,155 @@ BalloonView.prototype = {
 		}
 	},
 	
+	/**
+	 * The most complicated set of for loops I've ever written...
+	 * Connection = connection between leaf nodes
+	 * Link = connection between nodes that have connected child nodes
+	 * We check each source balloon with each destination balloon for a connection
+	 * We must also check each soure balloon's children for links with destination nodes and child nodes
+	 */
+	drawConnections : function()
+	{
+		// for each source node in the display
+		for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
+		{
+			// the source node currently being checked
+			var src = this.viewNodes[0].childNodes[i];
+
+			// get corresponding signals of the node
+			// this is a 2D array because signals of children are grouped into an array
+			var srcSignals = [];
+			
+			// if current node is a leaf, there's only one signal
+			// wrap the signal in an array
+			if(src.isLeaf())	
+				srcSignals.push([src.signalName]);
+
+			// if current node is a branch, must get all descendant signals
+			// signals for each child node is wrapped in an array
+			// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)  
+			else				
+			{
+				for(var a=0; a<src.childNodes.length; a++)
+					srcSignals.push(src.childNodes[a].getDescendantSignals());
+			}
+			
+			
+			// now we must compare to all the destination nodes in the display
+			// process is the same as for sources
+			// for each destination node
+			for(var j=0; j<this.viewNodes[1].childNodes.length; j++)
+			{
+				// the destination node currently being checked
+				var dst = this.viewNodes[1].childNodes[j];
+
+				// get corresponding signals of the node
+				// this is a 2D array because signals of children are grouped into an array
+				var dstSignals = [];
+				
+				// if current node is a leaf, there's only one signal
+				// wrap the signal in an array
+				if(dst.isLeaf())
+				{
+					dstSignals.push([dst.signalName]);
+				}
+				
+				// if current node is a branch, must get all descendant signals
+				// signals for each child node is wrapped in an array
+				// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)
+				else
+				{
+					for(var b=0; b<dst.childNodes.length; b++)
+					{
+						dstSignals.push(dst.childNodes[b].getDescendantSignals());
+					}
+				}
+				
+				// now we have a list of all signals or nested signals of the current source and destination node
+				// for each set of signals, we check if there is a connection
+				// if src was a leaf, srcSignals will have length 1, an array with a single signal
+				// if dst was a leaf, dstSignals will have length 1, an array with a single signal
+				// if src was a branch, srcSignals will have length = number of childNodes, with each element an array with nested signals of the child node
+				// if dst was a branch, dstSignals will have length = number of childNodes, with each element an array with nested signals of the child node
+				for(var k=0; k<srcSignals.length; k++)
+				{
+					// source's current set of signals (1 set for a leaf, 1 or more sets for a branch)
+					var currentSrcSignal_ar = srcSignals[k];
+					
+					for(var l=0; l<currentSrcSignal_ar.length; l++)
+					{
+						// the current source signal to check
+						var currentSrcSignal = currentSrcSignal_ar[l];
+						
+						for(var m=0; m<dstSignals.length; m++)
+						{
+							// destination's current set of signals (1 set for a leaf, 1 or more sets for a branch)
+							var currentDstSignal_ar = dstSignals[m];
+							
+							for(var n=0; n<dstSignals.length; n++)
+							{
+								// the current destination signal to check
+								var currentDstSignal = currentDstSignal_ar[n];
+								
+								// check for a connection
+								// if there is a connection, draw the line between the corresponding nodes
+								if(model.isConnected(currentSrcSignal, currentDstSignal))
+								{
+									var ctX1 =  this.svgDim[0]/2;
+									var ctY1 =  this.svgDim[1]/2;
+									var x1,y1,x2,y2;
+									
+									// if src is leaf, connect from center of the node
+									if(src.isLeaf())
+									{
+										x1 = src.svg.getAttribute("cx");	
+										y1 = src.svg.getAttribute("cy");	
+									}
+									// if branch, connect from the center of the child node
+									// k corresponds to the index into srcSignals and also the childIndex because there is one set per child
+									else
+									{
+										x1 = src.svgChilds[k].getAttribute("cx");
+										y1 = src.svgChilds[k].getAttribute("cy");
+									}
+									
+									// if dst is leaf, connect from center of the node
+									if(dst.isLeaf())
+									{
+										x2 = dst.svg.getAttribute("cx");	
+										y2 = dst.svg.getAttribute("cy");
+									}
+									// if branch, connect from the center of the child node
+									// m corresponds to the index into dstSignals and also the childIndex because there is one set per child
+									else
+									{
+										x2 = dst.svgChilds[m].getAttribute("cx");
+										y2 = dst.svgChilds[m].getAttribute("cy");
+									}
+									
+									// create the SVG line element
+									var line = document.createElementNS(this.svgNS,"path");
+									line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
+									line.setAttribute("class", "balloonConnection");
+									this.svg.appendChild(line);
+									
+									// don't need to check other signals from the same dst child because
+									// if leafs there's only 1 connection, and if branches, drawing multiple connections is redundant
+									// in the future, can possibly have some data viz (e.g. line width or opacity overlay) for multiple links
+									break;	
+									
+									
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		// phew! that wasn't so bad, was it?		
+	},
+	
+
 	onNodeMouseOver : function(evt)
 	{
 		evt.currentTarget.classList.add('BalloonNode_over');
@@ -569,10 +718,6 @@ BalloonView.prototype = {
 	},
 	
 	
-	// for each source node, build an array of all descendent signals
-	// and compare with each destination node for connections
-	// if node is a leaf, the connection line is drawn from the center
-	// if node is a branch, the connection line is drawn from the center of the corresponding child node
 	refreshSVG : function ()
 	{
 		// empty SVG canvas
@@ -586,112 +731,7 @@ BalloonView.prototype = {
     	this.drawNodes(1, this.viewNodes[1].childNodes);
     	
     	// draw connections
-    	for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
-    	{
-    		// get signals of source SVG object
-    		var srcSignals = [];
-    		var src = this.viewNodes[0].childNodes[i];
-    		
-    		if(src.isLeaf())	// if leaf, there's only one signal
-    		{
-    			srcSignals.push([src.signalName]);
-    		}
-    		else				// if branch, get all descendant signals
-			{
-    			for(var a=0; a<src.childNodes.length; a++)
-				{
-    				srcSignals.push(src.childNodes[a].getDescendantSignals());
-				}
-			}
-    		
-    		// check if connected to all visible dst objects
-    		
-    		for(var j=0; j<this.viewNodes[1].childNodes.length; j++)
-    		{
-    			var dstSignals = [];
-    			var dst = this.viewNodes[1].childNodes[j];
-        		
-        		if(dst.isLeaf())	// if leaf, there's only one signal
-        		{
-        			dstSignals.push([dst.signalName]);
-        		}
-        		else				// if branch, get all descendant signals
-    			{
-        			for(var b=0; b<dst.childNodes.length; b++)
-    				{
-        				dstSignals.push(dst.childNodes[b].getDescendantSignals());
-    				}
-    			}
-        		
-        		// check if connected
-        		for(var k=0; k<srcSignals.length; k++)
-        		{
-        			var currentSrcSignal_ar = srcSignals[k];
-        			
-        			for(var l=0; l<currentSrcSignal_ar.length; l++)
-        			{
-        				var currentSrcSignal = currentSrcSignal_ar[l];
-        				
-        				for(var m=0; m<dstSignals.length; m++)
-        				{
-        					var currentDstSignal_ar = dstSignals[m];
-        					
-        					for(var n=0; n<dstSignals.length; n++)
-        					{
-        						var currentDstSignal = currentDstSignal_ar[n];
-        				
-        						if(model.isConnected(currentSrcSignal, currentDstSignal))
-		        				{
-		        					var ctX1 =  this.svgDim[0]/2;
-		        					var ctY1 =  this.svgDim[1]/2;
-		        					var x1,y1,x2,y2;
-		        					
-		        					// if src is leaf, connect from center
-		        					if(src.isLeaf())
-		        					{
-		        						x1 = src.svg.getAttribute("cx");	
-		        						y1 = src.svg.getAttribute("cy");	
-		        					}
-		        					// if branch, connect from the child node's center
-		        					else
-		    						{
-		        						x1 = src.svgChilds[k].getAttribute("cx");
-		        						y1 = src.svgChilds[k].getAttribute("cy");
-		    						}
-		        					
-		        					// if dst is leaf, connect from center
-		        					if(dst.isLeaf())
-		        					{
-		        						x2 = dst.svg.getAttribute("cx");	
-		        						y2 = dst.svg.getAttribute("cy");
-		        					}
-		        					// if branch, connect from the child node's center
-		        					else
-		    						{
-		        						x2 = dst.svgChilds[m].getAttribute("cx");
-		        						y2 = dst.svgChilds[m].getAttribute("cy");
-		    						}
-		        					
-		        					var line = document.createElementNS(this.svgNS,"path");
-		        					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-		        					line.setAttribute("class", "balloonConnection");
-		        					this.svg.appendChild(line);
-		        					
-		        					// don't need to check other signals from the same dst child, 1 connection is enough
-		        					break;	
-		        					
-		        					
-		        				}
-        					}
-		        					
-
-       						//console.log("connection: " + srcSignals[k] + " > " + dstSignals[l]);
-        				}
-        			}
-        		}
-    		}
-    	}
-    	
+    	this.drawConnections();
 	}
 };
 
