@@ -33,7 +33,12 @@ function BalloonView(container, model)
 }
 
 BalloonView.prototype = {
-		
+	
+	/**
+	 * Initialize the view
+	 * Creates container DIVs for the accordions
+	 * Creates the SVG canvas
+	 */
 	init : function () 
 	{ 
 		var _self = this;				// to pass to the instance of balloon.js to event handlers
@@ -96,6 +101,9 @@ BalloonView.prototype = {
 		return list;
 	},
 	
+	/**
+	 * Called when the window resizes to update the dimension of the tables and SVG
+	 */
 	on_resize : function ()
 	{
 		// get the new window size
@@ -120,6 +128,9 @@ BalloonView.prototype = {
 		//document.onkeydown = null;
 	},
 	
+	/**
+	 * Draws the SVG container elements
+	 */
 	drawCanvas : function ()
 	{
 		var obj;
@@ -147,7 +158,7 @@ BalloonView.prototype = {
 		});
 		this.svg.appendChild(obj);
 		
-		// coutout the middle with a white ellipse
+		// cutout the middle with a white ellipse
 		obj = document.createElementNS(this.svgNS,"ellipse");
 		var w = this.svgDim[0]/2 + 1 - 20;
 		var h = this.svgDim[1]/2 + 1 + 20;
@@ -159,17 +170,28 @@ BalloonView.prototype = {
 		this.svg.appendChild(obj);
 	},
 	
+	/**
+	 * Given a set of nodes, calculates the size and position to plot them in the SVG canvas
+	 * Nodes are separated with sources on the left and destinations on the right
+	 * Radius is determined by Aaron's magical formula to calculate the largest possible circles that will fit inside the container ellipse
+	 * 
+	 * @param ind source or destination
+	 * @param nodes the set of nodes to draw
+	 */
 	drawNodes : function (ind, nodes)
 	{
 		// number of nodes
 		var n = nodes.length;
 
-		// radius of node
-		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );	// Aaron's magical formula for determining largest possible circle to fill the container circle's space
-		var containerR = (Math.min(this.svgDim[1], this.svgDim[0])/2) - 50;  
-		r = r * containerR;							// multiply by container's radius
-																// *doesn't work perfectly because container is actually an ellipse
-
+		// calculate radius of nodes
+		// Aaron's magical formula for determining largest possible circle to fill the container circle's space
+		// *sometimes the circles overlap because the container is an ellipse and the formula is for circles
+		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );	
+		// multiply by container's radius
+		// choose the smaller dimension to minimize overlap  
+		var containerR = (Math.min(this.svgDim[1], this.svgDim[0])/2) - 50;		
+		r = r * containerR;							
+																
 		// calculate angles
 		var angleFrom = 0 * Math.PI / 180;		// start angle		
 		var angleTo = 180 * Math.PI / 180;		// end angle
@@ -195,6 +217,16 @@ BalloonView.prototype = {
 		}
 	},
 	
+	/**
+	 * Draws a single node given the parameters from the arc plotter in the drawNodes() function 
+	 * 
+	 * @param node the BalloonNode
+	 * @param ind source or destination
+	 * @param x horizontal center of the circle
+	 * @param y vertical center of the circle
+	 * @param childIndex index into array
+	 * @param radius radius of circle
+	 */
 	drawNode : function (node, ind, x, y, childIndex, radius)
 	{
 		var _self = this;
@@ -406,16 +438,25 @@ BalloonView.prototype = {
 	},
 	
 
+	/**
+	 * Handles mouseover on a node in the SVG plot 
+	 */
 	onNodeMouseOver : function(evt)
 	{
 		evt.currentTarget.classList.add('BalloonNode_over');
 	},
 	
+	/**
+	 * Handles mouseout on a node in the SVG plot 
+	 */
 	onNodeMouseOut : function(evt)
 	{
 		evt.currentTarget.classList.remove('BalloonNode_over');
 	},
 	
+	/**
+	 * Handles clicking on a node in the SVG plot 
+	 */
 	onNodeClick : function(evt)
 	{
 		var item = evt.currentTarget;
@@ -424,10 +465,60 @@ BalloonView.prototype = {
 		var ind = item.getAttribute("data-ind");
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
-		this.updateTables(ind);
+		this.updateTable(ind);
 		
 	},
 	
+	/**
+	 * Handles clicking on a header in the accordion
+	 */
+	onListHeaderClick : function (evt, ui,ind)
+	{
+		var headerNode = $(ui.newHeader).data("node");
+		
+		// clicked on a new tab
+		if(headerNode)
+		{
+			// set the new view node
+			this.viewNodes[ind] = headerNode;
+			
+			// update styles
+			var headerNodeIndex = headerNode.childIndex;
+			$("#accordion" + ind).find('h3').each(function(){
+				var h3 = this;
+				if( $(h3).data("node").childIndex == headerNodeIndex )
+					h3.classList.add("selected");
+				else
+					h3.classList.remove("selected");
+			});
+			// update styles of new tab
+			$("#accordion" + ind).find('li').each(function(){
+				this.classList.remove("selected");
+			});
+			
+		}
+		// clicked on the already open tab, close tab and show root
+		else
+		{
+			// set the new view node
+			this.viewNodes[ind] = this.trees[ind];
+			
+			// update styles of new tab
+			$("#accordion" + ind).children('h3').each(function(){
+				this.classList.remove("selected");
+			});
+			$("#accordion" + ind).find('li').each(function(){
+				this.classList.remove("selected");
+			});
+		}
+		
+		// refresh the SVG
+		this.refreshSVG();
+	},
+	
+	/**
+	 * Handles clicking on a namespace in the accordion's contents (<LI> items) 
+	 */
 	onListClick : function (evt)
 	{
 		var item = evt.currentTarget;
@@ -442,20 +533,27 @@ BalloonView.prototype = {
 			this.viewNodes[ind] = node;
 		}
 		this.refreshSVG();
-		this.updateTables(ind);
+		this.updateTable(ind);
 	},
-	
+
+	/**
+	 * Handles mouseover on a namespace in the accordion's contents (<LI> items) 
+	 */
 	onListOver : function (evt)
 	{
 		
 	},
 	
+	/**
+	 * Handles clicking to go up one level in the hierarchy 
+	 */
 	onBackClick : function (ind)
 	{
 		if(this.viewNodes[ind].parentNode != null)
 		{
 			this.viewNodes[ind] = this.viewNodes[ind].parentNode;
 			this.refreshSVG();
+			this.updateTable(ind);
 		}
 	},
 	
@@ -565,6 +663,10 @@ BalloonView.prototype = {
 		this.createTables();
 	},
 	
+	/**
+	 * Recreates the balloon tree data structure
+	 * to be used when view initializes or model is updated with new devices/signals
+	 */
 	refreshData : function ()
 	{
 		// create root node for the source/destination trees
@@ -596,13 +698,21 @@ BalloonView.prototype = {
     	}
 	},
 	
+	/**
+	 * Wrapper to recreate both tables with the accordion lists
+	 */
 	createTables : function ()
 	{
-		this.drawTable(0);
-		this.drawTable(1);
+		this.createTable(0);
+		this.createTable(1);
 	},
 	
-	drawTable : function (ind)
+	/**
+	 * Creates a JQuery UI accordion with the namespaces
+	 * The acordion headers correspond to devices (the first element of the namespace)
+	 * A hierarchichal list is created for each device
+	 */
+	createTable : function (ind)
 	{
 		var _self = this;
 		var accordion, btn;
@@ -635,83 +745,103 @@ BalloonView.prototype = {
 		{
     		var node = this.trees[ind].childNodes[i];
     		
+    		// create the heading
     		var heading = document.createElement("h3");
     		heading.innerHTML = node.label;
     		$(heading).data("node", node);
     		accordion.appendChild(heading);
     		
+    		// create the list of namespaces
     		var content = document.createElement("div");
-    		content.appendChild(this.print(node, 0));
+    		content.appendChild(this.print(node, 0)); // recursive function
     		accordion.appendChild(content);
 
 		}
     	this.tables[ind].appendChild(accordion);
 
-    	// initialize the accordion
+    	// initialize the JQuery UI accordion
     	$( "#accordion" + ind ).accordion({
     		heightStyle: "content",
     		collapsible: true,
     		active: 'none',
     		beforeActivate: function( event, ui ) {
-				var headerNode = $(ui.newHeader).data("node");
-
-				// clicked on a new tab
-				if(headerNode){
-					_self.viewNodes[ind] = headerNode;
-    			}
-    			// clicked on the already open tab, close tab and show root
-    			else
-				{
-    				_self.viewNodes[ind] = _self.trees[ind];
-    				$("#accordion" + ind).find('li').each(function(){
-    					this.classList.remove("selected");
-    				});
-				}
-    			_self.refreshSVG();
-    			
+				_self.onListHeaderClick(event, ui, ind);    			
     		}
     	});
 	},
 	
-	updateTables : function (ind)
+	/**
+	 * Used to UPDATE the accordion's active container and selected styles
+	 */
+	updateTable : function (ind)
 	{
 		_self = this;
+		var index = null; 	// index of node->accordion to expand
+		
 		// the node currently in view in the SVG plot
 		var node = this.viewNodes[ind];
-		
-		// recurse to find the node pertaining to the signal's device
-		// this node will have a child index corresponding also to its position in the accordion list
-		var index = null;
-		while (node.parentNode != null) 
+
+		// clear all header selected styles
+		$("#accordion" + ind).children('h3').each(function(){
+			this.classList.remove("selected");
+		});
+
+		// if node is root, collapse all accordion items
+		if(node.level == -1)
 		{
-			// if node is the direct child of the root, then note its index
-			if(node.parentNode.label == this.rootLabel[ind]){
-				index = node.childIndex;
-				break;
-			}
-			// else recurse to the next upper level
-			else
-				node = node.parentNode;
+			$("#accordion" + ind).accordion("option", "active", false);
 		}
 		
-		// open the accordion to the corresponding index
-		if(index != null)
+		// if not root, find the correct accordion header to expand
+		else
+		{
+			// recursively find the node pertaining to the signal's device
+			// this node will have a child index corresponding also to its position in the accordion list
+			while (node.parentNode != null) 
+			{
+				// if node is the direct child of the root, then note its index
+				if(node.level == 0){
+					index = node.childIndex;
+					break;
+				}
+				// else recurse to the next upper level
+				else
+					node = node.parentNode;
+			}
+			
+			// open the accordion to the corresponding index
 			$("#accordion" + ind).accordion("option", "active", index);
+
+			// find the item currently in view and set its style
 			
-		
-		// find the item currently in view and set its style
-		$("#accordion" + ind).find('li').each(function(){
-			var li = this;
-			var liNode = $(li).data("node");
+			// if header is in view
+			if(this.viewNodes[ind].level == 0)
+			{
+				$("#accordion" + ind).children('h3').each(function(){
+					var h3Node = this;
+					if( $(h3Node).data("node").childIndex == index )
+						h3Node.classList.add("selected");
+					else
+						h3Node.classList.remove("selected");
+				});
+			}
 			
-			if(liNode.equals(_self.viewNodes[ind]))
-				li.classList.add("selected");
-			else
-				li.classList.remove("selected");
-		});
+			$("#accordion" + ind).find('li').each(function(){
+				var li = this;
+				var liNode = $(li).data("node");
+				
+				if(liNode.equals(_self.viewNodes[ind]))
+					li.classList.add("selected");
+				else
+					li.classList.remove("selected");
+			});
+			
+		}
 	},
 	
-	
+	/**
+	 * Used to redraw all the SVG elements (source/destination nodes and connection lines)
+	 */
 	refreshSVG : function ()
 	{
 		// empty SVG canvas
@@ -729,28 +859,37 @@ BalloonView.prototype = {
 	}
 };
 
-
+/**
+ * Class for a node in the balloon tree
+ */
 function BalloonNode()
 {
-	this.level;
-	this.label;
-	this.signalName;
-	this.parentNode;
-	this.childNodes = [];
-	this.childIndex;
-	this.direction;
-	this.svg;
-	this.svgChilds = [];
+	this.level;				// level in the hierarchy  (-1 for root)
+	this.label;				// namespace 
+	this.signalName;		// the full signal namespace			**FIX
+	this.parentNode;		// stores the parent node (null for root)
+	this.childNodes = [];	// stores all child nodes
+	this.childIndex;		// notes index into parent nodes array of child nodes
+	this.direction;			// source or destination signal (0/1)
+	this.svg;				// holds the SVG DOM element for the node
+	this.svgChilds = [];	// holds the SVG DOME elements for the child nodes
 };
 
 BalloonNode.prototype = {
 	
+		/**
+		 * Determines if the node is a terminal node (leaf) or not (branch)
+		 */
 		isLeaf : function()
 		{
 			return (this.childNodes.length==0);
 		},
 		
-		// comparison function for matching two nodes
+		/**
+		 * comparison function for matching two nodes 
+		 * @param node the node to match to
+		 */
+		
 		equals : function (node)
 		{
 			if(	this.signalName == node.signalName &&
@@ -761,7 +900,9 @@ BalloonNode.prototype = {
 					return false;
 		},
 		
-		// recursive function for getting all descendant signals of a node
+		/** 
+		 * Recursive function for getting all descendant signals of a node
+		 */
 		getDescendantSignals : function()
 		{
 			var result = [];

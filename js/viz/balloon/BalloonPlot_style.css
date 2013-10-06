@@ -97,17 +97,15 @@
 .balloonTable li{
 	cursor: pointer;
 	padding-left: 14px;
-	list-style-type: circle;
+	list-style-type: disc;
 }
 
 .balloonTable .selected{
-	color: red;
-	list-style-type: disc;
+	color: rgb(212, 31, 31);
 }
 .balloonTable .selected:hover{
-	color: red;
+	color: rgb(212, 31, 31);
 }
-
 
 .balloonTable li:hover{
 	color: #333;
