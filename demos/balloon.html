@@ -51,6 +51,7 @@ function init(){
     };
 
 	model = new LibMapperModel();
+	model.pathToImages = "../" + model.pathToImages;
 	view  = new  BalloonView(document.getElementById("container"), model);
 
 	// controller (from view)  

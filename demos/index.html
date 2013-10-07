@@ -4,32 +4,32 @@
 
 <title>LibMapper Matrix View</title>
 
-<script type="text/javascript" src="js/util.js"></script>
-<script type="text/javascript" src="js/LibMapperModel.js"></script>
+<script type="text/javascript" src="../js/util.js"></script>
+<script type="text/javascript" src="../js/LibMapperModel.js"></script>
 
-<script type="text/javascript" src="js/jquery.min.js"></script><!-- JQuery -->
-<script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
-<link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
+<script type="text/javascript" src="../js/jquery.min.js"></script><!-- JQuery -->
+<script type="text/javascript" src="../js/viz/grid/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
+<link rel="stylesheet" href="../js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
 
 <!--  List view Includes -->
-<script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="js/raphael.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="../js/viz/list.js"></script>
+<script type="text/javascript" src="../js/raphael.js"></script>
+<script type="text/javascript" src="../js/jquery.tablesorter.min.js"></script>
 
 <!--  Grid Includes -->
-<script type="text/javascript" src="js/viz/grid.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridSVG.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridSignals.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridDevices.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
+<script type="text/javascript" src="../js/viz/grid.js"></script>
+<script type="text/javascript" src="../js/viz/grid/GridSVG.js"></script>
+<script type="text/javascript" src="../js/viz/grid/GridSignals.js"></script>
+<script type="text/javascript" src="../js/viz/grid/GridDevices.js"></script>
+<link rel="stylesheet" type="text/css" href="../js/viz/grid/GridView_style.css"></link>
 
 <!--  Hive Includes -->
-<script type="text/javascript" src="js/viz/hive.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
+<script type="text/javascript" src="../js/viz/hive.js"></script>
+<link rel="stylesheet" type="text/css" href="../js/viz/hive/HivePlot_style.css" />
 
 <!--  Balloon Includes -->
-<script type="text/javascript" src="js/viz/balloon.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/balloon/BalloonPlot_style.css"></link>
+<script type="text/javascript" src="../js/viz/balloon.js"></script>
+<link rel="stylesheet" type="text/css" href="../js/viz/balloon/BalloonPlot_style.css"></link>
 
 
 <style type="text/css">
@@ -73,6 +73,8 @@ function init()
     };
 
     model = new LibMapperModel();
+    model.pathToImages = "../" + model.pathToImages;
+    
 	initFakeData(4, 4, 4);
 
 	switch_mode("grid");
@@ -278,7 +280,7 @@ function btnHandler(val)
 	<table id='logoWrapper' width="100%">
 	<tr width="100%">
 		<td width="40%" align="left">
-			<img alt="webmapper logo" src="images/webmapperlogo.png" width="44"
+			<img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
 					style="vertical-align: middle; position:relative; top: -3px" />
 			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
 	<select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">

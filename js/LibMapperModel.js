@@ -4,6 +4,9 @@ function LibMapperModel ()
 	this.signals = new Assoc();
 	this.links = new Assoc();
 	this.connections = new Assoc();
+	
+	// config items
+	this.pathToImages = "images/";
 };
 
 LibMapperModel.prototype = {

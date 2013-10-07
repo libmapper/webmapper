@@ -162,7 +162,7 @@ GridSVG.prototype = {
 			var btn, img;
 			
 			img = document.createElement("img");
-			img.setAttribute("src", "js/viz/grid/icons/zoom.png");
+			img.setAttribute("src", this.model.pathToImages + "grid/zoom.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
 			img.setAttribute("style", "top: 5px; margin: 0 5px 0 0");
@@ -197,7 +197,7 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			img = document.createElement("img");
-			img.setAttribute("src", "js/viz/grid/icons/filter.png");
+			img.setAttribute("src", this.model.pathToImages + "grid/filter.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
 			img.setAttribute("style", "top: 4px; margin: 0 4px 0 15px;");
@@ -233,7 +233,7 @@ GridSVG.prototype = {
 			}
 			
 			img = document.createElement("img");
-			img.setAttribute("src", "js/viz/grid/icons/connect.png");
+			img.setAttribute("src", this.model.pathToImages + "grid/connect.png");
 			img.setAttribute("width", "16px");
 			img.setAttribute("height", "16px");
 			img.setAttribute("style", "position: relative; top: 4px; right: 3px; opacity: 0.5; margin: 0 -2px 0 18px;");
