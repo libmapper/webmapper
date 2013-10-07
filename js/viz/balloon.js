@@ -204,6 +204,7 @@ BalloonView.prototype = {
 		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
 		var w = this.svgDim[0]/2 - r - 100;		// container ellipse width minus radius of node with extra padding
 		var h = this.svgDim[1]/2 - r - 10;		// container ellipse height minus radius of node with extra padding
+		if(ind==0)	h = -h;
 		var positionOffset = (ind==0)?  -this.nodeRadius-10 : this.nodeRadius+10;
 		
 		// draw the nodes
@@ -281,6 +282,8 @@ BalloonView.prototype = {
 					nAngle += Math.PI/2;
 				var x2 = ( (radius-childNodeRadius) * Math.cos(nAngle) ) + x;
 				var y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
+				if(ind==0)
+					y2 = ( -(radius-childNodeRadius) * Math.sin(nAngle) ) + y;
 				
 				var childNode = node.childNodes[i];
 				var childSvg = document.createElementNS(this.svgNS,"circle");
