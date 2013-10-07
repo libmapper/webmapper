@@ -260,6 +260,7 @@ BalloonView.prototype = {
 		// draw children nodes one level deep
 		if(!node.isLeaf())
 		{
+			node.svgChilds = [];	// clear the old SVG elements 
 			var n = node.childNodes.length;
 			var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
 			var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
@@ -270,6 +271,7 @@ BalloonView.prototype = {
 			
 			for(var i=0; i<n; i++)
 			{
+				
 				var childNode = node.childNodes[i];
 				var childStyle = (childNode.isLeaf()) ? "BalloonLeafNode": "BalloonNode";
 				childStyle += (ind==0)? "_src" : "_dst" ;
@@ -702,8 +704,8 @@ BalloonView.prototype = {
 		var keys = this.model.signals.keys();
 	    for (var i=0; i<keys.length; i++) 
 	    {
-	        var sigName = keys[i];
-	        var sig = this.model.signals.get(keys[i]);
+	    	var sig = this.model.signals.get(keys[i]);
+	        var sigName = sig.device_name + sig.name;
 	        var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
 	        this.addSignal(sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }
