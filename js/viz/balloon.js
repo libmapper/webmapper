@@ -241,6 +241,10 @@ BalloonView.prototype = {
 		node.svg.setAttribute("r", radius);			// radius of circle
 		$(node.svg).data("node", node);
 		
+		var tooltip = document.createElementNS(this.svgNS,"title");
+		tooltip.textContent = node.label;
+		node.svg.appendChild(tooltip);
+		
 		var stylename;
 		if(!node.isLeaf())									// for non-terminal node
 		{
@@ -295,8 +299,17 @@ BalloonView.prototype = {
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
 				childSvg.setAttribute("r", childNodeRadiusPadded);
 				childSvg.setAttribute("class", childStyle);
-				childSvg.setAttribute("style", "pointer-events: none");
+				//childSvg.setAttribute("style", "pointer-events: none");
 				$(childSvg).data("node", childNode);
+				
+				childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
+				childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
+				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+				
+				tooltip = document.createElementNS(this.svgNS,"title");
+				tooltip.textContent = childNode.label;
+				childSvg.appendChild(tooltip);
+				
 				node.svgChilds.push(childSvg);
 				this.svg.appendChild(childSvg);
 			}
@@ -460,6 +473,24 @@ BalloonView.prototype = {
 	{
 		evt.currentTarget.classList.remove('BalloonNode_over');
 	},
+	/**
+	 * Handles mouseover on a child node in the SVG plot 
+	 */
+	onChildNodeMouseOver : function(evt)
+	{
+		var node = $(evt.currentTarget).data("node");
+		node.parentNode.svg.classList.add('BalloonNode_over');
+	},
+	
+	/**
+	 * Handles mouseout on a node in the SVG plot 
+	 */
+	onChildNodeMouseOut : function(evt)
+	{
+		var node = $(evt.currentTarget).data("node");
+		if(node)
+			node.parentNode.svg.classList.remove('BalloonNode_over');
+	},
 	
 	/**
 	 * Handles clicking on a node in the SVG plot 
@@ -473,7 +504,19 @@ BalloonView.prototype = {
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
 		this.updateTable(ind);
-		
+	},
+	/**
+	 * Handles clicking on a node in the SVG plot 
+	 */
+	onChildNodeClick : function(evt)
+	{
+		var item = evt.currentTarget;
+		var node = $(item).data("node").parentNode;
+		var childIndex = node.childIndex;
+		var ind = item.getAttribute("data-ind");
+		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
+		this.refreshSVG();
+		this.updateTable(ind);
 	},
 	
 	/**
