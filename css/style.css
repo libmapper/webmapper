@@ -9,6 +9,12 @@
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
 }
+
+/* For HTML5 specs */
+html, body {
+  height: 100%;
+}
+
 /*
 @-webkit-keyframes myfirst 
 {

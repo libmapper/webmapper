@@ -280,7 +280,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 # There ought to be a more elegant way to do this
 def handler_page(out, args):
-    print >>out, """<html>
+    print >>out, """<!DOCTYPE html>
+<html>
 <head>
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">

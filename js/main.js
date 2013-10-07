@@ -494,9 +494,9 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
-    $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    $('#container').css('height', 'calc(100% - ' + ($('#logoWrapper').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    	$('#container').css('height', 'calc(100% - ' + ($('#logoWrapper').height() + 5) + 'px)' );
     	view.on_resize();
     };
     
