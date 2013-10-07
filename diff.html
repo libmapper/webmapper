@@ -1,20 +1,19 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+ 
+<html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <title>Playground</title>
 
-<title>LibMapper DIFF Utility</title>
 
+
+<!--<script src="diff.js"></script>-->
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/LibMapperModel.js"></script>
 
 <script type="text/javascript" src="js/jquery.min.js"></script><!-- JQuery -->
 <script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
-
-<!--  List view Includes -->
-<script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="js/raphael.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 
 <!--  Grid Includes -->
 <script type="text/javascript" src="js/viz/grid.js"></script>
@@ -26,251 +25,300 @@
 <!--  Hive Includes -->
 <script type="text/javascript" src="js/viz/hive.js"></script>
 <link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css" />
+  
+<style type="text/css">
+body{ font-family: helvetica, arial, sans-serif}
+
+#logoWrapper button{
+font-size: 12px;
+border-radius: 3px; 
+-moz-border-radius: 3px; 
+-webkit-border-radius: 3px; 
+border: 0px solid #eeeeee;
+background: #ccc;
+padding: 6px 8px;
+color: #fff;
+}
+#logoWrapper button:hover {
+	background-color: #EEE8AA;
+}
+#logoWrapper button:active{
+	background-color: #FFFFF0;
+}
+</style>  
+  
+  <script><!--
+  
+  var mapA;
+  var out;
+
+  var model;
+
+  var view;
+  var viewIndex;					// to index into viewData 
+  var viewData = new Array(3);	// data specific to the view, change 3 the number of views
 
 
 
-<script><!--
-
-var model;
-
-var view;
-var viewIndex;					// to index into viewData 
-var viewData = new Array(3);	// data specific to the view, change 3 the number of views
-
-var nSrcDevices = 0;	// used for labels of fake src devices
-var nDstDevices = 0;	// used for labels of fake dst devices
-
-function init()
-{
-	$('#container').css('height', ($(window).height() - 100) + 'px' );
+  function init()
+  {
+  	checkBrowserSupport();
+  	
+  	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
     window.onresize = function (e) {
-    	$('#container').css('height', ($(window).height() - 100) + 'px' );
+    	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
     	view.on_resize();
     };
-
-    model = new LibMapperModel();
-	initFakeData(4, 4, 4);
-
-	switch_mode("grid");
-	document.getElementById('modeSelection').value = "grid";
-
-	
-	// controller (from view)  
-    $("#container").on("link", function(e, src, dst){
-        link(src, dst);
-        view.update_display();
-    });
-    $("#container").on("unlink", function(e, src, dst){
-        unlink(src, dst);
-        view.update_display();
-    });
-    $("#container").on("connect", function(e, src, dst){
-        connect(src, dst);
-        view.update_display();
-    });
-    $("#container").on("disconnect", function(e, src, dst){
-        disconnect(src, dst);
-        view.update_display();
-    });
-}
-
-
-//init with fake data 
-function initFakeData(nIn, nOut, nSigs)
-{
-	// add sources
-	for(var i=0; i<nIn;i++)
-		addDevice("/Source" + nSrcDevices++, 0, nSigs);
-
-	// add destinations
-	for(var i=0; i<nOut;i++)
-		addDevice("/Destination" + nDstDevices++, nSigs, 0);
-	
-	// connect everything
-	for(var i=0; i<nSrcDevices; i++)
-	{
-		for(var j=0; j<nDstDevices; j++)
-		{
-			
-			for(var k=0; k<nSigs; k+=1){
-				for(var l=0; l<nSigs; l+=3, k+=1){
-					var rand = Math.random() * 10;
-					if(rand<2)
-					{
-						link("/Source" + i, "/Destination" + j);
-						connect("/Source" + i + "/Signal" + k, "/Destination" + j + "/Signal" + l);
-						k+=3;
-					}
-				}
-			}
-		}
-	}
-}
-
-function addDevice(name, nIn, nOut)
-{
-/*
-	var args = new Array();
-	args['name'] = name;
-	args['n_inputs'] = 2;
-	args['n_outputs'] = 0;
-	var device = model.new_device(args);
-*/
-	var args = new Object();
-	args.name = name;
-	args.n_inputs = nIn;
-	args.n_outputs = nOut;
-	model.devices.add(name, args);
-
-	for(var j=0; j<nIn;j++)
-		addDevSignal("/Signal" + j, name);	
-	for(var j=0; j<nOut;j++)
-		addDevSignal("/Signal" + j, name);
-}
-
-function addDevSignal(name, device_name)
-{
-	/*
-	var args = new Array(); 
-	args['device_name'] = device_name;
-	args['name'] = name;
-	var signal = model.new_signal(args);
-	*/
-	var args = new Object(); 
-	args.device_name = device_name;
-	args.name = name;
-	model.signals.add(device_name+name, args);
-
-}
-
-function link(src, dst){
-	var key = src + ">" + dst;
-	var args = new Object(); 
-	args.src_name = src;
-	args.dest_name = dst;
-	model.links.add(key, args);
-}
-function unlink(src, dst){
-	var key = src + ">" + dst;
-	model.links.remove(key);
-}
-function connect(src, dst){
-	var key = src + ">" + dst;
-	var args = new Object(); 
-	args.src_name = src;
-	args.dest_name = dst;
-	args.bound_min = 0;
-	args.dest_length = 1;
-	args.src_length = 1;
-	args.bound_max = 0;
-	args.muted = 0;
-	args.range = [0.0, 10.0, 0.0, 1.0];
-	args.mode = 2;
-	args.src_type = 'f';
-	args.dest_type = 'f';
-	args.expression = 'y=x';
-	model.connections.add(key, args);
-}
-function disconnect(src, dst){
-	var key = src + ">" + dst;
-	model.connections.remove(key);
-}
-
-
-function switch_mode(newMode)
-{
-	if(view)
-	{
-		// save view settings
-		if(typeof view.save_view_settings == 'function')
-			viewData[viewIndex] = view.save_view_settings();
-		
-		// tell the view to cleanup (ex: removing event listeners)
-		view.cleanup();
-	}
-	
-    $('#container').empty();
-    switch(newMode)
-    {
-        case 'list':
-            view = new listView(model);
-            viewIndex = 0;
-            view.init();
-            break;
-        case 'grid':
-        	view = new GridView(document.getElementById('container'), model);
-        	viewIndex = 1;
-        	$('#saveLoadDiv').removeClass('disabled');
-        	view.update_display();
-        	break;
-        case 'hive':
-        	view = new HivePlotView(document.getElementById('container'), model);
-        	viewIndex = 2;
-            view.on_resize();
-        	break;
-        default:
-            //console.log(newMode);
-    }
     
-    // load view settings if any
-    if(viewData[viewIndex]){
-	    if(typeof view.load_view_settings == 'function')
-	    		view.load_view_settings(viewData[viewIndex]);
-    }
-}
-
-function btnHandler(val)
-{
-		if(val=="load"){
-			loadJSON();	
-		}
-}
+  	model = new LibMapperModel();
+  	
+  	switch_mode("grid");
+	document.getElementById('modeSelection').value = "grid";
+  }
 
 
-function loadJSON(){
-	$.ajax({
-        url: 'http://twitter.com/status/user_timeline/padraicb.json?count=10',
-        dataType: 'jsonp',
-        success: function(dataWeGotViaJsonp){
-            var text = '';
-            var len = dataWeGotViaJsonp.length;
-            for(var i=0;i<len;i++){
-                twitterEntry = dataWeGotViaJsonp[i];
-                text += '<p><img src = "' + twitterEntry.user.profile_image_url_https +'"/>' + twitterEntry['text'] + '</p>'
-            }
-            $('#twitterFeed').html(text);
-        }
-    });
-}
+  function checkBrowserSupport()
+  {
+  	  
+  	// Check browser supports File loading with JS
+  	if (window.File && window.FileReader && window.FileList && window.Blob) 
+  	{
+  		console.log('Great success! All the File APIs are supported.')
+  		document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+  		out = document.getElementById('output');
+  	} 
+  	else 
+  	{
+  		alert('Loading files is not supported in this browser');
+  	}
+  }
+   
+  function readSingleFile(evt) 
+  {
+  	var file = evt.target.files[0]; 
+  	var filename = file.name;
+  	
+  	if (file) 
+  	{
+  		var reader = new FileReader();
+  		
+  		reader.onload = function(e) { 
+  			var contents = e.target.result;
+  			mapA = JSON.parse(contents);
+  			initData(mapA);
+  			view.update_display();
+  		};
+  		reader.readAsText(file);
+  	} 
+  	else { 
+  		alert("Failed to load file");
+  	}
+  }
 
---></script>
-<style>
-	body{margin: 0;}
-</style>
+  function switch_mode(newMode)
+  {
+  	if(view)
+  	{
+  		// save view settings
+  		if(typeof view.save_view_settings == 'function')
+  			viewData[viewIndex] = view.save_view_settings();
+  		
+  		// tell the view to cleanup (ex: removing event listeners)
+  		view.cleanup();
+  	}
+  	
+      $('#container').empty();
+      switch(newMode)
+      {
+          case 'list':
+              view = new listView(model);
+              viewIndex = 0;
+              view.init();
+              break;
+          case 'grid':
+          	view = new GridView(document.getElementById('container'), model);
+          	viewIndex = 1;
+          	$('#saveLoadDiv').removeClass('disabled');
+          	view.update_display();
+          	break;
+          case 'hive':
+          	view = new HivePlotView(document.getElementById('container'), model);
+          	viewIndex = 2;
+              view.on_resize();
+          	break;
+          default:
+              //console.log(newMode);
+      }
+      
+      // load view settings if any
+      if(viewData[viewIndex]){
+  	    if(typeof view.load_view_settings == 'function')
+  	    		view.load_view_settings(viewData[viewIndex]);
+      }
+  }
+
+	  
+  /* MODEL from JSON files (V1)
+    
+  	// mapping.destinations
+  	id: "d0"
+  	device: "delaydesigner.1"
+  	signal: "14_channel/control/79/globa
+
+  	// mapping.sources
+  	id: "s0"
+  	device: "71tstick.1"
+  	signal: "instrument/grip/tip/touch"
+    
+  	// mapping.connections
+      clipMax: "none"
+      clipMin: "none"
+      expression: "d0=s0*(-1)+(1)"
+      mode: "linear"
+      mute: 0
+      range: Array[4]
+  */
+  function initData(data)
+  {
+
+	if(!data.mapping || !data.mapping.sources || !data.mapping.destinations || !data.mapping.connections)
+	  		return;
+
+  	var devicesTemp = [];		// my array to store devices as they are made -to avoid duplicates
+  	var signalsArray = [];		// my associative array to access later when loading connections
+  	
+  	var initDevs = function (sources, isSources)
+  	{
+  		for (var i=0; i<sources.length; i++)
+  	  	{
+  	  		var source = sources[i];
+  	  		
+  	  		// create the device object if it doesn't already exist
+  	  		if(arrIsUnique(source.device, devicesTemp))
+  	  		{
+  	  			devicesTemp.push(source.device.toString());
+  	  			var devArgs = new Object(); 
+  	  			devArgs.name = source.device;
+  	  			devArgs.n_inputs = 0;
+  	  			devArgs.n_outputs = 0;
+  	  			model.devices.add(source.device, devArgs);
+  	  		}
+
+  	  		// create the object for the model
+  	  		var args = new Object(); 
+  	  		args.device_name = source.device;
+  	  		args.name = source.signal;
+  	  		args.id = source.id;
+  	  		model.signals.add(source.device+source.signal, args);
+  	  		
+  	  		// push to my associative array to access later when loading connections
+  	  		signalsArray[source.id] = args;
+  	  		
+  	  		// increment device signal count
+  	  		var dev = model.devices.get(source.device);
+  	  		if(isSources)
+  	  			dev.n_outputs = parseInt(dev.n_outputs) + 1;
+  	  		else
+  	  			dev.n_inputs = parseInt(dev.n_inputs) + 1;
+  	  	}
+  	};
+  	
+  	// for each source device/signal
+  	initDevs(data.mapping.sources, true);
+
+  	// for each source device/signal
+  	initDevs(data.mapping.destinations, false);
+  	
+  	
+    // for each connection
+    for (var i=0; i<data.mapping.connections.length; i++)
+  	{
+  		var connection = data.mapping.connections[i];
+
+  		//  split the equation LHS and RHS
+  		var expr = connection.expression;
+  		var split = expr.split("=");
+
+  		// dest
+  		var y = split[0];
+  		var destDevice = signalsArray[y].device;
+  		var destSignal = signalsArray[y].signal;
+
+  		// source
+  		var patt=/s\d+/gi;
+  		var result=patt.exec(split[1]);
+  		var x = result[0];
+  		var newExpr = split[1].replace( patt,"x");
+  	  	
+  		// match 
+  		var srcSignal = signalsArray[x].name; 
+  		var srcDevice = signalsArray[x].device_name;
+  		var	dstSignal = signalsArray[y].name;
+  		var dstDevice = signalsArray[y].device_name;
+  		var key = srcDevice + srcSignal + ">" + dstDevice + dstSignal;
+  		
+  		// create the link object for the model if not already linked
+  		if(this.model.isLinked(srcDevice, dstDevice) == false)
+  		{
+  			var linkKey = srcDevice + ">" + dstDevice;
+  			var linkArgs = new Object(); 
+  			linkArgs.src_name = srcDevice;
+  			linkArgs.dest_name = dstDevice;
+  			model.links.add(linkKey, linkArgs);
+  		}
+  		
+  		// create the connection object for the model
+  		var args = new Object(); 
+  		args.src_name = srcDevice + srcSignal;
+  		args.dest_name = dstDevice + dstSignal;
+  		args.muted = connection.mute;
+  		args.range = connection.range;
+  		args.expression = 'y=' + newExpr;
+  		args.mode = connection.mode;
+  		//args.bound_min = 0;
+  		//args.dest_length = 1;
+  		//args.src_length = 1;
+  		//args.bound_max = 0;
+  		//args.src_type = 'f';
+  		//args.dest_type = 'f';
+  		model.connections.add(key, args);
+  	}
+ }
+  
+  
+  --></script>
+  
 </head>
 
 
 <body onload="init()">
-
-<div style="margin: 0 auto;" class="topMenu">
-
+<div style="margin: 0 auto;" id="logoWrapper">
+	<table id='logoWrapper' width="100%">
+	<tr width="100%">
+		<td width="40%" align="left">
+			<img alt="webmapper logo" src="images/webmapperlogo.png" width="44"
+					style="vertical-align: middle; position:relative; top: -3px" />
+			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
 	<select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">
 		<option value='none'>None</option>
 		<option value='grid' selected>Grid Demo</option>"+
 		<option value='hive' selected>Hive Demo</option>"+
 	</select>
-	            
-	<button onclick="btnHandler('load')">load</button>
+			
+		</td>
+		
+		<td>
+			<input type="file" id="fileinput" name="files[]" multiple />
+		</td>
+	</table>
 </div> 
 
+	<div id="container">
 
- <div id = 'twitterFeed'></div>
- 
-<div id="container">
-	
-	<!--  VIEW GOES HERE -->
 
 </div>
 
 </body>
 </html>
+
+

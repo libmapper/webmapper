@@ -55,7 +55,13 @@ function switch_mode(newMode)
         case 'hive':
         	view = new HivePlotView(document.getElementById('container'), model);
         	viewIndex = 2;
-            view.on_resize();
+        	view.on_resize();
+        	break;
+        case 'balloon':
+        	view = new BalloonView(document.getElementById('container'), model);
+        	viewIndex = 3;
+            view.init();
+            view.update_display();
         	break;
         default:
             //console.log(newMode);
@@ -525,6 +531,7 @@ function add_container_elements()
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
 	                "<option value='hive'>Hive</option>"+
+	                "<option value='balloon'>Balloon</option>"+
 	            "</select>"+
 	    "</ul></tr></table>"+
 	    "<div id='container'></div>"

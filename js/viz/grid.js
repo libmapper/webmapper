@@ -614,23 +614,9 @@ GridView.prototype = {
 	updateDevicesGrid : function(){
 
 		//divide devices into sources and destinations
-		var srcDevs = new Array();
-		var dstDevs = new Array();
-		
-		var keys = this.model.devices.keys();
-		for (var d in keys) 
-		{
-			var k = keys[d];
-			var dev = this.model.devices.get(k);
-			
-			if (dev.n_outputs)
-				srcDevs.push(dev);
-			if (dev.n_inputs)
-				dstDevs.push(dev);
-		}
+		var devs = this.model.getDevices();
 		
 		// add links
-		
 		var links = new Array();
 		var l = this.model.links.keys();
 		for (var i=0; i<l.length; i++)			
@@ -640,7 +626,7 @@ GridView.prototype = {
 			links.push([src,dst]);
 		}
 		
-		this.devGrid.updateDisplayData(srcDevs, dstDevs, links);
+		this.devGrid.updateDisplayData(devs[0], devs[1], links);
 		this.devGrid.refresh();
 		
 	},

@@ -1,0 +1,150 @@
+* {
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box
+}
+
+#balloonWrapper{
+	margin: 0 auto;
+	position: relative;
+	float: left;
+	font-family: helvetica, arial, sans-serif;
+}
+
+#BalloonSVG{
+	
+}
+
+.BalloonCorner{
+	fill: #000;
+	stroke: #832352;
+	opacity: 0.1;
+}
+.BalloonCorner:hover{
+	opacity: 0.16;
+}
+
+#balloonTable_src, #balloonTable_dst, #BalloonSVG{
+	float: left;
+	position: relative;	
+}
+
+.balloonTable{
+	background-color: #aaa;
+	overflow: auto;	
+}
+
+[id^='accordion']{
+	padding: 0;
+	margin: 0;
+}
+
+[id^='accordion'] .ui-icon{ background-image: none; }
+
+/* accordion header up state */
+[id^='accordion'] .ui-state-default{ 
+	background: #aaa; 
+	border: none;
+    margin: 0px;
+    padding: 15px;  
+    font-weight: normal;
+    color: #fff;  
+    line-height: 42px;  
+    display: block;  
+    font-size: 12pt;  
+    width: 100%;  
+    text-indent: 10px; 
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+/* accordion's heading mouse over state */
+[id^='accordion'] .ui-state-hover {
+	color: #fff;
+	background-color: #bbb;
+}  
+
+/* accordion heading selected state */
+[id^='accordion'] .ui-accordion-header-active { background-color: #04C4D9; }	
+
+/* accordion contents  */
+[id^='accordion'] .ui-accordion-content {  
+	background: none; 
+	border: none;
+    width: 100%;  
+    background-color: #f3f3f3;  
+    color: #777;  
+    font-size: 10pt;  
+    line-height: 16pt; 
+    padding: 16px 0; 
+    border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}  
+
+
+.balloonTable ul{
+	padding: 0 10px;
+	margin: 0;
+	list-style-position: inside;
+	cursor: pointer;
+	
+}
+
+.balloonTable li{
+	cursor: pointer;
+	padding-left: 14px;
+	list-style-type: disc;
+}
+
+.balloonTable .selected, .balloonTable .selected:hover{
+	color: rgb(212, 31, 31);
+}
+
+.balloonTable li:hover{
+	color: #333;
+}
+
+/*
+.BalloonNode_src{
+	fill: #fff;
+	stroke: paleVioletRed ;
+}
+.BalloonLeafNode_src{
+	fill: paleVioletRed ;
+	stroke: #fff;
+}*/
+      
+.BalloonNode_dst, .BalloonNode_src{
+	fill: #fff;
+	stroke: #04C4D9;
+}
+.BalloonLeafNode_dst, .BalloonLeafNode_src{
+	fill: #04C4D9;
+	stroke: #fff;
+}
+
+.BalloonNode_over{
+	stroke-width: 4px;     
+}
+.BalloonNode_selected{
+	stroke-width: 8px;     
+}
+
+.balloonConnection{
+	fill: none;
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	/*shape-rendering: crispEdges;*/	
+}
+
+	
+
+
+/*
+http://stackoverflow.com/questions/4287225/jquery-ui-accordion-how-to-remove-style-completly
+*/

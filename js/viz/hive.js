@@ -333,21 +333,9 @@ HivePlotView.prototype = {
 	// divide devices from model into sources and destinations
 	initDevices : function ()
 	{
-		var keys = this.model.devices.keys();
-		for (var d in keys) 
-		{
-			var k = keys[d];
-			var dev = this.model.devices.get(k);
-			if (dev.n_outputs)
-				this.devs[0].push(dev);
-			if (dev.n_inputs)
-				this.devs[1].push(dev);
-		}
-		
-		// sort devices
+		this.devs = this.model.getDevices();
 		this.devs[0].sort(this.compareDeviceLabel);
 		this.devs[1].sort(this.compareDeviceLabel);
-
 	},
 	
 	// draw background for SVG, can be styles as a gradient in the CSS
@@ -428,6 +416,26 @@ HivePlotView.prototype = {
 		});
 		table.appendChild(btn);
 		
+		table.appendChild(document.createElement('br'));
+		
+		// connect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Connect";
+		btn.title = "connect the selected node(s) (C)";
+		btn.addEventListener("click", function(evt){
+			_self.connect();
+		});
+		table.appendChild(btn);
+		
+		// disconnect button
+		btn = document.createElement("button");
+		btn.innerHTML = "Disconnect";
+		btn.title = "disconnect the selected connection) (D)";
+		btn.addEventListener("click", function(evt){
+			_self.disconnect();
+		});
+		table.appendChild(btn);
+
 		table.appendChild(document.createElement('br'));
 		
 		// repeat for source and destination devices
@@ -631,26 +639,6 @@ HivePlotView.prototype = {
 	{
 		var _self = this;
 		var table = document.getElementById("hive_actionBar");
-		
-		/*
-		// connect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Connect";
-		btn.title = "connect the selected node(s) (C)";
-		btn.addEventListener("click", function(evt){
-			_self.connect();
-		});
-		table.appendChild(btn);
-		
-		// disconnect button
-		btn = document.createElement("button");
-		btn.innerHTML = "Disconnect";
-		btn.title = "disconnect the selected connection) (D)";
-		btn.addEventListener("click", function(evt){
-			_self.disconnect();
-		});
-		table.appendChild(btn);
-		 */
 
 		for(var ind=0; ind<2; ind++)
 		{
