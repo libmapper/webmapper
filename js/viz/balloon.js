@@ -281,9 +281,11 @@ BalloonView.prototype = {
 				if(n==1)
 					nAngle += Math.PI/2;
 				var x2 = ( (radius-childNodeRadius) * Math.cos(nAngle) ) + x;
-				var y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
+				var y2;
 				if(ind==0)
 					y2 = ( -(radius-childNodeRadius) * Math.sin(nAngle) ) + y;
+				else
+					y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
 				
 				var childNode = node.childNodes[i];
 				var childSvg = document.createElementNS(this.svgNS,"circle");
