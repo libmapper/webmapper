@@ -2,7 +2,7 @@
 function listView(model)
 {
 
-	this.model = model;
+	//this.model = model;
 	
     var svgns = 'http://www.w3.org/2000/svg';
 
@@ -244,7 +244,7 @@ function listTable(id)
 
 function update_devices()
 {
-    var keys = this.model.devices.keys();
+    var keys = model.devices.keys();
 
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -254,7 +254,7 @@ function update_devices()
     
     for (var d in keys) {
         var k = keys[d];
-        var dev = this.model.devices.get(k);
+        var dev = model.devices.get(k);
 
         if (dev.n_outputs){
             leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
@@ -273,15 +273,15 @@ function update_devices()
 
 function update_signals()
 {
-    var keys = this.model.signals.keys();
+    var keys = model.signals.keys();
     
     var leftBodyContent = [];
     var rightBodyContent = [];
     
     for (var s in keys) {
         var k = keys[s];
-        var sig = this.model.signals.get(k);
-        var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
+        var sig = model.signals.get(k);
+        var lnk = model.links.get(selectedTab+'>'+sig.device_name);
 
         if (sig.device_name == selectedTab && sig.direction == 1){
             leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
@@ -301,10 +301,10 @@ function update_signals()
 function update_tabs()
 {
     var t = tabDevices;
-    var keys = this.model.links.keys();
+    var keys = model.links.keys();
     var srcs = {};
     for (var l in keys)
-        srcs[this.model.links.get(keys[l]).src_name] = null;
+        srcs[model.links.get(keys[l]).src_name] = null;
     for (var s in srcs) {
         if (t.nextSibling)
             t = t.nextSibling;
@@ -371,9 +371,9 @@ function update_links()
     // How many are actually being displayed?
     var n_visibleLinks = 0;
 
-    var keys = this.model.links.keys();
+    var keys = model.links.keys();
     for (var k in keys) {
-        var l = this.model.links.get(keys[k]);
+        var l = model.links.get(keys[k]);
         $('td:endswith('+l.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -392,7 +392,7 @@ function update_links()
     }
 
     $('.status.middle').text(
-        n_visibleLinks + " of " + this.model.links.keys().length + " links"
+        n_visibleLinks + " of " + model.links.keys().length + " links"
     );
 
 }
@@ -430,7 +430,7 @@ function update_connections()
     var n_connections = 0;
     var n_visibleConnections = 0;
 
-    var keys = this.model.connections.keys();
+    var keys = model.connections.keys();
     for (var k in keys) {
         var c = model.connections.get(keys[k]);
         var muted = c.muted;

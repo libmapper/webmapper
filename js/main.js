@@ -494,9 +494,9 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
-    $('#container').css('height', 'calc(100% - ' + ($('#logoWrapper').height() + 5) + 'px)' );
+    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + ($('#logoWrapper').height() + 5) + 'px)' );
+    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     	view.on_resize();
     };
     
@@ -519,21 +519,22 @@ function main()
 function add_container_elements()
 {
     $('body').append(
-    	"<table id='logoWrapper'><tr><td width='60px'><img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
-        "<td>" +
-	        "<ul class='topMenu'>"+
+	        "<div class='topMenu'>"+
+                "<div id='logoWrapper'>"+
+                    "<img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'>"+
+                "</div>"+
 	            "<div id='saveLoadDiv'>"+
 	                "<li><a id='loadButton'>Load</a></li>"+
 	                "<li><a id='saveButton'>Save</a></li>"+
 	            "</div>"+
-	            "<select id='modeSelection'>"+
+	            "<div><select id='modeSelection'>"+
 	                "<option value='none'>None</option>"+
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
 	                "<option value='hive'>Hive</option>"+
 	                "<option value='balloon'>Balloon</option>"+
-	            "</select>"+
-	    "</ul></tr></table>"+
+	            "</select></div>"+
+	    "</div>"+
 	    "<div id='container'></div>"
     );
 

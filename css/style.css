@@ -135,20 +135,16 @@ body {
 
 /*The top menu*/
     .topMenu {
-      padding: 10px 0;
-      top: 0;
-      margin: 0;
-      margin-top: -1px;
       min-width: 560px;
     }
 
     .topMenu>div {
       display: inline-block;
+      vertical-align: middle;
     }
 
     .topMenu li {
       margin: 2px;
-      display: inline-block;
       list-style: none;
       cursor: pointer;
     }
@@ -159,7 +155,6 @@ body {
 
     #modeSelection {
       position: relative;
-      top:  -1px;
     }
 
 
@@ -285,7 +280,6 @@ body {
     }
 
     #saveLoadDiv {
-      display: inline-block;
       padding: 4px;
     }
 
@@ -445,7 +439,7 @@ body {
       
     }
     input.searchBar {
-      width: 200px;
+      width: 20%;
       text-align: right;
     }
     #leftTitle {
