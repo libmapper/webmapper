@@ -59,8 +59,6 @@ function listView(model)
 
         updateCallable = false;
         updateTimeout = setTimeout(function() {
-            timesUpdateCalled++;
-            //console.log("Update: "+timesUpdateCalled);
             
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
