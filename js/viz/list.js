@@ -46,6 +46,7 @@ function listView(model)
     this.cleanup = function() {
         // Remove view specific handlers
         $('*').off('.list');
+        $(document).off('.list');
     }
 
     var updateCallable = true;
@@ -621,7 +622,6 @@ function select_tab(tab)
         $('#saveLoadDiv').removeClass('disabled');
     }
 
-    view.unconnectedVisible = true;
     $('svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
@@ -866,7 +866,7 @@ function drawing_curve(sourceRow)
     this.sourceRow = sourceRow;
     this.targetRow;
     this.muted = false;
-    if( model.mKey == true && selectedTab != all_devices ) this.muted = true; // The curve is being drawn mute
+
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
@@ -906,7 +906,6 @@ function drawing_curve(sourceRow)
 
     // The actual line
     this.line = svgArea.path().attr({'stroke-width': 2});
-    if(this.muted) this.line.node.classList.add('muted');
 
     this.update = function( moveEvent ) {
         var target = moveEvent.currentTarget;
@@ -953,6 +952,7 @@ function drawing_curve(sourceRow)
             command.send('connect', [this.sourceRow.firstChild.innerHTML, this.targetRow.firstChild.innerHTML, {'muted': this.muted}]);
         }
         $("*").off('.drawing').removeClass('incompatible');
+        $(document).off('.drawing');
         self.line.remove();
     }
 
@@ -971,43 +971,6 @@ function drawing_curve(sourceRow)
                 select_tr(this.targetRow);
         }
     }
-}
-
-function drawing_handlers()
-{
-    // Wait for a mousedown on either table
-    // Handler is attached to table, but 'this' is the table row
-    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
-
-        var sourceRow = this;
-
-        // Cursor enters the canvas
-        $('svg').one('mouseenter.drawing', function() {
-
-            var curve = new drawing_curve(sourceRow);
-
-            // Make sure only the proper row is selected
-            deselect_all();
-            select_tr(curve.sourceRow);
-
-            // Fade out incompatible signals
-            if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
-
-            // Moving about the canvas
-            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
-                curve.update(moveEvent);
-            });
-
-            $(document).one('mouseup.drawing', function(mouseUpEvent) {
-                curve.mouseup(mouseUpEvent);
-            });
-        });
-
-        $(document).one('mouseup.drawing', function(mouseUpEvent) {
-            $("*").off('.drawing').removeClass('incompatible');
-        });
-    });
 }
 
 // Finds a bezier curve between two points
@@ -1041,6 +1004,59 @@ function fade_incompatible_signals(row, targetTableBody)
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
+}
+
+function drawing_handlers()
+{
+    // Wait for a mousedown on either table
+    // Handler is attached to table, but 'this' is the table row
+    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
+
+        var sourceRow = this;
+
+        // Cursor enters the canvas
+        $('svg').one('mouseenter.drawing', function() {
+
+            var curve = new drawing_curve(sourceRow);
+
+            // Make sure only the proper row is selected
+            deselect_all();
+            select_tr(curve.sourceRow);
+
+            // Fade out incompatible signals
+            if( selectedTab != all_devices )
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
+
+            // Moving about the canvas
+            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
+                curve.update(moveEvent);
+            });
+
+            $(document).one('mouseup.drawing', function(mouseUpEvent) {
+                curve.mouseup(mouseUpEvent);
+            });
+
+            $(document).on('keydown.drawing', function(keyPressEvent) {
+                if( selectedTab != all_devices && keyPressEvent.which == 77) {
+                    // Change if the user is drawing a muted connection
+                    if( curve.muted == true ) {
+                        curve.muted = false;
+                        curve.line.node.classList.remove('muted');
+                    }
+                    else {
+                        curve.muted = true;  
+                        curve.line.node.classList.add('muted');
+                    } 
+                }
+            });
+
+        });
+
+        $(document).one('mouseup.drawing', function(mouseUpEvent) {
+            $("*").off('.drawing').removeClass('incompatible');
+            $(document).off('.drawing');
+        });
+    });
 }
 
 this.add_handlers = function()
@@ -1139,10 +1155,6 @@ this.add_handlers = function()
             $('#svgTop').text('hide unconnected');
         }
         filter_view();
-    });
-
-    $('.status.left').on('click', function(e) {
-        console.log('a');
     });
 
     drawing_handlers();

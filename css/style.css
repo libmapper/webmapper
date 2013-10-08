@@ -47,7 +47,7 @@ ul {
 body {
   font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
-  margin: 0 8px;
+  margin: 0 4px;
 }
 
 /* Color scheme! */
@@ -243,7 +243,7 @@ body {
 
     #wsstatus {
       position: fixed;
-      bottom: 5px;
+      bottom: 7px;
       right: 14px;
       z-index: 9;
       opacity: 0.5; 

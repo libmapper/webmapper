@@ -629,9 +629,6 @@ function network_selection()
         menuOpen = false;
         command.unregister('available_networks');
     }
-
-    //$('#networkMenu').on('mouseleave.networkSelect')
-    //command.send('select_network', name);
 }
 
 /**
@@ -675,17 +672,8 @@ function add_handlers()
         on_boundary(e);
     });
 
-    $(document).keydown( function(e) {
-        if( e.which == 77 && model.mKey == false) { // mute on 'm'
-            model.mKey = true;
-            mute_selected();
-        }
-    });
-
-    $(document).keyup( function(e) {
-        if( e.which == 77) {
-            model.mKey = false;
-        }
+    $('body').on('keydown', function(e) {
+        if( e.which == 77 ) mute_selected();
     });
 
     $('#refresh').on('click', function(e) { 
