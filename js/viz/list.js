@@ -766,8 +766,9 @@ function on_connect(e)
         options['muted'] = true;
     }
     function do_connect(l, r) {
-        command.send('connect', [l.firstChild.innerHTML,
-                                 r.firstChild.innerHTML, options]);
+        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
+        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
+        command.send('connect', [sig1, sig2, options]);
     }
     apply_selected_pairs(do_connect);
     e.stopPropagation();
@@ -776,8 +777,9 @@ function on_connect(e)
 function on_disconnect(e)
 {
     function do_disconnect(l, r) {
-        command.send('disconnect', [l.firstChild.innerHTML,
-                                    r.firstChild.innerHTML]);
+        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
+        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
+        command.send('disconnect', [sig1, sig2]);
     }
     apply_selected_pairs(do_disconnect);
     e.stopPropagation();
@@ -949,7 +951,7 @@ function drawing_curve(sourceRow)
     this.mouseup = function( mouseUpEvent ) {
         if (selectedTab == all_devices) on_link(mouseUpEvent);
         else if (this.targetRow) {
-            command.send('connect', [this.sourceRow.firstChild.innerHTML, this.targetRow.firstChild.innerHTML, {'muted': this.muted}]);
+            command.send('connect', [this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, ''), this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, ''), {'muted': this.muted}]);
         }
         $("*").off('.drawing').removeClass('incompatible');
         $(document).off('.drawing');

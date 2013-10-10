@@ -316,7 +316,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 85px);
+    height: calc(100% - 89px);
     /*border: solid 1px black;*/
     border-bottom: 0;
   }
