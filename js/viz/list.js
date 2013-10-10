@@ -270,7 +270,6 @@ function update_devices()
     rightTable.update(rightBodyContent, destinationDeviceHeaders);
 }
 
-
 function update_signals()
 {
     var keys = model.signals.keys();
@@ -282,12 +281,13 @@ function update_signals()
         var k = keys[s];
         var sig = model.signals.get(k);
         var lnk = model.links.get(selectedTab+'>'+sig.device_name);
+        var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');  // So that all browsers break the line properly
 
         if (sig.device_name == selectedTab && sig.direction == 1){
-            leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+            leftBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
         if (sig.direction == 0 && lnk!=null){
-            rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+            rightBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
     }
 
