@@ -759,16 +759,15 @@ function on_unlink(e)
     e.stopPropagation();
 }
 
-function on_connect(e)
+function on_connect(e, args)
 {
-    var options = {};
     if ( model.mKey ) {
-        options['muted'] = true;
+        args['muted'] = true;
     }
     function do_connect(l, r) {
         var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
         var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
-        command.send('connect', [sig1, sig2, options]);
+        command.send('connect', [sig1, sig2, args]);
     }
     apply_selected_pairs(do_connect);
     e.stopPropagation();
@@ -951,7 +950,10 @@ function drawing_curve(sourceRow)
     this.mouseup = function( mouseUpEvent ) {
         if (selectedTab == all_devices) on_link(mouseUpEvent);
         else if (this.targetRow) {
-            command.send('connect', [this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, ''), this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, ''), {'muted': this.muted}]);
+            on_connect(mouseUpEvent, {'muted': this.muted});
+            //var sig1 = this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, '');
+            //var sig2 = this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, '');
+            //command.send('connect', sig1, sig2, {'muted': this.muted}]);
         }
         $("*").off('.drawing').removeClass('incompatible');
         $(document).off('.drawing');
