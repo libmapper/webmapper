@@ -103,7 +103,7 @@ function listView(model)
                 var left = this;
                 R.map(function() {
                         var right = this;
-                        var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+                        var key = left.firstChild.innerHTML.replace(/<wbr>/g, '')+'>'+right.firstChild.innerHTML.replace(/<wbr>/g, '');
                         var v = list.get(key);
                         if (v)
                             vals.push(v);
@@ -338,7 +338,7 @@ function update_selection()
         var l = selectLists[selectedTab][i];
         var tr = $(table).children('tbody').children('tr')[0];
         while (tr) {
-            if (l.get(tr.firstChild.innerHTML))
+            if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
                 $(tr).addClass("trsel");
             else
                 $(tr).removeClass("trsel");
@@ -633,7 +633,7 @@ function select_tr(tr)
     if(!tr) return;
 
     var t = $(tr);
-    var name = tr.firstChild.innerHTML;
+    var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
 
     //Is the row on the left or right?
     var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
