@@ -689,11 +689,11 @@ function full_select_tr(tr)
 function deselect_all()
 {
     $('tr.trsel', leftTable.table).each(function(i,e){
-            selectLists[selectedTab][0].remove(e.firstChild.innerHTML);
+            selectLists[selectedTab][0].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
             $(this).removeClass('trsel');
         });
     $('tr.trsel', rightTable.table).each(function(i,e){
-            selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
+            selectLists[selectedTab][1].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
             $(this).removeClass('trsel');
         });
     lastSelectedTr.left = null;
