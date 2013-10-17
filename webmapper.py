@@ -97,6 +97,7 @@ def on_save(arg):
     return fn, mapperstorage.serialise(monitor, arg['dev'])
 
 def on_load(mapping_json, devices):
+    # pdb.set_trace()
     mapperstorage.deserialise(monitor, mapping_json, devices)
 
 def select_network(newNetwork):
@@ -117,7 +118,6 @@ def get_networks(arg):
     server.send_command("active_network", networkInterfaces['active'])
 
 def get_active_network(arg):
-    pdb.set_trace()
     server.send_command("active_network", networkInterfaces['active'])
 
 
@@ -216,10 +216,10 @@ server.add_command_handler("select_network", select_network)
 server.add_command_handler("get_networks", get_networks)
 
 get_networks(False)
-if ( 'en0' in networkInterfaces['available'] ) :
-    networkInterfaces['active'] = 'en0'
-elif ( 'en1' in networkInterfaces['available'] ):
+if ( 'en1' in networkInterfaces['available'] ) :
     networkInterfaces['active'] = 'en1'
+elif ( 'en0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'en0'
 elif ( 'lo0' in networkInterfaces['available'] ):
     networkInterfaces['active'] = 'lo0'
 

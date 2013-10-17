@@ -130,7 +130,7 @@ def deserialise(monitor, mapping_json, devices):
                                    .replace('dest[0]', 'y'))
 
             for l in links:
-                if monitor.db.link_by_src_dest_names(l[0], l[1]):
+                if monitor.db.get_link_by_src_dest_names(l[0], l[1]):
                     args = (str(l[0]+'/'+srcsig),
                             str(l[1]+'/'+destsig),
                             {'mode': modeIdx[c['mode']],
