@@ -726,7 +726,6 @@ BalloonView.prototype = {
 	
 	update_display : function ()
 	{
-		this.clearSVG();
 		this.refreshData();
 		this.refreshSVG();
 		this.createTables();
@@ -749,6 +748,7 @@ BalloonView.prototype = {
 			var tree = new BalloonNode();
 			tree.parentNode = null;
 			tree.label = this.rootLabel[i];
+			this.signalName = this.rootLabel[i];
 			tree.level = -1;
 			tree.direction = i;
 			this.trees[i] = tree;
@@ -764,11 +764,20 @@ BalloonView.prototype = {
 	        this.addSignal(sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }
 	
+	    // if view level is not set by user, set it to the root
 	    for(var i=0; i<2; i++)
     	{
-	    	// if view level is not set by user, set it to the root
-	    	if(this.viewNodes[i]==null)
+	    	if(this.viewNodes[i] != null)
+	    	{
+	    		var newNode = this.trees[i].getNode(this.viewNodes[i]);
+	    		if(newNode)
+	    			this.viewNodes[i] = newNode;
+	    		else
+	    			this.viewNodes[i] = this.trees[i];
+	    	}	
+	    	else
 	    		this.viewNodes[i] = this.trees[i];
+	    		
     	}
 	},
 	
@@ -919,7 +928,11 @@ BalloonView.prototype = {
 	refreshSVG : function ()
 	{
 		// empty SVG canvas
-		//$(this.svg).empty();
+		$(this.svg).empty();
+		
+//		while (this.svg.firstChild) {
+//		    this.svg.removeChild(this.svg.firstChild);
+//		}
 		
 		// draw the svg background
 		this.drawCanvas();
@@ -934,9 +947,7 @@ BalloonView.prototype = {
 	
 	clearSVG : function ()
 	{
-		while (this.svg.firstChild) {
-		    this.svg.removeChild(this.svg.firstChild);
-		}
+		
 	}
 	
 };
@@ -1013,6 +1024,33 @@ BalloonNode.prototype = {
 			delete this.svg;
 			delete this.svgChilds;
 				
+		},
+		
+		getNode : function (node)
+		{
+
+			if(this.equals(node))
+			{
+				return this;
+			}
+			
+			// check with children
+			else
+			{
+				var foundNode = false;
+				for(var i=0; i<this.childNodes.length; i++)
+				{
+					foundNode = this.childNodes[i].getNode(node);
+					if(foundNode != false)
+						break;
+				}
+				
+				if(foundNode != false)
+					return foundNode;
+				else
+					return false;
+			}
+			
 		}
 		
 };
