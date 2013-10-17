@@ -6,10 +6,12 @@ if 'py2exe' in sys.argv: import py2exe
 if 'py2app' in sys.argv: import py2app
 
 data_files = [('',['js']),
-              ('css',['css/style.css']),
-              ('',['images']),
+              ('',['includes']),
+              ('',['css']),
+              ('',['images'])
               ]
-options = {'argv_emulation': True, 'iconfile': 'images/libmapper.icns'}
+
+options = {'argv_emulation': False, 'iconfile': 'images/libmapper.icns'}
 
 setup(name='WebMapper',
       version='0.1',

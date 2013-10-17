@@ -9,6 +9,12 @@
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
 }
+
+/* For HTML5 specs */
+html, body {
+  height: 100%;
+}
+
 /*
 @-webkit-keyframes myfirst 
 {
@@ -41,7 +47,7 @@ ul {
 body {
   font-family: helvetica-light, helvetica, sans;
   font-size: 11pt;
-  margin-top: 3px;
+  margin: 0 4px;
 }
 
 /* Color scheme! */
@@ -57,7 +63,7 @@ body {
     }
 
     /* Header Bars */
-    thead, #svgTop {
+    thead, #svgTop, #networkMenu {
       background: #EEE;
     }
     .displayTable th:hover, #svgTop:hover {
@@ -65,7 +71,7 @@ body {
     }
 
     /* highlights */
-    .modesel, .displayTable tr.trsel.even {
+    .modesel, .displayTable tr.trsel.even, #networkMenu td:hover  {
       background-color: #9CC2CF;
     }
     /* secondary highlight */
@@ -129,20 +135,16 @@ body {
 
 /*The top menu*/
     .topMenu {
-      padding: 10px 0;
-      top: 0;
-      margin: 0;
-      margin-top: -1px;
       min-width: 560px;
     }
 
     .topMenu>div {
       display: inline-block;
+      vertical-align: middle;
     }
 
     .topMenu li {
       margin: 2px;
-      display: inline-block;
       list-style: none;
       cursor: pointer;
     }
@@ -153,7 +155,6 @@ body {
 
     #modeSelection {
       position: relative;
-      top:  -1px;
     }
 
 
@@ -237,7 +238,7 @@ body {
 
     #wsstatus {
       position: fixed;
-      bottom: 5px;
+      bottom: 7px;
       right: 14px;
       z-index: 9;
       opacity: 0.5; 
@@ -279,9 +280,24 @@ body {
     }
 
     #saveLoadDiv {
-      display: inline-block;
       padding: 4px;
     }
+
+    #networkMenu {
+      position: absolute;
+      z-index: 2;
+      left: 37px;
+      top: 30px;
+    }
+
+    #networkMenu td, #networkMenu th {
+      opacity: 1;
+    }
+
+    #networkMenu td, #logo {
+      cursor: pointer;
+    }
+
 /****************/
 
 .notification {
@@ -300,7 +316,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 85px);
+    height: calc(100% - 89px);
     /*border: solid 1px black;*/
     border-bottom: 0;
   }
@@ -423,7 +439,7 @@ body {
       
     }
     input.searchBar {
-      width: 200px;
+      width: 20%;
       text-align: right;
     }
     #leftTitle {

@@ -2,7 +2,7 @@
 function listView(model)
 {
 
-	this.model = model;
+	//this.model = model;
 	
     var svgns = 'http://www.w3.org/2000/svg';
 
@@ -46,6 +46,7 @@ function listView(model)
     this.cleanup = function() {
         // Remove view specific handlers
         $('*').off('.list');
+        $(document).off('.list');
     }
 
     var updateCallable = true;
@@ -59,8 +60,6 @@ function listView(model)
 
         updateCallable = false;
         updateTimeout = setTimeout(function() {
-            timesUpdateCalled++;
-            //console.log("Update: "+timesUpdateCalled);
             
             // Removes 'invisible' classes which can muddle with display updating
             $('tr.invisible').removeClass('invisible');
@@ -104,7 +103,7 @@ function listView(model)
                 var left = this;
                 R.map(function() {
                         var right = this;
-                        var key = left.firstChild.innerHTML+'>'+right.firstChild.innerHTML;
+                        var key = left.firstChild.innerHTML.replace(/<wbr>/g, '')+'>'+right.firstChild.innerHTML.replace(/<wbr>/g, '');
                         var v = list.get(key);
                         if (v)
                             vals.push(v);
@@ -245,7 +244,7 @@ function listTable(id)
 
 function update_devices()
 {
-    var keys = this.model.devices.keys();
+    var keys = model.devices.keys();
 
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -255,7 +254,7 @@ function update_devices()
     
     for (var d in keys) {
         var k = keys[d];
-        var dev = this.model.devices.get(k);
+        var dev = model.devices.get(k);
 
         if (dev.n_outputs){
             leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
@@ -271,24 +270,24 @@ function update_devices()
     rightTable.update(rightBodyContent, destinationDeviceHeaders);
 }
 
-
 function update_signals()
 {
-    var keys = this.model.signals.keys();
+    var keys = model.signals.keys();
     
     var leftBodyContent = [];
     var rightBodyContent = [];
     
     for (var s in keys) {
         var k = keys[s];
-        var sig = this.model.signals.get(k);
-        var lnk = this.model.links.get(selectedTab+'>'+sig.device_name);
+        var sig = model.signals.get(k);
+        var lnk = model.links.get(selectedTab+'>'+sig.device_name);
+        var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');  // So that all browsers break the line properly
 
         if (sig.device_name == selectedTab && sig.direction == 1){
-            leftBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+            leftBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
         if (sig.direction == 0 && lnk!=null){
-            rightBodyContent.push([sig.device_name+sig.name, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+            rightBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
         }
     }
 
@@ -302,10 +301,10 @@ function update_signals()
 function update_tabs()
 {
     var t = tabDevices;
-    var keys = this.model.links.keys();
+    var keys = model.links.keys();
     var srcs = {};
     for (var l in keys)
-        srcs[this.model.links.get(keys[l]).src_name] = null;
+        srcs[model.links.get(keys[l]).src_name] = null;
     for (var s in srcs) {
         if (t.nextSibling)
             t = t.nextSibling;
@@ -339,7 +338,7 @@ function update_selection()
         var l = selectLists[selectedTab][i];
         var tr = $(table).children('tbody').children('tr')[0];
         while (tr) {
-            if (l.get(tr.firstChild.innerHTML))
+            if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
                 $(tr).addClass("trsel");
             else
                 $(tr).removeClass("trsel");
@@ -372,9 +371,9 @@ function update_links()
     // How many are actually being displayed?
     var n_visibleLinks = 0;
 
-    var keys = this.model.links.keys();
+    var keys = model.links.keys();
     for (var k in keys) {
-        var l = this.model.links.get(keys[k]);
+        var l = model.links.get(keys[k]);
         $('td:endswith('+l.src_name+')', leftTable.table).each(
             function(i,e){
                 var left = e.parentNode;
@@ -393,7 +392,7 @@ function update_links()
     }
 
     $('.status.middle').text(
-        n_visibleLinks + " of " + this.model.links.keys().length + " links"
+        n_visibleLinks + " of " + model.links.keys().length + " links"
     );
 
 }
@@ -431,7 +430,7 @@ function update_connections()
     var n_connections = 0;
     var n_visibleConnections = 0;
 
-    var keys = this.model.connections.keys();
+    var keys = model.connections.keys();
     for (var k in keys) {
         var c = model.connections.get(keys[k]);
         var muted = c.muted;
@@ -623,7 +622,6 @@ function select_tab(tab)
         $('#saveLoadDiv').removeClass('disabled');
     }
 
-    view.unconnectedVisible = true;
     $('svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
@@ -635,7 +633,7 @@ function select_tr(tr)
     if(!tr) return;
 
     var t = $(tr);
-    var name = tr.firstChild.innerHTML;
+    var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
 
     //Is the row on the left or right?
     var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
@@ -691,11 +689,11 @@ function full_select_tr(tr)
 function deselect_all()
 {
     $('tr.trsel', leftTable.table).each(function(i,e){
-            selectLists[selectedTab][0].remove(e.firstChild.innerHTML);
+            selectLists[selectedTab][0].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
             $(this).removeClass('trsel');
         });
     $('tr.trsel', rightTable.table).each(function(i,e){
-            selectLists[selectedTab][1].remove(e.firstChild.innerHTML);
+            selectLists[selectedTab][1].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
             $(this).removeClass('trsel');
         });
     lastSelectedTr.left = null;
@@ -761,11 +759,15 @@ function on_unlink(e)
     e.stopPropagation();
 }
 
-function on_connect(e)
+function on_connect(e, args)
 {
+    if ( model.mKey ) {
+        args['muted'] = true;
+    }
     function do_connect(l, r) {
-        command.send('connect', [l.firstChild.innerHTML,
-                                 r.firstChild.innerHTML]);
+        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
+        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
+        command.send('connect', [sig1, sig2, args]);
     }
     apply_selected_pairs(do_connect);
     e.stopPropagation();
@@ -774,8 +776,9 @@ function on_connect(e)
 function on_disconnect(e)
 {
     function do_disconnect(l, r) {
-        command.send('disconnect', [l.firstChild.innerHTML,
-                                    r.firstChild.innerHTML]);
+        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
+        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
+        command.send('disconnect', [sig1, sig2]);
     }
     apply_selected_pairs(do_disconnect);
     e.stopPropagation();
@@ -863,6 +866,8 @@ function drawing_curve(sourceRow)
     var self = this;
     this.sourceRow = sourceRow;
     this.targetRow;
+    this.muted = false;
+
     // We'll need to know the width of the canvas, in px, as a number
     var widthInPx = $('svg').css('width'); // Which returns "##px"
     this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
@@ -944,9 +949,14 @@ function drawing_curve(sourceRow)
 
     this.mouseup = function( mouseUpEvent ) {
         if (selectedTab == all_devices) on_link(mouseUpEvent);
-        else on_connect(mouseUpEvent);
+        else if (this.targetRow) {
+            on_connect(mouseUpEvent, {'muted': this.muted});
+            //var sig1 = this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, '');
+            //var sig2 = this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, '');
+            //command.send('connect', sig1, sig2, {'muted': this.muted}]);
+        }
         $("*").off('.drawing').removeClass('incompatible');
-        //So that the old line is only removed when the actual connection is made
+        $(document).off('.drawing');
         self.line.remove();
     }
 
@@ -965,43 +975,6 @@ function drawing_curve(sourceRow)
                 select_tr(this.targetRow);
         }
     }
-}
-
-function drawing_handlers()
-{
-    // Wait for a mousedown on either table
-    // Handler is attached to table, but 'this' is the table row
-    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
-
-        var sourceRow = this;
-
-        // Cursor enters the canvas
-        $('svg').one('mouseenter.drawing', function() {
-
-            var curve = new drawing_curve(sourceRow);
-
-            // Make sure only the proper row is selected
-            deselect_all();
-            select_tr(curve.sourceRow);
-
-            // Fade out incompatible signals
-            if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
-
-            // Moving about the canvas
-            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
-                curve.update(moveEvent);
-            });
-
-            $(document).one('mouseup.drawing', function(mouseUpEvent) {
-                curve.mouseup(mouseUpEvent);
-            });
-        });
-
-        $(document).one('mouseup.drawing', function(mouseUpEvent) {
-            $("*").off('.drawing').removeClass('incompatible');
-        });
-    });
 }
 
 // Finds a bezier curve between two points
@@ -1035,6 +1008,59 @@ function fade_incompatible_signals(row, targetTableBody)
         if( sourceLength != targetLength ) 
             $(element).addClass('incompatible');
     }); 
+}
+
+function drawing_handlers()
+{
+    // Wait for a mousedown on either table
+    // Handler is attached to table, but 'this' is the table row
+    $('.displayTable').on('mousedown', 'tr', function(tableClick) {
+
+        var sourceRow = this;
+
+        // Cursor enters the canvas
+        $('svg').one('mouseenter.drawing', function() {
+
+            var curve = new drawing_curve(sourceRow);
+
+            // Make sure only the proper row is selected
+            deselect_all();
+            select_tr(curve.sourceRow);
+
+            // Fade out incompatible signals
+            if( selectedTab != all_devices )
+                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
+
+            // Moving about the canvas
+            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
+                curve.update(moveEvent);
+            });
+
+            $(document).one('mouseup.drawing', function(mouseUpEvent) {
+                curve.mouseup(mouseUpEvent);
+            });
+
+            $(document).on('keydown.drawing', function(keyPressEvent) {
+                if( selectedTab != all_devices && keyPressEvent.which == 77) {
+                    // Change if the user is drawing a muted connection
+                    if( curve.muted == true ) {
+                        curve.muted = false;
+                        curve.line.node.classList.remove('muted');
+                    }
+                    else {
+                        curve.muted = true;  
+                        curve.line.node.classList.add('muted');
+                    } 
+                }
+            });
+
+        });
+
+        $(document).one('mouseup.drawing', function(mouseUpEvent) {
+            $("*").off('.drawing').removeClass('incompatible');
+            $(document).off('.drawing');
+        });
+    });
 }
 
 this.add_handlers = function()
@@ -1133,10 +1159,6 @@ this.add_handlers = function()
             $('#svgTop').text('hide unconnected');
         }
         filter_view();
-    });
-
-    $('.status.left').on('click', function(e) {
-        console.log('a');
     });
 
     drawing_handlers();

@@ -280,23 +280,24 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 # There ought to be a more elegant way to do this
 def handler_page(out, args):
-    print >>out, """<html>
+    print >>out, """<!DOCTYPE html>
+<html>
 <head>
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
-<script type="text/javascript" src="js/jquery.min.js"></script> <!-- JQuery -->
-<script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI-->
+<script type="text/javascript" src="includes/jquery-2.0.3.min.js"></script> <!-- JQuery -->
+<script type="text/javascript" src="includes/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI -->
+<script type="text/javascript" src="includes/json2.js"></script> <!-- JSON -->
 
 <script type="text/javascript" src="js/util.js"></script>
-<script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
 <script type="text/javascript" src="js/LibMapperModel.js"></script>
 
 <!-- List View includes -->
 <script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="js/raphael.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="includes/raphael.js"></script>
+<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
 
 <!-- Grid View includes -->

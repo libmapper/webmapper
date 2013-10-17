@@ -84,6 +84,7 @@ function refresh_all()
     command.send('refresh');
 }
 
+
 function update_save_location()
 {
     if (selectedTab==all_devices) {
@@ -368,8 +369,10 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
-function on_mute(conns)
+function mute_selected()
 {
+    var conns = view.get_selected_connections(model.connections);
+
     for ( var i in conns ) {
         var args = conns[i];
         if ( args.muted == 0 ) {
@@ -458,6 +461,15 @@ function main()
         view.update_display();
         update_connection_properties_for(args, conns);
     });
+
+    command.register("set_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
+        refresh_all();
+    });
+
+    command.register("active_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
+    });
     
     // actions from VIEW
 
@@ -482,9 +494,9 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
-    $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     	view.on_resize();
     };
     
@@ -494,35 +506,39 @@ function main()
         function(){
         	switch_mode('list');
             command.start();
+            command.send('get_networks');
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
             add_handlers();
-        },
-        100);
+        }, 100);
+
 }
 
 function add_container_elements()
 {
     $('body').append(
-    	"<table id='logoWrapper'><tr><td width='60px'><img alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
-        "<td>" +
-	        "<ul class='topMenu'>"+
+	        "<div class='topMenu'>"+
+                "<div id='logoWrapper'>"+
+                    "<img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'>"+
+                "</div>"+
 	            "<div id='saveLoadDiv'>"+
 	                "<li><a id='loadButton'>Load</a></li>"+
 	                "<li><a id='saveButton'>Save</a></li>"+
 	            "</div>"+
-	            "<select id='modeSelection'>"+
+	            "<div><select id='modeSelection'>"+
 	                "<option value='none'>None</option>"+
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
 	                "<option value='hive'>Hive</option>"+
 	                "<option value='balloon'>Balloon</option>"+
-	            "</select>"+
-	    "</ul></tr></table>"+
+	            "</select></div>"+
+	    "</div>"+
 	    "<div id='container'></div>"
     );
+
+    $('body').attr('oncontextmenu',"return false;");
 }
 
 function add_signal_control_bar() 
@@ -568,6 +584,54 @@ function add_extra_tools()
         "<div id='refresh' class='extratools'>");
 }
 
+
+function network_selection()
+{
+    var menuOpen = false; // A variable storing the state of network selection
+
+    $('body').on('mousedown', function(e) {
+        if(e.which == 3) {              // A right click
+            if(menuOpen) cleanup();     // Removes the menu and handlers if already open (multiple right clicks)
+            select_network(e);
+        }
+    });
+
+    function select_network(clickEvent) {
+        command.send('get_networks');
+        command.register('available_networks', function(cmd, args){
+            model.networkInterfaces.available = args;
+            $(  "<div id='networkMenu'>"+
+                    "<table>"+
+                        "Current Network: "+model.networkInterfaces.selected+
+                        "<thead><th>Available Networks</th></thead>"+
+                        "<tbody></tbody>"+
+                    "</table></div>"
+                ).insertAfter('#container');
+            $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
+            menuOpen = true;
+
+            for (var i in model.networkInterfaces.available ) {
+                $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
+            }
+
+            $('#networkMenu td').on('click.networkSelect', function(e) {
+                e.stopPropagation();
+                command.send('select_network', $(this).text() );
+                cleanup();
+            });
+
+            $('body').on('click.networkSelect', function(e) {cleanup()} );
+        });
+    }
+
+    function cleanup() {
+        $('#networkMenu').fadeOut(100).remove();
+        $('*').off('.networkSelect');
+        menuOpen = false;
+        command.unregister('available_networks');
+    }
+}
+
 /**
  * handlers for items in the top menu 
  */
@@ -609,17 +673,15 @@ function add_handlers()
         on_boundary(e);
     });
 
-    $(document).keydown( function(e) {
-        if( e.which == 77 ) { // mute on 'm'
-            var conns = view.get_selected_connections(model.connections);
-            if ( conns ) 
-                on_mute(conns);
-        }
+    $('body').on('keydown', function(e) {
+        if( e.which == 77 ) mute_selected();
     });
 
     $('#refresh').on('click', function(e) { 
         refresh_all(); 
     });
+
+    network_selection();
 
 }
 

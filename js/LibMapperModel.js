@@ -4,6 +4,8 @@ function LibMapperModel ()
 	this.signals = new Assoc();
 	this.links = new Assoc();
 	this.connections = new Assoc();
+
+	this.networkInterfaces = {'selected': null, 'available': []};		
 	
 	// config items
 	this.pathToImages = "images/";
