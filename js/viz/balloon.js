@@ -726,6 +726,7 @@ BalloonView.prototype = {
 	
 	update_display : function ()
 	{
+		this.clearSVG();
 		this.refreshData();
 		this.refreshSVG();
 		this.createTables();
@@ -737,6 +738,11 @@ BalloonView.prototype = {
 	 */
 	refreshData : function ()
 	{
+		if(this.trees[0])
+			this.trees[0].deleteNode();
+		if(this.trees[1])
+			this.trees[1].deleteNode();
+		
 		// create root node for the source/destination trees
 		for(var i=0; i<2; i++)
 		{
@@ -913,7 +919,7 @@ BalloonView.prototype = {
 	refreshSVG : function ()
 	{
 		// empty SVG canvas
-		$(this.svg).empty();
+		//$(this.svg).empty();
 		
 		// draw the svg background
 		this.drawCanvas();
@@ -924,7 +930,15 @@ BalloonView.prototype = {
     	
     	// draw connections
     	this.drawConnections();
+	},
+	
+	clearSVG : function ()
+	{
+		while (this.svg.firstChild) {
+		    this.svg.removeChild(this.svg.firstChild);
+		}
 	}
+	
 };
 
 /**
@@ -983,6 +997,22 @@ BalloonNode.prototype = {
 				result.push(this.signalName);
 			}
 			return result;
+		},
+		
+		deleteNode : function()
+		{
+			// cleanup child elements recursively
+			var n = this.childNodes.length; 
+			if(n>0){
+				for(var i=0; i<n; i++){
+					this.childNodes[i].deleteNode();
+				}
+			}
+			
+			// cleanup this element
+			delete this.svg;
+			delete this.svgChilds;
+				
 		}
 		
 };
