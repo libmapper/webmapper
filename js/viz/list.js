@@ -868,9 +868,10 @@ function drawing_curve(sourceRow)
     this.targetRow;
     this.muted = false;
 
+    this.canvasWidth = $('svg').width();
     // We'll need to know the width of the canvas, in px, as a number
-    var widthInPx = $('svg').css('width'); // Which returns "##px"
-    this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
+    //var widthInPx = $('svg').css('width'); // Which returns "##px"
+    //this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
     
     this.clamptorow = function( row ) {
         var svgPos = fullOffset($('.svgDiv')[0]);
@@ -1108,6 +1109,7 @@ this.add_handlers = function()
             deselect_all();
         }
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
+            e.preventDefault();
             select_all();
         }
         else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'
