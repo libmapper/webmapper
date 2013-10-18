@@ -45,7 +45,8 @@ ul {
 }
 
 body {
-  font-family: helvetica-light, helvetica, sans;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: 200;
   font-size: 11pt;
   margin: 0 4px;
 }
@@ -340,7 +341,7 @@ body {
       /* Rows and headers */
       .tableDiv th, #svgTop {
         cursor: pointer;
-        font-weight: normal;
+        font-weight: inherit;
         text-align: left;
         border-top: 0px;
         border-left: 0px;
@@ -428,7 +429,7 @@ body {
     }
     #titleSearchDiv h2 {
       margin-top: 9px;
-      font-weight: normal;
+      font-weight: inherit;
     }
     #svgTitle {
       left: calc(40% + 10px);
