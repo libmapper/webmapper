@@ -142,7 +142,12 @@
 	/*shape-rendering: crispEdges;*/	
 }
 
-	
+
+.qTipStyle .qtip-content{
+    background-color: #eee;
+	padding: 12px;
+    font-size: 20px;
+}
 
 
 /*

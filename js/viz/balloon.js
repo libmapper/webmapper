@@ -101,6 +101,18 @@ BalloonView.prototype = {
 		return list;
 	},
 	
+	save_view_settings : function ()
+	{
+		var data = this.viewNodes;
+		return data;
+		
+	},
+	
+	load_view_settings : function (data)
+	{
+		this.viewNodes = data;
+	},
+	
 	/**
 	 * Called when the window resizes to update the dimension of the tables and SVG
 	 */
@@ -204,6 +216,7 @@ BalloonView.prototype = {
 		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
 		var w = this.svgDim[0]/2 - r - 100;		// container ellipse width minus radius of node with extra padding
 		var h = this.svgDim[1]/2 - r - 10;		// container ellipse height minus radius of node with extra padding
+		if(ind==0)	h = -h;
 		var positionOffset = (ind==0)?  -this.nodeRadius-10 : this.nodeRadius+10;
 		
 		// draw the nodes
@@ -239,6 +252,25 @@ BalloonView.prototype = {
 		node.svg.setAttribute("data-childIndex", childIndex);	// index into the container array
 		node.svg.setAttribute("r", radius);			// radius of circle
 		$(node.svg).data("node", node);
+		
+		$(node.svg).qtip({ // Grab some elements to apply the tooltip to
+		    content: {
+		        text: node.label
+		    },
+		    position: {
+		        target: 'mouse',
+		        adjust: {
+		            mouse: true,
+	                x: 10,
+	                y: -15
+		        }
+		    },
+		    style: { classes: 'qTipStyle' }
+		});
+		
+//		var tooltip = document.createElementNS(this.svgNS,"title");
+//		tooltip.textContent = node.label;
+//		node.svg.appendChild(tooltip);
 		
 		var stylename;
 		if(!node.isLeaf())									// for non-terminal node
@@ -280,7 +312,11 @@ BalloonView.prototype = {
 				if(n==1)
 					nAngle += Math.PI/2;
 				var x2 = ( (radius-childNodeRadius) * Math.cos(nAngle) ) + x;
-				var y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
+				var y2;
+				if(ind==0)
+					y2 = ( -(radius-childNodeRadius) * Math.sin(nAngle) ) + y;
+				else
+					y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
 				
 				var childNode = node.childNodes[i];
 				var childSvg = document.createElementNS(this.svgNS,"circle");
@@ -290,8 +326,32 @@ BalloonView.prototype = {
 				childSvg.setAttribute("data-childIndex", n);	// index into the container array
 				childSvg.setAttribute("r", childNodeRadiusPadded);
 				childSvg.setAttribute("class", childStyle);
-				childSvg.setAttribute("style", "pointer-events: none");
+				//childSvg.setAttribute("style", "pointer-events: none");
 				$(childSvg).data("node", childNode);
+				
+				childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
+				childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
+				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+				
+				$(childSvg).qtip({ // Grab some elements to apply the tooltip to
+				    content: {
+				        text: node.label + ' / ' + childNode.label
+				    },
+				    position: {
+				        target: 'mouse',
+				        adjust: {
+				            mouse: true,
+			                x: 10,
+			                y: -15
+				        }
+				    },
+				    style: { classes: 'qTipStyle' }
+				});
+				
+//				tooltip = document.createElementNS(this.svgNS,"title");
+//				tooltip.textContent = childNode.label;
+//				childSvg.appendChild(tooltip);
+				
 				node.svgChilds.push(childSvg);
 				this.svg.appendChild(childSvg);
 			}
@@ -455,6 +515,24 @@ BalloonView.prototype = {
 	{
 		evt.currentTarget.classList.remove('BalloonNode_over');
 	},
+	/**
+	 * Handles mouseover on a child node in the SVG plot 
+	 */
+	onChildNodeMouseOver : function(evt)
+	{
+		var node = $(evt.currentTarget).data("node");
+		node.parentNode.svg.classList.add('BalloonNode_over');
+	},
+	
+	/**
+	 * Handles mouseout on a node in the SVG plot 
+	 */
+	onChildNodeMouseOut : function(evt)
+	{
+		var node = $(evt.currentTarget).data("node");
+		if(node)
+			node.parentNode.svg.classList.remove('BalloonNode_over');
+	},
 	
 	/**
 	 * Handles clicking on a node in the SVG plot 
@@ -468,7 +546,19 @@ BalloonView.prototype = {
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
 		this.updateTable(ind);
-		
+	},
+	/**
+	 * Handles clicking on a node in the SVG plot 
+	 */
+	onChildNodeClick : function(evt)
+	{
+		var item = evt.currentTarget;
+		var node = $(item).data("node").parentNode;
+		var childIndex = node.childIndex;
+		var ind = item.getAttribute("data-ind");
+		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
+		this.refreshSVG();
+		this.updateTable(ind);
 	},
 	
 	/**
@@ -689,12 +779,18 @@ BalloonView.prototype = {
 	 */
 	refreshData : function ()
 	{
+		if(this.trees[0])
+			this.trees[0].deleteNode();
+		if(this.trees[1])
+			this.trees[1].deleteNode();
+		
 		// create root node for the source/destination trees
 		for(var i=0; i<2; i++)
 		{
 			var tree = new BalloonNode();
 			tree.parentNode = null;
 			tree.label = this.rootLabel[i];
+			this.signalName = this.rootLabel[i];
 			tree.level = -1;
 			tree.direction = i;
 			this.trees[i] = tree;
@@ -710,11 +806,20 @@ BalloonView.prototype = {
 	        this.addSignal(sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }
 	
+	    // if view level is not set by user, set it to the root
 	    for(var i=0; i<2; i++)
     	{
-	    	// if view level is not set by user, set it to the root
-	    	if(this.viewNodes[i]==null)
+	    	if(this.viewNodes[i] != null)
+	    	{
+	    		var newNode = this.trees[i].getNode(this.viewNodes[i]);
+	    		if(newNode)
+	    			this.viewNodes[i] = newNode;
+	    		else
+	    			this.viewNodes[i] = this.trees[i];
+	    	}	
+	    	else
 	    		this.viewNodes[i] = this.trees[i];
+	    		
     	}
 	},
 	
@@ -788,6 +893,9 @@ BalloonView.prototype = {
 				_self.onListHeaderClick(event, ui, ind);    			
     		}
     	});
+    	
+    	// expand the device in view
+    	this.updateTable(ind);
 	},
 	
 	/**
@@ -867,6 +975,10 @@ BalloonView.prototype = {
 		// empty SVG canvas
 		$(this.svg).empty();
 		
+//		while (this.svg.firstChild) {
+//		    this.svg.removeChild(this.svg.firstChild);
+//		}
+		
 		// draw the svg background
 		this.drawCanvas();
 		
@@ -876,7 +988,13 @@ BalloonView.prototype = {
     	
     	// draw connections
     	this.drawConnections();
+	},
+	
+	clearSVG : function ()
+	{
+		
 	}
+	
 };
 
 /**
@@ -935,6 +1053,49 @@ BalloonNode.prototype = {
 				result.push(this.signalName);
 			}
 			return result;
+		},
+		
+		deleteNode : function()
+		{
+			// cleanup child elements recursively
+			var n = this.childNodes.length; 
+			if(n>0){
+				for(var i=0; i<n; i++){
+					this.childNodes[i].deleteNode();
+				}
+			}
+			
+			// cleanup this element
+			delete this.svg;
+			delete this.svgChilds;
+				
+		},
+		
+		getNode : function (node)
+		{
+
+			if(this.equals(node))
+			{
+				return this;
+			}
+			
+			// check with children
+			else
+			{
+				var foundNode = false;
+				for(var i=0; i<this.childNodes.length; i++)
+				{
+					foundNode = this.childNodes[i].getNode(node);
+					if(foundNode != false)
+						break;
+				}
+				
+				if(foundNode != false)
+					return foundNode;
+				else
+					return false;
+			}
+			
 		}
 		
 };
