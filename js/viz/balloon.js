@@ -851,6 +851,9 @@ BalloonView.prototype = {
 				_self.onListHeaderClick(event, ui, ind);    			
     		}
     	});
+    	
+    	// expand the device in view
+    	this.updateTable(ind);
 	},
 	
 	/**
