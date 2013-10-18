@@ -253,9 +253,24 @@ BalloonView.prototype = {
 		node.svg.setAttribute("r", radius);			// radius of circle
 		$(node.svg).data("node", node);
 		
-		var tooltip = document.createElementNS(this.svgNS,"title");
-		tooltip.textContent = node.label;
-		node.svg.appendChild(tooltip);
+		$(node.svg).qtip({ // Grab some elements to apply the tooltip to
+		    content: {
+		        text: node.label
+		    },
+		    position: {
+		        target: 'mouse',
+		        adjust: {
+		            mouse: true,
+	                x: 10,
+	                y: -15
+		        }
+		    },
+		    style: { classes: 'qTipStyle' }
+		});
+		
+//		var tooltip = document.createElementNS(this.svgNS,"title");
+//		tooltip.textContent = node.label;
+//		node.svg.appendChild(tooltip);
 		
 		var stylename;
 		if(!node.isLeaf())									// for non-terminal node
@@ -318,9 +333,24 @@ BalloonView.prototype = {
 				childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
 				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
 				
-				tooltip = document.createElementNS(this.svgNS,"title");
-				tooltip.textContent = childNode.label;
-				childSvg.appendChild(tooltip);
+				$(childSvg).qtip({ // Grab some elements to apply the tooltip to
+				    content: {
+				        text: node.label + ' / ' + childNode.label
+				    },
+				    position: {
+				        target: 'mouse',
+				        adjust: {
+				            mouse: true,
+			                x: 10,
+			                y: -15
+				        }
+				    },
+				    style: { classes: 'qTipStyle' }
+				});
+				
+//				tooltip = document.createElementNS(this.svgNS,"title");
+//				tooltip.textContent = childNode.label;
+//				childSvg.appendChild(tooltip);
 				
 				node.svgChilds.push(childSvg);
 				this.svg.appendChild(childSvg);
