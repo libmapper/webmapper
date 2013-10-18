@@ -399,7 +399,7 @@ body {
 
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
-  .svgDiv {
+  #svgDiv {
     position: absolute;
     border-bottom: 0;
     left: 40%;

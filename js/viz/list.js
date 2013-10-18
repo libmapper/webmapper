@@ -555,7 +555,7 @@ function create_arrow(left, right, sel, muted)
 
     var L = fullOffset(left);
     var R = fullOffset(right);
-    var S = fullOffset($('.svgDiv')[0]);
+    var S = fullOffset($('#svgDiv')[0]);
 
     var x1 = 0;
     var y1 = L.top+L.height/2-S.top;
@@ -836,12 +836,12 @@ function add_display_tables()
 function add_svg_area()
 {
     $('#container').append(
-        "<div class='svgDiv'>"+
+        "<div id='svgDiv'>"+
             "<div id='svgTop'>hide unconnected</div>"+
         "</div>"
     );
 
-    svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
+    svgArea = Raphael( $('#svgDiv')[0], '100%', '100%');
     
 }
 
@@ -868,20 +868,20 @@ function drawing_curve(sourceRow)
     this.targetRow;
     this.muted = false;
 
-    this.canvasWidth = $('svg').width();
+    this.canvasWidth = $('#svgDiv').width();
     // We'll need to know the width of the canvas, in px, as a number
     //var widthInPx = $('svg').css('width'); // Which returns "##px"
     //this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
     
     this.clamptorow = function( row ) {
-        var svgPos = fullOffset($('.svgDiv')[0]);
+        var svgPos = fullOffset($('#svgDiv')[0]);
         var rowPos = fullOffset(row);
         var y = rowPos.top + rowPos.height/2 - svgPos.top;
         return y;
     }
 
     this.findrow = function ( y ) {
-        var svgTop = $('.svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
+        var svgTop = $('#svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
         var ttleft = $(this.targetTable.tbody).offset().left + 5; // Left edge of the target table
         var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
         var row = $(td).parents('tr')[0]; 
@@ -910,6 +910,13 @@ function drawing_curve(sourceRow)
     this.line = svgArea.path().attr({'stroke-width': 2});
 
     this.update = function( moveEvent ) {
+
+        if(!moveEvent.offsetX) // this works for Firefox
+        {
+          moveEvent.offsetX = moveEvent.pageX-$('svg').offset().left;
+          moveEvent.offsetY = moveEvent.pageY-$('svg').offset().top;
+        }          
+
         var target = moveEvent.currentTarget;
         var start = [ this.path[0][1], this.path[0][2] ];
         var end = [ this.path[1][5], this.path[1][6] ];
@@ -942,7 +949,7 @@ function drawing_curve(sourceRow)
                 c1 = end[1] + moveEvent.offsetY - rowHeight/2;
             }
             else
-                end[1] = moveEvent.pageY - fullOffset($('.svgDiv')[0]).top;
+                end[1] = moveEvent.pageY - fullOffset($('#svgDiv')[0]).top;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
