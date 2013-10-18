@@ -103,7 +103,7 @@ def on_load(mapping_json, devices):
 def select_network(newNetwork):
     # print 'select_network', newNetwork
     networkInterfaces['active'] = newNetwork
-    server.send_command('set_network', newNetwork)
+    # server.send_command('set_network', newNetwork)
 
 def get_networks(arg):
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
@@ -113,12 +113,13 @@ def get_networks(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             connectedInterfaces.append(i)
-    server.send_command("available_networks", connectedInterfaces)
+    # server.send_command("available_networks", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
-    server.send_command("active_network", networkInterfaces['active'])
+    # server.send_command("active_network", networkInterfaces['active'])
 
 def get_active_network(arg):
-    server.send_command("active_network", networkInterfaces['active'])
+    print networkInterfaces['active']
+    # server.send_command("active_network", networkInterfaces['active'])
 
 
 def init_monitor():
