@@ -622,7 +622,7 @@ function select_tab(tab)
         $('#saveLoadDiv').removeClass('disabled');
     }
 
-    $('svgTop').text('hide unconnected');
+    $('#svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
     view.update_display();
@@ -911,11 +911,8 @@ function drawing_curve(sourceRow)
 
     this.update = function( moveEvent ) {
 
-        if(!moveEvent.offsetX) // this works for Firefox
-        {
-          moveEvent.offsetX = moveEvent.pageX-$('svg').offset().left;
-          moveEvent.offsetY = moveEvent.pageY-$('svg').offset().top;
-        }          
+        moveEvent.offsetX = moveEvent.pageX-$('#svgDiv').offset().left;
+        moveEvent.offsetY = moveEvent.pageY-$('#svgDiv').offset().top;
 
         var target = moveEvent.currentTarget;
         var start = [ this.path[0][1], this.path[0][2] ];
@@ -940,13 +937,14 @@ function drawing_curve(sourceRow)
         }
         // We're over a table row of the target table
         if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
-            var rowHeightPx = $(target).css('height');
-            var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
+            //var rowHeightPx = $(target).css('height');
+            //var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
+            var rowHeight = $(target).height();
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             if( !$(target).hasClass('incompatible') ) {
                 end[1] = this.clamptorow(target);
-                c1 = end[1] + moveEvent.offsetY - rowHeight/2;
+                c1 = moveEvent.offsetY;
             }
             else
                 end[1] = moveEvent.pageY - fullOffset($('#svgDiv')[0]).top;
@@ -1027,7 +1025,7 @@ function drawing_handlers()
         var sourceRow = this;
 
         // Cursor enters the canvas
-        $('svg').one('mouseenter.drawing', function() {
+        $('#svgDiv').one('mouseenter.drawing', function() {
 
             var curve = new drawing_curve(sourceRow);
 
