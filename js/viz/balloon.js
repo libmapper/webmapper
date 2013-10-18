@@ -101,6 +101,18 @@ BalloonView.prototype = {
 		return list;
 	},
 	
+	save_view_settings : function ()
+	{
+		var data = this.viewNodes;
+		return data;
+		
+	},
+	
+	load_view_settings : function (data)
+	{
+		this.viewNodes = data;
+	},
+	
 	/**
 	 * Called when the window resizes to update the dimension of the tables and SVG
 	 */

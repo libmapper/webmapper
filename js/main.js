@@ -61,6 +61,8 @@ function switch_mode(newMode)
         	view = new BalloonView(document.getElementById('container'), model);
         	viewIndex = 3;
             view.init();
+            if(viewData[viewIndex])
+      	    	view.load_view_settings(viewData[viewIndex]);
             view.update_display();
         	break;
         default:
