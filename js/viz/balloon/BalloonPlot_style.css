@@ -125,6 +125,7 @@
 .BalloonLeafNode_dst, .BalloonLeafNode_src{
 	fill: #04C4D9;
 	stroke: #fff;
+    cursor: move;
 }
 
 .BalloonNode_over{
@@ -137,6 +138,13 @@
 .balloonConnection{
 	fill: none;
 	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	/*shape-rendering: crispEdges;*/	
+}
+.dragLine{
+	fill: none;
+	stroke: #FF0000;
 	stroke-width: 1px;
 	stroke-linecap: round;
 	/*shape-rendering: crispEdges;*/	

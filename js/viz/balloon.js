@@ -25,6 +25,19 @@ function BalloonView(container, model)
 	this.tables = [null, null];
 	this.rootLabel = ["Sources", "Destinations"];
 	
+	// drag variables
+	this.dragSource = null;
+	this.dragTarget = null;
+	this.dragLine = null;
+	this.dragSourceX = 0;
+	this.dragSourceY = 0;
+	this.dragMouseX = 0;
+	this.dragMouseY = 0;
+	//this.ctX1 =  this.svgDim[0]/2;
+	//this.ctY1 =  this.svgDim[1]/2;
+	this.ctX1 =  300;
+	this.ctY1 =  300;
+	
 	//Keyboard handlers
 	document.onkeydown = function(e){
 		_self.keyboardHandler(e);
@@ -287,6 +300,13 @@ BalloonView.prototype = {
 		stylename += (ind==0)? "_src" : "_dst" ;
 		node.svg.setAttribute("class", stylename);
 		this.svg.appendChild(node.svg);
+		
+		
+		// add drag handler to leaves only
+		if(node.isLeaf()){
+			node.svg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
+			node.svg.classList.add("dragable");
+		}
 		
 		
 		// draw children nodes one level deep
@@ -667,6 +687,104 @@ BalloonView.prototype = {
 		}
 	},
 	
+
+	/**
+	 * starts the dragging process for creating connections (mousedown on leaf node)
+	 */
+	dragStart : function (evt) 
+	{
+		console.log("starting drag");
+		var _self = this;
+
+		// store the element clicked on
+		this.dragSource = evt.target;	
+
+		// init the mouse position variables
+		this.dragSourceX = this.dragSource.getAttribute("cx");
+		this.dragSourceY = this.dragSource.getAttribute("cy");
+
+		var bounds = this.svg.getBoundingClientRect();
+		this.dragMouseX = evt.clientX - bounds.left;
+		this.dragMouseY = evt.clientY - bounds.top;
+		
+		// create the temporary drag line
+		this.dragLine = document.createElementNS(this.svgNS,"path");
+		this.dragLine.setAttribute("class", "dragLine");
+		var pathString = "M " + this.dragSourceX + " " + this.dragSourceY + " L " + this.dragMouseX + " " + this.dragMouseY; 
+		//dragLine.setAttribute("d", "M " + dragMouseX + " " + dragMouseY + " Q " + ctX1 + " " + ctY1 + " " + dragCurrentX + " " + dragCurrentY);
+		this.dragLine.setAttribute("d", pathString);
+		this.svg.appendChild(this.dragLine);
+		
+		// init event listeners to track the mouse
+		$(window).bind("mousemove", {_self: _self}, this.drag);
+		$(window).bind("mouseup", {_self: _self}, this.dragStop);
+	  
+	},
+
+	/**
+	 * handles dragging after drag has started (window mousemove)
+	 * follows the mouse to draw a connection line from the drag source
+	 * checks if the target is a leaf node and snaps the line
+	 */
+	drag : function (evt)
+	{
+		evt.data._self.dragTarget = null;
+		
+		var mouseTarget = document.elementFromPoint(evt.clientX, evt.clientY);
+		if(mouseTarget && mouseTarget.classList.contains("dragable"))
+		{
+			var srcNode = $(evt.data._self.dragSource).data("node");
+			var tgtNode =  $(mouseTarget).data("node");
+			if(srcNode.direction != tgtNode.direction )
+				evt.data._self.dragTarget = mouseTarget;
+		}
+		
+		// if hovering over a terminal node, snap the line
+		if(evt.data._self.dragTarget)
+		{
+			var x = mouseTarget.getAttribute("cx");
+			var y = mouseTarget.getAttribute("cy");
+			evt.data._self.dragMouseX = x - 1;
+			evt.data._self.dragMouseY = y - 1;
+		}
+		else
+		{
+			var offset = evt.data._self.svg.getBoundingClientRect();
+			evt.data._self.dragMouseX = evt.clientX - offset.left - 1;
+			evt.data._self.dragMouseY = evt.clientY - offset.top - 1;
+		}
+
+		var pathString = "M " + evt.data._self.dragSourceX + " " + evt.data._self.dragSourceY + " L " + evt.data._self.dragMouseX + " " + evt.data._self.dragMouseY; 
+		evt.data._self.dragLine.setAttribute("d", pathString);
+	},
+
+	/**
+	 * handles mouseup from the window to stop the dragging process
+	 * triggers the connect event if a src and dst are valid
+	 */
+	dragStop : function (evt)
+	{
+		console.log ("stop drag");
+		if(evt.data._self.dragSource && evt.data._self.dragTarget)
+		{
+			var src = $(evt.data._self.dragSource).data("node");
+			var dst = $(evt.data._self.dragTarget).data("node");
+				
+			// send connect event
+			
+			//*** make sure src is src/dst 
+			evt.data._self.connect(src.signalName, dst.signalName);
+		}
+		
+		// delete the temporary line
+		
+		// cleanup
+		$(window).unbind("mousemove", evt.data._self.drag);
+		$(window).unbind("mouseup", evt.data._self.dragStop);
+		evt.data._self.dragSource = null;
+		evt.data._self.dragTarget = null;
+	},
+	
 	
 	/**
 	 * Function to create/add nodes into the tree given a signal namespace
@@ -989,10 +1107,17 @@ BalloonView.prototype = {
     	// draw connections
     	this.drawConnections();
 	},
-	
-	clearSVG : function ()
+
+	connect : function (src, dst)
 	{
-		
+		if(this.model.isConnected(src, dst) == false)
+		{
+			var srcDev = "hi";
+			var dstDev = "hi";
+			if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
+					$(this._container).trigger("link", [srcDev, dstDev]);	// trigger link event
+			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
+		}
 	}
 	
 };
