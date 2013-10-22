@@ -380,7 +380,7 @@ BalloonView.prototype = {
 	
 	/**
 	 * The most complicated set of for loops I've ever written... maybe a recursive algorithm could make it simpler but
-	 * I found it easier to follow this way in order to debug and find the corresponding SVG elements
+	 * I found it easier to follow this way in order to debug and find the appropriate SVG elements
 	 * 
 	 * Connection = connection between leaf nodes
 	 * Link = connection between nodes that have connected child nodes
@@ -709,6 +709,7 @@ BalloonView.prototype = {
 		
 		// create the temporary drag line
 		this.dragLine = document.createElementNS(this.svgNS,"path");
+		this.dragLine.id = "balloonDragLine";
 		this.dragLine.setAttribute("class", "dragLine");
 		var pathString = "M " + this.dragSourceX + " " + this.dragSourceY + " L " + this.dragMouseX + " " + this.dragMouseY; 
 		//dragLine.setAttribute("d", "M " + dragMouseX + " " + dragMouseY + " Q " + ctX1 + " " + ctY1 + " " + dragCurrentX + " " + dragCurrentY);
@@ -764,25 +765,32 @@ BalloonView.prototype = {
 	 */
 	dragStop : function (evt)
 	{
+		var _this = evt.data._self;
 		console.log ("stop drag");
-		if(evt.data._self.dragSource && evt.data._self.dragTarget)
+		if(_this.dragSource && _this.dragTarget)
 		{
-			var src = $(evt.data._self.dragSource).data("node");
-			var dst = $(evt.data._self.dragTarget).data("node");
+			var src = $(_this.dragSource).data("node");
+			var dst = $(_this.dragTarget).data("node");
 				
+			// ensure proper direction for connecting
+			if(src.direction == 0)
+				_this.connect(src.signalName, dst.signalName);
+			else
+				_this.connect(dst.signalName, src.signalName);
+
 			// send connect event
-			
-			//*** make sure src is src/dst 
-			evt.data._self.connect(src.signalName, dst.signalName);
 		}
 		
 		// delete the temporary line
+		if(_this.svg.getElementById("balloonDragLine"))
+			_this.svg.removeChild(_this.dragLine);
 		
 		// cleanup
-		$(window).unbind("mousemove", evt.data._self.drag);
-		$(window).unbind("mouseup", evt.data._self.dragStop);
-		evt.data._self.dragSource = null;
-		evt.data._self.dragTarget = null;
+		$(window).unbind("mousemove", _this.drag);
+		$(window).unbind("mouseup", _this.dragStop);
+		_this.dragSource = null;
+		_this.dragTarget = null;
+		_this.dragLine = null;
 	},
 	
 	
@@ -1117,6 +1125,8 @@ BalloonView.prototype = {
 			if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
 					$(this._container).trigger("link", [srcDev, dstDev]);	// trigger link event
 			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
+			
+			this.refreshSVG();
 		}
 	}
 	
