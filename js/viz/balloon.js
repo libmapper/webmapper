@@ -256,6 +256,7 @@ BalloonView.prototype = {
 	drawNode : function (node, ind, x, y, childIndex, radius)
 	{
 		var _self = this;
+		var stylename;
 		
 		// draw the node
 		node.svg = document.createElementNS(this.svgNS,"circle");
@@ -266,7 +267,8 @@ BalloonView.prototype = {
 		node.svg.setAttribute("r", radius);			// radius of circle
 		$(node.svg).data("node", node);
 		
-		$(node.svg).qtip({ // Grab some elements to apply the tooltip to
+		// tooltip
+		$(node.svg).qtip({
 		    content: {
 		        text: node.label
 		    },
@@ -285,28 +287,27 @@ BalloonView.prototype = {
 //		tooltip.textContent = node.label;
 //		node.svg.appendChild(tooltip);
 		
-		var stylename;
-		if(!node.isLeaf())									// for non-terminal node
+		
+		if(node.isLeaf())									// for terminal node
+		{
+			stylename = "BalloonLeafNode";
+			
+			// drag and drop functionality for leaves only
+			node.svg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
+			node.svg.classList.add("dragable");
+		}
+		else												// for non-terminal node
 		{
 			stylename = "BalloonNode";
+			
+			// mouse handlers
 			node.svg.addEventListener("mouseover", function(evt){ _self.onNodeMouseOver(evt);	});
 			node.svg.addEventListener("mouseout", function(evt){ _self.onNodeMouseOut(evt);	});
 			node.svg.addEventListener("click", function(evt){ _self.onNodeClick(evt); 	});
 		}
-		else												// terminal node
-		{
-			stylename = "BalloonLeafNode";
-		}
 		stylename += (ind==0)? "_src" : "_dst" ;
-		node.svg.setAttribute("class", stylename);
+		node.svg.classList.add(stylename);
 		this.svg.appendChild(node.svg);
-		
-		
-		// add drag handler to leaves only
-		if(node.isLeaf()){
-			node.svg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
-			node.svg.classList.add("dragable");
-		}
 		
 		
 		// draw children nodes one level deep
@@ -351,9 +352,19 @@ BalloonView.prototype = {
 				
 				childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
 				childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
-				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
 				
-				$(childSvg).qtip({ // Grab some elements to apply the tooltip to
+				// drag and drop functionality for leaves only
+				if(childNode.isLeaf()){
+					childSvg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
+					childSvg.classList.add("dragable");
+				}
+				// click functionality for branches
+				else{
+					childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+				}
+				
+				// tooltip
+				$(childSvg).qtip({ 
 				    content: {
 				        text: node.label + ' / ' + childNode.label
 				    },
@@ -447,7 +458,7 @@ BalloonView.prototype = {
 				{
 					// source's current set of signals (1 set for a leaf, 1 or more sets for a branch)
 					var currentSrcSignal_ar = srcSignals[k];
-					
+				
 					for(var l=0; l<currentSrcSignal_ar.length; l++)
 					{
 						// the current source signal to check
@@ -508,7 +519,7 @@ BalloonView.prototype = {
 									// don't need to check other signals from the same dst child because
 									// if leafs there's only 1 connection, and if branches, drawing multiple connections is redundant
 									// in the future, can possibly have some data viz (e.g. line width or opacity overlay) for multiple links
-									break;	
+									//break;	
 								}
 							}
 						}
@@ -579,6 +590,7 @@ BalloonView.prototype = {
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
 		this.updateTable(ind);
+		console.log("Child Clicked");
 	},
 	
 	/**
