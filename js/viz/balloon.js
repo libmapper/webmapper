@@ -294,11 +294,6 @@ BalloonView.prototype = {
 		    style: { classes: 'qTipStyle' }
 		});
 		
-//		var tooltip = document.createElementNS(this.svgNS,"title");
-//		tooltip.textContent = node.label;
-//		node.svg.appendChild(tooltip);
-		
-		
 		if(node.isLeaf())									// for terminal node
 		{
 			stylename = "BalloonLeafNode";
@@ -361,8 +356,8 @@ BalloonView.prototype = {
 			childNode.svg.setAttribute("class", childStyle);
 			$(childNode.svg).data("node", childNode);
 			
-			childNode.svg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
-			childNode.svg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
+			//childNode.svg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
+			//childNode.svg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
 			
 			// drag and drop functionality for leaves only
 			if(childNode.isLeaf()){
@@ -371,7 +366,7 @@ BalloonView.prototype = {
 			}
 			// click functionality for branches
 			else{
-				childNode.svg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+				childNode.svg.addEventListener("click", function(evt){ _self.onNodeClick(evt); 	});
 			}
 			
 			// tooltip
@@ -498,9 +493,10 @@ BalloonView.prototype = {
 	{
 		var item = evt.currentTarget;
 		var node = $(item).data("node");
-		var childIndex = node.childIndex;
+		console.log(node.label);
+//		var childIndex = node.childIndex;
 		var ind = item.getAttribute("data-ind");
-		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
+		this.viewNodes[ind] = node;
 		this.refreshSVG();
 		this.updateTable(ind);
 	},
@@ -1039,10 +1035,6 @@ BalloonView.prototype = {
 		// empty SVG canvas
 		$(this.svg).empty();
 		
-//		while (this.svg.firstChild) {
-//		    this.svg.removeChild(this.svg.firstChild);
-//		}
-		
 		// draw the svg background
 		this.drawCanvas();
 		
@@ -1101,7 +1093,6 @@ BalloonNode.prototype = {
 		 * comparison function for matching two nodes 
 		 * @param node the node to match to
 		 */
-		
 		equals : function (node)
 		{
 			if(	this.signalName == node.signalName &&
@@ -1110,23 +1101,6 @@ BalloonNode.prototype = {
 					return true;
 				else
 					return false;
-		},
-		
-		/** 
-		 * Recursive function for getting all descendant signals of a node
-		 */
-		getDescendantSignals : function()
-		{
-			var result = [];
-			if(this.childNodes.length>0){
-				for(var i=0; i<this.childNodes.length; i++){
-					result = result.concat(this.childNodes[i].getDescendantSignals());
-				}
-			}
-			else{
-				result.push(this.signalName);
-			}
-			return result;
 		},
 		
 		deleteNode : function()
@@ -1170,6 +1144,11 @@ BalloonNode.prototype = {
 			}
 		},
 		
+		/**
+		 * recursive function to get all descendant connected nodes
+		 * @param nodes array of nodes to check
+		 * @returns	an array of the connected nodes
+		 */
 		getConnected : function(nodes)
 		{
 			var result = [];
@@ -1177,9 +1156,12 @@ BalloonNode.prototype = {
 			if(!nodes || nodes.length < 1)
 				return result;
 			
+			// check all nodes
 			for(var i=0; i<nodes.length; i++)
 			{
 				var node = nodes[i];
+				
+				// if leaf, simple check
 				if(node.isLeaf())
 				{
 					if(model.isConnected(this.signalName, node.signalName))
@@ -1187,6 +1169,7 @@ BalloonNode.prototype = {
 						result.push(node);
 					}
 				}
+				// if branch, call recursive
 				else
 				{
 					result = result.concat(this.getConnected(node.childNodes));
@@ -1196,7 +1179,7 @@ BalloonNode.prototype = {
 		},
 		
 		/** 
-		 * Recursive function for getting all descendant signals of a node
+		 * Recursive function for getting all descendant nodes
 		 */
 		getDescendantLeafNodes : function()
 		{
