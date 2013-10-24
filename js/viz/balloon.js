@@ -420,15 +420,17 @@ BalloonView.prototype = {
 		for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
 		{
 			var srcNode = this.viewNodes[0].childNodes[i];
-			if(srcNode.isLeaf())
+			var descendantNodes = srcNode.getDescendantLeafNodes();
+			
+			for(var j=0; j<descendantNodes.length; j++)
 			{
-				// compare with all destination nodes
-				var cons = srcNode.getConnected(this.viewNodes[1].childNodes);
-				for(var j=0; j<cons.length; j++)
+				var curNode = descendantNodes[j];
+				var connections = curNode.getConnected(this.viewNodes[1].childNodes);
+
+				for(var k=0; k<connections.length; k++)
 				{
-					this.drawConnection(srcNode, cons[j]);
+					this.drawConnection(curNode, connections[k]);
 				}
-				
 			}
 		}
 		
@@ -1188,6 +1190,24 @@ BalloonNode.prototype = {
 				else
 				{
 					result = result.concat(this.getConnected(node.childNodes));
+				}
+			}
+			return result;
+		},
+		
+		/** 
+		 * Recursive function for getting all descendant signals of a node
+		 */
+		getDescendantLeafNodes : function()
+		{
+			var result = [];
+			
+			if(this.isLeaf()){
+				result.push(this);
+			}
+			else{
+				for(var i=0; i<this.childNodes.length; i++){
+					result = result.concat(this.childNodes[i].getDescendantLeafNodes());
 				}
 			}
 			return result;
