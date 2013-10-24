@@ -164,26 +164,32 @@ BalloonView.prototype = {
 		var _self = this;
 		
 		// source exterior
-		obj = document.createElementNS(this.svgNS,"rect");
-		obj.setAttribute("x", 0);		
-		obj.setAttribute("width", this.svgDim[0]/2);		
-		obj.setAttribute("height", this.svgDim[1]);			
-		obj.setAttribute("class", "BalloonCorner");
-		obj.addEventListener("click", function(evt){
-			_self.onBackClick(0);
-		});
-		this.svg.appendChild(obj);
+		if(this.viewNodes[0].level >= 0)
+		{
+			obj = document.createElementNS(this.svgNS,"rect");
+			obj.setAttribute("x", 0);		
+			obj.setAttribute("width", this.svgDim[0]/2);		
+			obj.setAttribute("height", this.svgDim[1]);			
+			obj.setAttribute("class", "BalloonCorner");
+			obj.addEventListener("click", function(evt){
+				_self.onBackClick(0);
+			});
+			this.svg.appendChild(obj);
+		}
 
 		// destination exterior
-		obj = document.createElementNS(this.svgNS,"rect");
-		obj.setAttribute("x", this.svgDim[0]/2);		
-		obj.setAttribute("width", this.svgDim[0]/2);		
-		obj.setAttribute("height", this.svgDim[1]);			
-		obj.setAttribute("class", "BalloonCorner");
-		obj.addEventListener("click", function(evt){
-			_self.onBackClick(1);
-		});
-		this.svg.appendChild(obj);
+		if(this.viewNodes[1].level >= 0)
+		{
+			obj = document.createElementNS(this.svgNS,"rect");
+			obj.setAttribute("x", this.svgDim[0]/2);		
+			obj.setAttribute("width", this.svgDim[0]/2);		
+			obj.setAttribute("height", this.svgDim[1]);			
+			obj.setAttribute("class", "BalloonCorner");
+			obj.addEventListener("click", function(evt){
+				_self.onBackClick(1);
+			});
+			this.svg.appendChild(obj);
+		}
 		
 		// cutout the middle with a white ellipse
 		obj = document.createElementNS(this.svgNS,"ellipse");
@@ -493,10 +499,10 @@ BalloonView.prototype = {
 	{
 		var item = evt.currentTarget;
 		var node = $(item).data("node");
-		console.log(node.label);
 //		var childIndex = node.childIndex;
 		var ind = item.getAttribute("data-ind");
 		this.viewNodes[ind] = node;
+		console.log(this.viewNodes[ind]);
 		this.refreshSVG();
 		this.updateTable(ind);
 	},
