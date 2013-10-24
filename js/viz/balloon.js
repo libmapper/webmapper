@@ -24,6 +24,8 @@ function BalloonView(container, model)
 	this.viewNodes = [null, null];
 	this.tables = [null, null];
 	this.rootLabel = ["Sources", "Destinations"];
+	this.maxViewDepth = 15;
+	this.connections = [];
 	
 	// drag variables
 	this.dragSource = null;
@@ -321,7 +323,6 @@ BalloonView.prototype = {
 		// recurse for children
 		if(!node.isLeaf())									// for terminal node
 		{
-			node.svgChilds = [];	// clear the old SVG elements
 			this.drawChildNodes(ind, node, x, y, radius);
 		}
 	},
@@ -329,7 +330,6 @@ BalloonView.prototype = {
 	drawChildNodes : function(ind, node, x, y, r)
 	{
 		// draw children nodes one level deep
-		node.svgChilds = [];	// clear the old SVG elements 
 		var n = node.childNodes.length;
 
 		var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
@@ -349,37 +349,33 @@ BalloonView.prototype = {
 			if(n==1)
 				nAngle += Math.PI/2;
 			var x2 = ( (r-childNodeRadius) * Math.cos(nAngle) ) + x;
-			var y2;
-			if(ind==0)
-				y2 = ( -(r-childNodeRadius) * Math.sin(nAngle) ) + y;
-			else
-				y2 = ( (r-childNodeRadius) * Math.sin(nAngle) ) + y;
+			var y2 = ( (r-childNodeRadius) * Math.sin(nAngle) ) + y;
+			if(ind==0) y2 = ( -(r-childNodeRadius) * Math.sin(nAngle) ) + y;
 			
-			var childSvg = document.createElementNS(this.svgNS,"circle");
-			childSvg.setAttribute("cx", x2);						// x-position
-			childSvg.setAttribute("cy", y2);						// y-position
-			childSvg.setAttribute("data-ind", ind);				// src or destination
-			childSvg.setAttribute("data-childIndex", n);	// index into the container array
-			childSvg.setAttribute("r", childNodeRadiusPadded);
-			childSvg.setAttribute("class", childStyle);
-			//childSvg.setAttribute("style", "pointer-events: none");
-			$(childSvg).data("node", childNode);
+			childNode.svg = document.createElementNS(this.svgNS,"circle");
+			childNode.svg.setAttribute("cx", x2);						// x-position
+			childNode.svg.setAttribute("cy", y2);						// y-position
+			childNode.svg.setAttribute("data-ind", ind);				// src or destination
+			childNode.svg.setAttribute("data-childIndex", n);	// index into the container array
+			childNode.svg.setAttribute("r", childNodeRadiusPadded);
+			childNode.svg.setAttribute("class", childStyle);
+			$(childNode.svg).data("node", childNode);
 			
-			childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
-			childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
+			childNode.svg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
+			childNode.svg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
 			
 			// drag and drop functionality for leaves only
 			if(childNode.isLeaf()){
-				childSvg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
-				childSvg.classList.add("dragable");
+				childNode.svg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
+				childNode.svg.classList.add("dragable");
 			}
 			// click functionality for branches
 			else{
-				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+				childNode.svg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
 			}
 			
 			// tooltip
-			$(childSvg).qtip({ 
+			$(childNode.svg).qtip({ 
 			    content: {
 			        text: node.label + ' / ' + childNode.label
 			    },
@@ -394,11 +390,12 @@ BalloonView.prototype = {
 			    style: { classes: 'qTipStyle' }
 			});
 			
-			node.svgChilds.push(childSvg);
-			this.svg.appendChild(childSvg);
+			this.svg.appendChild(childNode.svg);
 			
-			if(!childNode.isLeaf()){
-				this.drawChildNodes(ind, childNode, x2, y2, childNodeRadiusPadded);
+			if(childNode.level - this.viewNodes[ind].level < this.maxViewDepth){
+				if(!childNode.isLeaf()){
+					this.drawChildNodes(ind, childNode, x2, y2, childNodeRadiusPadded);
+				}
 			}
 			
 		}
@@ -416,133 +413,45 @@ BalloonView.prototype = {
 	 */
 	drawConnections : function()
 	{
+		//cleanup old
+		this.connections = [];
+		
 		// for each SOURCE node in the display
 		for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
 		{
-			// the source node currently being checked
-			var src = this.viewNodes[0].childNodes[i];
-
-			// get corresponding signals of the node
-			// this is a 2D array because signals of children are grouped into an array
-			var srcSignals = [];
-			
-			// if current node is a leaf, there's only one signal
-			// wrap the signal in an array
-			if(src.isLeaf())	
-				srcSignals.push([src.signalName]);
-
-			// if current node is a branch, must get all descendant signals
-			// signals for each child node is wrapped in an array
-			// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)  
-			else				
-				for(var a=0; a<src.childNodes.length; a++)
-					srcSignals.push(src.childNodes[a].getDescendantSignals());
-			
-			
-			// now we must compare to all the DESTINATION nodes in the display
-			// process is the same as for sources
-			// for each destination node
-			for(var j=0; j<this.viewNodes[1].childNodes.length; j++)
+			var srcNode = this.viewNodes[0].childNodes[i];
+			if(srcNode.isLeaf())
 			{
-				// the destination node currently being checked
-				var dst = this.viewNodes[1].childNodes[j];
-
-				// get corresponding signals of the node
-				// this is a 2D array because signals of children are grouped into an array
-				var dstSignals = [];
-				
-				// if current node is a leaf, there's only one signal
-				// wrap the signal in an array
-				if(dst.isLeaf())
-					dstSignals.push([dst.signalName]);
-				
-				// if current node is a branch, must get all descendant signals
-				// signals for each child node is wrapped in an array
-				// this means the index into this array will correspond to the childIndex (used later to get the SVG child objects)
-				else
-					for(var b=0; b<dst.childNodes.length; b++)
-						dstSignals.push(dst.childNodes[b].getDescendantSignals());
-				
-				// now we have a list of all signals or nested signals of the current source and destination node
-				// for each set of signals, we check if there is a connection
-				// if src was a leaf, srcSignals will have length 1, an array with a single signal
-				// if dst was a leaf, dstSignals will have length 1, an array with a single signal
-				// if src was a branch, srcSignals will have length = number of childNodes, with each element an array with nested signals of the child node
-				// if dst was a branch, dstSignals will have length = number of childNodes, with each element an array with nested signals of the child node
-				for(var k=0; k<srcSignals.length; k++)
+				// compare with all destination nodes
+				var cons = srcNode.getConnected(this.viewNodes[1].childNodes);
+				for(var j=0; j<cons.length; j++)
 				{
-					// source's current set of signals (1 set for a leaf, 1 or more sets for a branch)
-					var currentSrcSignal_ar = srcSignals[k];
-				
-					for(var l=0; l<currentSrcSignal_ar.length; l++)
-					{
-						// the current source signal to check
-						var currentSrcSignal = currentSrcSignal_ar[l];
-						
-						for(var m=0; m<dstSignals.length; m++)
-						{
-							// destination's current set of signals (1 set for a leaf, 1 or more sets for a branch)
-							var currentDstSignal_ar = dstSignals[m];
-							
-							for(var n=0; n<dstSignals.length; n++)
-							{
-								// the current destination signal to check
-								var currentDstSignal = currentDstSignal_ar[n];
-								
-								// check for a connection
-								// if there is a connection, draw the line between the corresponding nodes
-								if(model.isConnected(currentSrcSignal, currentDstSignal))
-								{
-									var ctX1 =  this.svgDim[0]/2;
-									var ctY1 =  this.svgDim[1]/2;
-									var x1,y1,x2,y2;
-									
-									// if src is leaf, connect from center of the node
-									if(src.isLeaf())
-									{
-										x1 = src.svg.getAttribute("cx");	
-										y1 = src.svg.getAttribute("cy");	
-									}
-									// if branch, connect from the center of the child node
-									// k corresponds to the index into srcSignals and also the childIndex because there is one set per child
-									else
-									{
-										x1 = src.svgChilds[k].getAttribute("cx");
-										y1 = src.svgChilds[k].getAttribute("cy");
-									}
-									
-									// if dst is leaf, connect from center of the node
-									if(dst.isLeaf())
-									{
-										x2 = dst.svg.getAttribute("cx");	
-										y2 = dst.svg.getAttribute("cy");
-									}
-									// if branch, connect from the center of the child node
-									// m corresponds to the index into dstSignals and also the childIndex because there is one set per child
-									else
-									{
-										x2 = dst.svgChilds[m].getAttribute("cx");
-										y2 = dst.svgChilds[m].getAttribute("cy");
-									}
-									
-									// create the SVG line element
-									var line = document.createElementNS(this.svgNS,"path");
-									line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-									line.setAttribute("class", "balloonConnection");
-									this.svg.appendChild(line);
-									
-									// don't need to check other signals from the same dst child because
-									// if leafs there's only 1 connection, and if branches, drawing multiple connections is redundant
-									// in the future, can possibly have some data viz (e.g. line width or opacity overlay) for multiple links
-									//break;	
-								}
-							}
-						}
-					}
+					this.drawConnection(srcNode, cons[j]);
 				}
+				
 			}
 		}
-		// phew! that wasn't so bad, was it?		
+		
+	},
+	
+	drawConnection : function(src, dst)
+	{
+		var ctX1 =  this.svgDim[0]/2;
+		var ctY1 =  this.svgDim[1]/2;
+		var x1,y1,x2,y2;
+
+		x1 = src.svg.getAttribute("cx");	
+		y1 = src.svg.getAttribute("cy");	
+		x2 = dst.svg.getAttribute("cx");	
+		y2 = dst.svg.getAttribute("cy");	
+
+		
+		// create the SVG line element
+		var line = document.createElementNS(this.svgNS,"path");
+		line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
+		line.setAttribute("class", "balloonConnection");
+		this.connections.push(line);
+		this.svg.appendChild(line);
 	},
 	
 
@@ -1142,7 +1051,7 @@ BalloonView.prototype = {
     	this.drawNodes(1, this.viewNodes[1].childNodes, origin, dim);
     	
     	// draw connections
-    	//this.drawConnections();
+    	this.drawConnections();
 	},
 
 	connect : function (src, dst)
@@ -1174,7 +1083,6 @@ function BalloonNode()
 	this.childIndex;		// notes index into parent nodes array of child nodes
 	this.direction;			// source or destination signal (0/1)
 	this.svg;				// holds the SVG DOM element for the node
-	this.svgChilds = [];	// holds the SVG DOME elements for the child nodes
 };
 
 BalloonNode.prototype = {
@@ -1231,7 +1139,6 @@ BalloonNode.prototype = {
 			
 			// cleanup this element
 			delete this.svg;
-			delete this.svgChilds;
 				
 		},
 		
@@ -1259,7 +1166,31 @@ BalloonNode.prototype = {
 				else
 					return false;
 			}
+		},
+		
+		getConnected : function(nodes)
+		{
+			var result = [];
 			
+			if(!nodes || nodes.length < 1)
+				return result;
+			
+			for(var i=0; i<nodes.length; i++)
+			{
+				var node = nodes[i];
+				if(node.isLeaf())
+				{
+					if(model.isConnected(this.signalName, node.signalName))
+					{
+						result.push(node);
+					}
+				}
+				else
+				{
+					result = result.concat(this.getConnected(node.childNodes));
+				}
+			}
+			return result;
 		}
 		
 };
@@ -1269,3 +1200,4 @@ BalloonNode.prototype = {
 
 
 
+	

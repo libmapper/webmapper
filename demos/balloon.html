@@ -51,8 +51,9 @@ var nDstDevices = 0;
 
 var model, view;
 
-var srcNamespace = "/body/arm/finger/size/naile";
-var dstNamespace = "/walk/area/panel"
+var srcNamespace = "/body/arm/finger/nail/hair/messy";
+var dstNamespace = "/walk/area";
+
 function init(){
 
 	$('#container').css('height', ($(window).height() - 100) + 'px' );
@@ -87,8 +88,8 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 2, nOut = 2;
-	var nSigs = 6;
+	var nIn = 2, nOut = 4;
+	var nSigs = 3;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
@@ -103,10 +104,10 @@ function initData()
 				for(var l=0; l<nSigs; l+=1){
 					//var rand = Math.random() * 10;
 					//if(rand<2){
-					if(i+j+k+l == 0){
+					//if(j > 0){
 						connect("/Source " + i + srcNamespace + k, "/Dest " + j + dstNamespace + l);
 						//k+=2;
-					}
+					//}
 				}
 			}
 		}
@@ -200,7 +201,7 @@ function btnHandler(val)
 		view.update_display();
 }
 
-</script>
+--></script>
 </head>
 
 
