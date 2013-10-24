@@ -216,6 +216,7 @@ function listTable(id)
             //If there is only one row, make it of even class for styling
             var newRow = "<tr>"
             for(var col in tableData[row]) {
+                if( tableData[row][col]==undefined ) tableData[row][col] = '';
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
             $(this.tbody).append(newRow+"</tr>");

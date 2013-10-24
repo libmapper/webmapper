@@ -530,7 +530,6 @@ function add_container_elements()
 	                "<li><a id='saveButton'>Save</a></li>"+
 	            "</div>"+
 	            "<div><select id='modeSelection'>"+
-	                "<option value='none'>None</option>"+
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
 	                "<option value='hive'>Hive</option>"+
