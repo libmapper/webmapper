@@ -195,6 +195,22 @@ BalloonView.prototype = {
 		this.svg.appendChild(obj);
 	},
 	
+	/*
+	 * 
+	 * 
+	 */
+	/**
+	 * Aaron's magic formula for determining largest possible circle to fill the container circle's space
+	 * sometimes the circles overlap because the container is an ellipse and the formula is actually for circles
+	 * @param n number of nodes to fit
+	 * @param containerR radius of containing circle (if ellipse, choose the smaller dimension to minimize overlap)
+	 */
+	calculateR : function (n, containerR, padding)
+	{
+		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );	
+		return r * (containerR * padding);							
+	},
+	
 	/**
 	 * Given a set of nodes, calculates the size and position to plot them in the SVG canvas
 	 * Nodes are separated with sources on the left and destinations on the right
@@ -202,21 +218,15 @@ BalloonView.prototype = {
 	 * 
 	 * @param ind source or destination
 	 * @param nodes the set of nodes to draw
+	 * @param origin origin of the containing ellipse [x,y]
+	 * @param dim radius of containing ellipse [rx, ry]
 	 */
-	drawNodes : function (ind, nodes)
+	drawNodes : function (ind, nodes, origin, dim)
 	{
 		// number of nodes
 		var n = nodes.length;
+		var r = this.calculateR(n, Math.min(this.svgDim[1], this.svgDim[0])/2, 0.9);
 
-		// calculate radius of nodes
-		// Aaron's magical formula for determining largest possible circle to fill the container circle's space
-		// *sometimes the circles overlap because the container is an ellipse and the formula is for circles
-		var r = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );	
-		// multiply by container's radius
-		// choose the smaller dimension to minimize overlap  
-		var containerR = (Math.min(this.svgDim[1], this.svgDim[0])/2) - 50;		
-		r = r * containerR;							
-																
 		// calculate angles
 		var angleFrom = 0 * Math.PI / 180;		// start angle		
 		var angleTo = 180 * Math.PI / 180;		// end angle
@@ -226,9 +236,8 @@ BalloonView.prototype = {
 		if (n==1) angleFromOffset += Math.PI/2;	// special case, if only one node then place it in the center
 		
 		//  plot helpers
-		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
-		var w = this.svgDim[0]/2 - r - 100;		// container ellipse width minus radius of node with extra padding
-		var h = this.svgDim[1]/2 - r - 10;		// container ellipse height minus radius of node with extra padding
+		var w = dim[0] - r - 75 ;		// container ellipse width minus radius of node with extra padding
+		var h = dim[1] - r ;		// container ellipse height minus radius of node with extra padding
 		if(ind==0)	h = -h;
 		var positionOffset = (ind==0)?  -this.nodeRadius-10 : this.nodeRadius+10;
 		
@@ -258,7 +267,7 @@ BalloonView.prototype = {
 		var _self = this;
 		var stylename;
 		
-		// draw the node
+		// create the SVG element 
 		node.svg = document.createElementNS(this.svgNS,"circle");
 		node.svg.setAttribute("cx", x);						// x-position
 		node.svg.setAttribute("cy", y);						// y-position
@@ -309,83 +318,89 @@ BalloonView.prototype = {
 		node.svg.classList.add(stylename);
 		this.svg.appendChild(node.svg);
 		
-		
-		// draw children nodes one level deep
-		if(!node.isLeaf())
+		// recurse for children
+		if(!node.isLeaf())									// for terminal node
 		{
-			node.svgChilds = [];	// clear the old SVG elements 
-			var n = node.childNodes.length;
-			var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
-			var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
-			var childNodeRadius = 1 / ( 1 / Math.sin( Math.PI / (2*n) ) + 1 );
-			childNodeRadius = childNodeRadius*radius;
-			var childNodeRadiusPadded = childNodeRadius*0.9;	
+			node.svgChilds = [];	// clear the old SVG elements
+			this.drawChildNodes(ind, node, x, y, radius);
+		}
+	},
+	
+	drawChildNodes : function(ind, node, x, y, r)
+	{
+		// draw children nodes one level deep
+		node.svgChilds = [];	// clear the old SVG elements 
+		var n = node.childNodes.length;
+
+		var angleInc =  (n==1)? 0 : (180 * Math.PI / 180) / (n);
+		var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
+		
+		var childNodeRadius = this.calculateR(n, r, 1);
+		var childNodeRadiusPadded = childNodeRadius*0.9;	
+		
+		
+		for(var i=0; i<n; i++)
+		{
+			var childNode = node.childNodes[i];
+			var childStyle = (childNode.isLeaf()) ? "BalloonLeafNode": "BalloonNode";
+			childStyle += (ind==0)? "_src" : "_dst" ;
 			
+			var nAngle = i*angleInc + offset + angleInc/2;
+			if(n==1)
+				nAngle += Math.PI/2;
+			var x2 = ( (r-childNodeRadius) * Math.cos(nAngle) ) + x;
+			var y2;
+			if(ind==0)
+				y2 = ( -(r-childNodeRadius) * Math.sin(nAngle) ) + y;
+			else
+				y2 = ( (r-childNodeRadius) * Math.sin(nAngle) ) + y;
 			
-			for(var i=0; i<n; i++)
-			{
-				
-				var childNode = node.childNodes[i];
-				var childStyle = (childNode.isLeaf()) ? "BalloonLeafNode": "BalloonNode";
-				childStyle += (ind==0)? "_src" : "_dst" ;
-				
-				var nAngle = i*angleInc + offset + angleInc/2;
-				if(n==1)
-					nAngle += Math.PI/2;
-				var x2 = ( (radius-childNodeRadius) * Math.cos(nAngle) ) + x;
-				var y2;
-				if(ind==0)
-					y2 = ( -(radius-childNodeRadius) * Math.sin(nAngle) ) + y;
-				else
-					y2 = ( (radius-childNodeRadius) * Math.sin(nAngle) ) + y;
-				
-				var childNode = node.childNodes[i];
-				var childSvg = document.createElementNS(this.svgNS,"circle");
-				childSvg.setAttribute("cx", x2);						// x-position
-				childSvg.setAttribute("cy", y2);						// y-position
-				childSvg.setAttribute("data-ind", ind);				// src or destination
-				childSvg.setAttribute("data-childIndex", n);	// index into the container array
-				childSvg.setAttribute("r", childNodeRadiusPadded);
-				childSvg.setAttribute("class", childStyle);
-				//childSvg.setAttribute("style", "pointer-events: none");
-				$(childSvg).data("node", childNode);
-				
-				childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
-				childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
-				
-				// drag and drop functionality for leaves only
-				if(childNode.isLeaf()){
-					childSvg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
-					childSvg.classList.add("dragable");
-				}
-				// click functionality for branches
-				else{
-					childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
-				}
-				
-				// tooltip
-				$(childSvg).qtip({ 
-				    content: {
-				        text: node.label + ' / ' + childNode.label
-				    },
-				    position: {
-				        target: 'mouse',
-				        adjust: {
-				            mouse: true,
-			                x: 10,
-			                y: -15
-				        }
-				    },
-				    style: { classes: 'qTipStyle' }
-				});
-				
-//				tooltip = document.createElementNS(this.svgNS,"title");
-//				tooltip.textContent = childNode.label;
-//				childSvg.appendChild(tooltip);
-				
-				node.svgChilds.push(childSvg);
-				this.svg.appendChild(childSvg);
+			var childSvg = document.createElementNS(this.svgNS,"circle");
+			childSvg.setAttribute("cx", x2);						// x-position
+			childSvg.setAttribute("cy", y2);						// y-position
+			childSvg.setAttribute("data-ind", ind);				// src or destination
+			childSvg.setAttribute("data-childIndex", n);	// index into the container array
+			childSvg.setAttribute("r", childNodeRadiusPadded);
+			childSvg.setAttribute("class", childStyle);
+			//childSvg.setAttribute("style", "pointer-events: none");
+			$(childSvg).data("node", childNode);
+			
+			childSvg.addEventListener("mouseover", function(evt){ _self.onChildNodeMouseOver(evt);	});
+			childSvg.addEventListener("mouseout", function(evt){ _self.onChildNodeMouseOut(evt);	});
+			
+			// drag and drop functionality for leaves only
+			if(childNode.isLeaf()){
+				childSvg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
+				childSvg.classList.add("dragable");
 			}
+			// click functionality for branches
+			else{
+				childSvg.addEventListener("click", function(evt){ _self.onChildNodeClick(evt); 	});
+			}
+			
+			// tooltip
+			$(childSvg).qtip({ 
+			    content: {
+			        text: node.label + ' / ' + childNode.label
+			    },
+			    position: {
+			        target: 'mouse',
+			        adjust: {
+			            mouse: true,
+		                x: 10,
+		                y: -15
+			        }
+			    },
+			    style: { classes: 'qTipStyle' }
+			});
+			
+			node.svgChilds.push(childSvg);
+			this.svg.appendChild(childSvg);
+			
+			if(!childNode.isLeaf()){
+				this.drawChildNodes(ind, childNode, x2, y2, childNodeRadius);
+			}
+			
 		}
 	},
 	
@@ -1121,11 +1136,13 @@ BalloonView.prototype = {
 		this.drawCanvas();
 		
 		// draw balloon plot
-		this.drawNodes(0, this.viewNodes[0].childNodes);
-    	this.drawNodes(1, this.viewNodes[1].childNodes);
+		var origin = [this.svgDim[0]/2, this.svgDim[1]/2];
+		var dim = [this.svgDim[0]/2, this.svgDim[1]/2];
+		this.drawNodes(0, this.viewNodes[0].childNodes, origin, dim);
+    	this.drawNodes(1, this.viewNodes[1].childNodes, origin, dim);
     	
     	// draw connections
-    	this.drawConnections();
+    	//this.drawConnections();
 	},
 
 	connect : function (src, dst)
