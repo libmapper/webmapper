@@ -185,8 +185,8 @@ BalloonView.prototype = {
 		
 		// cutout the middle with a white ellipse
 		obj = document.createElementNS(this.svgNS,"ellipse");
-		var w = this.svgDim[0]/2 + 1 - 20;
-		var h = this.svgDim[1]/2 + 1 + 20;
+		var w = this.svgDim[0]/2 + 1 - 10;
+		var h = this.svgDim[1]/2 + 1 + 10;
 		obj.setAttribute("cx", this.svgDim[0]/2);		
 		obj.setAttribute("cy", this.svgDim[1]/2);		
 		obj.setAttribute("rx", w);						
@@ -398,7 +398,7 @@ BalloonView.prototype = {
 			this.svg.appendChild(childSvg);
 			
 			if(!childNode.isLeaf()){
-				this.drawChildNodes(ind, childNode, x2, y2, childNodeRadius);
+				this.drawChildNodes(ind, childNode, x2, y2, childNodeRadiusPadded);
 			}
 			
 		}
