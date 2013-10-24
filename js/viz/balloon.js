@@ -1045,6 +1045,9 @@ BalloonView.prototype = {
 		// empty SVG canvas
 		$(this.svg).empty();
 		
+		//create the SVG texture
+		this.initTextures();
+
 		// draw the svg background
 		this.drawCanvas();
 		
@@ -1078,18 +1081,23 @@ BalloonView.prototype = {
 		var pattern, path;
 		
 		pattern = document.createElementNS(this.svgNS, "pattern");
-		pattern.setAttribute('id', "Pattern_leafNode");
-		pattern.setAttribute('patternUnits', 'objectBoundingBox');
-		pattern.setAttribute('width', "10%");
-		pattern.setAttribute('height', "10%");
-		
-		path = document.createElementNS(this.svgNS, 'path');
-		path.setAttribute("d", "M 0 0 L 0 20");
-		path.setAttribute("style", "stroke: red; fill: none;");
+		pattern.setAttribute('id', "Balloon_leafNodePattern");
+		pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+		pattern.setAttribute('width', "3");
+		pattern.setAttribute('height', "5");
 
+		path = document.createElementNS(this.svgNS, 'rect');
+		path.setAttribute("width", "3");
+		path.setAttribute("height", "5");
+		path.setAttribute("style", "stroke: none; fill: #29B1D7");
 		pattern.appendChild(path);
+
+		path = document.createElementNS(this.svgNS, 'path');
+		path.setAttribute("d", "M 0 3 l 3 0");
+		path.setAttribute("style", "stroke: #fff; stroke-width: 2px;");
+		pattern.appendChild(path);
+
 		defs.appendChild(pattern);
-		
 		this.svg.appendChild(defs);
 	}
 	

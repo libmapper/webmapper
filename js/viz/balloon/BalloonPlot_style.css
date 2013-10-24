@@ -117,9 +117,9 @@
 	stroke: #fff;
 }
 .BalloonLeafNode_dst, .BalloonLeafNode_src{
-	fill: #ffffff;
-	stroke: #29B1D7;
+	stroke: #fff;
     cursor: move;
+    fill: url(#Balloon_leafNodePattern);
 }
 
 .BalloonNode_over{
