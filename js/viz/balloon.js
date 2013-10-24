@@ -91,6 +91,9 @@ BalloonView.prototype = {
 		this.tables[1].setAttribute("style", "width: " + this.tableWidth + "px; height: " + this.svgDim[1] + "px;");
 		wrapperDiv.appendChild(this.tables[1]);
 		
+		//create the SVG texture
+		this.initTextures();
+		
 		this.refreshData();
 		this.on_resize();
 		this.createTables();
@@ -370,6 +373,7 @@ BalloonView.prototype = {
 				childNode.svg.addEventListener("mousedown", function(evt){ _self.dragStart(evt);	});
 				childNode.svg.classList.add("dragable");
 			}
+			
 			// click functionality for branches
 			else{
 				childNode.svg.addEventListener("click", function(evt){ _self.onNodeClick(evt); 	});
@@ -1066,6 +1070,27 @@ BalloonView.prototype = {
 			
 			this.refreshSVG();
 		}
+	},
+	
+	initTextures : function()
+	{
+		var defs = document.createElementNS(this.svgNS, "defs");
+		var pattern, path;
+		
+		pattern = document.createElementNS(this.svgNS, "pattern");
+		pattern.setAttribute('id', "Pattern_leafNode");
+		pattern.setAttribute('patternUnits', 'objectBoundingBox');
+		pattern.setAttribute('width', "10%");
+		pattern.setAttribute('height', "10%");
+		
+		path = document.createElementNS(this.svgNS, 'path');
+		path.setAttribute("d", "M 0 0 L 0 20");
+		path.setAttribute("style", "stroke: red; fill: none;");
+
+		pattern.appendChild(path);
+		defs.appendChild(pattern);
+		
+		this.svg.appendChild(defs);
 	}
 	
 };

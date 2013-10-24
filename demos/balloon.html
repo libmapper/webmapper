@@ -51,8 +51,8 @@ var nDstDevices = 0;
 
 var model, view;
 
-var srcNamespace = "/body/arm/finger/";
-var dstNamespace = "/walk/area";
+var srcNamespace = "/body/torso/arm/finger/";
+var dstNamespace = "/walk/area/panel";
 
 function init(){
 
@@ -88,7 +88,7 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 1, nOut = 4;
+	var nIn = 9, nOut = 3;
 	var nSigs = 3;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
@@ -102,7 +102,7 @@ function initData()
 
 			for(var k=0; k<nSigs; k+=1){
 				for(var l=0; l<nSigs; l+=1){
-					var rand = Math.random() * 20;
+					var rand = Math.random() * 30;
 					if(rand<2){
 					//if(j > 0){
 						connect("/Source " + i + srcNamespace + k, "/Dest " + j + dstNamespace + l);
