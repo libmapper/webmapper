@@ -16,12 +16,10 @@
 }
 
 .BalloonCorner{
-	fill: #000;
-	stroke: #832352;
-	opacity: 0.1;
+	fill: #fff;
 }
 .BalloonCorner:hover{
-	opacity: 0.16;
+	fill: #eee;
 }
 
 #balloonTable_src, #balloonTable_dst, #BalloonSVG{
@@ -30,7 +28,7 @@
 }
 
 .balloonTable{
-	background-color: #aaa;
+	background-color: #fff;
 	overflow: auto;	
 }
 
@@ -43,12 +41,12 @@
 
 /* accordion header up state */
 [id^='accordion'] .ui-state-default{ 
-	background: #aaa; 
+	background: #fff; 
 	border: none;
     margin: 0px;
     padding: 15px;  
     font-weight: normal;
-    color: #fff;  
+    color: #333;  
     line-height: 42px;  
     display: block;  
     font-size: 12pt;  
@@ -63,26 +61,31 @@
 /* accordion's heading mouse over state */
 [id^='accordion'] .ui-state-hover {
 	color: #fff;
-	background-color: #bbb;
+	background-color: #29B1D7;
+	opacity: 0.5;
 }  
 
 /* accordion heading selected state */
-[id^='accordion'] .ui-accordion-header-active { background-color: #04C4D9; }	
+[id^='accordion'] .ui-accordion-header-active { 
+	background-color: #29B1D7;
+	border-top-right-radius: 20px;
+	border-top-left-radius: 20px;
+}	
 
 /* accordion contents  */
 [id^='accordion'] .ui-accordion-content {  
 	background: none; 
 	border: none;
     width: 100%;  
-    background-color: #f3f3f3;  
-    color: #777;  
+    background-color: #fafafa;  
+    color: #333;  
     font-size: 10pt;  
     line-height: 16pt; 
     padding: 16px 0; 
     border-top-left-radius: 0;
 	border-top-right-radius: 0;
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 20px;
+	border-bottom-right-radius: 20px;
 }  
 
 
@@ -102,29 +105,21 @@
 
 .balloonTable .selected, .balloonTable .selected:hover{
 	color: rgb(212, 31, 31);
+	font-weight: bold;
 }
 
 .balloonTable li:hover{
 	color: #333;
 }
 
-/*
-.BalloonNode_src{
-	fill: #fff;
-	stroke: paleVioletRed ;
-}
-.BalloonLeafNode_src{
-	fill: paleVioletRed ;
+.BalloonNode_src, .BalloonNode_dst {
+	fill: #29B1D7;
 	stroke: #fff;
-}*/
-      
-.BalloonNode_dst, .BalloonNode_src{
-	fill: #fff;
-	stroke: #04C4D9;
 }
 .BalloonLeafNode_dst, .BalloonLeafNode_src{
-	fill: #04C4D9;
 	stroke: #fff;
+    cursor: move;
+    fill: url(#Balloon_leafNodePattern);
 }
 
 .BalloonNode_over{
@@ -137,6 +132,13 @@
 .balloonConnection{
 	fill: none;
 	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	/*shape-rendering: crispEdges;*/	
+}
+.dragLine{
+	fill: none;
+	stroke: #FF0000;
 	stroke-width: 1px;
 	stroke-linecap: round;
 	/*shape-rendering: crispEdges;*/	

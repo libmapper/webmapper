@@ -51,6 +51,9 @@ var nDstDevices = 0;
 
 var model, view;
 
+var srcNamespace = "/body/torso/arm/finger/";
+var dstNamespace = "/walk/area/panel";
+
 function init(){
 
 	$('#container').css('height', ($(window).height() - 100) + 'px' );
@@ -85,8 +88,8 @@ function init(){
 //init with fake data for now
 function initData()
 {
-	var nIn = 2, nOut = 2;
-	var nSigs = 6;
+	var nIn = 4, nOut = 3;
+	var nSigs = 3;
 	for(var i=0; i<nIn;i++)
 		addDevice("/Source " + nSrcDevices++, 0, nSigs);
 	for(var i=0; i<nOut;i++)
@@ -99,10 +102,10 @@ function initData()
 
 			for(var k=0; k<nSigs; k+=1){
 				for(var l=0; l<nSigs; l+=1){
-					//var rand = Math.random() * 10;
-					//if(rand<2){
-					if(i+j+k+l == 0){
-						connect("/Source " + i + "/body/arm/finger" + k, "/Dest " + j + "/walk/area/panel" + l);
+					var rand = Math.random() * 30;
+					if(rand<2){
+					//if(j > 0){
+						connect("/Source " + i + srcNamespace + k, "/Dest " + j + dstNamespace + l);
 						//k+=2;
 					}
 				}
@@ -165,9 +168,9 @@ function addDevice(name, nIn, nOut)
 	model.devices.add(name, args);
 
 	for(var j=0; j<nIn;j++)
-		addDevSignal("/walk/area/panel" + j, name, 0);	
+		addDevSignal(dstNamespace + j, name, 0);	
 	for(var j=0; j<nOut;j++)
-		addDevSignal("/body/arm/finger" + j, name, 1);	
+		addDevSignal(srcNamespace + j, name, 1);	
 }
 
 function addDevSignal(name, device_name, direction)
@@ -198,7 +201,7 @@ function btnHandler(val)
 		view.update_display();
 }
 
-</script>
+--></script>
 </head>
 
 
