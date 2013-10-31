@@ -44,6 +44,8 @@ function BalloonView(container, model)
 	document.onkeydown = function(e){
 		_self.keyboardHandler(e);
 	};
+	
+	this.selectedConnections = [];
 		
 }
 
@@ -407,14 +409,10 @@ BalloonView.prototype = {
 	},
 	
 	/**
-	 * The most complicated set of for loops I've ever written... maybe a recursive algorithm could make it simpler but
-	 * I found it easier to follow this way in order to debug and find the appropriate SVG elements
+	 * Draws the connections between all terminal nodes
 	 * 
 	 * Connection = connection between leaf nodes
-	 * Link = connection between nodes that have connected child nodes
-	 * We check each source balloon with each destination balloon for a connection
-	 * We must also check each soure balloon's children for links with destination nodes and child nodes
-	 * 
+	 * Link = connection between nodes that have connected child nodes (not used currently)
 	 */
 	drawConnections : function()
 	{
@@ -441,6 +439,12 @@ BalloonView.prototype = {
 		
 	},
 	
+	/**
+	 * creates the SVG element for a connection
+	 * 
+	 * @param src node
+	 * @param dst node
+	 */
 	drawConnection : function(src, dst)
 	{
 		var ctX1 =  this.svgDim[0]/2;
@@ -451,12 +455,23 @@ BalloonView.prototype = {
 		y1 = src.svg.getAttribute("cy");	
 		x2 = dst.svg.getAttribute("cx");	
 		y2 = dst.svg.getAttribute("cy");	
-
 		
 		// create the SVG line element
 		var line = document.createElementNS(this.svgNS,"path");
 		line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 		line.setAttribute("class", "balloonConnection");
+		
+		line.addEventListener("mouseover", function(evt){
+			this.classList.add("balloonConnection_over");
+		});
+		line.addEventListener("mouseout", function(evt){
+			this.classList.remove("balloonConnection_over");
+		});
+		line.addEventListener("click", function(evt){
+			_self.onConnectionClick(this) ;
+		});
+		
+		
 		this.connections.push(line);
 		this.svg.appendChild(line);
 	},
@@ -631,6 +646,10 @@ BalloonView.prototype = {
 		}
 	},
 	
+	onConnectionClick : function ()
+	{
+		
+	},
 
 	/**
 	 * starts the dragging process for creating connections (mousedown on leaf node)
@@ -718,9 +737,9 @@ BalloonView.prototype = {
 				
 			// ensure proper direction for connecting
 			if(src.direction == 0)
-				_this.connect(src.signalName, dst.signalName);
+				_this.connect(src, dst);
 			else
-				_this.connect(dst.signalName, src.signalName);
+				_this.connect(dst, src);
 
 			// send connect event
 		}
@@ -746,7 +765,7 @@ BalloonView.prototype = {
 	 * @param level used to set the level in the hierarchy
 	 * @returns
 	 */
-	addSignal : function (signalName, namespaces, currentNode, level, ind)
+	addSignal : function (deviceName, signalName, namespaces, currentNode, level, ind)
 	{
 		var label = namespaces[0];	
 		var node, i;
@@ -771,6 +790,7 @@ BalloonView.prototype = {
 			node.parentNode = currentNode;
 			node.childIndex = i;
 			node.direction = ind;
+			node.deviceName = deviceName;
 			node.signalName = signalName;
 			currentNode.childNodes.push(node);
 		}
@@ -779,7 +799,7 @@ BalloonView.prototype = {
 		if(namespaces.length > 1)
 		{
 			namespaces.splice(0,1);					
-			this.addSignal(signalName, namespaces, node, level+1, ind);
+			this.addSignal(deviceName, signalName, namespaces, node, level+1, ind);
 		}
 		else
 			return;
@@ -871,9 +891,10 @@ BalloonView.prototype = {
 	    for (var i=0; i<keys.length; i++) 
 	    {
 	    	var sig = this.model.signals.get(keys[i]);
+	    	var devName = sig.device_name;
 	        var sigName = sig.device_name + sig.name;
 	        var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
-	        this.addSignal(sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
+	        this.addSignal(devName, sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }
 	
 	    // if view level is not set by user, set it to the root
@@ -1063,13 +1084,13 @@ BalloonView.prototype = {
 
 	connect : function (src, dst)
 	{
-		if(this.model.isConnected(src, dst) == false)
+		if(this.model.isConnected(src.signalName, dst.signalName) == false)
 		{
-			var srcDev = "hi";
-			var dstDev = "hi";
+			var srcDev = src.deviceName;
+			var dstDev = dst.deviceName;
 			if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
 					$(this._container).trigger("link", [srcDev, dstDev]);	// trigger link event
-			$(this._container).trigger("connect", [src, dst]);	// trigger connect event
+			$(this._container).trigger("connect", [src.signalName, dst.signalName]);	// trigger connect event
 			
 			this.refreshSVG();
 		}
@@ -1084,7 +1105,7 @@ BalloonView.prototype = {
 		pattern.setAttribute('id', "Balloon_leafNodePattern");
 		pattern.setAttribute('patternUnits', 'userSpaceOnUse');
 		pattern.setAttribute('width', "3");
-		pattern.setAttribute('height', "5");
+		pattern.setAttribute('height', "3");
 
 		path = document.createElementNS(this.svgNS, 'rect');
 		path.setAttribute("width", "3");
@@ -1093,7 +1114,7 @@ BalloonView.prototype = {
 		pattern.appendChild(path);
 
 		path = document.createElementNS(this.svgNS, 'path');
-		path.setAttribute("d", "M 0 3 l 3 0");
+		path.setAttribute("d", "M 0 2 l 3 0");
 		path.setAttribute("style", "stroke: #fff; stroke-width: 2px;");
 		pattern.appendChild(path);
 
@@ -1111,6 +1132,7 @@ function BalloonNode()
 	this.level;				// level in the hierarchy  (-1 for root)
 	this.label;				// namespace 
 	this.signalName;		// the full signal namespace			**FIX
+	this.deviceName;
 	this.parentNode;		// stores the parent node (null for root)
 	this.childNodes = [];	// stores all child nodes
 	this.childIndex;		// notes index into parent nodes array of child nodes
@@ -1234,7 +1256,6 @@ BalloonNode.prototype = {
 			}
 			return result;
 		}
-		
 };
 
 
