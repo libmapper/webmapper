@@ -391,10 +391,22 @@ function mute_selected()
     }
 }
 
+var updateCallable = true;
+var updateTimeout;
+function update_display() {
+    if(updateCallable == false) {
+        clearTimeout(updateTimeout)
+    }
+    updateCallable = false;
+    updateTimeout = setTimeout(function() {
+        view.update_display();
+        console.log('update!');
+    });
+}
+
 /* The main program. */
 function main()
 {
-
     //Create the page elements
     add_container_elements();
     add_signal_control_bar();
@@ -403,64 +415,64 @@ function main()
     command.register("all_devices", function(cmd, args) {
         for (var d in args)
             model.devices.add(args[d].name, args[d]);
-        view.update_display();
+        update_display();
     });
     command.register("new_device", function(cmd, args) {
         model.devices.add(args.name, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_device", function(cmd, args) {
         model.devices.remove(args.name);
-        view.update_display();
+        update_display();
     });
     command.register("all_signals", function(cmd, args) {
         for (var d in args)
             model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
-        view.update_display();
+        update_display();
     });
     command.register("new_signal", function(cmd, args) {
         model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_signal", function(cmd, args) {
         model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
-        view.update_display();
+        update_display();
     });
     command.register("all_links", function(cmd, args) {
         for (var l in args)
             model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
-        view.update_display();
+        update_display();
     });
     command.register("new_link", function(cmd, args) {
         model.links.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_link", function(cmd, args) {
         model.links.remove(args.src_name+'>' + args.dest_name);
-        view.update_display();
+        update_display();
     });
 
     command.register("all_connections", function(cmd, args) {
         for (var d in args)
             model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
-        view.update_display();
+        update_display();
         for (var d in args)
             update_connection_properties_for(args[d], view.get_selected_connections(model.connections));
     });
     command.register("new_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, view.get_selected_connections(model.connections));
     });
     command.register("mod_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, view.get_selected_connections(model.connections));
     });
     command.register("del_connection", function(cmd, args) {
         var conns = view.get_selected_connections(model.connections);
         model.connections.remove(args.src_name+'>'+args.dest_name);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, conns);
     });
 
