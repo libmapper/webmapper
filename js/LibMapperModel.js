@@ -4,6 +4,9 @@ function LibMapperModel ()
 	this.signals = new Assoc();
 	this.links = new Assoc();
 	this.connections = new Assoc();
+	
+	this.selectedConnections = new Assoc();
+	
 
 	this.networkInterfaces = {'selected': null, 'available': []};		
 	
@@ -25,6 +28,39 @@ LibMapperModel.prototype = {
 			var key = src + ">" + dst;
 			return this.connections.get(key);
 		},
+		hasSelectedConnections : function()
+		{
+			if(this.length>0)
+				return true;
+			else
+				return false;
+		},
+		selectConnection : function (src, dst){
+			var key = src + ">" + dst;
+			var conn = this.connections.get(key);
+			if(conn){
+				this.selectedConnections = new Assoc();
+				this.selectedConnections.add(key, conn);
+			}				
+		},
+		isSelectedConnection : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			var conn = this.connections.get(key);
+			if(conn)
+				return true;
+			else
+				return false;
+		},
+		removeSelectedConnection : function(src, dst)
+		{
+			var key = src + ">" + dst;
+			this.selectedConnections.remove(key);
+		},
+		
+		
+		
+		
 		isLinked : function (src, dst)
 		{
 			var link = this.getLink(src, dst);

@@ -139,10 +139,17 @@
 
 .balloonConnection_over{
 	fill: none;
-	stroke: #ff0000;
+	stroke: #ffff00;
 	stroke-width: 2px;
 	stroke-linecap: round;	
 }
+
+.balloonConnection_selected{
+	fill: none;
+	stroke: #ff0000;
+	stroke-width: 2px;
+	stroke-linecap: round;	
+	}
 
 .dragLine{
 	fill: none;

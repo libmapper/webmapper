@@ -460,6 +460,8 @@ BalloonView.prototype = {
 		var line = document.createElementNS(this.svgNS,"path");
 		line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 		line.setAttribute("class", "balloonConnection");
+		$(line).data("srcNode", src);
+		$(line).data("dstNode", dst);
 		
 		line.addEventListener("mouseover", function(evt){
 			this.classList.add("balloonConnection_over");
@@ -646,9 +648,42 @@ BalloonView.prototype = {
 		}
 	},
 	
-	onConnectionClick : function ()
+	onConnectionClick : function (line)
 	{
+		var srcNode = $(line).data("srcNode");
+		var dstNode = $(line).data("dstNode");
 		
+		if(this.model.isSelectedConnection(srcNode.signalName, dstNode.signalName)){
+			this.deselectConnection(line);
+		}
+		else
+		{
+			this.selectConnection(line);
+		}
+	},
+	
+	clearSelectedConnections : function()
+	{
+		for (var i=0; i<this.connections.length; i++)
+		{
+			var line = this.connections[i];
+			line.classList.remove("balloonConnection_selected");
+		}
+	},
+	
+	selectConnection : function (line)
+	{
+		var srcNode = $(line).data("srcNode");
+		var dstNode = $(line).data("dstNode");
+		this.model.selectConnection(srcNode.signalName, dstNode.signalName);
+		line.classList.add("balloonConnection_selected");
+	},
+	deselectConnection : function (line)
+	{
+		var srcNode = $(line).data("srcNode");
+		var dstNode = $(line).data("dstNode");
+		this.model.removeSelectedConnection(srcNode.signalName, dstNode.signalName);
+		line.classList.remove("balloonConnection_selected");
 	},
 
 	/**
