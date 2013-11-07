@@ -16,6 +16,42 @@ function LibMapperModel ()
 
 LibMapperModel.prototype = {
 		
+		selectedConnections_addConnection : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			var conn = this.connections.get(key);
+			if(conn){
+				if(!this.selectedConnections.get(key)){
+					this.selectedConnections.add(key, conn);
+				}
+			}	
+		},
+
+		selectedConnections_removeConnection : function (src, dst){
+			var key = src + ">" + dst;
+			if(this.selectedConnections.get(key))
+			{
+				this.selectedConnections.remove(key);
+			}
+		},
+		
+		selectedConnections_isSelected : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			var conn = this.selectedConnections.get(key);
+			if(conn)
+				return true;
+			else
+				return false;
+		},
+		
+		
+		getConnection : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			return this.connections.get(key);
+		},
+		
 		isConnected : function (src, dst)
 		{
 			var conn = this.getConnection(src, dst);
@@ -23,43 +59,12 @@ LibMapperModel.prototype = {
 				return true;
 			return false;
 		},
-		getConnection : function (src, dst)
-		{
-			var key = src + ">" + dst;
-			return this.connections.get(key);
-		},
-		hasSelectedConnections : function()
-		{
-			if(this.length>0)
-				return true;
-			else
-				return false;
-		},
-		selectConnection : function (src, dst){
-			var key = src + ">" + dst;
-			var conn = this.connections.get(key);
-			if(conn){
-				this.selectedConnections = new Assoc();
-				this.selectedConnections.add(key, conn);
-			}				
-		},
-		isSelectedConnection : function (src, dst)
-		{
-			var key = src + ">" + dst;
-			var conn = this.connections.get(key);
-			if(conn)
-				return true;
-			else
-				return false;
-		},
-		removeSelectedConnection : function(src, dst)
-		{
-			var key = src + ">" + dst;
-			this.selectedConnections.remove(key);
-		},
 		
-		
-		
+		getLink : function (src, dst)
+		{
+			var key = src + ">" + dst;
+			return this.links.get(key);
+		},
 		
 		isLinked : function (src, dst)
 		{
@@ -67,11 +72,6 @@ LibMapperModel.prototype = {
 			if(link)
 				return true;
 			return false;
-		},
-		getLink : function (src, dst)
-		{
-			var key = src + ">" + dst;
-			return this.links.get(key);
 		},
 		
 		// returns devices split into sources and destinations

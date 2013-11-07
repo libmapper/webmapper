@@ -134,14 +134,13 @@
 	stroke: #000;
 	stroke-width: 1px;
 	stroke-linecap: round;
-	/*shape-rendering: crispEdges;*/	
 }
 
 .balloonConnection_over{
 	fill: none;
 	stroke: #ffff00;
-	stroke-width: 2px;
-	stroke-linecap: round;	
+	stroke-width: 1px;
+	stroke-linecap: round;
 }
 
 .balloonConnection_selected{
@@ -149,7 +148,7 @@
 	stroke: #ff0000;
 	stroke-width: 2px;
 	stroke-linecap: round;	
-	}
+}
 
 .dragLine{
 	fill: none;

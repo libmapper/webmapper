@@ -103,6 +103,29 @@ BalloonView.prototype = {
 	
 	keyboardHandler : function (e)
 	{
+		//console.log(e.keyCode);
+		 
+		// 'delete' to remove a connection
+		if(e.keyCode == 46)	
+		{
+			var n = this.model.selectedConnections.length();
+			if(n > 0)
+			{
+				e.stopPropagation();	//prevents bubbling to main.js
+				var keys = this.model.selectedConnections.keys();
+				for(i=0; i<keys.length; i++)
+				{
+					var conn = this.model.selectedConnections.get(keys[i]);
+					var src = conn.src_name;
+					var dst = conn.dest_name;
+					if(this.model.isConnected(src, dst) == true){
+						$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
+						this.model.selectedConnections.remove(keys[i]);
+					}
+				}
+			}
+			this.refreshSVG();
+		}
 		
 	},
 	
@@ -123,14 +146,17 @@ BalloonView.prototype = {
 	
 	save_view_settings : function ()
 	{
-		var data = this.viewNodes;
+		var data = [];
+		data.push(this.viewNodes);						// 0
+		data.push(this.model.selectedConnections);		// 1
 		return data;
 		
 	},
 	
 	load_view_settings : function (data)
 	{
-		this.viewNodes = data;
+		this.viewNodes = data[0];
+		this.model.selectedConnections = data[1];
 	},
 	
 	/**
@@ -449,19 +475,24 @@ BalloonView.prototype = {
 	{
 		var ctX1 =  this.svgDim[0]/2;
 		var ctY1 =  this.svgDim[1]/2;
-		var x1,y1,x2,y2;
+		var x1,y1,x2,y2, line;
 
 		x1 = src.svg.getAttribute("cx");	
 		y1 = src.svg.getAttribute("cy");	
 		x2 = dst.svg.getAttribute("cx");	
 		y2 = dst.svg.getAttribute("cy");	
-		
-		// create the SVG line element
-		var line = document.createElementNS(this.svgNS,"path");
+
+		// create the SVG line element to handle mmouse interaction
+		line = document.createElementNS(this.svgNS,"path");
 		line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 		line.setAttribute("class", "balloonConnection");
 		$(line).data("srcNode", src);
 		$(line).data("dstNode", dst);
+		
+		if(this.model.selectedConnections_isSelected(src.signalName, dst.signalName))
+		{
+			line.classList.add("balloonConnection_selected");
+		}
 		
 		line.addEventListener("mouseover", function(evt){
 			this.classList.add("balloonConnection_over");
@@ -472,7 +503,6 @@ BalloonView.prototype = {
 		line.addEventListener("click", function(evt){
 			_self.onConnectionClick(this) ;
 		});
-		
 		
 		this.connections.push(line);
 		this.svg.appendChild(line);
@@ -523,7 +553,7 @@ BalloonView.prototype = {
 //		var childIndex = node.childIndex;
 		var ind = item.getAttribute("data-ind");
 		this.viewNodes[ind] = node;
-		console.log(this.viewNodes[ind]);
+//		console.log(this.viewNodes[ind]);
 		this.refreshSVG();
 		this.updateTable(ind);
 	},
@@ -539,7 +569,7 @@ BalloonView.prototype = {
 		this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
 		this.refreshSVG();
 		this.updateTable(ind);
-		console.log("Child Clicked");
+//		console.log("Child Clicked");
 	},
 	
 	/**
@@ -653,37 +683,16 @@ BalloonView.prototype = {
 		var srcNode = $(line).data("srcNode");
 		var dstNode = $(line).data("dstNode");
 		
-		if(this.model.isSelectedConnection(srcNode.signalName, dstNode.signalName)){
-			this.deselectConnection(line);
-		}
-		else
+		// is already selected
+		if(line.classList.contains("balloonConnection_selected"))
 		{
-			this.selectConnection(line);
-		}
-	},
-	
-	clearSelectedConnections : function()
-	{
-		for (var i=0; i<this.connections.length; i++)
-		{
-			var line = this.connections[i];
 			line.classList.remove("balloonConnection_selected");
+			this.model.selectedConnections_removeConnection(srcNode.signalName, dstNode.signalName);
 		}
-	},
-	
-	selectConnection : function (line)
-	{
-		var srcNode = $(line).data("srcNode");
-		var dstNode = $(line).data("dstNode");
-		this.model.selectConnection(srcNode.signalName, dstNode.signalName);
-		line.classList.add("balloonConnection_selected");
-	},
-	deselectConnection : function (line)
-	{
-		var srcNode = $(line).data("srcNode");
-		var dstNode = $(line).data("dstNode");
-		this.model.removeSelectedConnection(srcNode.signalName, dstNode.signalName);
-		line.classList.remove("balloonConnection_selected");
+		else{
+			line.classList.add("balloonConnection_selected");
+			this.model.selectedConnections_addConnection(srcNode.signalName, dstNode.signalName);
+		}		
 	},
 
 	/**
@@ -691,7 +700,7 @@ BalloonView.prototype = {
 	 */
 	dragStart : function (evt) 
 	{
-		console.log("starting drag");
+//		console.log("starting drag");
 		var _self = this;
 
 		// store the element clicked on
@@ -764,7 +773,7 @@ BalloonView.prototype = {
 	dragStop : function (evt)
 	{
 		var _this = evt.data._self;
-		console.log ("stop drag");
+//		console.log ("stop drag");
 		if(_this.dragSource && _this.dragTarget)
 		{
 			var src = $(_this.dragSource).data("node");
