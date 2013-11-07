@@ -15,8 +15,8 @@ html, body {
   height: 100%;
 }
 
-/*
-@-webkit-keyframes myfirst 
+
+/*@-webkit-keyframes myfirst 
 {
 from {background: default;}
 to {background: yellow;}
@@ -24,6 +24,10 @@ to {background: yellow;}
 
 .displayTable tbody tr {
   -webkit-transition: background .5s;
+}
+
+.displayTable tbody tr:hover {
+  -webkit-animation: myfirst 1s;
 }
 
 path.selected {
@@ -224,6 +228,23 @@ body {
       position: absolute;
       right: 0px;
     }
+
+    @keyframes refreshSpin {
+      0%  {transform: rotate(0deg);}
+      25%  {transform: rotate(90deg);}
+      50% {transform: rotate(180deg);}
+      75% {transform: rotate(270deg);}
+      100% {transform: rotate(360deg);}
+    }
+
+    @-webkit-keyframes refreshSpin {
+      0%  {-webkit-transform: rotate(0deg);}
+      100% {-webkit-transform: rotate(360deg);}
+    }
+
+   /* #refresh:active {
+      -webkit-animation: refreshSpin 1s;
+    }*/
 
     #refresh {
       position: absolute;

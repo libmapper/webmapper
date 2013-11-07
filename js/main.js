@@ -691,7 +691,11 @@ function add_handlers()
     });
 
     $('#refresh').on('click', function(e) { 
+        $(this).css({'-webkit-animation': 'refreshSpin 1s'});
         refresh_all(); 
+        setTimeout(function(){
+            $('#refresh').css({'-webkit-animation': ''});
+        }, 1000);
     });
 
     network_selection();
