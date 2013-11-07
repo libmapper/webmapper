@@ -49,48 +49,34 @@ function listView(model)
         $(document).off('.list');
     }
 
-    var updateCallable = true;
-    var updateTimeout;
-    var timesUpdateCalled = 0;
     this.update_display = function() {
+            
+        // Removes 'invisible' classes which can muddle with display updating
+        $('tr.invisible').removeClass('invisible');
+        update_arrows();
+        update_tabs();
 
-        if (updateCallable == false) {
-            clearTimeout(updateTimeout);
+        //See if the selected tab still exists (important for changing networks)
+        var isTabAvailable = false;
+        $('.topTabs li').each(function(){
+            var dev = $(this).text();
+            if( dev == selectedTab ) isTabAvailable = true;
+        });
+        if(!isTabAvailable) select_tab(tabDevices);
+
+        if (selectedTab == all_devices) {
+            update_devices();
+            window.saveLocation = '';
+        }
+        else {
+            update_signals(selectedTab);
+            window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
         }
 
-        updateCallable = false;
-        updateTimeout = setTimeout(function() {
-            
-            // Removes 'invisible' classes which can muddle with display updating
-            $('tr.invisible').removeClass('invisible');
-            update_arrows();
-
-            update_tabs();
-            if (selectedTab == all_devices) {
-                update_devices();
-                window.saveLocation = '';
-            }
-            else {
-                update_signals(selectedTab);
-                window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
-            }
-
-            update_save_location();
-
-            update_selection();
-            
-            filter_view();
-
-            //Because svg keeps getting nudged left for some reason
-            //$('svg').css('left', '0px');
-            update_row_heights();
-            //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
-
-            updateCallable = true;
-
-        }, 34);
-
-
+        update_save_location();
+        update_selection();
+        filter_view();
+        update_row_heights();
     }
 
     this.get_selected_connections = function(list)

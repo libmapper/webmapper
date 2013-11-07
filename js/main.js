@@ -400,7 +400,7 @@ function update_display() {
     updateCallable = false;
     updateTimeout = setTimeout(function() {
         view.update_display();
-        console.log('update!');
+        // console.log('update!');
     });
 }
 
