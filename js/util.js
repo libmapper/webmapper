@@ -66,7 +66,7 @@ function Assoc() {
         return keys;
     }
     this.length = function() {
-        return keys.length;
+        return this.keys().length;
     }
 
 }
