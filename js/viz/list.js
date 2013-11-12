@@ -62,7 +62,7 @@ function listView(model)
             var dev = $(this).text();
             if( dev == selectedTab ) isTabAvailable = true;
         });
-        if(!isTabAvailable) select_tab(tabDevices);
+        // if(!isTabAvailable) select_tab(tabDevices);
 
         if (selectedTab == all_devices) {
             update_devices();

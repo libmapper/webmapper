@@ -428,12 +428,12 @@ function main()
         // Remove original device
         model.devices.remove(args.name);
         // Remove all child signals before syncing
-        var sigs = model.signals.keys();
-        for (var i in sigs ) {
-            if ( sigs[i].search(args.name) == 0 ) {
-                model.signals.remove(sigs[i]);
-            }
-        }
+        // var sigs = model.signals.keys();
+        // for (var i in sigs ) {
+        //     if ( sigs[i].search(args.name) == 0 ) {
+        //         model.signals.remove(sigs[i]);
+        //     }
+        // }
         model.devices.add(args.name, args);
         command.send('get_signals_by_device_name', args.name);
         update_display();
