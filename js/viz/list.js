@@ -35,7 +35,7 @@ function listView(model)
         add_svg_area();
         add_status_bar();
         this.add_handlers();
-        select_tab(tabDevices);
+        // select_tab(tabDevices);
         $('#container').css({
             'min-width': '700px',
             'min-height': '150px'
@@ -56,14 +56,6 @@ function listView(model)
         update_arrows();
         update_tabs();
 
-        //See if the selected tab still exists (important for changing networks)
-        var isTabAvailable = false;
-        $('.topTabs li').each(function(){
-            var dev = $(this).text();
-            if( dev == selectedTab ) isTabAvailable = true;
-        });
-        // if(!isTabAvailable) select_tab(tabDevices);
-
         if (selectedTab == all_devices) {
             update_devices();
             window.saveLocation = '';
@@ -76,7 +68,7 @@ function listView(model)
         update_save_location();
         update_selection();
         filter_view();
-        update_row_heights();
+        // update_row_heights();
     }
 
     this.get_selected_connections = function(list)
