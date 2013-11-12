@@ -148,6 +148,7 @@ function connect(src, dst){
 }
 function disconnect(src, dst){
 	var key = src + ">" + dst;
+	console.log("caught");
 	model.connections.remove(key);
 	view.update_display();
 }

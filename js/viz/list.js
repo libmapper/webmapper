@@ -50,12 +50,20 @@ function listView(model)
     }
 
     this.update_display = function() {
-        
+            
         // Removes 'invisible' classes which can muddle with display updating
         $('tr.invisible').removeClass('invisible');
         update_arrows();
-
         update_tabs();
+
+        //See if the selected tab still exists (important for changing networks)
+        var isTabAvailable = false;
+        $('.topTabs li').each(function(){
+            var dev = $(this).text();
+            if( dev == selectedTab ) isTabAvailable = true;
+        });
+        if(!isTabAvailable) select_tab(tabDevices);
+
         if (selectedTab == all_devices) {
             update_devices();
             window.saveLocation = '';
@@ -65,7 +73,7 @@ function listView(model)
             window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
         }
 
-        // update_save_location();
+        update_save_location();
         update_selection();
         filter_view();
         update_row_heights();
@@ -316,7 +324,7 @@ function update_selection()
             return;
         var l = selectLists[selectedTab][i];
         var tr = $(table).children('tbody').children('tr')[0];
-        while (tr) {
+        while (tr && tr.firstChild) {
             if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
                 $(tr).addClass("trsel");
             else

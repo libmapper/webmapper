@@ -704,7 +704,16 @@ function add_handlers()
     });
 
     $('#refresh').on('click', function(e) { 
+        $(this).css({'-webkit-animation': 'refreshSpin 1s'});
         refresh_all(); 
+        setTimeout(function(){
+            $('#refresh').css({'-webkit-animation': ''});
+        }, 1000);
+    });
+
+    $('body').on('keydown', function(e){
+        if(e.which == 8  && !$(':focus').is('input')) // 'delete' key, don't want the browser to go back in history
+            e.preventDefault();
     });
 
     network_selection();
