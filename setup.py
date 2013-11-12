@@ -14,7 +14,7 @@ data_files = [('',['js']),
 options = {'argv_emulation': False, 'iconfile': 'images/libmapper.icns'}
 
 setup(name='WebMapper',
-      version='0.1',
+      version='0.2',
       description='GUI for libmapper OSC network',
       author='Stephen Sinclair, Aaron Krajeski & Jonathan Wilansky',
       author_email='aaron.krajeski@music.mcgill.ca',
