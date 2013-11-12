@@ -35,7 +35,7 @@ function listView(model)
         add_svg_area();
         add_status_bar();
         this.add_handlers();
-        select_tab(tabDevices);
+        // select_tab(tabDevices);
         $('#container').css({
             'min-width': '700px',
             'min-height': '150px'
