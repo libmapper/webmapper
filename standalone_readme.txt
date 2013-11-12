@@ -90,4 +90,8 @@ Saving and loading notes:
   As of now saving and loading work via a na•ve approach. In the list view (currently the only view tested for saving and loading) save files will only save data for the active tab. Loading will only load connections for signals in the active tab. Though device names are recorded in save files, they are not actually used by the GUI to load mappings (this is done to make save mappings more portable).
 
 
+Notes:
+
+	- Balloon plot is brand new and has not yet been thoroughly tested.
+
 	Have fun! Do report any bugs.

@@ -324,7 +324,7 @@ function update_selection()
             return;
         var l = selectLists[selectedTab][i];
         var tr = $(table).children('tbody').children('tr')[0];
-        while (tr) {
+        while (tr && tr.firstChild) {
             if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
                 $(tr).addClass("trsel");
             else
