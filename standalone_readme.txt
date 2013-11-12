@@ -6,13 +6,13 @@ http://libmapper.org
 
 Dependancies:
 
-	- Google Chrome, you can theoretically run it in any browser, though I really wouldn't recommend it.
+	- Google Chrome, there has also been some preliminary testing in Firefox.
 
 To Run:
 
 	- Double click on 'WebMapper.app'
-	- If Google Chrome is installed on your computer and it is the default browser often it will open automatically in a new tab.
-	- If this does not happen, manually navigate to <localhost:50000> in Google Chrome.
+	- If Google Chrome is installed on your computer, but is not currently running, the GUI will open automatically.
+	- If this does not happen for whatever reason, manually navigate to <localhost:50000> in Google Chrome (or Firefox if you're feeling lucky).
 
 List View Command Keys:
 
@@ -23,7 +23,7 @@ List View Command Keys:
 	- 'alt+shift+tab' : move left one tab
 	- 'cmd+a' : select all currently visible connections/links	
 
-	You can also mute connections while they are being made.
+	You can also mute connections while they are being made (press 'm' while connecting)
 
 
 Grid view Command keys:
