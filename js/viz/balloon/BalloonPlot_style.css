@@ -155,9 +155,18 @@
 
 .balloonConnection_selected{
 	fill: none;
-	stroke: #ff0000;
-	stroke-width: 2px;
+	stroke: #ff0000 !important;
+	stroke-width: 2px !important;
 	stroke-linecap: round;	
+}
+
+.balloonConnection_muted{
+	fill: none;
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	pointer-events: none;
+	stroke-dasharray:10,10;
 }
 
 .dragLine{

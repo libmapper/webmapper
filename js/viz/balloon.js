@@ -497,7 +497,12 @@ BalloonView.prototype = {
 		// create the SVG line element as the display object
 		var line2 = document.createElementNS(this.svgNS,"path");
 		line2.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-		line2.setAttribute("class", "balloonConnection");
+		
+		var c = model.connections.get(src.signalName + ">" + dst.signalName);
+		if(c.muted)
+			line2.setAttribute("class", "balloonConnection_muted");
+		else
+			line2.setAttribute("class", "balloonConnection");
 		
 		if(this.model.selectedConnections_isSelected(src.signalName, dst.signalName))
 		{
