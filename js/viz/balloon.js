@@ -41,7 +41,7 @@ function BalloonView(container, model)
 	this.ctY1 =  300;
 	
 	//Keyboard handlers
-	$('body').on('keydown.balloon', function(e){
+	$(this._container).on('keydown.balloon', function(e){
 		_self.keyboardHandler(e);
 	});
 	this.selectedConnections = [];
@@ -83,6 +83,9 @@ BalloonView.prototype = {
 		this.svg.setAttribute("width", this.svgDim[0]);
 		this.svg.setAttribute("height", this.svgDim[1]);
 		this.svg.setAttribute("style", "float:left;margin: 0 auto;");
+		this.svg.addEventListener("click", function(evt){
+			_self.clearSelectedConnections();
+		});
 		wrapperDiv.appendChild(this.svg);	
 		
 		// add destination table DIV
@@ -102,15 +105,15 @@ BalloonView.prototype = {
 	
 	keyboardHandler : function (e)
 	{
-		console.log(e.which);
-		 
+		//console.log(e.which);
+		
 		// 'delete' to remove a connection
-		if (e.which == 8)  // disconnect on 'delete'
+		if (e.which == 46 || e.which == 8)  // disconnect on 'delete'
 		{
+			e.preventDefault();
 			var n = this.model.selectedConnections.length();
 			if(n > 0)
 			{
-				e.stopPropagation();	//prevents bubbling to main.js
 				var keys = this.model.selectedConnections.keys();
 				for(i=0; i<keys.length; i++)
 				{
@@ -182,7 +185,7 @@ BalloonView.prototype = {
 	
 	cleanup : function ()
 	{
-		//document.onkeydown = null;
+		$(this._container).off('.balloon');
 	},
 	
 	/**
@@ -202,6 +205,7 @@ BalloonView.prototype = {
 			obj.setAttribute("height", this.svgDim[1]);			
 			obj.setAttribute("class", "BalloonCorner");
 			obj.addEventListener("click", function(evt){
+				evt.stopPropagation(); //prevents click reaching canvas and deselecting
 				_self.onBackClick(0);
 			});
 			this.svg.appendChild(obj);
@@ -216,6 +220,7 @@ BalloonView.prototype = {
 			obj.setAttribute("height", this.svgDim[1]);			
 			obj.setAttribute("class", "BalloonCorner");
 			obj.addEventListener("click", function(evt){
+				evt.stopPropagation(); //prevents click reaching canvas and deselecting
 				_self.onBackClick(1);
 			});
 			this.svg.appendChild(obj);
@@ -500,6 +505,7 @@ BalloonView.prototype = {
 			this.classList.remove("balloonConnection_over");
 		});
 		line.addEventListener("click", function(evt){
+			evt.stopPropagation();
 			_self.onConnectionClick(this) ;
 		});
 		
@@ -547,6 +553,7 @@ BalloonView.prototype = {
 	 */
 	onNodeClick : function(evt)
 	{
+		evt.stopPropagation(); //prevents click reaching canvas and deselecting
 		var item = evt.currentTarget;
 		var node = $(item).data("node");
 //		var childIndex = node.childIndex;
@@ -561,6 +568,7 @@ BalloonView.prototype = {
 	 */
 	onChildNodeClick : function(evt)
 	{
+		evt.stopPropagation(); //prevents click reaching canvas and deselecting
 		var item = evt.currentTarget;
 		var node = $(item).data("node").parentNode;
 		var childIndex = node.childIndex;
@@ -694,6 +702,12 @@ BalloonView.prototype = {
 		}		
 	},
 
+	clearSelectedConnections : function ()
+	{
+		this.model.selectedConnections_clearAll();
+		this.refreshSVG();
+	},
+	
 	/**
 	 * starts the dragging process for creating connections (mousedown on leaf node)
 	 */
