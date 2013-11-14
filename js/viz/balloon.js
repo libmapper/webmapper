@@ -41,10 +41,9 @@ function BalloonView(container, model)
 	this.ctY1 =  300;
 	
 	//Keyboard handlers
-	document.onkeydown = function(e){
+	$('body').on('keydown.balloon', function(e){
 		_self.keyboardHandler(e);
-	};
-	
+	});
 	this.selectedConnections = [];
 		
 }
@@ -103,10 +102,10 @@ BalloonView.prototype = {
 	
 	keyboardHandler : function (e)
 	{
-		//console.log(e.keyCode);
+		console.log(e.which);
 		 
 		// 'delete' to remove a connection
-		if(e.keyCode == 46)	
+		if (e.which == 8)  // disconnect on 'delete'
 		{
 			var n = this.model.selectedConnections.length();
 			if(n > 0)
