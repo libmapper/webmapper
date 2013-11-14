@@ -40,7 +40,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-monitor = mapper.monitor(autorequest=mapper.AUTOREQ_ALL)
+monitor = mapper.monitor(autorequest=0)
 
 def on_device(dev, action):
     if action == mapper.MDB_NEW:
@@ -86,7 +86,7 @@ def on_refresh(arg):
     global monitor
     del monitor
     admin = mapper.admin(networkInterfaces['active'])
-    monitor = mapper.monitor(admin)
+    monitor = mapper.monitor(admin, autorequest=0)
     init_monitor()
 
 def on_save(arg):
