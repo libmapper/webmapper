@@ -135,6 +135,15 @@
 	stroke: #000;
 	stroke-width: 1px;
 	stroke-linecap: round;
+	pointer-events: none;
+}
+
+.balloonConnectionHandler{
+	fill: none;
+	stroke: #f0fff0;
+	stroke-width: 5px;
+	stroke-linecap: round;
+	opacity: 0;
 }
 
 .balloonConnection_over{
