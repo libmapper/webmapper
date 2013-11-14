@@ -19,7 +19,8 @@
 	fill: #fff;
 }
 .BalloonCorner:hover{
-	fill: #eee;
+	fill: #ff0000;
+	opacity: 0.1;
 }
 
 #balloonTable_src, #balloonTable_dst, #BalloonSVG{
@@ -134,6 +135,15 @@
 	stroke: #000;
 	stroke-width: 1px;
 	stroke-linecap: round;
+	pointer-events: none;
+}
+
+.balloonConnectionHandler{
+	fill: none;
+	stroke: #f0fff0;
+	stroke-width: 5px;
+	stroke-linecap: round;
+	opacity: 0;
 }
 
 .balloonConnection_over{
@@ -145,9 +155,18 @@
 
 .balloonConnection_selected{
 	fill: none;
-	stroke: #ff0000;
-	stroke-width: 2px;
+	stroke: #ff0000 !important;
+	stroke-width: 2px !important;
 	stroke-linecap: round;	
+}
+
+.balloonConnection_muted{
+	fill: none;
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	pointer-events: none;
+	stroke-dasharray:10,10;
 }
 
 .dragLine{

@@ -521,6 +521,16 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
+    $("#container").on("disconnect", function(e, src, dst){
+    	command.send('disconnect', [src, dst]);
+    });
+    
+    $("#container").on("updateConnectionProperties", function(e){
+    	update_connection_properties();
+    });
+    
+    
+    
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
     	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
@@ -711,9 +721,9 @@ function add_handlers()
         }, 1000);
     });
 
-    $('body').on('keydown', function(e){
+    $(document).on('keydown', function(e){
         if(e.which == 8  && !$(':focus').is('input')) // 'delete' key, don't want the browser to go back in history
-            e.preventDefault();
+        	console.log("balloon.js");
     });
 
     network_selection();
