@@ -49,48 +49,26 @@ function listView(model)
         $(document).off('.list');
     }
 
-    var updateCallable = true;
-    var updateTimeout;
-    var timesUpdateCalled = 0;
     this.update_display = function() {
+            
+        // Removes 'invisible' classes which can muddle with display updating
+        $('tr.invisible').removeClass('invisible');
+        update_arrows();
+        update_tabs();
 
-        if (updateCallable == false) {
-            clearTimeout(updateTimeout);
+        if (selectedTab == all_devices) {
+            update_devices();
+            window.saveLocation = '';
+        }
+        else {
+            update_signals(selectedTab);
+            window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
         }
 
-        updateCallable = false;
-        updateTimeout = setTimeout(function() {
-            
-            // Removes 'invisible' classes which can muddle with display updating
-            $('tr.invisible').removeClass('invisible');
-            update_arrows();
-
-            update_tabs();
-            if (selectedTab == all_devices) {
-                update_devices();
-                window.saveLocation = '';
-            }
-            else {
-                update_signals(selectedTab);
-                window.saveLocation = '/save?dev='+encodeURIComponent(selectedTab);
-            }
-
-            update_save_location();
-
-            update_selection();
-            
-            filter_view();
-
-            //Because svg keeps getting nudged left for some reason
-            //$('svg').css('left', '0px');
-            update_row_heights();
-            //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
-
-            updateCallable = true;
-
-        }, 34);
-
-
+        update_save_location();
+        update_selection();
+        filter_view();
+        // update_row_heights();
     }
 
     this.get_selected_connections = function(list)
@@ -216,6 +194,7 @@ function listTable(id)
             //If there is only one row, make it of even class for styling
             var newRow = "<tr>"
             for(var col in tableData[row]) {
+                if( tableData[row][col]==undefined ) tableData[row][col] = '';
                 newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
             }
             $(this.tbody).append(newRow+"</tr>");
@@ -337,7 +316,7 @@ function update_selection()
             return;
         var l = selectLists[selectedTab][i];
         var tr = $(table).children('tbody').children('tr')[0];
-        while (tr) {
+        while (tr && tr.firstChild) {
             if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
                 $(tr).addClass("trsel");
             else
@@ -555,7 +534,7 @@ function create_arrow(left, right, sel, muted)
 
     var L = fullOffset(left);
     var R = fullOffset(right);
-    var S = fullOffset($('.svgDiv')[0]);
+    var S = fullOffset($('#svgDiv')[0]);
 
     var x1 = 0;
     var y1 = L.top+L.height/2-S.top;
@@ -622,7 +601,7 @@ function select_tab(tab)
         $('#saveLoadDiv').removeClass('disabled');
     }
 
-    $('svgTop').text('hide unconnected');
+    $('#svgTop').text('hide unconnected');
     $('#leftSearch, #rightSearch').val('');
     command.send('tab', selectedTab);
     view.update_display();
@@ -836,12 +815,12 @@ function add_display_tables()
 function add_svg_area()
 {
     $('#container').append(
-        "<div class='svgDiv'>"+
+        "<div id='svgDiv'>"+
             "<div id='svgTop'>hide unconnected</div>"+
         "</div>"
     );
 
-    svgArea = Raphael( $('.svgDiv')[0], '100%', '100%');
+    svgArea = Raphael( $('#svgDiv')[0], '100%', '100%');
     
 }
 
@@ -868,19 +847,20 @@ function drawing_curve(sourceRow)
     this.targetRow;
     this.muted = false;
 
+    this.canvasWidth = $('#svgDiv').width();
     // We'll need to know the width of the canvas, in px, as a number
-    var widthInPx = $('svg').css('width'); // Which returns "##px"
-    this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
+    //var widthInPx = $('svg').css('width'); // Which returns "##px"
+    //this.canvasWidth = +widthInPx.substring(0, widthInPx.length - 2); // Returning a ##
     
     this.clamptorow = function( row ) {
-        var svgPos = fullOffset($('.svgDiv')[0]);
+        var svgPos = fullOffset($('#svgDiv')[0]);
         var rowPos = fullOffset(row);
         var y = rowPos.top + rowPos.height/2 - svgPos.top;
         return y;
     }
 
     this.findrow = function ( y ) {
-        var svgTop = $('.svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
+        var svgTop = $('#svgDiv').offset().top;  // The upper position of the canvas (so that we can find the absolute position)
         var ttleft = $(this.targetTable.tbody).offset().left + 5; // Left edge of the target table
         var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
         var row = $(td).parents('tr')[0]; 
@@ -909,6 +889,10 @@ function drawing_curve(sourceRow)
     this.line = svgArea.path().attr({'stroke-width': 2});
 
     this.update = function( moveEvent ) {
+
+        moveEvent.offsetX = moveEvent.pageX-$('#svgDiv').offset().left;
+        moveEvent.offsetY = moveEvent.pageY-$('#svgDiv').offset().top;
+
         var target = moveEvent.currentTarget;
         var start = [ this.path[0][1], this.path[0][2] ];
         var end = [ this.path[1][5], this.path[1][6] ];
@@ -932,16 +916,17 @@ function drawing_curve(sourceRow)
         }
         // We're over a table row of the target table
         if( $(target).parents('tbody')[0] == this.targetTable.tbody ) {
-            var rowHeightPx = $(target).css('height');
-            var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
+            //var rowHeightPx = $(target).css('height');
+            //var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
+            var rowHeight = $(target).height();
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
             if( !$(target).hasClass('incompatible') ) {
                 end[1] = this.clamptorow(target);
-                c1 = end[1] + moveEvent.offsetY - rowHeight/2;
+                c1 = moveEvent.offsetY;
             }
             else
-                end[1] = moveEvent.pageY - fullOffset($('.svgDiv')[0]).top;
+                end[1] = moveEvent.pageY - fullOffset($('#svgDiv')[0]).top;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
@@ -1019,7 +1004,7 @@ function drawing_handlers()
         var sourceRow = this;
 
         // Cursor enters the canvas
-        $('svg').one('mouseenter.drawing', function() {
+        $('#svgDiv').one('mouseenter.drawing', function() {
 
             var curve = new drawing_curve(sourceRow);
 
@@ -1108,6 +1093,7 @@ this.add_handlers = function()
             deselect_all();
         }
         else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
+            e.preventDefault();
             select_all();
         }
         else if (e.which == 9 && e.altKey == true) { // Tabbing like in google chrome 'alt-tab'

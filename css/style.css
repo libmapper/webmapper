@@ -15,8 +15,8 @@ html, body {
   height: 100%;
 }
 
-/*
-@-webkit-keyframes myfirst 
+
+/*@-webkit-keyframes myfirst 
 {
 from {background: default;}
 to {background: yellow;}
@@ -24,6 +24,10 @@ to {background: yellow;}
 
 .displayTable tbody tr {
   -webkit-transition: background .5s;
+}
+
+.displayTable tbody tr:hover {
+  -webkit-animation: myfirst 1s;
 }
 
 path.selected {
@@ -45,7 +49,8 @@ ul {
 }
 
 body {
-  font-family: helvetica-light, helvetica, sans;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: 200;
   font-size: 11pt;
   margin: 0 4px;
 }
@@ -224,6 +229,23 @@ body {
       right: 0px;
     }
 
+    @keyframes refreshSpin {
+      0%  {transform: rotate(0deg);}
+      25%  {transform: rotate(90deg);}
+      50% {transform: rotate(180deg);}
+      75% {transform: rotate(270deg);}
+      100% {transform: rotate(360deg);}
+    }
+
+    @-webkit-keyframes refreshSpin {
+      0%  {-webkit-transform: rotate(0deg);}
+      100% {-webkit-transform: rotate(360deg);}
+    }
+
+   /* #refresh:active {
+      -webkit-animation: refreshSpin 1s;
+    }*/
+
     #refresh {
       position: absolute;
       top:  18px;
@@ -340,7 +362,7 @@ body {
       /* Rows and headers */
       .tableDiv th, #svgTop {
         cursor: pointer;
-        font-weight: normal;
+        font-weight: inherit;
         text-align: left;
         border-top: 0px;
         border-left: 0px;
@@ -399,7 +421,7 @@ body {
 
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
-  .svgDiv {
+  #svgDiv {
     position: absolute;
     border-bottom: 0;
     left: 40%;
@@ -428,7 +450,7 @@ body {
     }
     #titleSearchDiv h2 {
       margin-top: 9px;
-      font-weight: normal;
+      font-weight: inherit;
     }
     #svgTitle {
       left: calc(40% + 10px);

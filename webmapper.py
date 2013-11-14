@@ -21,10 +21,10 @@ def open_gui(port):
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
             '/usr/bin/chromium-browser --app=%s',
             ]
-    # if 'darwin' in sys.platform:
+    if 'darwin' in sys.platform:
         # Dangerous to run 'open' on platforms other than OS X, so
         # check for OS explicitly in this case.
-        # apps = ['open -n -a "Google Chrome" --args --app=%s']
+        apps = ['open -n -a "Google Chrome" --args --app=%s']
     def launch():
         try:
             import webbrowser, time
@@ -118,6 +118,7 @@ def get_networks(arg):
     server.send_command("active_network", networkInterfaces['active'])
 
 def get_active_network(arg):
+    print networkInterfaces['active']
     server.send_command("active_network", networkInterfaces['active'])
 
 
