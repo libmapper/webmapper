@@ -41,7 +41,7 @@ function BalloonView(container, model)
 	this.ctY1 =  300;
 	
 	//Keyboard handlers
-	$(this._container).on('keydown.balloon', function(e){
+	$('body').on('keydown.balloon', function(e){
 		_self.keyboardHandler(e);
 	});
 	this.selectedConnections = [];
@@ -105,7 +105,7 @@ BalloonView.prototype = {
 	
 	keyboardHandler : function (e)
 	{
-		//console.log(e.which);
+		console.log(e.which);
 		
 		// 'delete' to remove a connection
 		if (e.which == 46 || e.which == 8)  // disconnect on 'delete'
@@ -126,6 +126,7 @@ BalloonView.prototype = {
 					}
 				}
 			}
+			$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
 			this.refreshSVG();
 		}
 		
@@ -133,7 +134,11 @@ BalloonView.prototype = {
 	
 	get_selected_connections: function (list)
 	{
-		var vals =[];
+		var vals = [];
+		var keys = this.model.selectedConnections.keys(); 
+		for(var i=0; i<keys.length; i++){
+			vals.push(this.model.connections.get(keys[i]));
+		}
 		return vals;
 	},
 	
@@ -699,12 +704,16 @@ BalloonView.prototype = {
 		else{
 			line.classList.add("balloonConnection_selected");
 			this.model.selectedConnections_addConnection(srcNode.signalName, dstNode.signalName);
-		}		
+		}	
+		
+		$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
+		
 	},
 
 	clearSelectedConnections : function ()
 	{
 		this.model.selectedConnections_clearAll();
+		$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
 		this.refreshSVG();
 	},
 	

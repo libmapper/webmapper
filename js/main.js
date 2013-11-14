@@ -521,6 +521,16 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
+    $("#container").on("disconnect", function(e, src, dst){
+    	command.send('disconnect', [src, dst]);
+    });
+    
+    $("#container").on("updateConnectionProperties", function(e){
+    	update_connection_properties();
+    });
+    
+    
+    
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
     	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
