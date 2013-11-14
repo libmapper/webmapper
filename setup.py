@@ -11,7 +11,7 @@ data_files = [('',['js']),
               ('',['images'])
               ]
 
-options = {'argv_emulation': False, 'iconfile': 'images/libmapper.icns'}
+options = {'argv_emulation': True, 'iconfile': 'images/libmapper.icns'}
 
 setup(name='WebMapper',
       version='0.2',
