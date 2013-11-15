@@ -376,7 +376,7 @@ BalloonView.prototype = {
 		var offset = (ind==0)? Math.PI/2 : - Math.PI/2;
 		
 		var childNodeRadius = this.calculateR(n, r, 1);
-		var childNodeRadiusPadded = childNodeRadius*0.9;	
+		var childNodeRadiusPadded = childNodeRadius*0.85;	
 		
 		
 		for(var i=0; i<n; i++)
@@ -388,9 +388,9 @@ BalloonView.prototype = {
 			var nAngle = i*angleInc + offset + angleInc/2;
 			if(n==1)
 				nAngle += Math.PI/2;
-			var x2 = ( (r-childNodeRadius) * Math.cos(nAngle) ) + x;
-			var y2 = ( (r-childNodeRadius) * Math.sin(nAngle) ) + y;
-			if(ind==0) y2 = ( -(r-childNodeRadius) * Math.sin(nAngle) ) + y;
+			var x2 = ( ((r-childNodeRadius) * 0.9) * Math.cos(nAngle) ) + x;
+			var y2 = ( ((r-childNodeRadius) * 0.9) * Math.sin(nAngle) ) + y;
+			if(ind==0) y2 = ( -((r-childNodeRadius) * 0.9) * Math.sin(nAngle) ) + y;
 			
 			childNode.svg = document.createElementNS(this.svgNS,"circle");
 			childNode.svg.setAttribute("cx", x2);						// x-position
