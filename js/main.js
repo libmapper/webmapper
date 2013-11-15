@@ -507,7 +507,9 @@ function main()
     $("#container").on("getSignalsByDevice", function(e, deviceName){
         command.send('get_signals_by_device_name', deviceName);
     });
-    
+    $("#container").on("get_links_or_connections_by_device_name", function(e, devName){
+    	command.send('tab', devName);	//FIX
+    });
     $("#container").on("link", function(e, src, dst){
         command.send('link', [src, dst]);
     });
@@ -528,7 +530,6 @@ function main()
     $("#container").on("updateConnectionProperties", function(e){
     	update_connection_properties();
     });
-    
     
     
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
