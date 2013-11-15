@@ -19,8 +19,8 @@
 	fill: #fff;
 }
 .BalloonCorner:hover{
-	fill: #ff0000;
-	opacity: 0.1;
+	fill: #000000;
+	opacity: 0.025;
 }
 
 #balloonTable_src, #balloonTable_dst, #BalloonSVG{
