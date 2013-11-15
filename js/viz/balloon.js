@@ -965,7 +965,16 @@ BalloonView.prototype = {
 			this.trees[i] = tree;
 		}
 		
-		// prep the data
+		// ensure all signals are loaded into the model
+		var keys = this.model.devices.keys();
+		for (var d in keys) 
+		{
+			var k = keys[d];
+			var dev = this.model.devices.get(k);
+			$(this._container).trigger("getSignalsByDevice", dev.name);
+			$(this._container).trigger("get_links_or_connections_by_device_name", dev.name);
+		}
+		
 		var keys = this.model.signals.keys();
 	    for (var i=0; i<keys.length; i++) 
 	    {
