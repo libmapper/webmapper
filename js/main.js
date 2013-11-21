@@ -1,30 +1,27 @@
 "use strict";
 var model = new LibMapperModel();
 
-var selectedTab;
+var view;						// holds the current view object
+var viewIndex;					// index of current view
+var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+
 
 var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
 var connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
 var connectionModeCommands = {"Byp": 'bypass',
-                          "Line": 'linear',
-                          "Calib": 'calibrate',
-                          "Expr": 'expression'};
+                          	  "Line": 'linear',
+                          	  "Calib": 'calibrate',
+                          	  "Expr": 'expression'};
 var boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
 var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
-                 "boundaryMute", "boundaryClamp", "boundaryWrap"];
+                     "boundaryMute", "boundaryClamp", "boundaryWrap"];
 
-//A global variable storing which display mode is currently in use
-var view;
-var viewIndex;					// to index into viewData 
-var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+window.saveLocation = '';		// Where the network will be saved
+window.onload = main;			// Kick things off
 
-
-//Where the network will be saved
-window.saveLocation = '';
-
-/* Kick things off. */
-window.onload = main;
-
+/**
+ * Called by the view selector to change the current view
+ */
 function switch_mode(newMode)
 {
 	if(view)
@@ -68,7 +65,7 @@ function switch_mode(newMode)
             //console.log(newMode);
     }
     
-    // load view settings if any
+    // load view settings (if any)
     if(viewData[viewIndex]){
 	    if(typeof view.load_view_settings == 'function')
 	    		view.load_view_settings(viewData[viewIndex]);
@@ -420,7 +417,6 @@ function main()
     add_container_elements();
     add_signal_control_bar();
     add_extra_tools();
-
     initMonitorCommands();
     initViewCommands();
     
