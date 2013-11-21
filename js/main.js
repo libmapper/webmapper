@@ -1,7 +1,7 @@
 "use strict";
 var model = new LibMapperModel();
 
-var all_devices = 'All Devices';
+var selectedTab;
 
 var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
 var connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
@@ -20,9 +20,8 @@ var viewData = new Array(3);	// data specific to the view, change 3 the number o
 
 
 //Where the network will be saved
-var saveLocation = '';
-var selectedTab;
 window.saveLocation = '';
+
 /* Kick things off. */
 window.onload = main;
 
@@ -89,13 +88,27 @@ function refresh_all()
 
 function update_save_location()
 {
-    if (selectedTab==all_devices) {
-        $('#saveButton, #loadButton').addClass('disabled');
-    }
-    else 
-        $('#saveButton, #loadButton').removeClass('disabled');
+	// get the save location
+	if(typeof view.get_save_location == 'function'){
+		window.saveLocation = view.get_save_location();
+	}else{
+		window.saveLocation = '';
+	}
+	
+	// update the save button's link
+	$('#saveButton').attr('href', window.saveLocation);
 
-    $('#saveButton').attr('href', window.saveLocation);
+	// if saving is not ready, disable the save button
+	if(window.saveLocation == '')	
+	{
+		$('#saveButton, #loadButton').addClass('disabled');
+	}
+	// if saving is ready, enable the save button
+	else
+	{
+		$('#saveButton, #loadButton').removeClass('disabled');
+	}
+    
 }
 
 function on_load()
@@ -190,9 +203,6 @@ function notify(msg)
 
 function update_connection_properties()
 {
-    if (selectedTab == all_devices)
-        return;
-
     var clear_props = function() {
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
@@ -395,7 +405,7 @@ var updateCallable = true;
 var updateTimeout;
 function update_display() {
     if(updateCallable == false) {
-        clearTimeout(updateTimeout)
+        clearTimeout(updateTimeout);
     }
     updateCallable = false;
     updateTimeout = setTimeout(function() {
@@ -498,8 +508,35 @@ function main()
         model.networkInterfaces.selected = args;
     });
     
-    // actions from VIEW
+    initViewListeners();
+    
+    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+    window.onresize = function (e) {
+    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+    	view.on_resize();
+    };
+    
+    // Delay starting polling, because it results in a spinning wait
+    // cursor in the browser.
+    setTimeout(
+        function(){
+        	switch_mode('list');
+            command.start();
+            command.send('get_networks');
+            command.send('all_devices');
+            command.send('all_signals');
+            command.send('all_links');
+            command.send('all_connections');
+            add_handlers();
+        }, 100);
 
+}
+
+/**
+ * initialize the event listerners on events triggered by the views
+ */
+function initViewListeners()
+{
     $("#container").on("tab", function(e, selectedTab){
     	command.send('tab', selectedTab);
     });
@@ -527,31 +564,17 @@ function main()
     	command.send('disconnect', [src, dst]);
     });
     
+    // asks the view for the selected connections and updates the edit bar
     $("#container").on("updateConnectionProperties", function(e){
     	update_connection_properties();
     });
     
+    // asks the view for the save button link (based on the active device) 
+    // currently implemented in List view only
+    $("#container").on("updateSaveLocation", function(e){
+    	update_save_location();
+    });
     
-    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    	view.on_resize();
-    };
-    
-    // Delay starting polling, because it results in a spinning wait
-    // cursor in the browser.
-    setTimeout(
-        function(){
-        	switch_mode('list');
-            command.start();
-            command.send('get_networks');
-            command.send('all_devices');
-            command.send('all_signals');
-            command.send('all_links');
-            command.send('all_connections');
-            add_handlers();
-        }, 100);
-
 }
 
 function add_container_elements()
