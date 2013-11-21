@@ -533,10 +533,12 @@ function main()
 }
 
 /**
- * initialize the event listerners on events triggered by the views
+ * initialize the event listeners for events triggered by the views
  */
 function initViewListeners()
 {
+	// from list view
+	// requests links and connections from the selected source device (the selectedTab)
     $("#container").on("tab", function(e, selectedTab){
     	command.send('tab', selectedTab);
     });
@@ -547,21 +549,34 @@ function initViewListeners()
     $("#container").on("get_links_or_connections_by_device_name", function(e, devName){
     	command.send('tab', devName);	//FIX
     });
+    
+    // link command
+    // src = "/devicename"
+    // dst = "/devicename"
     $("#container").on("link", function(e, src, dst){
         command.send('link', [src, dst]);
+        console.log(src, dst);
     });
+    
+    // unlink command
+    // src = "/devicename"
+    // dst = "/devicename"
     $("#container").on("unlink", function(e, src, dst){
         command.send('unlink', [src, dst]);
     });
-    $("#container").on("connect", function(e, src, dst){
-        command.send('connect', [src, dst]);
-    });
-    $("#container").on("disconnect", function(e, src, dst){
-        command.send('disconnect', [src, dst]);
+    
+    // connect command
+    // src = "/devicename/signalname"
+    // dst = "/devicename/signalname"
+    $("#container").on("connect", function(e, src, dst, args){
+        command.send('connect', [src, dst, args]);
     });
     
+    // disconnect command
+    // src = "/devicename/signalname"
+    // dst = "/devicename/signalname"
     $("#container").on("disconnect", function(e, src, dst){
-    	command.send('disconnect', [src, dst]);
+        command.send('disconnect', [src, dst]);
     });
     
     // asks the view for the selected connections and updates the edit bar
@@ -618,8 +633,8 @@ function add_signal_control_bar()
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input><input>");
     $('.range').children('input').each( function(i) {
-        var minOrMax = 'Max'   // A variable storing minimum or maximum
-        var srcOrDest = 'Src'
+        var minOrMax = 'Max';   // A variable storing minimum or maximum
+        var srcOrDest = 'Src';
         if(i%2==0)  minOrMax = 'Min';
         if(i>1)     srcOrDest = 'Dest';
         $(this).attr({
@@ -680,7 +695,7 @@ function network_selection()
                 cleanup();
             });
 
-            $('body').on('click.networkSelect', function(e) {cleanup()} );
+            $('body').on('click.networkSelect', function(e) {cleanup();} );
         });
     }
 

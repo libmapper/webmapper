@@ -76,6 +76,7 @@ function listView(model)
     this.get_save_location = function ()
     {
     	 if (selectedTab == all_devices){
+    		 // nothing to save if in the devices tab
     		 return '';
     	 } 
     	 else{
@@ -618,7 +619,8 @@ function listView(model)
 	
 	    $('#svgTop').text('hide unconnected');
 	    $('#leftSearch, #rightSearch').val('');
-	    command.send('tab', selectedTab);
+	    
+	    $('#container').trigger("tab", selectedTab);
 	    view.update_display();
 	}
 	
@@ -656,7 +658,7 @@ function listView(model)
 	        lastSelectedTr.right = tr;
 	
 	    selectLists[selectedTab][i] = l;
-	    update_connection_properties();
+	    $('#container').trigger("updateConnectionProperties");
 	}
 	
 	//For selecting multiple rows with the 'shift' key
@@ -693,7 +695,7 @@ function listView(model)
 	    lastSelectedTr.left = null;
 	    lastSelectedTr.right = null;
 	    update_arrows();
-	    update_connection_properties();
+	    $('#container').trigger("updateConnectionProperties");
 	}
 	
 	function select_all()
@@ -736,8 +738,7 @@ function listView(model)
 	function on_link(e)
 	{
 	    function do_link(l, r) {
-	        command.send('link', [l.firstChild.innerHTML,
-	                              r.firstChild.innerHTML]);
+	        $('#container').trigger("link", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
 	    }
 	    apply_selected_pairs(do_link);
 	    e.stopPropagation();
@@ -746,8 +747,7 @@ function listView(model)
 	function on_unlink(e)
 	{
 	    function do_unlink(l, r) {
-	        command.send('unlink', [l.firstChild.innerHTML,
-	                                r.firstChild.innerHTML]);
+	    	$('#container').trigger("unlink", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
 	    }
 	    apply_selected_pairs(do_unlink);
 	    e.stopPropagation();
@@ -761,7 +761,7 @@ function listView(model)
 	    function do_connect(l, r) {
 	        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
 	        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
-	        command.send('connect', [sig1, sig2, args]);
+	        $('#container').trigger("connect", [sig1, sig2, args]);
 	    }
 	    apply_selected_pairs(do_connect);
 	    e.stopPropagation();
@@ -772,7 +772,7 @@ function listView(model)
 	    function do_disconnect(l, r) {
 	        var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
 	        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
-	        command.send('disconnect', [sig1, sig2]);
+	        $('#container').trigger("disconnect", [sig1, sig2]);
 	    }
 	    apply_selected_pairs(do_disconnect);
 	    e.stopPropagation();
@@ -985,7 +985,7 @@ function listView(model)
 	    var path = [ ["M", start[0], start[1]], ["C"]];
 	
 	    // x-coordinate of both control points
-	    path[1][1] = path[1][3] = (end[0] + start[0]) / 2
+	    path[1][1] = path[1][3] = (end[0] + start[0]) / 2;
 	    // y-coordinate of first control point
 	    path[1][2] = start[1];
 	    // y-coordinate of second control point
