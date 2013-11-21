@@ -1096,7 +1096,7 @@ function listView(model)
 	            else
 	                on_connect(e);
 	        }
-	        else if (e.which == 8) { // disconnect on 'delete'
+	        else if (e.which == 8 || e.which == 46) { // disconnect on 'delete'
 	            //Prevent the browser from going back a page
 	            //but NOT if you're focus is an input and deleting text
 	            if( !$(':focus').is('input') ) {

@@ -421,6 +421,38 @@ function main()
     add_signal_control_bar();
     add_extra_tools();
 
+    initMonitorCommands();
+    initViewCommands();
+    
+    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+    window.onresize = function (e) {
+    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+    	view.on_resize();
+    };
+    
+    // Delay starting polling, because it results in a spinning wait
+    // cursor in the browser.
+    setTimeout(
+        function(){
+        	switch_mode('list');
+            command.start();
+            command.send('get_networks');
+            command.send('all_devices');
+            command.send('all_signals');
+            command.send('all_links');
+            command.send('all_connections');
+            add_handlers();
+        }, 100);
+
+}
+
+
+
+/**
+ * initialize the event listeners for events triggered by the views
+ */
+function initMonitorCommands()
+{
     command.register("all_devices", function(cmd, args) {
         for (var d in args)
             model.devices.add(args[d].name, args[d]);
@@ -447,7 +479,7 @@ function main()
         model.devices.add(args.name, args);
         command.send('get_signals_by_device_name', args.name);
         update_display();
-    })
+    });
     command.register("all_signals", function(cmd, args) {
         for (var d in args)
             model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
@@ -474,7 +506,6 @@ function main()
         model.links.remove(args.src_name+'>' + args.dest_name);
         update_display();
     });
-
     command.register("all_connections", function(cmd, args) {
         for (var d in args)
             model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
@@ -498,44 +529,20 @@ function main()
         update_display();
         update_connection_properties_for(args, conns);
     });
-
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
         refresh_all();
     });
-
     command.register("active_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
     });
-    
-    initViewListeners();
-    
-    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    	view.on_resize();
-    };
-    
-    // Delay starting polling, because it results in a spinning wait
-    // cursor in the browser.
-    setTimeout(
-        function(){
-        	switch_mode('list');
-            command.start();
-            command.send('get_networks');
-            command.send('all_devices');
-            command.send('all_signals');
-            command.send('all_links');
-            command.send('all_connections');
-            add_handlers();
-        }, 100);
-
 }
+
 
 /**
  * initialize the event listeners for events triggered by the views
  */
-function initViewListeners()
+function initViewCommands()
 {
 	// from list view
 	// requests links and connections from the selected source device (the selectedTab)
