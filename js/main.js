@@ -546,11 +546,16 @@ function initViewCommands()
     	command.send('tab', selectedTab);
     });
     
+    // request list of signals from the monitor for a specific device
+    // deviceName = "/devicename"
     $("#container").on("getSignalsByDevice", function(e, deviceName){
         command.send('get_signals_by_device_name', deviceName);
     });
-    $("#container").on("get_links_or_connections_by_device_name", function(e, devName){
-    	command.send('tab', devName);	//FIX
+    
+    // request links and connections from monitor from a specific device
+    // deviceName = "/devicename"
+    $("#container").on("get_links_or_connections_by_device_name", function(e, deviceName){
+    	command.send('tab', deviceName);	//FIX
     });
     
     // link command
