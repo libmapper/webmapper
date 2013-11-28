@@ -582,17 +582,29 @@ function listView(model)
 	
 	    //TODO move this with all the other UI handlers
 	    $(line.border.node).on('click', function(e) {
-	        //So that the arrow is deselected if both rows are selected
-	        if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
+	        
+	    	var src = $(left).children('.name').text(); 
+	    	var dst = $(right).children('.name').text();
+	    	
+	    	
+	    	//So that the arrow is deselected if both rows are selected
+	    	// selected, so deselect it
+	    	if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
 	            select_tr(left);
 	            select_tr(right);
+	            if(selectedTab != all_devices)
+	            	model.selectedConnections_removeConnection(src, dst);
 	        }
+	        
+	        // not selected, so select it
 	        else {
 	            if( ! $(left).hasClass('trsel') )
 	                select_tr(left);
 	            if( ! $(right).hasClass('trsel') )
 	                select_tr(right);
 	            line.node.classList.add('selected');
+	            if(selectedTab != all_devices)
+	            	model.selectedConnections_addConnection(src, dst);
 	        }
 	        e.stopPropagation();
 	    });

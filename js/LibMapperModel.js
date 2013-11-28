@@ -20,6 +20,7 @@ LibMapperModel.prototype = {
 		{
 			var key = src + ">" + dst;
 			var conn = this.connections.get(key);
+			console.log(key);
 			if(conn){
 				if(!this.selectedConnections.get(key)){
 					this.selectedConnections.add(key, conn);

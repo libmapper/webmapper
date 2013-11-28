@@ -12,8 +12,6 @@ window.onload = init;			// Kick things off
 /* The main program. */
 function init()
 {
-
-	
 	$('body').append("<div id='topMenuWrapper'></div>");	// add the top menu wrapper
     $('body').append("<div id='container'></div>");			// add the view wrapper
     $('body').attr('oncontextmenu',"return false;");		// ?
