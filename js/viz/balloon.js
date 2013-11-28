@@ -515,7 +515,8 @@ BalloonView.prototype = {
 		});
 		line.addEventListener("mouseout", function(evt){
 			var displayLine = $(this).data("displayObject");
-			displayLine.classList.remove("balloonConnection_over");
+			if(displayLine)
+				displayLine.classList.remove("balloonConnection_over");
 		});
 		line.addEventListener("click", function(evt){
 			evt.stopPropagation();
