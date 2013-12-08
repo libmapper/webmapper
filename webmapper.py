@@ -3,8 +3,11 @@
 import webmapper_http_server as server
 import mapper
 import mapperstorage
-import sys, os, os.path, threading, json, re
+import netifaces # a library to find available network interfaces
+import sys, os, os.path, threading, json, re, pdb
 from random import randint
+
+networkInterfaces = {'active': '', 'available': []}   
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -82,7 +85,8 @@ def set_connection(con):
 def on_refresh(arg):
     global monitor
     del monitor
-    monitor = mapper.monitor(autorequest=0)
+    admin = mapper.admin(networkInterfaces['active'])
+    monitor = mapper.monitor(admin, autorequest=0)
     init_monitor()
 
 def on_save(arg):
@@ -93,7 +97,30 @@ def on_save(arg):
     return fn, mapperstorage.serialise(monitor, arg['dev'])
 
 def on_load(mapping_json, devices):
+    # pdb.set_trace()
     mapperstorage.deserialise(monitor, mapping_json, devices)
+
+def select_network(newNetwork):
+    # print 'select_network', newNetwork
+    networkInterfaces['active'] = newNetwork
+    server.send_command('set_network', newNetwork)
+
+def get_networks(arg):
+    location = netifaces.AF_INET    # A computer specific integer for internet addresses
+    totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
+    connectedInterfaces = []
+    for i in totalInterfaces:
+        addrs = netifaces.ifaddresses(i)
+        if location in addrs:       # Test to see if the interface is actually connected
+            connectedInterfaces.append(i)
+    server.send_command("available_networks", connectedInterfaces)
+    networkInterfaces['available'] = connectedInterfaces
+    server.send_command("active_network", networkInterfaces['active'])
+
+def get_active_network(arg):
+    print networkInterfaces['active']
+    server.send_command("active_network", networkInterfaces['active'])
+
 
 def init_monitor():
     monitor.db.add_device_callback(on_device)
@@ -142,6 +169,15 @@ def select_tab(src_dev):
         sync_device(src_dev, 1)
         monitor.request_connections_by_src_device_name(src_dev)
 
+def new_connection(args):
+    source = str(args[0])
+    dest = str(args[1])
+    options = {}
+    if( len(args) > 2 ): # See if the connection message has been supplied with options
+        if( type(args[2]) is dict ): # Make sure they are the proper format
+            options = args[2]  
+    monitor.connect(source, dest, options)
+
 server.add_command_handler("tab", lambda x: select_tab(x))
 
 server.add_command_handler("get_signals_by_device_name", lambda x: get_signals_by_device_name(x))
@@ -167,8 +203,7 @@ server.add_command_handler("link",
 server.add_command_handler("unlink",
                            lambda x: monitor.unlink(*map(str,x)))
 
-server.add_command_handler("connect",
-                           lambda x: monitor.connect(*map(str,x)))
+server.add_command_handler("connect", lambda x: new_connection(x))
 
 server.add_command_handler("disconnect",
                            lambda x: monitor.disconnect(*map(str,x)))
@@ -177,6 +212,17 @@ server.add_command_handler("refresh", on_refresh)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
+
+server.add_command_handler("select_network", select_network)
+server.add_command_handler("get_networks", get_networks)
+
+get_networks(False)
+if ( 'en1' in networkInterfaces['available'] ) :
+    networkInterfaces['active'] = 'en1'
+elif ( 'en0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'en0'
+elif ( 'lo0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'lo0'
 
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
@@ -188,5 +234,8 @@ on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
 
+
+
 server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)
+

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>LibMapper Hive Plot</title>
+
+<script type="text/javascript" src="../js/util.js"></script>
+<script type="text/javascript" src="../js/LibMapperModel.js"></script>
+<script type="text/javascript" src="../includes/jquery-2.0.3.min.js"></script><!-- JQuery -->
+<script type="text/javascript" src="../js/viz/hive.js"></script>
+<link rel="stylesheet" type="text/css" href="../js/viz/hive/HivePlot_style.css" />
+
+<style type="text/css">
+body{ font-family: helvetica, arial, sans-serif; margin: 0; padding: 0}
+
+
+#logoWrapper button{
+font-size: 12px;
+border-radius: 3px; 
+-moz-border-radius: 3px; 
+-webkit-border-radius: 3px; 
+border: 0px solid #eeeeee;
+background: #ccc;
+padding: 6px 8px;
+color: #fff;
+}
+#logoWrapper button:hover {
+	background-color: #EEE8AA;
+}
+#logoWrapper button:active{
+	background-color: #FFFFF0;
+}
+</style>
+<script><!--
+
+var nSrcDevices = 0;
+var nDstDevices = 0;
+
+var model, view;
+
+function init(){
+
+	$('#container').empty();
+	
+	$('#container').css('height', ($(window).height() - 40) + 'px' );
+    window.onresize = function (e) {
+    	$('#container').css('height', ($(window).height() - 40) + 'px' );
+    	view.on_resize();
+    };
+	
+	model = new LibMapperModel();
+    model.pathToImages = "../" + model.pathToImages;
+	view  = new  HivePlotView(document.getElementById("container"), model);
+	view.on_resize();
+
+	// controller (from view)  
+    $("#container").on("link", function(e, src, dst){
+        link(src, dst);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+        unlink(src, dst);
+    });
+    $("#container").on("connect", function(e, src, dst){
+        connect(src, dst);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+        disconnect(src, dst);
+    });
+	
+    var nsrc = Math.floor(Math.random()*8) + 2;
+    var ndst = Math.floor(Math.random()*8) + 2;
+	initData(nsrc, ndst, 4);
+	view.update_display();
+}
+
+// init with fake data for now
+function initData(nIn, nOut, nSigs)
+{
+	for(var i=0; i<nIn;i++)
+		addDevice("/Source " + nSrcDevices++, 0, nSigs);
+	for(var i=0; i<nOut;i++)
+		addDevice("/Destination " + nDstDevices++, nSigs, 0);
+	
+	// connect everything
+	for(var i=0; i<nSrcDevices; i++){
+		for(var j=0; j<nDstDevices; j++){
+			link("/Source " + i, "/Destination " + j);
+			
+			for(var k=0; k<nSigs; k+=1){
+				for(var l=0; l<nSigs; l+=3, k+=1){
+					var rand = Math.random() * 10;
+					if(rand<2){
+						connect("/Source " + i + "/Signal" + k, "/Destination " + j + "/Signal" + l);
+						k+=3;
+					}
+				}
+			}
+		}
+	}
+}
+
+function link(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	model.links.add(key, args);
+	view.update_display();
+}
+function unlink(src, dst){
+	var key = src + ">" + dst;
+	model.links.remove(key);
+	view.update_display();
+}
+function connect(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	args.bound_min = 0;
+	args.dest_length = 1;
+	args.src_length = 1;
+	args.bound_max = 0;
+	args.muted = 0;
+	args.range = [0.0, 10.0, 0.0, 1.0];
+	args.mode = 2;
+	args.src_type = 'f';
+	args.dest_type = 'f';
+	args.expression = 'y=x';
+	model.connections.add(key, args);	
+}
+function disconnect(src, dst){
+	var key = src + ">" + dst;
+	model.connections.remove(key);
+	view.update_display();
+}
+
+function addDevice(name, nIn, nOut)
+{
+/*
+	var args = new Array();
+	args['name'] = name;
+	args['n_inputs'] = 2;
+	args['n_outputs'] = 0;
+	var device = model.new_device(args);
+*/
+	var args = new Object();
+	args.name = name;
+	args.n_inputs = nIn;
+	args.n_outputs = nOut;
+	model.devices.add(name, args);
+
+	for(var j=0; j<nIn;j++)
+		addDevSignal("/Signal" + j, name);	
+	for(var j=0; j<nOut;j++)
+		addDevSignal("/Signal" + j, name);	
+}
+
+function addDevSignal(name, device_name)
+{
+	/*
+	var args = new Array(); 
+	args['device_name'] = device_name;
+	args['name'] = name;
+	var signal = model.new_signal(args);
+	*/
+	var args = new Object(); 
+	args.device_name = device_name;
+	args.name = name;
+	model.signals.add(device_name+name, args);
+
+}
+
+function btnHandler(val)
+{
+		if(val=="dst"){
+			addDevice("/Destination " + nDstDevices++, 2, 0);
+		}else if(val=="src"){
+			addDevice("/Source " + nSrcDevices++, 0, 2);		
+		}else if(val=="init"){
+			initData(1,1,3);		
+		}
+		view.update_display();
+}
+
+--></script>
+
+</head>
+
+<body onload="init()">
+<div style="margin: 0 auto; class: topMenu">
+	<table id='logoWrapper' width="100%">
+	<tr width="100%">
+		<td width="40%" align="left">
+			<img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
+					style="vertical-align: middle; position:relative; top: -3px" />
+			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper (Hive Demo)</span>
+		</td>
+		<td align="right">
+			<button onclick="btnHandler('src')">Add Source Device</button>
+			<button onclick="btnHandler('dst')">Add Destination Device</button>
+			<!-- <button onclick="btnHandler('init')">Add 1x1 Devices and Connect</button>-->
+		</td>
+	</table>
+</div> 
+
+	<div id="container">
+
+
+</div>
+
+</body>
+</html>

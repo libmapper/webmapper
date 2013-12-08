@@ -23,6 +23,7 @@ function GridView(container, model)
 	
 	this.init();
 	this.setActiveGrid(this.activeGridIndex);
+	this.filters = [ ["",""] , ["", ""]];
 
 	//Keyboard handlers
 	document.onkeydown = function(e){
@@ -257,6 +258,10 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.toggleLink(e, cell);
 		});
+		$("#devGrid").on("filterChanged", function(e, filters){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.filters[0] = filters;
+		});
 
 		
 		$("#sigGrid").on("connect", function(e, cell){
@@ -271,6 +276,11 @@ GridView.prototype = {
 			e.stopPropagation();	//prevents bubbling to main.js
 			_self.toggleConnection(e, cell);
 		});
+		$("#sigGrid").on("filterChanged", function(e, filters){
+			e.stopPropagation();	//prevents bubbling to main.js
+			_self.filters[1] = filters;
+		});
+
 
 		
 		$("#devGrid").on("updateConnectionProperties", function(e){
@@ -604,23 +614,9 @@ GridView.prototype = {
 	updateDevicesGrid : function(){
 
 		//divide devices into sources and destinations
-		var srcDevs = new Array();
-		var dstDevs = new Array();
-		
-		var keys = this.model.devices.keys();
-		for (var d in keys) 
-		{
-			var k = keys[d];
-			var dev = this.model.devices.get(k);
-			
-			if (dev.n_outputs)
-				srcDevs.push(dev);
-			if (dev.n_inputs)
-				dstDevs.push(dev);
-		}
+		var devs = this.model.getDevices();
 		
 		// add links
-		
 		var links = new Array();
 		var l = this.model.links.keys();
 		for (var i=0; i<l.length; i++)			
@@ -630,7 +626,7 @@ GridView.prototype = {
 			links.push([src,dst]);
 		}
 		
-		this.devGrid.updateDisplayData(srcDevs, dstDevs, links);
+		this.devGrid.updateDisplayData(devs[0], devs[1], links);
 		this.devGrid.refresh();
 		
 	},
@@ -682,12 +678,14 @@ GridView.prototype = {
 	
 	calculateSizes : function ()
 	{
-		var w = $(this._container).width();
+		var w = $(this._container).width() -2;
+		document.getElementById("actionBar").style.width = (w-12) + "px";
 		
 		if(this.viewMode == 0)
 			w = Math.floor(w/2);
 		
-		var h = $(this._container).height() - $("#actionBar").height() - $(".topMenu").height() - 2;
+		var h = $(this._container).height() - $("#actionBar").height() - $("#logoWrapper").height() - 2;
+		
 		
 		document.getElementById("devGrid").style.width = w + "px";
 		document.getElementById("devGrid").style.height = h + "px";
@@ -781,7 +779,7 @@ GridView.prototype = {
 	
 	cleanup : function ()
 	{
-		
+		document.onkeydown = null;
 	}
 	
 };
@@ -792,19 +790,3 @@ function GridViewPreset(name, includedSrcs, includedDsts)
 	this.includedSrcs = includedSrcs;
 	this.includedDsts = includedDsts;
 };
-
-
-
-function arrPushIfUnique(item, arr){
-	if(arrIsUnique(item, arr))
-		arr.push(item);
-}
-
-function arrIsUnique(item, arr){
-	for(var i=0; i<arr.length; i++){
-		if(arr[i] == item)
-			return false;
-	}	
-	return true;
-}
-

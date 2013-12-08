@@ -14,9 +14,12 @@ GridSignals.prototype.refresh = function ()
 	this.nRows = 0;
 	this.nCols = 0;
 
-	this.contentDim[0] = this.colsArray.length*(this.cellDim[0]+this.cellMargin);
-	this.contentDim[1] = this.rowsArray.length*(this.cellDim[1]+this.cellMargin);
+	this.contentDim[0] = this.filteredData[0].length*(this.cellDim[0]+this.cellMargin);
+	this.contentDim[1] = this.filteredData[1].length*(this.cellDim[1]+this.cellMargin);
 
+	this.filteredData[0].sort(this.compareLabel);
+	this.filteredData[1].sort(this.compareLabel);
+	
 	// when autozoom is on, strech to fit into canvas
 	// must be done first to set the font size
 	if(this.autoZoom && this.contentDim[0] > 0 && this.contentDim[1] > 0)
@@ -41,9 +44,9 @@ GridSignals.prototype.refresh = function ()
 	
 	
 	// create column labels
-	for (var index=0; index< this.colsArray.length; index++)
+	for (var index=0; index< this.filteredData[0].length; index++)
 	{
-		var dev = this.colsArray[index];
+		var dev = this.filteredData[0][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
@@ -64,7 +67,16 @@ GridSignals.prototype.refresh = function ()
 		label.setAttribute("class", "label");
 		label.setAttribute("text-anchor", "end");
 		
-		label.appendChild(document.createTextNode(name)); 	
+		// pad slashes in namespace to make label easier to read
+		var patt = /\//g;
+		var nameFormatted = name.replace(patt, " / ");
+		
+		// tooltip for long names
+		var tooltip = document.createElementNS(this.svgNS,"title");
+		tooltip.textContent = nameFormatted;
+		label.appendChild(tooltip); 	
+		
+		label.appendChild(document.createTextNode(nameFormatted)); 	
 		this.svgColLabels.appendChild(label);
 
 		var xPos = ((this.nCols)*(this.cellDim[0]+this.cellMargin) + Math.floor(this.cellDim[0]/2) - 1 ); // I don't know why -1 .... getBBox() doesn't really work well 
@@ -75,9 +87,9 @@ GridSignals.prototype.refresh = function ()
 	}
 	
 	// create row labels
-	for (var index=0; index< this.rowsArray.length; index++)
+	for (var index=0; index< this.filteredData[1].length; index++)
 	{	
-		var dev = this.rowsArray[index];
+		var dev = this.filteredData[1][index];
 		var label = document.createElementNS(this.svgNS,"text");
 		
 		var name = dev.name;
@@ -98,7 +110,17 @@ GridSignals.prototype.refresh = function ()
 		label.setAttribute("class","label");
 		label.setAttribute("text-anchor", "end");
 		
-		label.appendChild(document.createTextNode(name));	
+		// pad slashes in namespace to make label easier to read
+		var patt = /\//g;
+		var nameFormatted = name.replace(patt, " / ");
+		
+		// tooltip for long names
+		var tooltip = document.createElementNS(this.svgNS,"title");
+		tooltip.textContent = nameFormatted;
+		label.appendChild(tooltip); 	
+
+		
+		label.appendChild(document.createTextNode(nameFormatted.toString()));	
 		this.svgRowLabels.appendChild(label);
 		
 		label.setAttribute("x", this.rowLabelsW);
@@ -180,5 +202,31 @@ GridSignals.prototype.refresh = function ()
 
 	this.updateViewBoxes();
 	this.updateZoomBars();
+};
+
+GridSignals.prototype.filterData = function ()
+{
+	this.filteredData = [[],[]];
+	for(var ind=0; ind<2; ind++)
+	{
+		var filterText = this.filters[ind];
+		var regExp = new RegExp(filterText, 'i');
+		
+		for(var i=0; i<this.data[ind].length; i++)
+		{
+			var sig = this.data[ind][i];
+			if( regExp.test(sig.name) || regExp.test(sig.device_name)) { 
+				this.filteredData[ind].push(sig);
+			}
+		}
+	}
+};
+
+//functions used for sorting alphabetically
+GridSignals.prototype.compareLabel = function (devA, devB) 
+{
+	var a = devA.device_name.toUpperCase() + devA.name.toUpperCase();
+	var b = devB.device_name.toUpperCase() + devB.name.toUpperCase();
+	return a.localeCompare(b);
 };
 

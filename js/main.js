@@ -49,8 +49,21 @@ function switch_mode(newMode)
         case 'grid':
         	view = new GridView(document.getElementById('container'), model);
         	viewIndex = 1;
-            $('#saveLoadDiv').removeClass('disabled');
+        	$('#saveLoadDiv').removeClass('disabled');
         	view.update_display();
+        	break;
+        case 'hive':
+        	view = new HivePlotView(document.getElementById('container'), model);
+        	viewIndex = 2;
+        	view.on_resize();
+        	break;
+        case 'balloon':
+        	view = new BalloonView(document.getElementById('container'), model);
+        	viewIndex = 3;
+            view.init();
+            if(viewData[viewIndex])
+      	    	view.load_view_settings(viewData[viewIndex]);
+            view.update_display();
         	break;
         default:
             //console.log(newMode);
@@ -72,6 +85,7 @@ function refresh_all()
     view.update_display();
     command.send('refresh');
 }
+
 
 function update_save_location()
 {
@@ -357,8 +371,10 @@ function on_boundary(e)
     e.stopPropagation();
 }
 
-function on_mute(conns)
+function mute_selected()
 {
+    var conns = view.get_selected_connections(model.connections);
+
     for ( var i in conns ) {
         var args = conns[i];
         if ( args.muted == 0 ) {
@@ -375,10 +391,21 @@ function on_mute(conns)
     }
 }
 
+var updateCallable = true;
+var updateTimeout;
+function update_display() {
+    if(updateCallable == false) {
+        clearTimeout(updateTimeout)
+    }
+    updateCallable = false;
+    updateTimeout = setTimeout(function() {
+        view.update_display();
+    });
+}
+
 /* The main program. */
 function main()
 {
-
     //Create the page elements
     add_container_elements();
     add_signal_control_bar();
@@ -387,65 +414,88 @@ function main()
     command.register("all_devices", function(cmd, args) {
         for (var d in args)
             model.devices.add(args[d].name, args[d]);
-        view.update_display();
+        update_display();
     });
     command.register("new_device", function(cmd, args) {
         model.devices.add(args.name, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_device", function(cmd, args) {
         model.devices.remove(args.name);
-        view.update_display();
+        update_display();
     });
+    command.register("mod_device", function(cmd, args) {
+        // Remove original device
+        model.devices.remove(args.name);
+        // Remove all child signals before syncing
+        // var sigs = model.signals.keys();
+        // for (var i in sigs ) {
+        //     if ( sigs[i].search(args.name) == 0 ) {
+        //         model.signals.remove(sigs[i]);
+        //     }
+        // }
+        model.devices.add(args.name, args);
+        command.send('get_signals_by_device_name', args.name);
+        update_display();
+    })
     command.register("all_signals", function(cmd, args) {
         for (var d in args)
             model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
-        view.update_display();
+        update_display();
     });
     command.register("new_signal", function(cmd, args) {
         model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_signal", function(cmd, args) {
         model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
-        view.update_display();
+        update_display();
     });
     command.register("all_links", function(cmd, args) {
         for (var l in args)
             model.links.add(args[l].src_name + '>' + args[l].dest_name, args[l]);
-        view.update_display();
+        update_display();
     });
     command.register("new_link", function(cmd, args) {
         model.links.add(args.src_name+'>'+args.dest_name, args);
-        view.update_display();
+        update_display();
     });
     command.register("del_link", function(cmd, args) {
         model.links.remove(args.src_name+'>' + args.dest_name);
-        view.update_display();
+        update_display();
     });
 
     command.register("all_connections", function(cmd, args) {
         for (var d in args)
             model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
-        view.update_display();
+        update_display();
         for (var d in args)
             update_connection_properties_for(args[d], view.get_selected_connections(model.connections));
     });
     command.register("new_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, view.get_selected_connections(model.connections));
     });
     command.register("mod_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, view.get_selected_connections(model.connections));
     });
     command.register("del_connection", function(cmd, args) {
         var conns = view.get_selected_connections(model.connections);
         model.connections.remove(args.src_name+'>'+args.dest_name);
-        view.update_display();
+        update_display();
         update_connection_properties_for(args, conns);
+    });
+
+    command.register("set_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
+        refresh_all();
+    });
+
+    command.register("active_network", function(cmd, args) {
+        model.networkInterfaces.selected = args;
     });
     
     // actions from VIEW
@@ -457,7 +507,9 @@ function main()
     $("#container").on("getSignalsByDevice", function(e, deviceName){
         command.send('get_signals_by_device_name', deviceName);
     });
-    
+    $("#container").on("get_links_or_connections_by_device_name", function(e, devName){
+    	command.send('tab', devName);	//FIX
+    });
     $("#container").on("link", function(e, src, dst){
         command.send('link', [src, dst]);
     });
@@ -471,9 +523,18 @@ function main()
         command.send('disconnect', [src, dst]);
     });
     
-    $('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    $("#container").on("disconnect", function(e, src, dst){
+    	command.send('disconnect', [src, dst]);
+    });
+    
+    $("#container").on("updateConnectionProperties", function(e){
+    	update_connection_properties();
+    });
+    
+    
+    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + $('.topMenu').css('height') +')' );
+    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     	view.on_resize();
     };
     
@@ -483,33 +544,38 @@ function main()
         function(){
         	switch_mode('list');
             command.start();
+            command.send('get_networks');
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
             command.send('all_connections');
             add_handlers();
-        },
-        100);
+        }, 100);
+
 }
 
 function add_container_elements()
 {
     $('body').append(
-    	"<table id='logoWrapper'><tr><td width='60px'><img alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'></td>"+
-        "<td>" +
-	        "<ul class='topMenu'>"+
+	        "<div class='topMenu'>"+
+                "<div id='logoWrapper'>"+
+                    "<img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'>"+
+                "</div>"+
 	            "<div id='saveLoadDiv'>"+
 	                "<li><a id='loadButton'>Load</a></li>"+
 	                "<li><a id='saveButton'>Save</a></li>"+
 	            "</div>"+
-	            "<select id='modeSelection'>"+
-	                "<option value='none'>None</option>"+
+	            "<div><select id='modeSelection'>"+
 	                "<option value='list' selected>List</option>"+
 	                "<option value='grid'>Grid</option>"+
-	            "</select>"+
-	    "</ul></tr></table>"+
+	                "<option value='hive'>Hive</option>"+
+	                "<option value='balloon'>Balloon</option>"+
+	            "</select></div>"+
+	    "</div>"+
 	    "<div id='container'></div>"
     );
+
+    $('body').attr('oncontextmenu',"return false;");
 }
 
 function add_signal_control_bar() 
@@ -555,6 +621,54 @@ function add_extra_tools()
         "<div id='refresh' class='extratools'>");
 }
 
+
+function network_selection()
+{
+    var menuOpen = false; // A variable storing the state of network selection
+
+    $('body').on('mousedown', function(e) {
+        if(e.which == 3) {              // A right click
+            if(menuOpen) cleanup();     // Removes the menu and handlers if already open (multiple right clicks)
+            select_network(e);
+        }
+    });
+
+    function select_network(clickEvent) {
+        command.send('get_networks');
+        command.register('available_networks', function(cmd, args){
+            model.networkInterfaces.available = args;
+            $(  "<div id='networkMenu'>"+
+                    "<table>"+
+                        "Current Network: "+model.networkInterfaces.selected+
+                        "<thead><th>Available Networks</th></thead>"+
+                        "<tbody></tbody>"+
+                    "</table></div>"
+                ).insertAfter('#container');
+            $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
+            menuOpen = true;
+
+            for (var i in model.networkInterfaces.available ) {
+                $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
+            }
+
+            $('#networkMenu td').on('click.networkSelect', function(e) {
+                e.stopPropagation();
+                command.send('select_network', $(this).text() );
+                cleanup();
+            });
+
+            $('body').on('click.networkSelect', function(e) {cleanup()} );
+        });
+    }
+
+    function cleanup() {
+        $('#networkMenu').fadeOut(100).remove();
+        $('*').off('.networkSelect');
+        menuOpen = false;
+        command.unregister('available_networks');
+    }
+}
+
 /**
  * handlers for items in the top menu 
  */
@@ -596,17 +710,24 @@ function add_handlers()
         on_boundary(e);
     });
 
-    $(document).keydown( function(e) {
-        if( e.which == 77 ) { // mute on 'm'
-            var conns = view.get_selected_connections(model.connections);
-            if ( conns ) 
-                on_mute(conns);
-        }
+    $('body').on('keydown', function(e) {
+        if( e.which == 77 ) mute_selected();
     });
 
     $('#refresh').on('click', function(e) { 
+        $(this).css({'-webkit-animation': 'refreshSpin 1s'});
         refresh_all(); 
+        setTimeout(function(){
+            $('#refresh').css({'-webkit-animation': ''});
+        }, 1000);
     });
+
+    $(document).on('keydown', function(e){
+        if(e.which == 8  && !$(':focus').is('input')) // 'delete' key, don't want the browser to go back in history
+        	console.log("balloon.js");
+    });
+
+    network_selection();
 
 }
 

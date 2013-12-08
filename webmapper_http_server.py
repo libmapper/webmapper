@@ -280,23 +280,24 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 # There ought to be a more elegant way to do this
 def handler_page(out, args):
-    print >>out, """<html>
+    print >>out, """<!DOCTYPE html>
+<html>
 <head>
 <title>mapperGUI</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
-<script type="text/javascript" src="js/jquery.min.js"></script> <!-- JQuery -->
-<script type="text/javascript" src="js/viz/grid/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI-->
+<script type="text/javascript" src="includes/jquery-2.0.3.min.js"></script> <!-- JQuery -->
+<script type="text/javascript" src="includes/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI -->
+<script type="text/javascript" src="includes/json2.js"></script> <!-- JSON -->
 
 <script type="text/javascript" src="js/util.js"></script>
-<script type="text/javascript" src="js/json2.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
 <script type="text/javascript" src="js/LibMapperModel.js"></script>
 
 <!-- List View includes -->
 <script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="js/raphael.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="includes/raphael.js"></script>
+<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
 
 <!-- Grid View includes -->
@@ -307,9 +308,21 @@ def handler_page(out, args):
 <link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
 <link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
 
+<!-- HivePlot View includes -->
+<script type="text/javascript" src="js/viz/hive.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css"></link>
+
+<!-- Balloon Plot View includes -->
+<script type="text/javascript" src="js/viz/balloon.js"></script>
+<link rel="stylesheet" type="text/css" href="js/viz/balloon/BalloonPlot_style.css"></link>
+
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
+<link type="text/css" rel="stylesheet" href="includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
+<script type="text/javascript" src="includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
+
+
 
 </head>
 <body></body>

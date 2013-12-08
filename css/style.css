@@ -9,8 +9,14 @@
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
 }
-/*
-@-webkit-keyframes myfirst 
+
+/* For HTML5 specs */
+html, body {
+  height: 100%;
+}
+
+
+/*@-webkit-keyframes myfirst 
 {
 from {background: default;}
 to {background: yellow;}
@@ -18,6 +24,10 @@ to {background: yellow;}
 
 .displayTable tbody tr {
   -webkit-transition: background .5s;
+}
+
+.displayTable tbody tr:hover {
+  -webkit-animation: myfirst 1s;
 }
 
 path.selected {
@@ -39,9 +49,10 @@ ul {
 }
 
 body {
-  font-family: helvetica-light, helvetica, sans;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-weight: 200;
   font-size: 11pt;
-  margin-top: 3px;
+  margin: 0 4px;
 }
 
 /* Color scheme! */
@@ -57,7 +68,7 @@ body {
     }
 
     /* Header Bars */
-    thead, #svgTop {
+    thead, #svgTop, #networkMenu {
       background: #EEE;
     }
     .displayTable th:hover, #svgTop:hover {
@@ -65,7 +76,7 @@ body {
     }
 
     /* highlights */
-    .modesel, .displayTable tr.trsel.even {
+    .modesel, .displayTable tr.trsel.even, #networkMenu td:hover  {
       background-color: #9CC2CF;
     }
     /* secondary highlight */
@@ -129,20 +140,16 @@ body {
 
 /*The top menu*/
     .topMenu {
-      padding: 10px 0;
-      top: 0;
-      margin: 0;
-      margin-top: -1px;
       min-width: 560px;
     }
 
     .topMenu>div {
       display: inline-block;
+      vertical-align: middle;
     }
 
     .topMenu li {
       margin: 2px;
-      display: inline-block;
       list-style: none;
       cursor: pointer;
     }
@@ -153,7 +160,6 @@ body {
 
     #modeSelection {
       position: relative;
-      top:  -1px;
     }
 
 
@@ -223,6 +229,23 @@ body {
       right: 0px;
     }
 
+    @keyframes refreshSpin {
+      0%  {transform: rotate(0deg);}
+      25%  {transform: rotate(90deg);}
+      50% {transform: rotate(180deg);}
+      75% {transform: rotate(270deg);}
+      100% {transform: rotate(360deg);}
+    }
+
+    @-webkit-keyframes refreshSpin {
+      0%  {-webkit-transform: rotate(0deg);}
+      100% {-webkit-transform: rotate(360deg);}
+    }
+
+   /* #refresh:active {
+      -webkit-animation: refreshSpin 1s;
+    }*/
+
     #refresh {
       position: absolute;
       top:  18px;
@@ -237,7 +260,7 @@ body {
 
     #wsstatus {
       position: fixed;
-      bottom: 5px;
+      bottom: 7px;
       right: 14px;
       z-index: 9;
       opacity: 0.5; 
@@ -279,9 +302,24 @@ body {
     }
 
     #saveLoadDiv {
-      display: inline-block;
       padding: 4px;
     }
+
+    #networkMenu {
+      position: absolute;
+      z-index: 2;
+      left: 37px;
+      top: 30px;
+    }
+
+    #networkMenu td, #networkMenu th {
+      opacity: 1;
+    }
+
+    #networkMenu td, #logo {
+      cursor: pointer;
+    }
+
 /****************/
 
 .notification {
@@ -300,7 +338,7 @@ body {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 85px);
+    height: calc(100% - 89px);
     /*border: solid 1px black;*/
     border-bottom: 0;
   }
@@ -324,7 +362,7 @@ body {
       /* Rows and headers */
       .tableDiv th, #svgTop {
         cursor: pointer;
-        font-weight: normal;
+        font-weight: inherit;
         text-align: left;
         border-top: 0px;
         border-left: 0px;
@@ -383,7 +421,7 @@ body {
 
 /*For the SVG area*/
 /*TODO change classes to IDs for single objects*/
-  .svgDiv {
+  #svgDiv {
     position: absolute;
     border-bottom: 0;
     left: 40%;
@@ -412,7 +450,7 @@ body {
     }
     #titleSearchDiv h2 {
       margin-top: 9px;
-      font-weight: normal;
+      font-weight: inherit;
     }
     #svgTitle {
       left: calc(40% + 10px);
@@ -423,7 +461,7 @@ body {
       
     }
     input.searchBar {
-      width: 200px;
+      width: 20%;
       text-align: right;
     }
     #leftTitle {

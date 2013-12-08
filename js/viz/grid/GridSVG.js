@@ -10,9 +10,13 @@ function GridSVG()
 	this.svgRowLabels;
 	this.svgColLabels;	 
 	this.cells = new Array();
+	this.filters = ["", ""];
+	//this.colsArray = new Array();
+	//this.rowsArray = new Array();
 	
-	this.colsArray = new Array();
-	this.rowsArray = new Array();
+	this.filteredData = [[],[]];	// [col, rows]
+	this.data = [[],[]];			// [col, rows]
+	
 	this.connectionsArray = new Array();
 	
 	this.scrollBarDim = [30,30];
@@ -103,7 +107,7 @@ GridSVG.prototype = {
 			div.setAttribute("id", "activeIndicator" + this.gridIndex);
 			div.setAttribute("style", "width: 14px; height: 14px; position: relative; float: left; margin: 2px 12px 2px " + (this.rowLabelsW+17).toString() + "px");
 			div.setAttribute("class", "inactiveGridIndicator");
-			div.title = "active grid indicator (ALT + left/right arrow to switch)";
+			div.title = "a black square indicates grid is active and will receive keyboard shortcuts (ALT + left/right arrow to switch)";
 			wrapper0.appendChild(div);
 			
 			//horizontal scrollbar 
@@ -155,7 +159,14 @@ GridSVG.prototype = {
 			div = document.createElement("div");
 			div.setAttribute("class", "buttonBar");
 			
-			var btn;
+			var btn, img;
+			
+			img = document.createElement("img");
+			img.setAttribute("src", this.model.pathToImages + "grid/zoom.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "top: 5px; margin: 0 5px 0 0");
+			div.appendChild(img);
 			
 			//zoom in button
 			btn = document.createElement("button");
@@ -177,16 +188,60 @@ GridSVG.prototype = {
 
 			//zoom to fit button
 			btn = document.createElement("button");
-			btn.innerHTML = "Zoom to fit";
+			btn.innerHTML = "&#9632;";
+			btn.setAttribute("style", "font-size: 22px; padding: 0px 6px 1px; position: relative; top: 3px;");
 			btn.title = "Zoom to fit content (CTRL + 0)";
 			btn.addEventListener("click", function(evt){
 				_self.zoomToFit();
 			});
 			div.appendChild(btn);
 			
+			img = document.createElement("img");
+			img.setAttribute("src", this.model.pathToImages + "grid/filter.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "top: 4px; margin: 0 4px 0 15px;");
+			div.appendChild(img);
+			
+			var filterTooltips = ["filter columns by regular expression", "filter rows by regular expression"];
+			for(var ind=0; ind<2; ind++)
+			{
+				var wrap = document.createElement("span");
+				wrap.setAttribute("class", "filterWrapper");
+				
+				var filter = document.createElement("input");
+				filter.value = this.filters[ind]; 
+				filter.title = filterTooltips[ind]; 
+				filter.setAttribute("class", "namespaceFilter");
+				filter.setAttribute("style", "position: relative; width: 100px");
+				filter.setAttribute("data-ind", ind);
+				filter.addEventListener("keydown", function(evt){
+					// don't know why but filter not working on keydown
+					// and causing problems... 
+					evt.stopPropagation();
+				});
+				filter.addEventListener("keyup", function(evt){
+					evt.stopPropagation();
+					_self.filters[evt.target.getAttribute("data-ind")] = evt.target.value;
+					$(this._container).trigger("filterChanged", _self.filters);		// send to parent Grid.js to store
+					_self.filterData();
+					_self.refresh();
+				});
+				
+				wrap.appendChild(filter);
+				div.appendChild(wrap);
+			}
+			
+			img = document.createElement("img");
+			img.setAttribute("src", this.model.pathToImages + "grid/connect.png");
+			img.setAttribute("width", "16px");
+			img.setAttribute("height", "16px");
+			img.setAttribute("style", "position: relative; top: 4px; right: 3px; opacity: 0.5; margin: 0 -2px 0 18px;");
+			div.appendChild(img);
+			
 			//connection buttons
 			btn = document.createElement("button");
-			btn.innerHTML = "Connect";
+			btn.innerHTML = "O";
 			btn.title = "connect the selected cell(s) (C)";
 			btn.addEventListener("click", function(evt){
 				_self.connect();
@@ -194,7 +249,7 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			btn = document.createElement("button");
-			btn.innerHTML = "Disconnect";
+			btn.innerHTML = "X";
 			btn.title = "disconnect the selected cell(s) (D)";
 			btn.addEventListener("click", function(evt){
 				_self.disconnect();
@@ -202,12 +257,14 @@ GridSVG.prototype = {
 			div.appendChild(btn);
 			
 			btn = document.createElement("button");
-			btn.innerHTML = "Toggle";
+			btn.innerHTML = "O|X";
 			btn.title = "toggle the selected cell(s)  (ENTER)";
 			btn.addEventListener("click", function(evt){
 				_self.toggleConnection();
 			});
 			div.appendChild(btn);
+			
+			
 			
 			this._container.appendChild(div);
 			// END button bar
@@ -218,7 +275,7 @@ GridSVG.prototype = {
 			
 			
 		},
-
+		
 		initHorizontalZoomSlider : function ()
 		{
 			var _self = this;
@@ -848,11 +905,11 @@ GridSVG.prototype = {
 			}
 		},
 		
-		updateDisplayData: function (colsArray, rowsArray, connectionsArray)
+		updateDisplayData: function (cols, rows, connections)
 		{
-			this.colsArray = colsArray;
-			this.rowsArray = rowsArray;
-			this.connectionsArray = connectionsArray;
+			this.data = [cols, rows];
+			this.connectionsArray = connections;
+			this.filterData();
 		},
 		
 		refresh : function ()
@@ -934,10 +991,6 @@ GridSVG.prototype = {
 				 target.fireEvent('onmouseover');
 		     }
 		}
-		
-		
-		
-		
 };
 
 

@@ -1,0 +1,190 @@
+* {
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  -webkit-box-sizing:border-box
+}
+
+#balloonWrapper{
+	margin: 0 auto;
+	position: relative;
+	float: left;
+	font-family: helvetica, arial, sans-serif;
+}
+
+#BalloonSVG{
+	
+}
+
+.BalloonCorner{
+	fill: #fff;
+}
+.BalloonCorner:hover{
+	fill: #000000;
+	opacity: 0.025;
+}
+
+#balloonTable_src, #balloonTable_dst, #BalloonSVG{
+	float: left;
+	position: relative;	
+}
+
+.balloonTable{
+	background-color: #fff;
+	overflow: auto;	
+}
+
+[id^='accordion']{
+	padding: 0;
+	margin: 0;
+}
+
+[id^='accordion'] .ui-icon{ background-image: none; }
+
+/* accordion header up state */
+[id^='accordion'] .ui-state-default{ 
+	background: #fff; 
+	border: none;
+    margin: 0px;
+    padding: 15px;  
+    font-weight: normal;
+    color: #333;  
+    line-height: 42px;  
+    display: block;  
+    font-size: 12pt;  
+    width: 100%;  
+    text-indent: 10px; 
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+/* accordion's heading mouse over state */
+[id^='accordion'] .ui-state-hover {
+	color: #fff;
+	background-color: #29B1D7;
+	opacity: 0.5;
+}  
+
+/* accordion heading selected state */
+[id^='accordion'] .ui-accordion-header-active { 
+	background-color: #29B1D7;
+	border-top-right-radius: 20px;
+	border-top-left-radius: 20px;
+}	
+
+/* accordion contents  */
+[id^='accordion'] .ui-accordion-content {  
+	background: none; 
+	border: none;
+    width: 100%;  
+    background-color: #fafafa;  
+    color: #333;  
+    font-size: 10pt;  
+    line-height: 16pt; 
+    padding: 16px 0; 
+    border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	border-bottom-left-radius: 20px;
+	border-bottom-right-radius: 20px;
+}  
+
+
+.balloonTable ul{
+	padding: 0 10px;
+	margin: 0;
+	list-style-position: inside;
+	cursor: pointer;
+	
+}
+
+.balloonTable li{
+	cursor: pointer;
+	padding-left: 14px;
+	list-style-type: disc;
+}
+
+.balloonTable .selected, .balloonTable .selected:hover{
+	color: rgb(212, 31, 31);
+	font-weight: bold;
+}
+
+.balloonTable li:hover{
+	color: #333;
+}
+
+.BalloonNode_src, .BalloonNode_dst {
+	fill: #29B1D7;
+	stroke: #fff;
+}
+.BalloonLeafNode_dst, .BalloonLeafNode_src{
+	stroke: #fff;
+    cursor: move;
+    fill: url(#Balloon_leafNodePattern);
+}
+
+.BalloonNode_over{
+	stroke-width: 4px;     
+}
+.BalloonNode_selected{
+	stroke-width: 8px;     
+}
+
+.balloonConnection{
+	fill: none;
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	pointer-events: none;
+}
+
+.balloonConnectionHandler{
+	fill: none;
+	stroke: #f0fff0;
+	stroke-width: 5px;
+	stroke-linecap: round;
+	opacity: 0;
+}
+
+.balloonConnection_over{
+	fill: none;
+	stroke: #ffff00;
+	stroke-width: 1px;
+	stroke-linecap: round;
+}
+
+.balloonConnection_selected{
+	fill: none;
+	stroke: #ff0000 !important;
+	stroke-width: 2px !important;
+	stroke-linecap: round;	
+}
+
+.balloonConnection_muted{
+	fill: none;
+	stroke: #000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	pointer-events: none;
+	stroke-dasharray:10,10;
+}
+
+.dragLine{
+	fill: none;
+	stroke: #FF0000;
+	stroke-width: 1px;
+	stroke-linecap: round;
+	/*shape-rendering: crispEdges;*/	
+}
+
+
+.qTipStyle .qtip-content{
+    background-color: #eee;
+	padding: 12px;
+    font-size: 20px;
+}
+
+
+/*
+http://stackoverflow.com/questions/4287225/jquery-ui-accordion-how-to-remove-style-completly
+*/

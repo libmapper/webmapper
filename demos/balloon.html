@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>LibMapper Balloon Tree DEMO</title>
+
+<script type="text/javascript" src="../js/util.js"></script>
+<script type="text/javascript" src="../js/LibMapperModel.js"></script>
+
+<script type="text/javascript" src="../includes/jquery-2.0.3.min.js"></script><!-- JQuery -->
+<script type="text/javascript" src="../includes/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
+<link rel="stylesheet" href="../js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
+
+<script type="text/javascript" src="../js/viz/balloon.js"></script>
+<link rel="stylesheet" type="text/css" href="../js/viz/balloon/BalloonPlot_style.css"></link>
+
+<link type="text/css" rel="stylesheet" href="../includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
+<script type="text/javascript" src="../includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
+</head>
+<body>
+
+
+
+
+
+<style type="text/css">
+body{ font-family: helvetica, arial, sans-serif}
+
+#logoWrapper button{
+font-size: 12px;
+border-radius: 3px; 
+-moz-border-radius: 3px; 
+-webkit-border-radius: 3px; 
+border: 0px solid #eeeeee;
+background: #ccc;
+padding: 6px 8px;
+color: #fff;
+}
+#logoWrapper button:hover {
+	background-color: #EEE8AA;
+}
+#logoWrapper button:active{
+	background-color: #FFFFF0;
+}
+</style>
+
+<script><!--
+
+var nSrcDevices = 0;
+var nDstDevices = 0;
+
+var model, view;
+
+var srcNamespace = "/body/torso/arm/finger/";
+var dstNamespace = "/walk/area/panel";
+
+function init(){
+
+	$('#container').css('height', ($(window).height() - 100) + 'px' );
+    window.onresize = function (e) {
+    	$('#container').css('height', ($(window).height() - 100) + 'px' );
+    	view.on_resize();
+    };
+
+	model = new LibMapperModel();
+	model.pathToImages = "../" + model.pathToImages;
+	view  = new  BalloonView(document.getElementById("container"), model);
+
+	// controller (from view)  
+    $("#container").on("link", function(e, src, dst){
+        link(src, dst);
+    });
+    $("#container").on("unlink", function(e, src, dst){
+        unlink(src, dst);
+    });
+    $("#container").on("connect", function(e, src, dst){
+        connect(src, dst);
+    });
+    $("#container").on("disconnect", function(e, src, dst){
+        disconnect(src, dst);
+    });
+
+	initData();
+	view.init();
+
+}
+
+//init with fake data for now
+function initData()
+{
+	var nIn = 4, nOut = 3;
+	var nSigs = 3;
+	for(var i=0; i<nIn;i++)
+		addDevice("/Source " + nSrcDevices++, 0, nSigs);
+	for(var i=0; i<nOut;i++)
+		addDevice("/Dest " + nDstDevices++, nSigs, 0);
+	// connect everything
+	for(var i=0; i<nIn; i++){
+		for(var j=0; j<nOut; j++){
+			link("/Source " + i, "/Dest " + j);
+
+
+			for(var k=0; k<nSigs; k+=1){
+				for(var l=0; l<nSigs; l+=1){
+					var rand = Math.random() * 30;
+					if(rand<2){
+					//if(j > 0){
+						connect("/Source " + i + srcNamespace + k, "/Dest " + j + dstNamespace + l);
+						//k+=2;
+					}
+				}
+			}
+		}
+	}
+}
+
+
+function link(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	model.links.add(key, args);
+	//view.update_display();
+}
+function unlink(src, dst){
+	var key = src + ">" + dst;
+	model.links.remove(key);
+	view.update_display();
+}
+function connect(src, dst){
+	var key = src + ">" + dst;
+	var args = new Object(); 
+	args.src_name = src;
+	args.dest_name = dst;
+	args.bound_min = 0;
+	args.dest_length = 1;
+	args.src_length = 1;
+	args.bound_max = 0;
+	args.muted = 0;
+	args.range = [0.0, 10.0, 0.0, 1.0];
+	args.mode = 2;
+	args.src_type = 'f';
+	args.dest_type = 'f';
+	args.expression = 'y=x';
+	model.connections.add(key, args);
+	//view.update_display();
+}
+function disconnect(src, dst){
+	var key = src + ">" + dst;
+	console.log("caught");
+	model.connections.remove(key);
+	view.update_display();
+}
+
+function addDevice(name, nIn, nOut)
+{
+/*
+	var args = new Array();
+	args['name'] = name;
+	args['n_inputs'] = 2;
+	args['n_outputs'] = 0;
+	var device = model.new_device(args);
+*/
+	var args = new Object();
+	args.name = name;
+	args.n_inputs = nIn;
+	args.n_outputs = nOut;
+	model.devices.add(name, args);
+
+	for(var j=0; j<nIn;j++)
+		addDevSignal(dstNamespace + j, name, 0);	
+	for(var j=0; j<nOut;j++)
+		addDevSignal(srcNamespace + j, name, 1);	
+}
+
+function addDevSignal(name, device_name, direction)
+{
+	/*
+	var args = new Array(); 
+	args['device_name'] = device_name;
+	args['name'] = name;
+	var signal = model.new_signal(args);
+	*/
+	var args = new Object(); 
+	args.device_name = device_name;
+	args.name = name;
+	args.direction = direction;
+	model.signals.add(device_name+name, args);
+
+}
+
+function btnHandler(val)
+{
+		if(val=="dst"){
+			addDevice("Destination" + nDstDevices++, 2, 0);
+		}else if(val=="src"){
+			addDevice("Source" + nSrcDevices++, 0, 2);		
+		}else if(val=="init"){
+			initData();		
+		}
+		view.update_display();
+}
+
+--></script>
+</head>
+
+
+<body onload="init()">
+<div style="margin: 0 auto; class: topMenu">
+	<table id='logoWrapper' width="100%">
+	<tr width="100%">
+		<td width="40%" align="left">
+			<img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
+					style="vertical-align: middle; position:relative; top: -3px" />
+			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper (Balloon Demo)</span>
+		</td>
+		<td align="right">
+		 
+			<button onclick="btnHandler('src')">Add Source Device</button>
+			<button onclick="btnHandler('dst')">Add Destination Device</button>
+			<button onclick="btnHandler('init')">Add 5x5 Devices</button>
+		
+		</td>
+	</table>
+</div> 
+
+	<div id="container">
+
+
+</div>
+</body>
+</html>

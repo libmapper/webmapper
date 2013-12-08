@@ -6,15 +6,15 @@ if 'py2exe' in sys.argv: import py2exe
 if 'py2app' in sys.argv: import py2app
 
 data_files = [('',['js']),
-              ('css',['css/style.css']),
-              ('images',['images/boundary_icons.png',
-                         'images/range_switch.png',
-                         'images/refresh.png']),
+              ('',['includes']),
+              ('',['css']),
+              ('',['images'])
               ]
+
 options = {'argv_emulation': True, 'iconfile': 'images/libmapper.icns'}
 
 setup(name='WebMapper',
-      version='0.1',
+      version='0.2',
       description='GUI for libmapper OSC network',
       author='Stephen Sinclair, Aaron Krajeski & Jonathan Wilansky',
       author_email='aaron.krajeski@music.mcgill.ca',

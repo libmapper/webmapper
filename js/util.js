@@ -66,7 +66,7 @@ function Assoc() {
         return keys;
     }
     this.length = function() {
-        return keys.length;
+        return this.keys().length;
     }
 
 }
@@ -92,4 +92,19 @@ function fullOffset(e)
             top:e.offsetTop - e.scrollTop + o.top,
             width:e.offsetWidth,
             height:e.offsetHeight};
+}
+
+/* add an item to an array only if it is unique */
+function arrPushIfUnique(item, arr){
+	if(arrIsUnique(item, arr))
+		arr.push(item);
+}
+
+/* check if an item is unique in an array */
+function arrIsUnique(item, arr){
+	for(var i=0; i<arr.length; i++){
+		if(arr[i] == item)
+			return false;
+	}	
+	return true;
 }

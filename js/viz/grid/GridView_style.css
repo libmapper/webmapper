@@ -107,6 +107,7 @@ a:hover { color: #036; }
 
 .label{
 	fill: #3e3e3e;
+	cursor: pointer;
 }
 .label_over{
 	font-weight: bold;		
@@ -130,38 +131,6 @@ a:hover { color: #036; }
 	fill: #EEEEEE;
 }
 	
-	
-
-#actionBar{
-	
-	padding: 2px 5px;
-	width: 100%;
-	clear: both;
-	position: relative;
-	
-	background-color: #eeeeee;
-	border: 1px solid #dddddd;
-}
-
-.buttonBar{
-	padding: 2px 0px;
-	margin-top: 20px; 
-	float: right;
-	text-align: center;
-	background-color: #eeeeee;
-	border: 1px solid #dddddd;
-	width: 100%;
-}
-
-#actionBar button, .buttonBar button{
-	font-size: 14px;
-	border-radius: 3px; 
-	-moz-border-radius: 3px; 
-	-webkit-border-radius: 3px; 
-	border: 0px solid #eeeeee;
-	background: #F2FFDE;
-	padding: 10px 15px;
-}
 #actionBar button:hover, .buttonBar button:hover{
 	background-color: #EEE8AA;
 }
@@ -169,21 +138,27 @@ a:hover { color: #036; }
 	background-color: #FFFFF0;
 }
 
+.buttonBar img{
+	position: relative;
+	float: center;
+	opacity: 0.5;
+}
 
 
-#actionBar .styled-select 
-{
-   width: 200px;
-   overflow: hidden;
-   border: 0px solid #ccc;
-   margin-top: 2px;
-   margin-right: 3px;
-   padding: 1px 5px 0px 5px;
-   background: url(dropdown_arrow.png) no-repeat right #F2FFDE;
-   	border-radius: 3px; 
+
+.buttonBar .filterWrapper{
+	background-color: #04C4D9;
+	padding: 4px 6px 6px 6px;
+	border-radius: 3px; 
 	-moz-border-radius: 3px; 
 	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	position: relative;
+	float: center;
 }
+
+
+
 #actionBar .styled-select:hover {
 	background-color: #EEE8AA;
 }
@@ -197,7 +172,74 @@ a:hover { color: #036; }
    line-height: 1;
    border: 0;
    border-radius: 0;
-   height: 36px;
+   height: 28px;
    -webkit-appearance: none;
-   }
+   color: #fff;
+}
 	
+	
+.buttonBar .btn_zin{
+	width: 30px;
+	height: 30px;
+	padding: 5;
+	background: url('icons/zin.png') #04C4D9;
+}
+
+
+#actionBar{
+	padding: 2px 5px;
+	/*width: 100%;*/
+	clear: both;
+	position: relative;
+	background-color: #eeeeee;
+	border: 1px solid #dddddd;
+}
+
+
+.buttonBar{
+	padding: 2px 0px 4px 0;
+	margin-top: 20px; 
+	text-align: center;
+	background-color: #eee;
+	border: 1px solid #dddddd;
+	width: 100%;
+	position: relative;
+	float: left;
+}
+
+#actionBar button{
+	font-size: 14px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #04C4D9;
+	color: #fff;
+	padding: 6px 15px;
+}
+.buttonBar button{
+	font-size: 12px;
+	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+	border: 0px solid #eeeeee;
+	background: #04C4D9;
+	padding: 6px 8px;
+	color: #fff;
+	float: center;
+}
+
+#actionBar .styled-select 
+{
+   width: 200px;
+   overflow: hidden;
+   border: 0px solid #ccc;
+   margin-top: 2px;
+   margin-right: 3px;
+   padding: 1px 5px 0px 5px;
+   background: url(dropdown_arrow.png) no-repeat right #04C4D9;
+   color: #fff;
+   	border-radius: 3px; 
+	-moz-border-radius: 3px; 
+	-webkit-border-radius: 3px; 
+}
