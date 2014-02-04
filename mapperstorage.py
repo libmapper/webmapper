@@ -31,7 +31,11 @@ def serialise(monitor, device):
           'dest': [ c['dest_name'] ],
           'mute': c['muted'],
           'mode': modeStr[c['mode']],
-          'range': c['range'],
+          #'range': c['range'],
+          'src_min': c['src_min'],
+          'src_max': c['src_max'],
+          'dest_min': c['dest_min'],
+          'dest_max': c['dest_max'],
           'expression': c['expression'],
           'bound_min': boundStr[c['bound_min']],
           'bound_max': boundStr[c['bound_max']] 
@@ -70,7 +74,7 @@ def serialise(monitor, device):
             'muted': c['muted'],
             }"""
     
-    contents = {"fileversion": "2.0", "mapping": {
+    contents = {"fileversion": "2.1", "mapping": {
                             "connections": new_connections
                             }
                 }
@@ -104,8 +108,59 @@ def deserialise(monitor, mapping_json, devices):
 
     m = js['mapping']
 
+    # This is a version 2.1 save file
+    if version == '2.1':
+        for c in m['connections']:
+            # First, make certain to create necessary links
+            # Since we're accomodating many-to-many connections, etc.
+            # sources and destinations are lists, devices are split from the second '/' character
+            srcdevs = devices['sources']
+            destdevs = devices['destinations']
+            links = [( str(x), str(y) ) for x in srcdevs for y in destdevs]
+            # Don't want to explicitly create links now
+            """
+                for l in links:
+                # Only make a link if it does not already exist
+                if not monitor.db.get_link_by_src_dest_names(l[0], l[1]):
+                monitor.link(l[0], l[1])"""
+
+            #The name of the source signal (without device, assuming 1 to 1 for now)
+            srcsig = str(c['src'][0]).split('/')[2]
+            #And the destination
+            destsig = str(c['dest'][0]).split('/')[2]
+
+            # The expression, agian we're simply replacing based on an assumption of 1 to 1 connections
+            e = str(c['expression'].replace('src[0]', 'x')
+                                   .replace('dest[0]', 'y'))
+
+            for l in links:
+                if monitor.db.get_link_by_src_dest_names(l[0], l[1]):
+                    args = (str(l[0]+'/'+srcsig),
+                            str(l[1]+'/'+destsig),
+                            {'mode': modeIdx[c['mode']],
+                             'src_min': c['src_min'],
+                             'src_max': c['src_max'],
+                             'dest_min': c['dest_min'],
+                             'dest_max': c['dest_max'],
+                             'expression': e,
+                             'bound_min': boundIdx[c['bound_min']],
+                             'bound_max': boundIdx[c['bound_max']],
+                             'muted': c['mute']})
+
+                    # If connection already exists, use 'modify', otherwise 'connect'.
+                    # Assumes 1 to 1, again
+                    cs = list(monitor.db.connections_by_device_and_signal_names(
+                        (l[0]).split('/')[1], srcsig,
+                        (l[1]).split('/')[1], destsig) )
+                    if len(cs) > 0:
+                        args[2]['src_name'] = args[0]
+                        args[2]['dest_name'] = args[1]
+                        monitor.modify(args[2])
+                    else:
+                        monitor.connect(*args)
+
     # This is a version 2.0 save file
-    if version == '2.0':
+    elif version == '2.0':
         for c in m['connections']:
             # First, make certain to create necessary links
             # Since we're accomodating many-to-many connections, etc.
@@ -155,7 +210,7 @@ def deserialise(monitor, mapping_json, devices):
     # This is a version 1 save file
     # As of now, version 1 explicitly save devices
     # So it can create links, whereas v2.0 cannot
-    if version == 'dot-1':
+    elif version == 'dot-1':
         srcs = {}
         dests = {}
         for s in m['sources']:
@@ -227,6 +282,8 @@ def deserialise(monitor, mapping_json, devices):
                 monitor.modify(args[2])
             else:
                 monitor.connect(*args)
+    else:
+        print 'Unknown file version'
 
         # TODO: Strictly speaking we should wait until links are
         # acknowledged before continuing with a connection.  An
