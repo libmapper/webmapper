@@ -77,6 +77,7 @@ def on_connection(con, action):
 def set_connection(con):
     if con.has_key('mode'):
         con['mode'] = {'bypass': mapper.MO_BYPASS,
+                       'reverse': mapper.MO_REVERSE,
                        'linear': mapper.MO_LINEAR,
                        'calibrate': mapper.MO_CALIBRATE,
                        'expression': mapper.MO_EXPRESSION}[con['mode']]

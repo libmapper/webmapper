@@ -3,12 +3,13 @@ var model = new LibMapperModel();
 
 var all_devices = 'All Devices';
 
-var connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
-var connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+var connectionModes = ["None", "Byp", "Line", "Expr", "Calib", "Rev"];
+var connectionModesDisplayOrder = ["Byp", "Rev", "Line", "Calib", "Expr"];
 var connectionModeCommands = {"Byp": 'bypass',
-                          "Line": 'linear',
-                          "Calib": 'calibrate',
-                          "Expr": 'expression'};
+                              "Rev": 'reverse',
+                              "Line": 'linear',
+                              "Calib": 'calibrate',
+                              "Expr": 'expression'};
 var boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
 var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                  "boundaryMute", "boundaryClamp", "boundaryWrap"];
