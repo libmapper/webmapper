@@ -31,14 +31,13 @@ def serialise(monitor, device):
           'dest': [ c['dest_name'] ],
           'mute': c['muted'],
           'mode': modeStr[c['mode']],
-          #'range': c['range'],
-          'src_min': c['src_min'],
-          'src_max': c['src_max'],
-          'dest_min': c['dest_min'],
-          'dest_max': c['dest_max'],
+          'srcMin': c['src_min'],
+          'srcMax': c['src_max'],
+          'destMin': c['dest_min'],
+          'destMax': c['dest_max'],
           'expression': c['expression'],
-          'bound_min': boundStr[c['bound_min']],
-          'bound_max': boundStr[c['bound_max']] 
+          'boundMin': boundStr[c['bound_min']],
+          'boundMax': boundStr[c['bound_max']]
         }
         # To get proper expression nomenclature
         # dest[0] = src[0] NOT y = x
@@ -189,11 +188,20 @@ def deserialise(monitor, mapping_json, devices):
                     args = (str(l[0]+'/'+srcsig),
                             str(l[1]+'/'+destsig),
                             {'mode': modeIdx[c['mode']],
-                             'range': c['range'],
                              'expression': e,
                              'bound_min': boundIdx[c['bound_min']],
                              'bound_max': boundIdx[c['bound_max']],
                              'muted': c['mute']})
+                    if len(c['range']) == 4:
+                        if c['range'][0] != '-':
+                            args[2]['src_min'] = c['range'][0]
+                        if c['range'][1] != '-':
+                            args[2]['src_max'] = c['range'][1]
+                        if c['range'][2] != '-':
+                            args[2]['dest_min'] = c['range'][2]
+                        if c['range'][3] != '-':
+                            args[2]['dest_max'] = c['range'][3]
+
 
                     # If connection already exists, use 'modify', otherwise 'connect'.
                     # Assumes 1 to 1, again
@@ -208,8 +216,6 @@ def deserialise(monitor, mapping_json, devices):
                         monitor.connect(*args)
 
     # This is a version 1 save file
-    # As of now, version 1 explicitly save devices
-    # So it can create links, whereas v2.0 cannot
     elif version == 'dot-1':
         srcs = {}
         dests = {}
@@ -237,9 +243,7 @@ def deserialise(monitor, mapping_json, devices):
             srcdev = str('/'+link[0]['device'])
             destdev = str('/'+link[1]['device'])
 
-            # Only make a link if it doesn't already exist.
-            if not monitor.db.get_link_by_src_dest_names(srcdev, destdev):
-                monitor.link(srcdev, destdev)
+            # Note: do not create link
 
             # The expression itself
             e = str(c['expression'].replace(link[0]['id'], 'x')
@@ -248,29 +252,26 @@ def deserialise(monitor, mapping_json, devices):
             # Range may have integers, floats, or '-' strings. When
             # converting to a list of floats, pass through anything that
             # doesn't parse as a float or int.
-            rng = []
-            for r in c['range'].split():
-                try:
-                    rng.append(int(r))
-                except:
-                    try:
-                        rng.append(float(r))
-                    except:
-                        rng.append(r)
 
             srcsig = srcdev + str(link[0]['parameter'])
             destsig = destdev + str(link[1]['parameter'])
 
-        
             args = (srcdev + str(link[0]['parameter']),
                     destdev + str(link[1]['parameter']),
                     {'mode': modeIdx[c['scaling']],
-                     'range': map(lambda x: None if x=='-' else float(x),
-                                  c['range'].split()),
                      'expression': e,
                      'bound_min': boundIdx[c['boundMin']],
                      'bound_max': boundIdx[c['boundMax']],
                      'muted': c['muted']})
+            if len(c['range']) == 4:
+                if c['range'][0] != '-':
+                    args[2]['src_min'] = c['range'][0]
+                if c['range'][1] != '-':
+                    args[2]['src_max'] = c['range'][1]
+                if c['range'][2] != '-':
+                    args[2]['dest_min'] = c['range'][2]
+                if c['range'][3] != '-':
+                    args[2]['dest_max'] = c['range'][3]
 
             # If connection already exists, use 'modify', otherwise 'connect'.
             cs = list(monitor.db.get_connections_by_device_and_signal_names(

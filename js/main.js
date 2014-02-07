@@ -224,10 +224,10 @@ function update_connection_properties()
             $('#srcRange').addClass('disabled');
 
         $(".expression").val(c.expression);
-        if (c.range[0]!=null) { $("#rangeSrcMin").val(c.range[0]); }
-        if (c.range[1]!=null) { $("#rangeSrcMax").val(c.range[1]); }
-        if (c.range[2]!=null) { $("#rangeDestMin").val(c.range[2]); }
-        if (c.range[3]!=null) { $("#rangeDestMax").val(c.range[3]); }
+        if (c.src_min!=null) { $("#rangeSrcMin").val(c.src_min); }
+        if (c.src_max!=null) { $("#rangeSrcMax").val(c.src_max); }
+        if (c.dest_min!=null) { $("#rangeDestMin").val(c.dest_min); }
+        if (c.dest_max!=null) { $("#rangeDestMax").val(c.dest_max); }
         if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
         if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
     }
