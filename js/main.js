@@ -217,17 +217,11 @@ function update_connection_properties()
         $('.signalControl').children('*').removeClass('disabled');
         $(".mode"+mode).addClass("modesel");
 
-        if(mode != "Expr") 
-            $('.expression').addClass('disabled');
-
-        if(mode != "Line")
-            $('#srcRange').addClass('disabled');
-
         $(".expression").val(c.expression);
-        if (c.src_min!=null) { $("#rangeSrcMin").val(c.src_min); }
-        if (c.src_max!=null) { $("#rangeSrcMax").val(c.src_max); }
-        if (c.dest_min!=null) { $("#rangeDestMin").val(c.dest_min); }
-        if (c.dest_max!=null) { $("#rangeDestMax").val(c.dest_max); }
+        if (c.src_min!=null) { $("#srcMin").val(c.src_min); }
+        if (c.src_max!=null) { $("#srcMax").val(c.src_max); }
+        if (c.dest_min!=null) { $("#destMin").val(c.dest_min); }
+        if (c.dest_max!=null) { $("#destMax").val(c.dest_max); }
         if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
         if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
     }
@@ -409,7 +403,7 @@ function main()
 {
     //Create the page elements
     add_container_elements();
-    add_signal_control_bar();
+    add_signal_properties_bar();
     add_extra_tools();
 
     command.register("all_devices", function(cmd, args) {
@@ -559,19 +553,19 @@ function add_container_elements()
 {
     $('body').append(
 	        "<div class='topMenu'>"+
-                "<div id='logoWrapper'>"+
-                    "<img id='logo' alt=''webmapper logo' src='images/webmapperlogo.png' width='59' height='40'>"+
-                "</div>"+
-	            "<div id='saveLoadDiv'>"+
-	                "<li><a id='loadButton'>Load</a></li>"+
-	                "<li><a id='saveButton'>Save</a></li>"+
-	            "</div>"+
-	            "<div><select id='modeSelection'>"+
-	                "<option value='list' selected>List</option>"+
-	                "<option value='grid'>Grid</option>"+
-	                "<option value='hive'>Hive</option>"+
-	                "<option value='balloon'>Balloon</option>"+
-	            "</select></div>"+
+	            "<div class='utils'>"+
+                  "<div id='refresh'></div>"+
+                  "<div>"+
+                      "<div class='loadButton'>Load</div>"+
+                      "<div class='saveButton'>Save</div>"+
+                  "</div>"+
+                  "<div>Display: <select id='modeSelection'>"+
+                      "<option value='list' selected>List</option>"+
+                      "<option value='grid'>Grid</option>"+
+                      "<option value='hive'>Hive</option>"+
+                      "<option value='balloon'>Balloon</option></select>"+
+                  "</div>"+
+              "</div>"+
 	    "</div>"+
 	    "<div id='container'></div>"
     );
@@ -579,47 +573,52 @@ function add_container_elements()
     $('body').attr('oncontextmenu',"return false;");
 }
 
-function add_signal_control_bar() 
+function add_signal_properties_bar()
 {
     //Add the mode controls
-    $('.topMenu').append("<div class='modesDiv signalControl disabled'></div>");
+    $('.topMenu').append("<div class='signalProps'>"+
+                              "<div class='modesDiv signalControl disabled'>Mode: </div>"+
+                              "<div class='ranges' style='width:50%'></div>"+
+                         "</div>");
     for (var m in connectionModesDisplayOrder) {
         $('.modesDiv').append(
             "<div class='mode mode"+connectionModesDisplayOrder[m]+"'>"+connectionModesDisplayOrder[m]+"</div>");
     }
 
-    $('.modesDiv').append("<input type='text' size=25 class='expression'></input>");
+    $('.modesDiv').append("<div style='width:100%'>Expression: "+
+                              "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
+                          "</div>");
 
     //Add the range controls
-    $('.topMenu').append(
-        "<div id='srcRange' class='range signalControl disabled'>Src Range:</div>"+
+    $('.ranges').append(
+        "<div id='srcRange' class='range signalControl disabled'>Src Range: </div>"+
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
-    $('.range').append("<input><input>");
+    $('.range').append("<input style='width:calc(50% - 60px)'><input>");
     $('.range').children('input').each( function(i) {
         var minOrMax = 'Max'   // A variable storing minimum or maximum
-        var srcOrDest = 'Src'
+        var srcOrDest = 'src'
         if(i%2==0)  minOrMax = 'Min';
-        if(i>1)     srcOrDest = 'Dest';
+        if(i>1)     srcOrDest = 'dest';
         $(this).attr({
-            'maxLength': 15,
-            "size": 5,
+            'maxLength': 25,
+            "size": 30,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
             'class': 'range',   
-            'id': 'range'+srcOrDest+minOrMax,
+            'id': srcOrDest+minOrMax,
             'index': i
         })
     });
 
-    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#rangeDestMin');
-    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#rangeDestMax');
-
+    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#destMin');
+    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#destMax');
+    $("<input id='foo' class='boundary' type='button'></input>").insertBefore('#srcMin');
+    $("<input id='bar' class='boundary' type='button'></input>").insertAfter('#srcMax');
 }
 
 function add_extra_tools()
 {
     $('.topMenu').append(
-        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>"+
-        "<div id='refresh' class='extratools'>");
+        "<div id='wsstatus' class='extratools'>websocket uninitialized</div>");
 }
 
 
@@ -680,10 +679,10 @@ function add_handlers()
         keydown: function(e) {
             e.stopPropagation();
             if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );
+                selected_connection_set_input( $(this).attr('id').split(' ')[0], this, $(this).attr('index') );
         },
         click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('class').split(' ')[0], this, $(this).attr('index') );}
+        blur: function() {selected_connection_set_input( $(this).attr('id').split(' ')[0], this, $(this).attr('index') );}
     }, 'input');
 
     //For the mode buttons

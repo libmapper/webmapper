@@ -141,17 +141,41 @@ body {
 /*The top menu*/
     .topMenu {
       min-width: 560px;
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
 
-    .topMenu>div {
+    .topMenu div {
       display: inline-block;
-      vertical-align: middle;
+      vertical-align: top;
     }
 
     .topMenu li {
       margin: 2px;
       list-style: none;
       cursor: pointer;
+    }
+
+    .utils {
+      width: 160px;
+      display:inline-block;
+      padding: 10px;
+      background-color: #EEE;
+      border-radius:12px;
+      height: 100%;
+    }
+
+    .utils div {
+      margin-right: 10px;
+      margin-bottom: 5px;
+    }
+
+    .signalProps {
+      background-color: #EEE;
+      border-radius:12px;
+      width: calc(100% - 165px);
+      padding: 10px;
+      float: right;
     }
 
     form {
@@ -227,6 +251,7 @@ body {
     #extratoolsDiv {
       position: absolute;
       right: 0px;
+      bottom: 0px;
     }
 
     @keyframes refreshSpin {
@@ -247,15 +272,15 @@ body {
     }*/
 
     #refresh {
-      position: absolute;
-      top:  18px;
-      right:  14px;
+      /*position: absolute;*/
+      top:  12px;
+      float: left;
       background-image: url(/images/refresh.png);
       background-size: contain;
       background-repeat: no-repeat;
       cursor: pointer;
-      width: 25px;
-      height: 25px;
+      width: 18px;
+      height: 18px;
     }
 
     #wsstatus {
@@ -272,10 +297,12 @@ body {
   
     .modesDiv {
       padding: 0 10px;
-      margin-left: 30px;
+      width: 50%;
+      float: left;
     }
     .modesDiv div {
-      padding: 3pt;
+      padding-right: 3pt;
+      margin-bottom: 10px;
       cursor: pointer;
       display: inline-block;
     }
@@ -283,12 +310,13 @@ body {
     div.range {
       margin-left: 10px;
       padding: 3px 3px;
+      width: 100%;
     }
     input.range {
       text-align: center;
       margin: 0;
     }
-    #rangeSrcMin, #rangeDestMin {
+    #srcMin, #destMin {
       border-right: 0;
     }
     input.range, input.expression {
@@ -297,7 +325,7 @@ body {
     }
 
     /* For proper spacing of text of range divs */
-    #boundaryMin, #rangeSrcMin, input.expression {
+    #boundaryMin, #srcMin, input.expression {
       margin-left: 5px
     }
 
