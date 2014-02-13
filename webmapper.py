@@ -81,7 +81,35 @@ def set_connection(con):
                        'linear': mapper.MO_LINEAR,
                        'calibrate': mapper.MO_CALIBRATE,
                        'expression': mapper.MO_EXPRESSION}[con['mode']]
-    monitor.modify(con)
+    if (con.has_key('src_min')):
+        con['src_min'] = con['src_min'].replace(',',' ').split()
+        numargs = len(con['src_min'])
+        for i in range(numargs):
+            con['src_min'][i] = float(con['src_min'][i])
+        if numargs == 1:
+            con['src_min'] = con['src_min'][0]
+    if (con.has_key('src_max')):
+        con['src_max'] = con['src_max'].replace(',',' ').split()
+        numargs = len(con['src_max'])
+        for i in range(numargs):
+            con['src_max'][i] = float(con['src_max'][i])
+        if numargs == 1:
+            con['src_max'] = con['src_max'][0]
+    if (con.has_key('dest_min')):
+        con['dest_min'] = con['dest_min'].replace(',',' ').split()
+        numargs = len(con['dest_min'])
+        for i in range(numargs):
+            con['dest_min'][i] = float(con['dest_min'][i])
+        if numargs == 1:
+            con['dest_min'] = con['dest_min'][0]
+    if (con.has_key('dest_max')):
+        con['dest_max'] = con['dest_max'].replace(',',' ').split()
+        numargs = len(con['dest_max'])
+        for i in range(numargs):
+            con['dest_max'][i] = float(con['dest_max'][i])
+        if numargs == 1:
+            con['dest_max'] = con['dest_max'][0]
+    monitor.modify_connection(con['src_name'], con['dest_name'], con)
 
 def on_refresh(arg):
     global monitor

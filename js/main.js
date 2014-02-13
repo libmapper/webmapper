@@ -218,10 +218,10 @@ function update_connection_properties()
         $(".mode"+mode).addClass("modesel");
 
         $(".expression").val(c.expression);
-        if (c.src_min!=null) { $("#srcMin").val(c.src_min); }
-        if (c.src_max!=null) { $("#srcMax").val(c.src_max); }
-        if (c.dest_min!=null) { $("#destMin").val(c.dest_min); }
-        if (c.dest_max!=null) { $("#destMax").val(c.dest_max); }
+        if (c.src_min!=null) { $("#src_min").val(c.src_min); }
+        if (c.src_max!=null) { $("#src_max").val(c.src_max); }
+        if (c.dest_min!=null) { $("#dest_min").val(c.dest_min); }
+        if (c.dest_max!=null) { $("#dest_max").val(c.dest_max); }
         if (c.bound_min!=null) { set_boundary($("#boundaryMin"),c.bound_min,0);};
         if (c.bound_max!=null) { set_boundary($("#boundaryMax"),c.bound_max,1);};
     }
@@ -282,39 +282,49 @@ function selected_connection_set_mode(modestring)
     var modecmd = connectionModeCommands[modestring];
     if (!modecmd) return;
 
-    var args = copy_selected_connection();
+    var conns = view.get_selected_connections(model.connections);
+    if (!conns.length) return;
 
-    // adjust the mode
-    args['mode'] = modecmd;
+    var msg = { 'mode' : modecmd };
 
-    // send the command, should receive a /connection/modify message after.
-    command.send('set_connection', args);
+    for (var i in conns) {
+        if (conns[i]['mode'] == modestring)
+            continue;
+        msg['src_name'] = conns[i]['src_name'];
+        msg['dest_name'] = conns[i]['dest_name'];
+        command.send('set_connection', msg);
+    }
 }
 
-function selected_connection_set_input(what,field,idx)
+function selected_connection_set_input(what, field)
 {
-    var args = copy_selected_connection();
+    var conns = view.get_selected_connections(model.connections);
+    if (!conns.length) return;
 
-    if( !args ) return;
+    for (var i in conns) {
+        if (conns[i][what] == field.value || conns[i][what] == parseFloat(field.value))
+            continue;
+        var msg = {};
 
-    // Return if there is no change
-    if ( args[what][idx] == parseFloat(field.value) || args[what] == field.value) return;
+        // copy src and dest names
+        msg['src_name'] = conns[i]['src_name'];
+        msg['dest_name'] = conns[i]['dest_name'];
 
-    // TODO: this is a bit out of hand, need to simplify the mode
-    // strings and indexes.
-    var modecmd = connectionModeCommands[connectionModes[args['mode']]];
-    args['mode'] = modecmd;
+        // set the property being modified
+        if (what == 'mode')
+            msg[what] = connectionModeCommands[connectionModes[conns[i][what]]];
+        else
+            msg[what] = field.value;
 
-    // adjust the field
-    if (idx===undefined)
-        args[what] = field.value;
-    else
-        args[what][idx] = parseFloat(field.value);
+        // is expression is edited, switch to expression mode
+        if (what == 'expression' && conns[i]['mode'] != 'Expr')
+            msg['mode'] = 'expression';
 
-    // send the command, should receive a /connection/modify message after.
-    command.send('set_connection', args);
+        // send the command, should receive a /connection/modify message after.
+        command.send('set_connection', msg);
 
-    $(field).addClass('waiting');
+        $(field).addClass('waiting');
+    }
 }
 
 function selected_connection_set_boundary(boundarymode, ismax, div)
@@ -595,24 +605,23 @@ function add_signal_properties_bar()
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input style='width:calc(50% - 60px)'><input>");
     $('.range').children('input').each( function(i) {
-        var minOrMax = 'Max'   // A variable storing minimum or maximum
-        var srcOrDest = 'src'
-        if(i%2==0)  minOrMax = 'Min';
-        if(i>1)     srcOrDest = 'dest';
+        var minOrMax = 'max'   // A variable storing minimum or maximum
+        var srcOrDest = 'src_'
+        if(i%2==0)  minOrMax = 'min';
+        if(i>1)     srcOrDest = 'dest_';
         $(this).attr({
             'maxLength': 25,
             "size": 30,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
             'class': 'range',   
             'id': srcOrDest+minOrMax,
-            'index': i
         })
     });
 
-    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#destMin');
-    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#destMax');
-    $("<input id='foo' class='boundary' type='button'></input>").insertBefore('#srcMin');
-    $("<input id='bar' class='boundary' type='button'></input>").insertAfter('#srcMax');
+    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#dest_min');
+    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#dest_max');
+    $("<input id='foo' class='boundary' type='button'></input>").insertBefore('#src_min');
+    $("<input id='bar' class='boundary' type='button'></input>").insertAfter('#src_max');
 }
 
 function add_extra_tools()
@@ -679,10 +688,10 @@ function add_handlers()
         keydown: function(e) {
             e.stopPropagation();
             if(e.which == 13) //'enter' key
-                selected_connection_set_input( $(this).attr('id').split(' ')[0], this, $(this).attr('index') );
+                selected_connection_set_input( $(this).attr('id').split(' ')[0], this );
         },
         click: function(e) { e.stopPropagation(); },
-        blur: function() {selected_connection_set_input( $(this).attr('id').split(' ')[0], this, $(this).attr('index') );}
+        blur: function() {selected_connection_set_input( $(this).attr('id').split(' ')[0], this );}
     }, 'input');
 
     //For the mode buttons
