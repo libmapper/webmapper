@@ -4,6 +4,7 @@
 
 <title>LibMapper Matrix View</title>
 
+<link rel="stylesheet" type="text/css" href="../css/style.css"></link>
 <script type="text/javascript" src="../js/util.js"></script>
 <script type="text/javascript" src="../js/LibMapperModel.js"></script>
 
@@ -77,7 +78,7 @@ function init()
     
 	initFakeData(4, 4, 4);
 
-	switch_mode("grid");
+	switch_mode("list");
 	document.getElementById('modeSelection').value = "grid";
 
 	
@@ -287,9 +288,10 @@ function btnHandler(val)
 			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
 	<select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">
 		<option value='none'>None</option>
-		<option value='grid' selected>Grid Demo</option>"+
-		<option value='hive' selected>Hive Demo</option>"+
-		<option value='balloon' selected>Balloon Demo</option>"+
+		<option value='list' selected>List Demo</option>"+
+		<option value='grid' >Grid Demo</option>"+
+		<option value='hive' >Hive Demo</option>"+
+		<option value='balloon' >Balloon Demo</option>"+
 	</select>
 			
 		</td>
