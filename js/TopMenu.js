@@ -105,8 +105,9 @@ TopMenu.prototype = {
 		    $('.topMenu').on({
 		        keydown: function(e) {
 		            e.stopPropagation();
-		            if(e.which == 13) //'enter' key
-		            	selected_connection_set_input( $(this).attr('id').split(' ')[0], this );
+		            if(e.which == 13){ //'enter' key
+		            	_self.selected_connection_set_input( $(this).attr('id').split(' ')[0], this );
+		            }
 		        },
 		        click: function(e) { e.stopPropagation(); },
 		        blur: function() {selected_connection_set_input( $(this).attr('id').split(' ')[0], this );}
@@ -230,7 +231,6 @@ TopMenu.prototype = {
 		
 		selected_connection_set_input : function (what,field)
 		{
-//		    var args = this.copy_selected_connection();	//CHECK
 			var conns = view.get_selected_connections(model.connections);
 			if (!conns.length) return;
 			 
@@ -255,7 +255,6 @@ TopMenu.prototype = {
 					msg['mode'] = 'expression';
 				 
 				// send the command, should receive a /connection/modify message after.
-				//command.send('set_connection', msg);	//CHECK
 				$(this._container).trigger("setConnection", [msg]);
 
 			    $(field).addClass('waiting');
