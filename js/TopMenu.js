@@ -110,7 +110,7 @@ TopMenu.prototype = {
 		            }
 		        },
 		        click: function(e) { e.stopPropagation(); },
-		        blur: function() {selected_connection_set_input( $(this).attr('id').split(' ')[0], this );}
+		        blur: function() {_self.selected_connection_set_input( $(this).attr('id').split(' ')[0], this );}
 		    }, 'input');
 			
 		    //For the mode buttons
@@ -135,7 +135,7 @@ TopMenu.prototype = {
 		    });
 
 		    $('.boundary').on('click', function(e) {
-		        _self.on_boundary(e);
+		        _self.on_boundary(e, _self);
 		    });
 
 		    $('body').on('keydown', function(e) {
@@ -370,7 +370,7 @@ TopMenu.prototype = {
 		    return false;
 		},
 		
-		on_boundary : function(e)
+		on_boundary : function(e, _self)
 		{
 		    for (var i in this.boundaryIcons) {
 		        if ($(e.currentTarget).hasClass(this.boundaryIcons[i]))
@@ -390,8 +390,8 @@ TopMenu.prototype = {
 
 		    // set_boundary($(e.currentTarget), b,
 		    //              e.currentTarget.id=='boundaryMax');
-
-		    selected_connection_set_boundary(b, e.currentTarget.id=='boundaryMax',
+		    
+		    _self.selected_connection_set_boundary(b, e.currentTarget.id=='boundaryMax',
 		                                     e.currentTarget);
 
 		    e.stopPropagation();
@@ -406,7 +406,7 @@ TopMenu.prototype = {
 
 		    // TODO: this is a bit out of hand, need to simplify the mode
 		    // strings and indexes.
-		    var modecmd = this.connectionModeCommands[connectionModes[args['mode']]];
+		    var modecmd = this.connectionModeCommands[this.connectionModes[args['mode']]];
 		    args['mode'] = modecmd;
 
 		    var c = ismax ? 'bound_max' : 'bound_min';
