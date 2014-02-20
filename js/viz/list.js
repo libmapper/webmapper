@@ -581,7 +581,8 @@ function listView(model)
 	    line.leftTr = left;
 	
 	    arrows.push(line);
-	
+	    $('#container').trigger("updateConnectionProperties");
+	    
 	    //TODO move this with all the other UI handlers
 	    $(line.border.node).on('click', function(e) {
 	        
@@ -609,6 +610,8 @@ function listView(model)
 	            if(selectedTab != all_devices)
 	            	model.selectedConnections_addConnection(src, dst);
 	        }
+	    	$('#container').trigger("updateConnectionProperties");
+	    	
 	        e.stopPropagation();
 	    });
 	}
@@ -710,6 +713,7 @@ function listView(model)
 	    lastSelectedTr.left = null;
 	    lastSelectedTr.right = null;
 	    update_arrows();
+	    model.selectedConnections_clearAll();
 	    $('#container').trigger("updateConnectionProperties");
 	}
 	
@@ -1134,7 +1138,7 @@ function listView(model)
 	            var nextTabIndex;
 	            if (e.shiftKey == false) { //Tabbing forwards
 	                if (currentTabIndex < n_tabs)
-	                    nextTabIndex = currentTabIndex + 1
+	                    nextTabIndex = currentTabIndex + 1;
 	                else // If we're at the last tab, select the first one
 	                    nextTabIndex = 1;
 	            }
