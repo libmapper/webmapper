@@ -291,6 +291,8 @@ function switch_mode(newMode)
 	    if(typeof view.load_view_settings == 'function')
 	    		view.load_view_settings(viewData[viewIndex]);
     }
+    
+    topMenu.clearConnectionProperties();
 }
 
 function network_selection()

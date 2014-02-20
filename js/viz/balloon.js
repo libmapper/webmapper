@@ -154,7 +154,8 @@ BalloonView.prototype = {
 	{
 		var data = [];
 		data.push(this.viewNodes);						// 0
-		data.push(this.model.selectedConnections);		// 1
+		model.selectedConnections_clearAll();
+		//data.push(this.model.selectedConnections);		// 1
 		return data;
 		
 	},
@@ -162,7 +163,7 @@ BalloonView.prototype = {
 	load_view_settings : function (data)
 	{
 		this.viewNodes = data[0];
-		this.model.selectedConnections = data[1];
+		//this.model.selectedConnections = data[1];
 	},
 	
 	/**

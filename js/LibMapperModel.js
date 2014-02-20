@@ -55,7 +55,7 @@ LibMapperModel.prototype = {
 			else
 				return false;
 		},
-		selectedConnections_clearAll : function (src, dst)
+		selectedConnections_clearAll : function ()
 		{
 			this.selectedConnections = new Assoc();
 		},
