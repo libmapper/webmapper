@@ -115,8 +115,6 @@ function initMonitorCommands()
     });
     command.register("new_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
-        model.selectedConnections_clearAll();
-        model.selectedConnections_addConnection(args.src_name, args.dest_name)
         update_display();
         topMenu.updateConnectionPropertiesFor(args);
     });
