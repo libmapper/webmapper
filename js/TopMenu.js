@@ -180,10 +180,24 @@ TopMenu.prototype = {
 			}
 		},
 		
-		// conn object with arguments for the connection
-		// conns array of connections to update
-		updateConnectionPropertiesFor : function(conn, conns)
+
+		//clears and disables to connection properties bar
+		clearConnectionProperties : function ()
 		{
+	        $(".mode").removeClass("modesel");
+	        $("*").removeClass('waiting');
+	        $(".topMenu input").val('');
+	        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+	        $('.signalControl').children('*').removeClass('disabled');
+	        $('.signalControl').addClass('disabled');
+		},
+		
+		
+		// conn object with arguments for the connection
+		updateConnectionPropertiesFor : function(conn)
+		{
+			var conns = view.get_selected_connections();
+			
 		    if (conns.length == 1) {
 		        if (conns[0].src_name == conn.src_name
 		            && conns[0].dest_name == conn.dest_name)
@@ -193,22 +207,17 @@ TopMenu.prototype = {
 		    }
 		},
 		
-		updateConnectionProperties : function(conns)
+		
+		updateConnectionProperties : function()
 		{
-		    var clear_props = function() {
-		        $(".mode").removeClass("modesel");
-		        $("*").removeClass('waiting');
-		        $(".topMenu input").val('');
-		        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
-		        $('.signalControl').children('*').removeClass('disabled');
-		        $('.signalControl').addClass('disabled');
-		    };
+			this.clearConnectionProperties();
+
+			var conns = view.get_selected_connections();
 
 			// if there is one connection selected, display its properties on top
 		    if (conns.length == 1) {
 		        var c = conns[0];
 		        var mode = this.connectionModes[c.mode];
-		        clear_props();
 		        $('.signalControl').removeClass('disabled');
 		        $('.signalControl').children('*').removeClass('disabled');
 		        $(".mode"+mode).addClass("modesel");
@@ -221,10 +230,6 @@ TopMenu.prototype = {
 		        
 		        if (c.bound_min!=null) { this.set_boundary($("#boundaryMin"),c.bound_min,0);};
 		        if (c.bound_max!=null) { this.set_boundary($("#boundaryMax"),c.bound_max,1);};
-		    }
-		    else {
-		        clear_props();
-		        // Figure out what the heck to do for multiple selected connections
 		    }
 		},
 		

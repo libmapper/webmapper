@@ -131,7 +131,7 @@ BalloonView.prototype = {
 		
 	},
 	
-	get_selected_connections: function (list)
+	get_selected_connections: function ()
 	{
 		var vals = [];
 		var keys = this.model.selectedConnections.keys(); 

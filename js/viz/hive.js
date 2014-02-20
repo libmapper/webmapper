@@ -1260,7 +1260,7 @@ HivePlotView.prototype = {
 		
 		
 		this.update_display();
-		update_connection_properties();
+		$(this._container).trigger("updateConnectionProperties");	// trigger update topMenu event
 	},
 	selectedConnections_clearAll : function ()
 	{
@@ -1394,7 +1394,7 @@ HivePlotView.prototype = {
 	
 	
 	// returns to the main view an assoc containing the selected connection
-	get_selected_connections: function(list)
+	get_selected_connections: function()
 	{
 		var vals =[];
 		

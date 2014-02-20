@@ -16,6 +16,16 @@ function LibMapperModel ()
 
 LibMapperModel.prototype = {
 		
+		// returns an ARRAY with the selected connections
+		getSelectedConnections : function ()
+		{
+			var result = new Array();
+			var k = this.selectedConnections.keys();
+			for (var key in k)
+				result.push(this.selectedConnections.get(k));
+			return result;
+		},
+		
 		selectedConnections_addConnection : function (src, dst)
 		{
 			var key = src + ">" + dst;

@@ -111,23 +111,22 @@ function initMonitorCommands()
             model.connections.add(args[d].src_name + '>' + args[d].dest_name, args[d]);
         update_display();
         for (var d in args)
-            topMenu.updateConnectionPropertiesFor(args[d], view.get_selected_connections(model.connections));
+            topMenu.updateConnectionPropertiesFor(args[d]);
     });
     command.register("new_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args, view.get_selected_connections(model.connections));
+        topMenu.updateConnectionPropertiesFor(args);
     });
     command.register("mod_connection", function(cmd, args) {
         model.connections.add(args.src_name + '>' + args.dest_name, args);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args, view.get_selected_connections(model.connections));
+        topMenu.updateConnectionPropertiesFor(args);
     });
     command.register("del_connection", function(cmd, args) {
-        var conns = view.get_selected_connections(model.connections);
         model.connections.remove(args.src_name+'>'+args.dest_name);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args, conns);
+        topMenu.updateConnectionPropertiesFor(args);
     });
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
@@ -193,7 +192,7 @@ function initViewCommands()
     
     // asks the view for the selected connections and updates the edit bar
     $("#container").on("updateConnectionProperties", function(e){
-    	topMenu.updateConnectionProperties(view.get_selected_connections(model.connections));
+    	topMenu.updateConnectionProperties();
     });
     
     // asks the view for the save button link (based on the active device) 

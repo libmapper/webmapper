@@ -84,8 +84,10 @@ function listView(model)
     	 }
     };
 
-    this.get_selected_connections = function(list)
+    this.get_selected_connections = function()
     {
+    	var list = model.connections;
+    	
         var L = $('.trsel', leftTable.table);
         var R = $('.trsel', rightTable.table);
         var vals = [];

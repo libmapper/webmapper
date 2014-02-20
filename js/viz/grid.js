@@ -289,7 +289,7 @@ GridView.prototype = {
 		});
 		$("#sigGrid").on("updateConnectionProperties", function(e){
 			e.stopPropagation();	//prevents bubbling to main.js
-			update_connection_properties();
+			$(_self._container).trigger("updateConnectionProperties");	// trigger update topMenu event
 		});
 		
 		
