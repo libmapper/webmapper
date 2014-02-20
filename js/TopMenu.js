@@ -36,9 +36,9 @@ TopMenu.prototype = {
 			        "<div class='topMenu'>"+
 			        "<div class='utils'>"+
 			        	"<div id='refresh'></div>"+
-			        	"<div>"+
-					        "<div class='loadButton'>Load</div>"+
-					        "<div class='saveButton'>Save</div>"+
+			        	"<div id='saveLoadDiv'>"+
+					        "<div><a id='loadButton'>Load</div>"+
+					        "<div><a id='saveButton'>Save</a></div>"+
 					    "</div>"+
 				        "<div>Display: <select id='modeSelection'>"+
 					        "<option value='list' selected>List</option>"+
