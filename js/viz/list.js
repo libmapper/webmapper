@@ -594,6 +594,7 @@ function listView(model)
 	    	if( $(right).hasClass('trsel') && $(left).hasClass('trsel') ) {
 	            select_tr(left);
 	            select_tr(right);
+	            line.node.classList.remove('selected');
 	            if(selectedTab != all_devices)
 	            	model.selectedConnections_removeConnection(src, dst);
 	        }
