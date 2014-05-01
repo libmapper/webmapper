@@ -40,7 +40,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-monitor = mapper.monitor(autorequest=0)
+monitor = mapper.monitor(autosubscribe_flags=mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT)
 
 def on_device(dev, action):
     if action == mapper.MDB_NEW:
@@ -115,7 +115,7 @@ def on_refresh(arg):
     global monitor
     del monitor
     admin = mapper.admin(networkInterfaces['active'])
-    monitor = mapper.monitor(admin, autorequest=0)
+    monitor = mapper.monitor(admin, autosubscribe_flags=mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT)
     init_monitor()
 
 def on_save(arg):
@@ -156,8 +156,6 @@ def init_monitor():
     monitor.db.add_signal_callback(on_signal)
     monitor.db.add_link_callback(on_link)
     monitor.db.add_connection_callback(on_connection)
-    monitor.request_devices()
-    monitor.request_links_by_src_device_name("/*")
 
 init_monitor()
 
@@ -165,38 +163,16 @@ server.add_command_handler("all_devices",
                            lambda x: ("all_devices",
                                       list(monitor.db.all_devices())))
 
-def sync_device(name, is_src):
-    device = monitor.db.get_device_by_name(name)
-    if not device:
-        return
-    sigs_reported = 0
-    sigs_recorded = 0
-    if is_src:
-        sigs_reported = device["n_outputs"]
-        sigs_recorded = sum(1 for _ in monitor.db.outputs_by_device_name(name))
-    else:
-        sigs_reported = device["n_inputs"]
-        sigs_recorded = sum(1 for _ in monitor.db.inputs_by_device_name(name))
-    if sigs_reported != sigs_recorded:
-        if is_src:
-            monitor.request_output_signals_by_device_name(name)
-        else:
-            monitor.request_input_signals_by_device_name(name)
-    monitor.request_device_info(name)
-
-def get_signals_by_device_name(src_dev):
-    monitor.request_signals_by_device_name(src_dev)
-
 def select_tab(src_dev):
-    if src_dev == "All Devices":
-        monitor.request_devices()
-        monitor.request_links_by_src_device_name("/*")
-    else:
+    # TODO:
+    # if src_dev != focus_dev and focus_dev != "All Devices":
+    #     # revert device subscription back to only device and link metadata
+    #     monitor.subscribe(focus_dev, mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT, -1)
+    if src_dev != "All Devices":
+        monitor.subscribe(src_dev, mapper.SUB_DEVICE_OUTPUTS | mapper.SUB_DEVICE_CONNECTIONS_OUT, -1)
         links = monitor.db.links_by_src_device_name(src_dev)
         for i in links:
-            sync_device(i["dest_name"], 0)
-        sync_device(src_dev, 1)
-        monitor.request_connections_by_src_device_name(src_dev)
+            monitor.subscribe(i["dest_name"], mapper.SUB_DEVICE_INPUTS, -1)
 
 def new_connection(args):
     source = str(args[0])
@@ -208,8 +184,6 @@ def new_connection(args):
     monitor.connect(source, dest, options)
 
 server.add_command_handler("tab", lambda x: select_tab(x))
-
-server.add_command_handler("get_signals_by_device_name", lambda x: get_signals_by_device_name(x))
 
 server.add_command_handler("all_signals",
                            lambda x: ("all_signals",

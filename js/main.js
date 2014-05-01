@@ -77,7 +77,6 @@ function initMonitorCommands()
         //     }
         // }
         model.devices.add(args.name, args);
-        command.send('get_signals_by_device_name', args.name);
         update_display();
     });
     command.register("all_signals", function(cmd, args) {
