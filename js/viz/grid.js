@@ -479,7 +479,7 @@ GridView.prototype = {
 			
 	},
 	
-	get_selected_connections: function(list)
+	get_selected_connections: function()
 	{
 		
 		var vals =[];

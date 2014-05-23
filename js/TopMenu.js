@@ -39,7 +39,7 @@ TopMenu.prototype = {
 			        "<div class='utils'>"+
 			        	"<div id='refresh'></div>"+
 			        	"<div id='saveLoadDiv'>"+
-					        "<div id='loadButton'><input type='file' id='fileinput' name='files[]' multiple /></div>"+
+					        "<div><a id='loadButton'>Load</a></div>"+
 					        "<div><a id='saveButton'>Save</a></div>"+
 					    "</div>"+
 				        "<div>Display: <select id='modeSelection'>"+
@@ -52,8 +52,6 @@ TopMenu.prototype = {
 			    "</div>"
 		    );
 
-			this.checkBrowserSupport();
-			
 		    //Add the mode controls
 		    $('.topMenu').append("<div class='signalProps'>"+
 		    		 	"<div class='modesDiv signalControl disabled'>Mode: </div>"+
@@ -156,36 +154,7 @@ TopMenu.prototype = {
 		    });
 		},
 		
-		/**
-		 * Updates the save/loading functions based on the view's state
-		 * currently set up for the list view only
-		 */
-		updateSaveLocation : function (location)
-		{
-			console.log(location);
-			// get the save location
-			if(location){
-				window.saveLocation = location;
-			}else{
-				window.saveLocation = '';
-			}
-			
-			// update the save button's link
-			$('#saveButton').attr('href', window.saveLocation);
-
-			// if saving is not ready, disable the save button
-			if(window.saveLocation == '')	
-			{
-				$('#saveButton, #loadButton').addClass('disabled');
-			}
-			// if saving is ready, enable the save button
-			else
-			{
-				$('#saveButton, #loadButton').removeClass('disabled');
-			}
-		},
 		
-
 		//clears and disables to connection properties bar
 		clearConnectionProperties : function ()
 		{
@@ -484,177 +453,35 @@ TopMenu.prototype = {
 		    }
 		},
 		
-		checkBrowserSupport : function()
+		/**
+		 * Updates the save/loading functions based on the view's state
+		 * currently set up for the list view only
+		 */
+		updateSaveLocation : function (location)
 		{
+			console.log(location);
+			// get the save location
+			if(location){
+				window.saveLocation = location;
+			}else{
+				window.saveLocation = '';
+			}
 			
-		  	// Check browser supports File loading with JS
-		  	if (window.File && window.FileReader && window.FileList && window.Blob) 
-		  	{
-		  		console.log('Loading file API supported.');
-		  		var _self = this;
+			// update the save button's link
+			$('#saveButton').attr('href', window.saveLocation);
 
-		  		$('#fileinput').change( function (e){
-		  			
-			  			var file = e.target.files[0]; 
-					  	var filename = file.name;
-					  	if (file) 
-					  	{
-					  		var reader = new FileReader();
-					  		reader.onload = function(e) { 
-					  			var contents = e.target.result;
-					  			mapA = JSON.parse(contents);
-					  			_self.initData(mapA);
-					  			view.update_display();
-					  		};
-					  		reader.readAsText(file);
-					  	} 
-					  	else { 
-					  		alert("Failed to load file");
-					  	}
-		  			
-		  			});
-		  	} 
-		  	else 
-		  		console.log('Loading files is not supported in this browser');
-		},
+			// if saving is not ready, disable the save button
+			if(window.saveLocation == '')	
+			{
+				$('#saveButton, #loadButton').addClass('disabled');
+			}
+			// if saving is ready, enable the save button
+			else
+			{
+				$('#saveButton, #loadButton').removeClass('disabled');
+			}
+		}
 		
-		readSingleFile : function (evt) 
-		{
-			
-		},
-		
-	/* MODEL from JSON files (V1)
-	    
-	  	// mapping.destinations
-	  	id: "d0"
-	  	device: "delaydesigner.1"
-	  	signal: "14_channel/control/79/globa
-
-	  	// mapping.sources
-	  	id: "s0"
-	  	device: "71tstick.1"
-	  	signal: "instrument/grip/tip/touch"
-	    
-	  	// mapping.connections
-	      clipMax: "none"
-	      clipMin: "none"
-	      expression: "d0=s0*(-1)+(1)"
-	      mode: "linear"
-	      mute: 0
-	      range: Array[4]
-	  */
-		
-	  initData : function (data)
-	  {
-				console.log("initing")
-			/*
-			 			 
-		if(!data.mapping || !data.mapping.sources || !data.mapping.destinations || !data.mapping.connections)
-		  		return;
-
-	  	var devicesTemp = [];		// my array to store devices as they are made -to avoid duplicates
-	  	var signalsArray = [];		// my associative array to access later when loading connections
-	  	
-	  	var initDevs = function (sources, isSources)
-	  	{
-	  		for (var i=0; i<sources.length; i++)
-	  	  	{
-	  	  		var source = sources[i];
-	  	  		
-	  	  		// create the device object if it doesn't already exist
-	  	  		if(arrIsUnique(source.device, devicesTemp))
-	  	  		{
-	  	  			devicesTemp.push(source.device.toString());
-	  	  			var devArgs = new Object(); 
-	  	  			devArgs.name = source.device;
-	  	  			devArgs.n_inputs = 0;
-	  	  			devArgs.n_outputs = 0;
-	  	  			model.devices.add(source.device, devArgs);
-	  	  		}
-
-	  	  		// create the object for the model
-	  	  		var args = new Object(); 
-	  	  		args.device_name = source.device;
-	  	  		args.name = source.signal;
-	  	  		args.id = source.id;
-	  	  		model.signals.add(source.device+source.signal, args);
-	  	  		
-	  	  		// push to my associative array to access later when loading connections
-	  	  		signalsArray[source.id] = args;
-	  	  		
-	  	  		// increment device signal count
-	  	  		var dev = model.devices.get(source.device);
-	  	  		if(isSources)
-	  	  			dev.n_outputs = parseInt(dev.n_outputs) + 1;
-	  	  		else
-	  	  			dev.n_inputs = parseInt(dev.n_inputs) + 1;
-	  	  	}
-	  	};
-	  	
-	  	// for each source device/signal
-	  	initDevs(data.mapping.sources, true);
-
-	  	// for each source device/signal
-	  	initDevs(data.mapping.destinations, false);
-	  	
-	  	
-	    // for each connection
-	    for (var i=0; i<data.mapping.connections.length; i++)
-	  	{
-	  		var connection = data.mapping.connections[i];
-
-	  		//  split the equation LHS and RHS
-	  		var expr = connection.expression;
-	  		var split = expr.split("=");
-
-	  		// dest
-	  		var y = split[0];
-	  		var destDevice = signalsArray[y].device;
-	  		var destSignal = signalsArray[y].signal;
-
-	  		// source
-	  		var patt=/s\d+/gi;
-	  		var result=patt.exec(split[1]);
-	  		var x = result[0];
-	  		var newExpr = split[1].replace( patt,"x");
-	  	  	
-	  		// match 
-	  		var srcSignal = signalsArray[x].name; 
-	  		var srcDevice = signalsArray[x].device_name;
-	  		var	dstSignal = signalsArray[y].name;
-	  		var dstDevice = signalsArray[y].device_name;
-	  		var key = srcDevice + srcSignal + ">" + dstDevice + dstSignal;
-	  		
-	  		// create the link object for the model if not already linked
-	  		if(this.model.isLinked(srcDevice, dstDevice) == false)
-	  		{
-	  			var linkKey = srcDevice + ">" + dstDevice;
-	  			var linkArgs = new Object(); 
-	  			linkArgs.src_name = srcDevice;
-	  			linkArgs.dest_name = dstDevice;
-	  			model.links.add(linkKey, linkArgs);
-	  		}
-	  		
-	  		// create the connection object for the model
-	  		var args = new Object(); 
-	  		args.src_name = srcDevice + srcSignal;
-	  		args.dest_name = dstDevice + dstSignal;
-	  		args.muted = connection.mute;
-	  		args.range = connection.range;
-	  		args.expression = 'y=' + newExpr;
-	  		args.mode = connection.mode;
-	  		//args.bound_min = 0;
-	  		//args.dest_length = 1;
-	  		//args.src_length = 1;
-	  		//args.bound_max = 0;
-	  		//args.src_type = 'f';
-	  		//args.dest_type = 'f';
-	  		model.connections.add(key, args);
-	  	}
-	  	
-	  	*/
-	 }
-
 };
 
 
