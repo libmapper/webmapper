@@ -12,6 +12,9 @@
 <script type="text/javascript" src="../includes/jquery-ui-1.10.0.custom.js"></script><!-- JQuery UI-->
 <link rel="stylesheet" href="../js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" /><!-- JQueryUI CSS -->
 
+<link type="text/css" rel="stylesheet" href="../includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
+<script type="text/javascript" src="../includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
+
 <!--  List view Includes -->
 <script type="text/javascript" src="../js/viz/list.js"></script>
 <script type="text/javascript" src="../includes/raphael.js"></script>
@@ -76,7 +79,7 @@ function init()
     model = new LibMapperModel();
     model.pathToImages = "../" + model.pathToImages;
     
-	initFakeData(4, 4, 4);
+	initFakeData(4, 6, 4);
 
 	switch_mode("list");
 	document.getElementById('modeSelection').value = "list";

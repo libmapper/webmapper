@@ -484,19 +484,68 @@ GridSVG.prototype = {
 		},
 		
 		/**
-		 * Handlers for manipulating the array of selected cells
+		 * select a cell in the grid 
 		 */
 		selectedCells_addCell : function(cell){
-			cell.classList.add('cell_selected');			
+			
+			// add selected cell style
+			cell.classList.add('cell_selected');
+			
+			// add to view's array of selected cells
 			this.selectedCells.push(cell);
+			
+			// if cell is a connection, add to model's array of selected connections
+			var src = cell.getAttribute("data-src");
+			var dst = cell.getAttribute("data-dst");
+			if(this.model.isConnected(src, dst))
+				this.model.selectedConnections_addConnection(src, dst);
 		},
+		
+		/**
+		 * deselect a cell in the grid
+		 */
 		selectedCells_removeCell : function(cell){
+
 			var index = this.selectedCells_getCellIndex(cell);
-			if(index > -1){
+			if(index > -1)
+			{
+				// remove selected cell style
 				cell.classList.remove('cell_selected');
+				
+				// remove from view's array of selected cells
 				this.selectedCells.splice(index, 1);				
 			}
+			
+			// if cell is a connection, remove from model's array of selected connections
+			var src = cell.getAttribute("data-src");
+			var dst = cell.getAttribute("data-dst");
+			if(this.model.isConnected(src, dst))
+				this.model.selectedConnections_removeConnection(src, dst);
 		},
+		
+		/**
+		 * deselect all cells in the grid
+		 */
+		selectedCells_clearAll : function (){
+			
+			for(var i=0; i<this.selectedCells.length; i++)
+			{
+				var cell = this.selectedCells[i];
+				
+				// remove style
+				cell.classList.remove('cell_selected');
+
+				// if cell is a connection, remove from model's array of selected connections
+				var src = cell.getAttribute("data-src");
+				var dst = cell.getAttribute("data-dst");
+				if(this.model.isConnected(src, dst))
+					this.model.selectedConnections_removeConnection(src, dst);
+			}
+			
+			// clear the view's array of selected cells
+			this.selectedCells.length=0;
+		},
+		
 		selectedCells_getCellIndex : function (cell){
 			var index = -1;
 			for(var i=0; i<this.selectedCells.length; i++)
@@ -508,11 +557,6 @@ GridSVG.prototype = {
 			}
 			return index;
 			//return this.selectedCells.indexOf(cell);	// not sure but might be dangerous 
-		},
-		selectedCells_clearAll : function (){
-			for(var i=0; i<this.selectedCells.length; i++)
-				this.selectedCells[i].classList.remove('cell_selected');
-			this.selectedCells.length=0;	//clears the array
 		},
 		selectedCells_restore : function (cells)
 		{
@@ -908,8 +952,25 @@ GridSVG.prototype = {
 		updateDisplayData: function (cols, rows, connections)
 		{
 			this.data = [cols, rows];
-			this.connectionsArray = connections;
+			this.connectionsArray = connections;	
 			this.filterData();
+			
+			// check for selected connections
+			for (var i=0; i<this.selectedCells.length; i++)
+			{
+				var selectedCell = this.selectedCells[i];
+				var src = selectedCell.getAttribute("data-src");
+				var dst = selectedCell.getAttribute("data-dst");
+				
+				for(var j=0; j<connections.length; j++)
+				{
+					var cSrc = connections[j][0];
+					var cDst = connections[j][1];
+					if(src == cSrc && dst == cDst){
+						this.model.selectedConnections_addConnection(src, dst);
+					}
+				}
+			}
 		},
 		
 		refresh : function ()
@@ -960,6 +1021,8 @@ GridSVG.prototype = {
 			for (var i=0; i<this.selectedCells.length; i++)
 			{
 				var cell = this.selectedCells[i];
+				
+				// trigger the connect event
 				$(this._container).trigger("connect", cell);
 			}
 		},
@@ -971,7 +1034,14 @@ GridSVG.prototype = {
 			for (var i=0; i<this.selectedCells.length; i++)
 			{
 				var cell = this.selectedCells[i];
+				
+				// trigger the disconnect event
 				$(this._container).trigger("disconnect", cell);
+
+				// remove from model's array of selected connections
+				var src = cell.getAttribute("data-src");
+				var dst = cell.getAttribute("data-dst");
+				this.model.selectedConnections_removeConnection(src, dst);
 			}
 		},
 		getSelectedCells : function()

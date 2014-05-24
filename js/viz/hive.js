@@ -882,6 +882,7 @@ HivePlotView.prototype = {
 	drawConnections : function()
 	{
 		var _self = this;
+		this.model.selectedConnections_clearAll();
 		
 		for(var i=0; i<this.sigs[0].length; i++)
 		{
@@ -909,11 +910,12 @@ HivePlotView.prototype = {
 					var ctY2 = y2;
 					
 					var line = document.createElementNS(this.svgNS,"path");
+					var key = s.device_name + s.name + ">" + d.device_name + d.name;
+					line.setAttribute("data-fullname", key);
 					line.setAttribute("data-src", s.device_name);
 					line.setAttribute("data-dst", d.device_name);
 					line.setAttribute("data-srcSignal", s.name);
 					line.setAttribute("data-dstSignal", d.name);
-					line.setAttribute("data-fullname", s.device_name + s.name + ">" + d.device_name + d.name);
 					if(this.mode == 1){
 						line.setAttribute("marker-start" , "url(#hive_connectionMarker)");
 						line.setAttribute("marker-end" , "url(#hive_connectionMarker)");
@@ -935,9 +937,14 @@ HivePlotView.prototype = {
 						_self.onConnectionClick(this) ;
 					});
 					
-					if(this.selectedConnections_getIndex(line.getAttribute("data-fullname")) != -1)
+					// if line is selected
+					if(this.selectedConnections_getIndex(key) != -1)
 					{
+						// add the selected style
 						line.classList.add("hive_connection_selected");
+						
+						// add to model's array of selected connections
+						this.model.selectedConnections_addConnection(key, null);
 					}
 					
 					this.connectionsLines.push(line);
@@ -1239,7 +1246,7 @@ HivePlotView.prototype = {
 		if(arrIsUnique(name, this.selectedConnections))
 		{
 			this.selectedConnections_clearAll();
-			this.selectedConnections.push(name);
+			this.selectedConnections_add(con);
 			
 			// select corresponding nodes as well
 			var fakeSrc = document.createElement("p");
@@ -1252,7 +1259,7 @@ HivePlotView.prototype = {
 			fakeDst.setAttribute("data-srcSignal", con.getAttribute("data-dstSignal"));
 			this.selectedCells_addCell(fakeDst, 1);
 			
-			con.classList.add("hive_connection_selected");
+			
 		}
 		else{
 			this.selectedConnections_clearAll();
@@ -1262,6 +1269,16 @@ HivePlotView.prototype = {
 		this.update_display();
 		$(this._container).trigger("updateConnectionProperties");	// trigger update topMenu event
 	},
+	
+	selectedConnections_add : function (con)
+	{
+		// add to the view's array of selected connections
+		this.selectedConnections.push(con.getAttribute("data-fullname"));
+		
+		// add selected style to the connection line
+		con.classList.add("hive_connection_selected");
+	},
+	
 	selectedConnections_clearAll : function ()
 	{
 		this.selectedConnections = [];
@@ -1325,6 +1342,7 @@ HivePlotView.prototype = {
 			$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 		
 		this.selectedConnections_clearAll();
+		this.model.selectedConnections_clearAll();
 	},
 	
 	// toggle a connection
@@ -1393,22 +1411,6 @@ HivePlotView.prototype = {
 	},
 	
 	
-	// returns to the main view an assoc containing the selected connection
-	get_selected_connections: function()
-	{
-		var vals =[];
-		
-		if(this.selectedConnections.length > 0)
-		{
-			var con = this.selectedConnections[0].split(">");
-			var src = con[0];
-			var dst = con[1];
-			if(this.model.isConnected(src, dst))
-				vals.push(this.model.getConnection(src, dst));
-		}	
-		return vals;
-	},
-
 	//returns to the main view an assoc containing the devices included in view (all of them)
 	get_focused_devices : function()
 	{

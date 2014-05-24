@@ -170,7 +170,7 @@ TopMenu.prototype = {
 		// conn object with arguments for the connection
 		updateConnectionPropertiesFor : function(conn)
 		{
-			var conns = view.get_selected_connections();
+			var conns = this.get_selected_connections();
 			
 		    if (conns.length == 1) {
 		        if (conns[0].src_name == conn.src_name
@@ -186,7 +186,7 @@ TopMenu.prototype = {
 		{
 			this.clearConnectionProperties();
 
-			var conns = view.get_selected_connections();
+			var conns = this.get_selected_connections();
 
 			// if there is one connection selected, display its properties on top
 		    if (conns.length == 1) {
@@ -210,7 +210,7 @@ TopMenu.prototype = {
 		
 		selected_connection_set_input : function (what,field)
 		{
-			var conns = view.get_selected_connections(model.connections);
+			var conns = this.get_selected_connections();
 			if (!conns.length) return;
 			 
 			 
@@ -240,12 +240,24 @@ TopMenu.prototype = {
 			}
 		},
 		
+		/*
+		 * Gets the view's currently selected connections
+		 * All views except 'list view' use the model to store selected connections 
+		 */
+		get_selected_connections : function ()
+		{
+			if( $('#modeSelection').val() == "list" )
+				return view.get_selected_connections(model.connections);
+			else
+				return model.getSelectedConnections();
+		},
+		
 		selected_connection_set_mode : function (modestring)
 		{
 		    var modecmd = this.connectionModeCommands[modestring];
 		    if (!modecmd) return;
 
-		    var conns = view.get_selected_connections(model.connections);
+		    var conns = this.get_selected_connections();
 		    if (!conns.length) return;
 		    
 		    var msg = { 'mode' : modecmd };
@@ -261,7 +273,7 @@ TopMenu.prototype = {
 
 		copy_selected_connection : function ()
 		{
-		    var conns = view.get_selected_connections(model.connections);
+		    var conns = this.get_selected_connections();
 		    if (conns.length!=1) return;
 		    var args = {};
 
@@ -435,7 +447,7 @@ TopMenu.prototype = {
 		
 		mute_selected : function()
 		{
-		    var conns = view.get_selected_connections(model.connections);
+		    var conns = this.get_selected_connections();
 
 		    for ( var i in conns ) {
 		        var args = conns[i];

@@ -235,6 +235,7 @@ function update_display() {
     updateCallable = false;
     updateTimeout = setTimeout(function() {
         view.update_display();
+        topMenu.updateConnectionProperties();
     });
 }
 

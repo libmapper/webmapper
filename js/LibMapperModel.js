@@ -28,11 +28,17 @@ LibMapperModel.prototype = {
 		
 		selectedConnections_addConnection : function (src, dst)
 		{
-			var key = src + ">" + dst;
+			// no polymorphism in JS... arrg!
+			// called with no 'dst' if the full key is passed in src
+			var key = src;
+			if(dst != null)
+				key += ">" + dst;
+			
 			var conn = this.connections.get(key);
 			if(conn){
 				if(!this.selectedConnections.get(key)){
 					this.selectedConnections.add(key, conn);
+					console.log(this.selectedConnections.keys());
 				}
 			}	
 		},
@@ -42,6 +48,7 @@ LibMapperModel.prototype = {
 			if(this.selectedConnections.get(key))
 			{
 				this.selectedConnections.remove(key);
+				console.log(this.selectedConnections.keys());
 			}
 		},
 		
@@ -57,6 +64,7 @@ LibMapperModel.prototype = {
 		selectedConnections_clearAll : function ()
 		{
 			this.selectedConnections = new Assoc();
+			console.log(this.selectedConnections.keys());
 		},
 		
 		getConnection : function (src, dst)

@@ -479,24 +479,6 @@ GridView.prototype = {
 			
 	},
 	
-	get_selected_connections: function()
-	{
-		
-		var vals =[];
-		
-		var selectedCells = this.sigGrid.getSelectedCells();
-
-		for (var i=0; i<selectedCells.length; i++)
-		{
-			var cell = selectedCells[i];
-			var src = cell.getAttribute("data-src");
-			var dst = cell.getAttribute("data-dst");
-			if(this.model.isConnected(src, dst))
-				vals.push(this.model.getConnection(src, dst));
-		}	
-		return vals;
-	},
-	
 	/**
 	 * returns an assoc containing the devices included in the signals grid
 	 */

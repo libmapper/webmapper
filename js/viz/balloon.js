@@ -131,16 +131,6 @@ BalloonView.prototype = {
 		
 	},
 	
-	get_selected_connections: function ()
-	{
-		var vals = [];
-		var keys = this.model.selectedConnections.keys(); 
-		for(var i=0; i<keys.length; i++){
-			vals.push(this.model.connections.get(keys[i]));
-		}
-		return vals;
-	},
-	
 	/**
 	 * returns an assoc containing the devices included in the signals grid
 	 */
