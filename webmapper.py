@@ -7,7 +7,7 @@ import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
-networkInterfaces = {'active': '', 'available': []}   
+networkInterfaces = {'active': '', 'available': []}
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -204,7 +204,7 @@ def new_connection(args):
     options = {}
     if( len(args) > 2 ): # See if the connection message has been supplied with options
         if( type(args[2]) is dict ): # Make sure they are the proper format
-            options = args[2]  
+            options = args[2]
     monitor.connect(source, dest, options)
 
 server.add_command_handler("tab", lambda x: select_tab(x))

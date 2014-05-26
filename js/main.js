@@ -16,29 +16,29 @@ var boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
 
 //A global variable storing which display mode is currently in use
 var view;
-var viewIndex;					// to index into viewData 
-var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+var viewIndex;                    // to index into viewData
+var viewData = new Array(3);    // data specific to the view, change 3 the number of views
 
 
 //Where the network will be saved
 var saveLocation = '';
-var selectedTab;
+
 window.saveLocation = '';
 /* Kick things off. */
 window.onload = main;
 
 function switch_mode(newMode)
 {
-	if(view)
-	{
-		// save view settings
-		if(typeof view.save_view_settings == 'function')
-			viewData[viewIndex] = view.save_view_settings();
-		
-		// tell the view to cleanup (ex: removing event listeners)
-		view.cleanup();
-	}
-	
+    if(view)
+    {
+        // save view settings
+        if(typeof view.save_view_settings == 'function')
+            viewData[viewIndex] = view.save_view_settings();
+
+        // tell the view to cleanup (ex: removing event listeners)
+        view.cleanup();
+    }
+
     $('#container').empty();
     switch(newMode)
     {
@@ -48,32 +48,32 @@ function switch_mode(newMode)
             view.init();
             break;
         case 'grid':
-        	view = new GridView(document.getElementById('container'), model);
-        	viewIndex = 1;
-        	$('#saveLoadDiv').removeClass('disabled');
-        	view.update_display();
-        	break;
+            view = new GridView(document.getElementById('container'), model);
+            viewIndex = 1;
+            $('#saveButton, #loadButton').removeClass('disabled');
+            view.update_display();
+            break;
         case 'hive':
-        	view = new HivePlotView(document.getElementById('container'), model);
-        	viewIndex = 2;
-        	view.on_resize();
-        	break;
+            view = new HivePlotView(document.getElementById('container'), model);
+            viewIndex = 2;
+            view.on_resize();
+            break;
         case 'balloon':
-        	view = new BalloonView(document.getElementById('container'), model);
-        	viewIndex = 3;
+            view = new BalloonView(document.getElementById('container'), model);
+            viewIndex = 3;
             view.init();
             if(viewData[viewIndex])
-      	    	view.load_view_settings(viewData[viewIndex]);
+                view.load_view_settings(viewData[viewIndex]);
             view.update_display();
-        	break;
+            break;
         default:
             //console.log(newMode);
     }
-    
+
     // load view settings if any
     if(viewData[viewIndex]){
-	    if(typeof view.load_view_settings == 'function')
-	    		view.load_view_settings(viewData[viewIndex]);
+        if(typeof view.load_view_settings == 'function')
+                view.load_view_settings(viewData[viewIndex]);
     }
 }
 
@@ -90,11 +90,12 @@ function refresh_all()
 
 function update_save_location()
 {
-    if (selectedTab==all_devices) {
+    if (view.get_selected_tab()==all_devices) {
         $('#saveButton, #loadButton').addClass('disabled');
     }
-    else 
+    else {
         $('#saveButton, #loadButton').removeClass('disabled');
+    }
 
     $('#saveButton').attr('href', window.saveLocation);
 }
@@ -162,12 +163,12 @@ function on_load()
         var srcs = document.createElement('input');
         srcs.type = 'hidden';
         srcs.name = 'sources';
-        srcs.value = srcdevs.join(); 
+        srcs.value = srcdevs.join();
         form.appendChild(srcs);
         var dests = document.createElement('input');
         dests.type = 'hidden';
         dests.name = 'destinations';
-        dests.value = destdevs.join(); 
+        dests.value = destdevs.join();
         form.appendChild(dests);
 
         form.submit();
@@ -191,7 +192,7 @@ function notify(msg)
 
 function update_connection_properties()
 {
-    if (selectedTab == all_devices)
+    if (view.get_selected_tab() == all_devices)
         return;
 
     var clear_props = function() {
@@ -204,7 +205,7 @@ function update_connection_properties()
     };
 
     var conns = view.get_selected_connections(model.connections);
-	// if there is one connection selected, display its properties on top
+    // if there is one connection selected, display its properties on top
     if (conns.length > 1) {
         // Figure out what the heck to do for multiple connections
         clear_props();
@@ -385,7 +386,7 @@ function mute_selected()
         if ( args.muted == 0 ) {
             args.muted = 1;
         }
-        else 
+        else
             args.muted = 0;
 
         // TODO: why modes aren't just stored as their strings, I don't know
@@ -502,18 +503,18 @@ function main()
     command.register("active_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
     });
-    
+
     // actions from VIEW
 
     $("#container").on("tab", function(e, selectedTab){
-    	command.send('tab', selectedTab);
+        command.send('tab', selectedTab);
     });
-    
+
     $("#container").on("getSignalsByDevice", function(e, deviceName){
         command.send('get_signals_by_device_name', deviceName);
     });
     $("#container").on("get_links_or_connections_by_device_name", function(e, devName){
-    	command.send('tab', devName);	//FIX
+        command.send('tab', devName);    //FIX
     });
     $("#container").on("link", function(e, src, dst){
         command.send('link', [src, dst]);
@@ -527,27 +528,26 @@ function main()
     $("#container").on("disconnect", function(e, src, dst){
         command.send('disconnect', [src, dst]);
     });
-    
+
     $("#container").on("disconnect", function(e, src, dst){
-    	command.send('disconnect', [src, dst]);
+        command.send('disconnect', [src, dst]);
     });
-    
+
     $("#container").on("updateConnectionProperties", function(e){
-    	update_connection_properties();
+        update_connection_properties();
     });
-    
-    
+
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    	view.on_resize();
+        $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+        view.on_resize();
     };
-    
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
-        	switch_mode('list');
+            switch_mode('list');
             command.start();
             command.send('get_networks');
             command.send('all_devices');
@@ -562,12 +562,12 @@ function main()
 function add_container_elements()
 {
     $('body').append(
-	        "<div class='topMenu'>"+
-	            "<div class='utils'>"+
-                  "<div id='refresh'></div>"+
+            "<div class='topMenu'>"+
+                "<div class='utils'>"+
+                  "<div id='refreshButton'></div>"+
                   "<div>"+
-                      "<div class='loadButton'>Load</div>"+
-                      "<div class='saveButton'>Save</div>"+
+                      "<div id='loadButton' class='button'>Load</div>"+
+                      "<div id='saveButton' class='button'>Save</div>"+
                   "</div>"+
                   "<div>Display: <select id='modeSelection'>"+
                       "<option value='list' selected>List</option>"+
@@ -576,8 +576,8 @@ function add_container_elements()
                       "<option value='balloon'>Balloon</option></select>"+
                   "</div>"+
               "</div>"+
-	    "</div>"+
-	    "<div id='container'></div>"
+        "</div>"+
+        "<div id='container'></div>"
     );
 
     $('body').attr('oncontextmenu',"return false;");
@@ -613,7 +613,7 @@ function add_signal_properties_bar()
             'maxLength': 25,
             "size": 30,
             // Previously this was stored as 'rangeMin' or 'rangeMax'
-            'class': 'range',   
+            'class': 'range',
             'id': srcOrDest+minOrMax,
         })
     });
@@ -679,7 +679,7 @@ function network_selection()
 }
 
 /**
- * handlers for items in the top menu 
+ * handlers for items in the top menu
  */
 function add_handlers()
 {
@@ -706,7 +706,8 @@ function add_handlers()
         switch_mode(newMode);
     });
 
-    $('#saveButton').on('click', function(e) {
+    $('#saveButton').click(function(e) {
+        window.open($(this).attr('href'), '_blank');
         e.stopPropagation();
     });
 
@@ -723,17 +724,17 @@ function add_handlers()
         if( e.which == 77 ) mute_selected();
     });
 
-    $('#refresh').on('click', function(e) { 
-        $(this).css({'-webkit-animation': 'refreshSpin 1s'});
-        refresh_all(); 
+    $('#refreshButton').on('click', function(e) {
+        $(this).css({'-webkit-animation': 'refreshButtonSpin 1s'});
+        refresh_all();
         setTimeout(function(){
-            $('#refresh').css({'-webkit-animation': ''});
+            $('#refreshButton').css({'-webkit-animation': ''});
         }, 1000);
     });
 
     $(document).on('keydown', function(e){
         if(e.which == 8  && !$(':focus').is('input')) // 'delete' key, don't want the browser to go back in history
-        	console.log("balloon.js");
+            console.log("balloon.js");
     });
 
     network_selection();
