@@ -892,9 +892,7 @@ function drawing_curve(sourceRow)
         var ttleft = $(this.targetTable.tbody).offset().left + 5; // Left edge of the target table
         var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
         var row = $(td).parents('tr')[0];
-        var incompatible = $(row).hasClass('incompatible');
-        if( !incompatible )
-            return row;
+        return row;
     }
 
     // Our bezier curve points
@@ -949,26 +947,23 @@ function drawing_curve(sourceRow)
             var rowHeight = $(target).height();
             this.checkTarget(target);
             end[0] = this.canvasWidth - start[0];
-            if( !$(target).hasClass('incompatible') ) {
-                end[1] = this.clamptorow(target);
-                c1 = moveEvent.offsetY;
-            }
-            else
-                end[1] = moveEvent.pageY - fullOffset($('#svgDiv')[0]).top;
+            end[1] = this.clamptorow(target);
+            c1 = moveEvent.offsetY;
         }
         this.path = get_bezier_path(start, end, c1);
         this.line.attr({'path': this.path});
     }
 
     this.mouseup = function( mouseUpEvent ) {
-        if (selectedTab == all_devices) on_link(mouseUpEvent);
+        if (selectedTab == all_devices)
+            on_link(mouseUpEvent);
         else if (this.targetRow) {
             on_connect(mouseUpEvent, {'muted': this.muted});
             //var sig1 = this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, '');
             //var sig2 = this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, '');
             //command.send('connect', sig1, sig2, {'muted': this.muted}]);
         }
-        $("*").off('.drawing').removeClass('incompatible');
+        $("*").off('.drawing');
         $(document).off('.drawing');
         self.line.remove();
     }
@@ -976,17 +971,14 @@ function drawing_curve(sourceRow)
     //Sees if we have a new target row, selects it if necessary
     this.checkTarget = function( mousedOverRow ) {
         if(this.targetRow != mousedOverRow ) {
-            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible')) {
+            if(this.targetRow != null) {
                 update_connection_properties();
                 select_tr(this.targetRow);
             }
 
-            if( !$(mousedOverRow).hasClass('incompatible') )
-                this.targetRow = mousedOverRow;
-            else
-                this.targetRow = null;
+            this.targetRow = mousedOverRow;
 
-            if(this.targetRow && !$(this.targetRow).hasClass('incompatible') ) {
+            if(this.targetRow) {
                 update_connection_properties();
                 select_tr(this.targetRow);
             }
@@ -1016,17 +1008,6 @@ function get_bezier_path(start, end, controlEnd)
     return path;
 }
 
-function fade_incompatible_signals(row, targetTableBody)
-{
-    var sourceLength = $(row).children('.length').text();
-
-    $(targetTableBody).children('tr').each( function(index, element) {
-        var targetLength =  $(element).children('.length').text();
-        if( sourceLength != targetLength )
-            $(element).addClass('incompatible');
-    });
-}
-
 function drawing_handlers()
 {
     // Wait for a mousedown on either table
@@ -1044,10 +1025,6 @@ function drawing_handlers()
             deselect_all();
             select_tr(curve.sourceRow);
             update_connection_properties();
-
-            // Fade out incompatible signals
-            if( selectedTab != all_devices )
-                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
 
             // Moving about the canvas
             $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
@@ -1075,7 +1052,7 @@ function drawing_handlers()
         });
 
         $(document).one('mouseup.drawing', function(mouseUpEvent) {
-            $("*").off('.drawing').removeClass('incompatible');
+            $("*").off('.drawing');
             $(document).off('.drawing');
         });
     });
