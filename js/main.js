@@ -199,7 +199,7 @@ function update_connection_properties()
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
-        //$('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
     };
@@ -299,6 +299,8 @@ function selected_connection_set_mode(modestring)
 
 function selected_connection_set_input(what, field)
 {
+    if (what == 'srcRangeSwitch' || what == 'destRangeSwitch')
+        return;
     var conns = view.get_selected_connections(model.connections);
     if (!conns.length) return;
 
@@ -350,6 +352,25 @@ function selected_connection_set_boundary(boundarymode, ismax, div)
     //$(div).addClass('waiting');
 }
 
+function selected_connection_switch_range(is_src, div)
+{
+    var c = copy_selected_connection();
+    if (!c) return;
+
+    var msg = {};
+    if (is_src) {
+        msg['src_max'] = String(c['src_min']);
+        msg['src_min'] = String(c['src_max']);
+    }
+    else {
+        msg['dest_max'] = String(c['dest_min']);
+        msg['dest_min'] = String(c['dest_max']);
+    }
+    msg['src_name'] = c['src_name'];
+    msg['dest_name'] = c['dest_name'];
+    command.send('set_connection', msg);
+}
+
 function on_boundary(e)
 {
     for (var i in boundaryIcons) {
@@ -373,7 +394,6 @@ function on_boundary(e)
 
     selected_connection_set_boundary(b, e.currentTarget.id=='boundaryMax',
                                      e.currentTarget);
-
     e.stopPropagation();
 }
 
@@ -601,7 +621,7 @@ function add_signal_properties_bar()
 
     //Add the range controls
     $('.ranges').append(
-        "<div id='srcRange' class='range signalControl disabled'>Src Range: </div>"+
+        "<div id='srcRange' class='range signalControl disabled'><div style='width:80px'>Src Range:</div></div>"+
         "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
     $('.range').append("<input style='width:calc(50% - 60px)'><input>");
     $('.range').children('input').each( function(i) {
@@ -617,11 +637,10 @@ function add_signal_properties_bar()
             'id': srcOrDest+minOrMax,
         })
     });
-
+    $("<input id='srcRangeSwitch' class='rangeSwitch' type='button'></input>").insertBefore('#src_max');
+    $("<input id='destRangeSwitch' class='rangeSwitch' type='button'></input>").insertBefore('#dest_max');
     $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#dest_min');
     $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#dest_max');
-    $("<input id='foo' class='boundary' type='button'></input>").insertBefore('#src_min');
-    $("<input id='bar' class='boundary' type='button'></input>").insertAfter('#src_max');
 }
 
 function add_extra_tools()
@@ -719,6 +738,12 @@ function add_handlers()
     $('.boundary').on('click', function(e) {
         on_boundary(e);
     });
+
+    $('.rangeSwitch').click(function(e) {
+        e.stopPropagation();
+        selected_connection_switch_range(e.currentTarget.id=='srcRangeSwitch',
+                                         e.currentTarget);
+    })
 
     $('body').on('keydown', function(e) {
         if( e.which == 77 ) mute_selected();

@@ -441,6 +441,8 @@ function update_connections()
     $('.status.middle').text(
         n_visibleConnections + " of " + n_connections + " connections"
     );
+    if (!n_connections)
+        $('#saveButton').addClass('disabled');
 }
 
 //A function for filtering out unconnected signals

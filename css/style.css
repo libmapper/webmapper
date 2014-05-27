@@ -207,15 +207,22 @@ form {
     color: gray;
 }*/
 
+.ranges {
+    padding-right: 10px;
+}
+
 .rangeSwitch {
     width: 20px;
     height: 20px;
     background: url(/images/range_switch.png);
     background-repeat: no-repeat;
     cursor: pointer;
+    border: none;
+    position: relative;
+    top: 3px;
 }
 
-/* Just the bounary icons */
+/* Just the boundary icons */
 .boundary {
     width: 24px;
     height: 24px;
