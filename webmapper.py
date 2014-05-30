@@ -82,38 +82,57 @@ def set_connection(con):
                        'calibrate': mapper.MO_CALIBRATE,
                        'expression': mapper.MO_EXPRESSION}[con['mode']]
     if (con.has_key('src_min')):
-        if (type(con['src_min']) is str):
-            con['src_min'] = con['src_min'].replace(',',' ').split()
-        numargs = len(con['src_min'])
-        for i in range(numargs):
-            con['src_min'][i] = float(con['src_min'][i])
-        if numargs == 1:
-            con['src_min'] = con['src_min'][0]
+        if (type(con['src_min']) is int or type(con['src_min']) is float):
+            con['src_min'] = float(con['src_min'])
+            numargs = 1;
+        else:
+            if (type(con['src_min']) is str):
+                con['src_min'] = con['src_min'].replace(',',' ').split()
+            numargs = len(con['src_min'])
+            for i in range(numargs):
+                con['src_min'][i] = float(con['src_min'][i])
+            if numargs == 1:
+                con['src_min'] = con['src_min'][0]
         con['src_type'] = 'f'
     if (con.has_key('src_max')):
-        if (type(con['src_max']) is str):
-            con['src_max'] = con['src_max'].replace(',',' ').split()
-        numargs = len(con['src_max'])
-        for i in range(numargs):
-            con['src_max'][i] = float(con['src_max'][i])
-        if numargs == 1:
-            con['src_max'] = con['src_max'][0]
+        if (type(con['src_max']) is int or type(con['src_max']) is float):
+            con['src_max'] = float(con['src_max'])
+            numargs = 1;
+        else:
+            if (type(con['src_max']) is str):
+                con['src_max'] = con['src_max'].replace(',',' ').split()
+            numargs = len(con['src_max'])
+            for i in range(numargs):
+                con['src_max'][i] = float(con['src_max'][i])
+            if numargs == 1:
+                con['src_max'] = con['src_max'][0]
+        con['src_type'] = 'f'
     if (con.has_key('dest_min')):
-        if (type(con['dest_min']) is str):
-            con['dest_min'] = con['dest_min'].replace(',',' ').split()
-        numargs = len(con['dest_min'])
-        for i in range(numargs):
-            con['dest_min'][i] = float(con['dest_min'][i])
-        if numargs == 1:
-            con['dest_min'] = con['dest_min'][0]
+        if (type(con['dest_min']) is int or type(con['dest_min']) is float):
+            con['dest_min'] = float(con['dest_min'])
+            numargs = 1;
+        else:
+            if (type(con['dest_min']) is str):
+                con['dest_min'] = con['dest_min'].replace(',',' ').split()
+            numargs = len(con['dest_min'])
+            for i in range(numargs):
+                con['dest_min'][i] = float(con['dest_min'][i])
+            if numargs == 1:
+                con['dest_min'] = con['dest_min'][0]
+        con['src_type'] = 'f'
     if (con.has_key('dest_max')):
-        if (type(con['dest_max']) is str):
-            con['dest_max'] = con['dest_max'].replace(',',' ').split()
-        numargs = len(con['dest_max'])
-        for i in range(numargs):
-            con['dest_max'][i] = float(con['dest_max'][i])
-        if numargs == 1:
-            con['dest_max'] = con['dest_max'][0]
+        if (type(con['dest_max']) is int or type(con['dest_max']) is float):
+            con['dest_max'] = float(con['dest_max'])
+            numargs = 1;
+        else:
+            if (type(con['dest_max']) is str):
+                con['dest_max'] = con['dest_max'].replace(',',' ').split()
+            numargs = len(con['dest_max'])
+            for i in range(numargs):
+                con['dest_max'][i] = float(con['dest_max'][i])
+            if numargs == 1:
+                con['dest_max'] = con['dest_max'][0]
+        con['src_type'] = 'f'
     monitor.modify_connection(con['src_name'], con['dest_name'], con)
 
 def on_refresh(arg):
