@@ -140,12 +140,12 @@ TopMenu.prototype = {
 		    $('.boundary').on('click', function(e) {
 		        _self.on_boundary(e, _self);
 		    });
-		    
-		    $('.rangeSwitch').click(function(e) {
-	            e.stopPropagation();
-	            selected_connection_switch_range(e.currentTarget.id=='srcRangeSwitch',
-	                                             e.currentTarget);
-	        });
+
+            $('.rangeSwitch').click(function(e) {
+                e.stopPropagation();
+                _self.selected_connection_switch_range(e.currentTarget.id=='srcRangeSwitch',
+                                                       e.currentTarget);
+            });
 
 		    $('body').on('keydown', function(e) {
 		        if( e.which == 77 ) 
@@ -372,7 +372,7 @@ TopMenu.prototype = {
 		
 		selected_connection_switch_range : function(is_src, div)
 		{
-		     var c = copy_selected_connection();
+		     var c = this.copy_selected_connection();
 		     if (!c) return;
 		 
 		     var msg = {};
