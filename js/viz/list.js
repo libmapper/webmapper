@@ -105,6 +105,11 @@ function listView(model)
         return vals;
     };
 
+    this.get_selected_tab = function()
+    {
+        return selectedTab;
+    }
+
     this.get_focused_devices = function()
     {
         if (selectedTab == all_devices) {
@@ -128,7 +133,7 @@ function listView(model)
         return focusedDevices;
     };
 
-    this.on_resize = function() 
+    this.on_resize = function()
     {
         update_arrows();
         update_row_heights();
@@ -370,6 +375,8 @@ function listView(model)
 	
 	    var keys = model.links.keys();
 	    for (var k in keys) {
+	    	// TODO: need to use exact match instead of endswith here since
+	        // names are arbitrary and could have substring matches
 	        var l = model.links.get(keys[k]);
 	        $('td:endswith('+l.src_name+')', leftTable.table).each(
 	            function(i,e){
@@ -431,6 +438,8 @@ function listView(model)
 	    for (var k in keys) {
 	        var c = model.connections.get(keys[k]);
 	        var muted = c.muted;
+	        // TODO: need to use exact match instead of endswith here since
+	        // names are arbitrary and could have substring matches
 	        $('td:endswith('+c.src_name+')', leftTable.table).each(
 	            function(i,e){
 	                var left = e.parentNode;
@@ -452,6 +461,9 @@ function listView(model)
 	    $('.status.middle').text(
 	        n_visibleConnections + " of " + n_connections + " connections"
 	    );
+	    
+	    if (!n_connections)
+	    	$('#saveButton').addClass('disabled');
 	}
 	
 	//A function for filtering out unconnected signals
@@ -464,8 +476,6 @@ function listView(model)
 	        else
 	            $(this).addClass('invisible');
 	    });
-	
-	
 	
 	    update_arrows();
 	    $(leftTable.table).trigger('update');
@@ -695,8 +705,10 @@ function listView(model)
 	    var endIndex = Math.max(index1, index2);
 	
 	    $(''+targetTable+' tbody tr').each( function(i, e) {
-	        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') )
-	            select_tr(e);
+	        if( i > startIndex && i < endIndex && !$(e).hasClass('invisible') && !$(e).hasClass('trsel') ){
+	        	select_tr(e);
+	        	$('#container').trigger("updateConnectionProperties");	        	
+	        }
 	    });
 	}
 	
@@ -741,7 +753,7 @@ function listView(model)
 	        update_connections();
 	}
 	
-	function apply_selected_pairs(f)
+	function apply_selected(f)
 	{
 	    $('tr.trsel', leftTable.table).each(
 	    function(i,e){
@@ -754,12 +766,30 @@ function listView(model)
 	    });
 	}
 	
+	function apply_selected_pairs(f, list)
+	{
+	    var L = $('.trsel', leftTable.table);
+	    var R = $('.trsel', rightTable.table);
+
+	    L.map(function() {
+	        var left = this;
+	        R.map(function() {
+	            var right = this;
+	            var key = left.firstChild.innerHTML.replace(/<wbr>/g, '')+'>'+right.firstChild.innerHTML.replace(/<wbr>/g, '');
+	            var v = list.get(key);
+	            if (v) {
+	                f(left, right);
+	            }
+	        });
+	    });
+	}
+	
 	function on_link(e)
 	{
 	    function do_link(l, r) {
 	        $('#container').trigger("link", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
 	    }
-	    apply_selected_pairs(do_link);
+	    apply_selected(do_link);
 	    e.stopPropagation();
 	}
 	
@@ -768,7 +798,7 @@ function listView(model)
 	    function do_unlink(l, r) {
 	    	$('#container').trigger("unlink", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
 	    }
-	    apply_selected_pairs(do_unlink);
+	    apply_selected_pairs(do_unlink, model.links);
 	    e.stopPropagation();
 	}
 	
@@ -782,7 +812,7 @@ function listView(model)
 	        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
 	        $('#container').trigger("connect", [sig1, sig2, args]);
 	    }
-	    apply_selected_pairs(do_connect);
+	    apply_selected(do_connect);
 	    e.stopPropagation();
 	}
 	
@@ -793,7 +823,7 @@ function listView(model)
 	        var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
 	        $('#container').trigger("disconnect", [sig1, sig2]);
 	    }
-	    apply_selected_pairs(do_disconnect);
+	    apply_selected_pairs(do_disconnect, model.connections);
 	    e.stopPropagation();
 	}
 	
@@ -898,9 +928,7 @@ function listView(model)
 	        var ttleft = $(this.targetTable.tbody).offset().left + 5; // Left edge of the target table
 	        var td = document.elementFromPoint( ttleft, svgTop + y ); // Closest table element (probably a <td> cell)
 	        var row = $(td).parents('tr')[0]; 
-	        var incompatible = $(row).hasClass('incompatible');
-	        if( !incompatible )
-	            return row;
+            return row;
 	    };
 	
 	    // Our bezier curve points
@@ -956,26 +984,22 @@ function listView(model)
 	            var rowHeight = $(target).height();
 	            this.checkTarget(target);
 	            end[0] = this.canvasWidth - start[0];
-	            if( !$(target).hasClass('incompatible') ) {
-	                end[1] = this.clamptorow(target);
-	                c1 = moveEvent.offsetY;
-	            }
-	            else
-	                end[1] = moveEvent.pageY - fullOffset($('#svgDiv')[0]).top;
+	            end[1] = this.clamptorow(target);
 	        }
 	        this.path = get_bezier_path(start, end, c1);
 	        this.line.attr({'path': this.path});
 	    };
 	
 	    this.mouseup = function( mouseUpEvent ) {
-	        if (selectedTab == all_devices) on_link(mouseUpEvent);
+	        if (selectedTab == all_devices) 
+	        	on_link(mouseUpEvent);
 	        else if (this.targetRow) {
 	            on_connect(mouseUpEvent, {'muted': this.muted});
 	            //var sig1 = this.sourceRow.firstChild.innerHTML.replace(/<wbr>/g, '');
 	            //var sig2 = this.targetRow.firstChild.innerHTML.replace(/<wbr>/g, '');
 	            //command.send('connect', sig1, sig2, {'muted': this.muted}]);
 	        }
-	        $("*").off('.drawing').removeClass('incompatible');
+	        $("*").off('.drawing');
 	        $(document).off('.drawing');
 	        self.line.remove();
 	    };
@@ -983,15 +1007,12 @@ function listView(model)
 	    //Sees if we have a new target row, selects it if necessary
 	    this.checkTarget = function( mousedOverRow ) {
 	        if(this.targetRow != mousedOverRow ) {
-	            if(this.targetRow != null && !$(this.targetRow).hasClass('incompatible'));
+	            if(this.targetRow != null);
 	                select_tr(this.targetRow);
 	
-	            if( !$(mousedOverRow).hasClass('incompatible') )
-	                this.targetRow = mousedOverRow;
-	            else
-	                this.targetRow = null;
+	            this.targetRow = mousedOverRow;
 	
-	            if(this.targetRow && !$(this.targetRow).hasClass('incompatible') )
+	            if(this.targetRow)
 	                select_tr(this.targetRow);
 	        }
 	    };
@@ -1019,17 +1040,6 @@ function listView(model)
 	    return path;
 	}
 	
-	function fade_incompatible_signals(row, targetTableBody)
-	{
-	    var sourceLength = $(row).children('.length').text();
-	    
-	    $(targetTableBody).children('tr').each( function(index, element) {
-	        var targetLength =  $(element).children('.length').text();
-	        if( sourceLength != targetLength ) 
-	            $(element).addClass('incompatible');
-	    }); 
-	}
-	
 	function drawing_handlers()
 	{
 	    // Wait for a mousedown on either table
@@ -1046,10 +1056,7 @@ function listView(model)
 	            // Make sure only the proper row is selected
 	            deselect_all();
 	            select_tr(curve.sourceRow);
-	
-	            // Fade out incompatible signals
-	            if( selectedTab != all_devices )
-	                fade_incompatible_signals(curve.sourceRow, curve.targetTable.tbody);
+	            $('#container').trigger("updateConnectionProperties");
 	
 	            // Moving about the canvas
 	            $('svg, .displayTable tbody tr').on('mousemove.drawing', function(moveEvent) {
@@ -1077,7 +1084,7 @@ function listView(model)
 	        });
 	
 	        $(document).one('mouseup.drawing', function(mouseUpEvent) {
-	            $("*").off('.drawing').removeClass('incompatible');
+	            $("*").off('.drawing');
 	            $(document).off('.drawing');
 	        });
 	    });

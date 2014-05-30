@@ -7,7 +7,7 @@ import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
-networkInterfaces = {'active': '', 'available': []}   
+networkInterfaces = {'active': '', 'available': []}
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -82,28 +82,33 @@ def set_connection(con):
                        'calibrate': mapper.MO_CALIBRATE,
                        'expression': mapper.MO_EXPRESSION}[con['mode']]
     if (con.has_key('src_min')):
-        con['src_min'] = con['src_min'].replace(',',' ').split()
+        if (type(con['src_min']) is str):
+            con['src_min'] = con['src_min'].replace(',',' ').split()
         numargs = len(con['src_min'])
         for i in range(numargs):
             con['src_min'][i] = float(con['src_min'][i])
         if numargs == 1:
             con['src_min'] = con['src_min'][0]
+        con['src_type'] = 'f'
     if (con.has_key('src_max')):
-        con['src_max'] = con['src_max'].replace(',',' ').split()
+        if (type(con['src_max']) is str):
+            con['src_max'] = con['src_max'].replace(',',' ').split()
         numargs = len(con['src_max'])
         for i in range(numargs):
             con['src_max'][i] = float(con['src_max'][i])
         if numargs == 1:
             con['src_max'] = con['src_max'][0]
     if (con.has_key('dest_min')):
-        con['dest_min'] = con['dest_min'].replace(',',' ').split()
+        if (type(con['dest_min']) is str):
+            con['dest_min'] = con['dest_min'].replace(',',' ').split()
         numargs = len(con['dest_min'])
         for i in range(numargs):
             con['dest_min'][i] = float(con['dest_min'][i])
         if numargs == 1:
             con['dest_min'] = con['dest_min'][0]
     if (con.has_key('dest_max')):
-        con['dest_max'] = con['dest_max'].replace(',',' ').split()
+        if (type(con['dest_max']) is str):
+            con['dest_max'] = con['dest_max'].replace(',',' ').split()
         numargs = len(con['dest_max'])
         for i in range(numargs):
             con['dest_max'][i] = float(con['dest_max'][i])
@@ -204,7 +209,7 @@ def new_connection(args):
     options = {}
     if( len(args) > 2 ): # See if the connection message has been supplied with options
         if( type(args[2]) is dict ): # Make sure they are the proper format
-            options = args[2]  
+            options = args[2]
     monitor.connect(source, dest, options)
 
 server.add_command_handler("tab", lambda x: select_tab(x))

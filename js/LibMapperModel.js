@@ -102,7 +102,7 @@ LibMapperModel.prototype = {
 			var dstDevs = new Array();
 			
 			var keys = this.devices.keys();
-			for (var d in keys) 
+			for (var d in keys)
 			{
 				var k = keys[d];
 				var dev = this.devices.get(k);

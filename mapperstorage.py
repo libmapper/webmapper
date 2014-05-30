@@ -92,7 +92,7 @@ def deserialise(monitor, mapping_json, devices):
     version = '';
     if 'fileversion' in js:
         version = js['fileversion']
-    elif 'fileversion' in  js['mapping']:
+    elif 'mapping' in js and 'fileversion' in js['mapping']:
         version = js['mapping']['fileversion']
 
     modeIdx = {'bypass': mapper.MO_BYPASS,
@@ -100,10 +100,10 @@ def deserialise(monitor, mapping_json, devices):
                'calibrate': mapper.MO_CALIBRATE,
                'expression': mapper.MO_EXPRESSION}
     boundIdx = {'none': mapper.BA_NONE,
-               'mute': mapper.BA_MUTE,
-               'clamp': mapper.BA_CLAMP,
-               'fold': mapper.BA_FOLD,
-               'wrap': mapper.BA_WRAP}
+                'mute': mapper.BA_MUTE,
+                'clamp': mapper.BA_CLAMP,
+                'fold': mapper.BA_FOLD,
+                'wrap': mapper.BA_WRAP}
 
     m = js['mapping']
 
@@ -128,23 +128,31 @@ def deserialise(monitor, mapping_json, devices):
             #And the destination
             destsig = str(c['dest'][0]).split('/')[2]
 
-            # The expression, agian we're simply replacing based on an assumption of 1 to 1 connections
-            e = str(c['expression'].replace('src[0]', 'x')
-                                   .replace('dest[0]', 'y'))
-
             for l in links:
                 if monitor.db.get_link_by_src_dest_names(l[0], l[1]):
                     args = (str(l[0]+'/'+srcsig),
                             str(l[1]+'/'+destsig),
-                            {'mode': modeIdx[c['mode']],
-                             'src_min': c['src_min'],
-                             'src_max': c['src_max'],
-                             'dest_min': c['dest_min'],
-                             'dest_max': c['dest_max'],
-                             'expression': e,
-                             'bound_min': boundIdx[c['bound_min']],
-                             'bound_max': boundIdx[c['bound_max']],
-                             'muted': c['mute']})
+                            {})
+                    if 'mode' in c:
+                        args[2]['mode'] = modeIdx[c['mode']]
+                    if 'expression' in c:
+                        args[2]['expression'] = str(c['expression']
+                                                    .replace('src[0]', 'x')
+                                                    .replace('dest[0]', 'y'))
+                    if 'srcMin' in c:
+                        args[2]['src_min'] = c['srcMin']
+                    if 'srcMax' in c:
+                        args[2]['src_max'] = c['srcMax']
+                    if 'destMin' in c:
+                        args[2]['dest_min'] = c['destMin']
+                    if 'destMax' in c:
+                        args[2]['dest_max'] = c['destMax']
+                    if 'boundMin' in c:
+                        args[2]['bound_min'] = boundIdx[c['boundMin']]
+                    if 'boundMax' in c:
+                        args[2]['bound_max'] = boundIdx[c['boundMax']]
+                    if 'mute' in c:
+                        args[2]['muted'] = c['mute']
 
                     # If connection already exists, use 'modify', otherwise 'connect'.
                     # Assumes 1 to 1, again
@@ -187,12 +195,20 @@ def deserialise(monitor, mapping_json, devices):
                 if monitor.db.get_link_by_src_dest_names(l[0], l[1]):
                     args = (str(l[0]+'/'+srcsig),
                             str(l[1]+'/'+destsig),
-                            {'mode': modeIdx[c['mode']],
-                             'expression': e,
-                             'bound_min': boundIdx[c['bound_min']],
-                             'bound_max': boundIdx[c['bound_max']],
-                             'muted': c['mute']})
-                    if len(c['range']) == 4:
+                            {})
+                    if 'mode' in c:
+                        args[2]['mode'] = modeIdx[c['mode']]
+                    if 'expression' in c:
+                        args[2]['expression'] = str(c['expression']
+                                                    .replace('src[0]', 'x')
+                                                    .replace('dest[0]', 'y'))
+                    if 'boundMin' in c:
+                        args[2]['bound_min'] = boundIdx[c['boundMin']]
+                    if 'boundMax' in c:
+                        args[2]['bound_max'] = boundIdx[c['boundMax']]
+                    if 'mute' in c:
+                        args[2]['muted'] = c['mute']
+                    if 'range' in c and len(c['range']) == 4:
                         if c['range'][0] != '-':
                             args[2]['src_min'] = c['range'][0]
                         if c['range'][1] != '-':
@@ -201,7 +217,6 @@ def deserialise(monitor, mapping_json, devices):
                             args[2]['dest_min'] = c['range'][2]
                         if c['range'][3] != '-':
                             args[2]['dest_max'] = c['range'][3]
-
 
                     # If connection already exists, use 'modify', otherwise 'connect'.
                     # Assumes 1 to 1, again
@@ -245,10 +260,6 @@ def deserialise(monitor, mapping_json, devices):
 
             # Note: do not create link
 
-            # The expression itself
-            e = str(c['expression'].replace(link[0]['id'], 'x')
-                                   .replace(link[1]['id'], 'y'))
-
             # Range may have integers, floats, or '-' strings. When
             # converting to a list of floats, pass through anything that
             # doesn't parse as a float or int.
@@ -258,12 +269,20 @@ def deserialise(monitor, mapping_json, devices):
 
             args = (srcdev + str(link[0]['parameter']),
                     destdev + str(link[1]['parameter']),
-                    {'mode': modeIdx[c['scaling']],
-                     'expression': e,
-                     'bound_min': boundIdx[c['boundMin']],
-                     'bound_max': boundIdx[c['boundMax']],
-                     'muted': c['muted']})
-            if len(c['range']) == 4:
+                    {})
+            if 'scaling' in c:
+                args[2]['mode'] = modeIdx[c['scaling']]
+            if 'expression' in c:
+                args[2]['expression'] = str(c['expression']
+                                            .replace(link[0]['id'], 'x')
+                                            .replace(link[1]['id'], 'y'))
+            if 'clipMin' in c:
+                args[2]['bound_min'] = boundIdx[c['clipMin']]
+            if 'clipMax' in c:
+                args[2]['bound_max'] = boundIdx[c['clipMax']]
+            if 'muted' in c:
+                args[2]['muted'] = c['muted']
+            if 'range' in c and len(c['range']) == 4:
                 if c['range'][0] != '-':
                     args[2]['src_min'] = c['range'][0]
                 if c['range'][1] != '-':

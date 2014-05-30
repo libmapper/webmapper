@@ -49,7 +49,7 @@ function init()
 }
 
 /**
- * initialize the event listeners for events triggered by the views
+ * initialize the event listeners for events triggered by the monitor
  */
 function initMonitorCommands()
 {
@@ -135,9 +135,8 @@ function initMonitorCommands()
     command.register("active_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
     });
+    
 }
-
-
 /**
  * initialize the event listeners for events triggered by the views
  */
@@ -146,7 +145,7 @@ function initViewCommands()
 	// from list view
 	// requests links and connections from the selected source device (the selectedTab)
     $("#container").on("tab", function(e, selectedTab){
-    	command.send('tab', selectedTab);
+        command.send('tab', selectedTab);
     });
     
     // request list of signals from the monitor for a specific device
