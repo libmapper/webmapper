@@ -69,7 +69,7 @@ TopMenu.prototype = {
 
 		    //Add the range controls
 		    $('.ranges').append(
-		    		 "<div id='srcRange' class='range signalControl disabled'><div style='width:80px'>Src Range:</div></div>"+
+                     "<div id='srcRange' class='range signalControl disabled'><div style='width:108px'>Src Range:</div></div>"+
 		    		 "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
 					 
 		    $('.range').append("<input style='width:calc(50% - 60px)'><input>");
@@ -86,13 +86,12 @@ TopMenu.prototype = {
 		            'id': srcOrDest+minOrMax
 		        });
 		    });
-		    
-		    
-		    $("<input id='srcRangeSwitch' class='rangeSwitch' type='button'></input>").insertBefore('#src_max');
-		    $("<input id='destRangeSwitch' class='rangeSwitch' type='button'></input>").insertBefore('#dest_max');
-		    $("<input id='boundaryMin' class='boundary boundaryDown' type='button'></input>").insertBefore('#dest_min');
-		    $("<input id='boundaryMax' class='boundary boundaryUp' type='button'></input>").insertAfter('#dest_max');
-		    
+
+            $("<div id='srcRangeSwitch' class='rangeSwitch'></div>").insertBefore('#src_max');
+            $("<div id='destRangeSwitch' class='rangeSwitch' type='button'></div>").insertBefore('#dest_max');
+            $("<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>").insertBefore('#dest_min');
+            $("<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>").insertAfter('#dest_max');
+
 		    // extra tools
 		    $('.topMenu').append(
 		    	"<div id='wsstatus' class='extratools'>websocket uninitialized</div>");
