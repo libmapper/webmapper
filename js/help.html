@@ -1,0 +1,108 @@
+
+
+<div id="help">
+
+<div id="closeButton"><span onclick="closeHelp()">X</span></div>	
+
+
+<h1>List View</h1>
+
+<h2>List View Commands:</h2>
+
+<ul>
+	<li>'c' : Connect selected devices/signals</li>
+	<li>'delete': Delete selected links/connections</li>
+	<li>'cmd+a'	: Select all links/connections</li>
+	<li>'alt+tab' : Change tab to the right</li>
+	<li>'alt+shift+tab' : Change tab to the left</li>
+</ul>
+	
+
+
+<h1>Grid View</h1>
+
+<h2>Instructions:</h2> 
+
+<p>The grid view divides the interface into two constructions: The "DEVICES GRID" on the left, and the "SIGNALS GRID" on the right.</p>
+
+<p>When the grid view is initialized, both grids are visible; the devices grid is populated by all devices declared on the network, and the signals grid is initially empty.</p> 
+
+<p>To make connections between signals, devices must first be added to the signals grid. To do this, 
+select a device's label (or a cell corresponding to a pair of devices) and then press the "Add" button; signals of 
+the added devices will then be displayed in the signals grid. 
+A device can be removed from the signals grid in the same manner using the "remove" button. 
+Cells of devices that are included in the signals grid are indicated by a vertical or horizonal line.</p> 
+
+<p>You can save the current view in the SIGNALS grid as a 'preset' using the "SaveNew" button on the top right hand side. 
+Note that changes to the current preset will not be remembered unless you press the "Update" button.</p>
+
+<p>Note the keyboard shortcuts below for changing the active grid, moving the selected cell, toggling cells, andloading presets, as they 
+will enable you to use the interface much more efficiently. All keyboard shortcuts affect the 'active' grid, indicated by the little square in 
+the upper left corner of each grid.</p>
+
+<p>*Grid view was developed and tested on Google Chrome only.</p>
+
+<h2>Grid View Commands:</h2>
+
+<h3>Selecting Cells</h3>
+ <ul>
+	<li>CLICK a cell: set the cell as selected</li>
+	<li>COMMAND CLICK a cell: select multiple cells</li>
+	<li>ARROW KEYS: move selected cell</li>
+	<li>SHIFT + ARROW KEYS: move selected cell by 3 spaces</li>
+</ul>
+
+<h3>Connecting</h3>
+<ul>
+	<li>space: toggle selected cell(s)</li>
+	<li>c: connect selected cell(s)</li>
+	<li>d: disconnect selected cell(s)</li>
+</ul>
+
+<h3>Viewing</h3>	
+<ul>	
+	<li>CTRL 1: switch to SPLIT view</li>
+	<li>CTRL 2: switch to DEVICES only view</li>
+	<li>CTRL 3: switch to SIGNALS only view</li>
+	<br />	
+	<li>CTRL +: zoom in on active grid</li>
+	<li>CTRL -: zoom out on active grid</li>
+	<li>CTRL 0: zoom-to-fit on active grid</li>
+	<br />	
+	<li>ALT leftArrow: set DEVICES grid as active</li>
+	<li>ALT rightArrow: set SIGNALS grid as active</li>
+	<li>ALT up/down arrows: cycle through presets</li>
+</ul>
+
+
+
+<h1>Hive view</h1>
+
+<h2>Instructions</h2>
+
+<p>The hive plot is a method for visualizing networks. In this view, the upper half of the plot is designated for source devices, 
+and the lower for destinations. In view mode 1, an adapted hive plot, each device is given its own axis. In view mode 2, a traditional hive plot, 
+source/destination devices are grouped along a single axis.</p>
+
+<p>Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure connections. 
+Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. 
+Select signals by clicking its name in the list (or its node in the plot). 
+Once a source and destination signal is selected, you can create or remove the connection by clicking on the blue 
+bar at the bottom (or by using the keyboard shortcuts).</p> 
+
+<p>Connections on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.</p>
+
+
+<h2>Keyboard Commands:</h2>
+
+<ul>
+	<li>c: connect selected signals</li>
+	<li>d: disconnect selected signals</li>
+	<br />
+	<li>CTRL 1: switch to view mode 1 (adapted Hive plot)</li>
+	<li>CTRL 2: switch to view mode 2 (Hive plot)</li>
+</ul>
+
+
+	
+</div>

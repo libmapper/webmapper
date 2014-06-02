@@ -37,24 +37,26 @@
 
 
 <style type="text/css">
-body{ font-family: helvetica, arial, sans-serif}
 
-#logoWrapper button{
-font-size: 12px;
-border-radius: 3px; 
--moz-border-radius: 3px; 
--webkit-border-radius: 3px; 
-border: 0px solid #eeeeee;
-background: #ccc;
-padding: 6px 8px;
-color: #fff;
-}
-#logoWrapper button:hover {
-	background-color: #EEE8AA;
-}
-#logoWrapper button:active{
-	background-color: #FFFFF0;
-}
+body{ font-family: helvetica, arial, sans-serif}
+#menuWrapper button{ font-size: 12px; border-radius: 3px; -moz-border-radius: 3px; -webkit-border-radius: 3px; border: 1px solid #ccc; background: #ccc; padding: 6px 8px; color: #fff; }
+#menuWrapper button:hover, #menuWrapper #helpbutton:hover { background-color: #EEE8AA; }
+#menuWrapper button:active{	background-color: #FFFFF0; }
+#menuWrapper #helpbutton{ width: 28px; margin-right: 5px; background-color: #ffffff; border: 1px solid #1f628d; color: #1f628d; border-radius: 26px; -moz-border-radius: 26x; -webkit-border-radius: 26px; }
+
+#helpWrapper { position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: rgba(0,0,0, 0.75); z-index: 3; }
+#helpWrapper > div { margin: 50px 200px; padding: 0 30px; background: rgba(255,255,255, 1); position: absolute; top: 0; bottom: 0; left: 0; right: 0; overflow: scroll; }
+#helpWrapper h1{ margin-top: 40px; background: #eee; padding: 10px; }
+#helpWrapper h1:first-child{ margin-top: 0; }
+#helpWrapper h3 { font-weight: normal; }
+#helpWrapper h2, #helpWrapper h3, #helpWrapper p { padding-left: 10px; padding-right: 10px}
+#helpWrapper #closeButton { position: fixed; top: 24px; right: 200px; left: 200px; height: 26px; text-align: right; background: #fafafa; padding-right: 3px;}
+#helpWrapper #closeButton span {background: #fff; position: absolute; padding: 4px 10px; right: 0; cursor: pointer}
+#helpWrapper #closeButton span:hover {background: #ddd; }
+#helpWrapper #closeButton:hover {  }
+#helpWrapper ul{ padding-left: 10px; list-style-position: inside; }
+
+
 </style>
 
 <script><!--
@@ -70,9 +72,13 @@ var nDstDevices = 0;	// used for labels of fake dst devices
 
 function init()
 {
-	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
+
+	closeHelp();
+	$( "#helpWrapper" ).load( "../js/help.html" );
+	
+	$('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
     window.onresize = function (e) {
-    	$('#container').css('height', ($(window).height() - $('#logoWrapper').height()) + 'px' );
+    	$('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
     	view.on_resize();
     };
 
@@ -272,6 +278,17 @@ function btnHandler(val)
 		view.update_display();
 }
 
+
+	
+function closeHelp()
+{
+	$('#helpWrapper').hide();
+}
+function openHelp()
+{
+	$('#helpWrapper').show();
+}
+
 --></script>
 <style>
 	body{margin: 0;}
@@ -282,8 +299,8 @@ function btnHandler(val)
 
 
 <body onload="init()">
-<div style="margin: 0 auto;" id="logoWrapper">
-	<table id='logoWrapper' width="100%">
+<div style="margin: 0 auto;" id="menuWrapper">
+	<table width="100%">
 	<tr width="100%">
 		<td width="40%" align="left">
 			<img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
@@ -303,14 +320,23 @@ function btnHandler(val)
 			<button onclick="btnHandler('src')">Add Source Device</button>
 			<button onclick="btnHandler('dst')">Add Destination Device</button>
 			<button onclick="btnHandler('init')">Add 5x5 Devices</button>
+			<button onclick="openHelp()" id="helpbutton">?</button>
 		</td>
 	</table>
 </div> 
 
-	<div id="container">
+<div id="container">
 
+	<!-- views load here -->
 
 </div>
+
+<div id="helpWrapper">
+
+	<!-- help content loads here -->
+
+</div>	
+	
 
 </body>
 </html>
