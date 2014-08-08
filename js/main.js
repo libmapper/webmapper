@@ -24,14 +24,14 @@ function init()
 	initMonitorCommands();
     initViewCommands();
     initTopMenuCommands();
-    
+
     // update container height based on height of top menu
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
     	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     	view.on_resize();
     };
-    
+
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
@@ -77,7 +77,6 @@ function initMonitorCommands()
         //     }
         // }
         model.devices.add(args.name, args);
-        command.send('get_signals_by_device_name', args.name);
         update_display();
     });
     command.register("all_signals", function(cmd, args) {
@@ -147,19 +146,7 @@ function initViewCommands()
     $("#container").on("tab", function(e, selectedTab){
         command.send('tab', selectedTab);
     });
-    
-    // request list of signals from the monitor for a specific device
-    // deviceName = "/devicename"
-    $("#container").on("getSignalsByDevice", function(e, deviceName){
-        command.send('get_signals_by_device_name', deviceName);
-    });
-    
-    // request links and connections from monitor from a specific device
-    // deviceName = "/devicename"
-    $("#container").on("get_links_or_connections_by_device_name", function(e, deviceName){
-    	command.send('tab', deviceName);	//FIX
-    });
-    
+
     // link command
     // src = "/devicename"
     // dst = "/devicename"
@@ -167,39 +154,39 @@ function initViewCommands()
         command.send('link', [src, dst]);
         console.log(src, dst);
     });
-    
+
     // unlink command
     // src = "/devicename"
     // dst = "/devicename"
     $("#container").on("unlink", function(e, src, dst){
         command.send('unlink', [src, dst]);
     });
-    
+
     // connect command
     // src = "/devicename/signalname"
     // dst = "/devicename/signalname"
     $("#container").on("connect", function(e, src, dst, args){
         command.send('connect', [src, dst, args]);
     });
-    
+
     // disconnect command
     // src = "/devicename/signalname"
     // dst = "/devicename/signalname"
     $("#container").on("disconnect", function(e, src, dst){
         command.send('disconnect', [src, dst]);
     });
-    
+
     // asks the view for the selected connections and updates the edit bar
     $("#container").on("updateConnectionProperties", function(e){
     	topMenu.updateConnectionProperties();
     });
-    
-    // asks the view for the save button link (based on the active device) 
+
+    // asks the view for the save button link (based on the active device)
     // currently implemented in List view only
     $("#container").on("updateSaveLocation", function(e){
     	topMenu.updateSaveLocation(view.get_save_location());
     });
-    
+
 }
 
 function initTopMenuCommands()
@@ -285,13 +272,13 @@ function switch_mode(newMode)
         default:
             //console.log(newMode);
     }
-    
+
     // load view settings (if any)
     if(viewData[viewIndex]){
 	    if(typeof view.load_view_settings == 'function')
 	    		view.load_view_settings(viewData[viewIndex]);
     }
-    
+
     topMenu.clearConnectionProperties();
 }
 
