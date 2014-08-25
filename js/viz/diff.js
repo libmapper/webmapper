@@ -134,8 +134,8 @@ signal: "instrument/grip/tip/touch"
 			devicesTemp.push(source.device.toString());
 			var devArgs = new Object(); 
 			devArgs.name = source.device;
-			devArgs.n_inputs = 0;
-			devArgs.n_outputs = 0;
+			devArgs.num_inputs = 0;
+			devArgs.num_outputs = 0;
 			model.devices.add(source.device, devArgs);
 		}
 		
@@ -147,7 +147,7 @@ signal: "instrument/grip/tip/touch"
 		
 		// increment
 		var dev = model.devices.get(source.device);
-		dev.n_outputs = parseInt(dev.n_outputs) + 1;
+		dev.num_outputs = parseInt(dev.num_outputs) + 1;
 	}
 	for (var i=0; i<data.mapping.destinations.length; i++)
 	{
@@ -158,8 +158,8 @@ signal: "instrument/grip/tip/touch"
 			devicesTemp.push(source.device.toString());
 			var devArgs = new Object(); 
 			devArgs.name = source.device;
-			devArgs.n_inputs = 0;
-			devArgs.n_outputs = 0;
+			devArgs.num_inputs = 0;
+			devArgs.num_outputs = 0;
 			model.devices.add(source.device, devArgs);
 		}
 		
@@ -171,7 +171,7 @@ signal: "instrument/grip/tip/touch"
 		
 		// increment
 		var dev = model.devices.get(source.device);
-		dev.n_inputs = parseInt(dev.n_inputs) + 1;
+		dev.num_inputs = parseInt(dev.num_inputs) + 1;
 	}
 	
 	console.log("done!");

@@ -200,8 +200,8 @@ color: #fff;
   	  			devicesTemp.push(source.device.toString());
   	  			var devArgs = new Object(); 
   	  			devArgs.name = source.device;
-  	  			devArgs.n_inputs = 0;
-  	  			devArgs.n_outputs = 0;
+  	  			devArgs.num_inputs = 0;
+  	  			devArgs.num_outputs = 0;
   	  			model.devices.add(source.device, devArgs);
   	  		}
 
@@ -218,9 +218,9 @@ color: #fff;
   	  		// increment device signal count
   	  		var dev = model.devices.get(source.device);
   	  		if(isSources)
-  	  			dev.n_outputs = parseInt(dev.n_outputs) + 1;
+  	  			dev.num_outputs = parseInt(dev.num_outputs) + 1;
   	  		else
-  	  			dev.n_inputs = parseInt(dev.n_inputs) + 1;
+  	  			dev.num_inputs = parseInt(dev.num_inputs) + 1;
   	  	}
   	};
   	

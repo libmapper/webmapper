@@ -338,9 +338,9 @@ TopMenu.prototype = {
             var srcdevs = [];
             var destdevs = [];
             for (var i in devs.contents) {
-                if( devs.contents[i].n_outputs )
+                if( devs.contents[i].num_outputs )
                     srcdevs.push( devs.contents[i].name );
-                if( devs.contents[i].n_inputs )
+                if( devs.contents[i].num_inputs )
                     destdevs.push( devs.contents[i].name );
             }
 

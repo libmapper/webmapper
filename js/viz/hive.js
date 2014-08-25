@@ -1114,9 +1114,9 @@ HivePlotView.prototype = {
 		for (var d in keys) 
 		{
 			var dev = this.model.devices.get(keys[d]);
-			if(dev.n_outputs)
+			if(dev.num_outputs)
 				this.excludedDevs[0].push(dev.name);
-			if(dev.n_inputs)
+			if(dev.num_inputs)
 				this.excludedDevs[1].push(dev.name);
 		}
 	},
@@ -1137,9 +1137,9 @@ HivePlotView.prototype = {
 		for (var d in keys) 
 		{
 			var dev = this.model.devices.get(keys[d]);
-			if(dev.n_outputs)
+			if(dev.num_outputs)
 				this.expandedDevices[0].push(dev.name);
-			if(dev.n_inputs)
+			if(dev.num_inputs)
 				this.expandedDevices[1].push(dev.name);
 		}
 	},

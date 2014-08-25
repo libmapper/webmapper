@@ -257,10 +257,10 @@ function listView(model)
 	        var k = keys[d];
 	        var dev = model.devices.get(k);
 	
-	        if (dev.n_outputs){
-	            leftBodyContent.push([dev.name, dev.n_outputs, dev.host, dev.port]);}
-	        if (dev.n_inputs){
-	            rightBodyContent.push([dev.name, dev.n_inputs, dev.host, dev.port]);}
+	        if (dev.num_outputs){
+	            leftBodyContent.push([dev.name, dev.num_outputs, dev.host, dev.port]);}
+	        if (dev.num_inputs){
+	            rightBodyContent.push([dev.name, dev.num_inputs, dev.host, dev.port]);}
 	        
 	    }
 	

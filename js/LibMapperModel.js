@@ -107,9 +107,9 @@ LibMapperModel.prototype = {
 				var k = keys[d];
 				var dev = this.devices.get(k);
 				
-				if (dev.n_outputs)
+				if (dev.num_outputs)
 					srcDevs.push(dev);
-				if (dev.n_inputs)
+				if (dev.num_inputs)
 					dstDevs.push(dev);
 			}
 			
