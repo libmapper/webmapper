@@ -1,4 +1,4 @@
-//An object for the overall display
+// An object for the overall display
 function listView(model)
 {
     var svgns = 'http://www.w3.org/2000/svg';
@@ -21,7 +21,7 @@ function listView(model)
     var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
-    //"use strict";
+    // "use strict";
     this.type = 'list';
     this.unconnectedVisible = true; // Are unconnected devices/signals visible?
     this.focusedDevices = []; // An array containing devices seen in the display
@@ -139,10 +139,9 @@ function listView(model)
     {
         update_arrows();
         update_row_heights();
-        //$('.displayTable tr, #svgTop').css('height', ($(window).height() * 0.05) + "px");
     };
 
-    //A function to make sure that rows fill up the available space, in testing for now
+    // A function to make sure that rows fill up the available space, in testing for now
     function update_row_heights()
     {
         var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
@@ -153,20 +152,20 @@ function listView(model)
         $('#rightTable tbody tr').css('height', rightHeight+'px');
     }
 
-    //An object for the left and right tables, listing devices and signals
+    // An object for the left and right tables, listing devices and signals
     function listTable(id)
     {
-        this.id = id; //Something like "leftTable"
-        this.parent; //The node containing the table
-        this.div; //The div node (and status)
-        this.table; //The table node itself
-        this.headerRow; //The top row node of the table within <thead>
-        this.tbody; //The <tbody> node
-        this.footer; //The status bar at the bottom
+        this.id = id; // Something like "leftTable"
+        this.parent; // The node containing the table
+        this.div; // The div node (and status)
+        this.table; // The table node itself
+        this.headerRow; // The top row node of the table within <thead>
+        this.tbody; // The <tbody> node
+        this.footer; // The status bar at the bottom
 
-        this.nRows; //Number of rows (e.g. devices or signals) present
-        this.nVisibleRows; //Number of rows actually visible to the user
-        this.nCols; //Number of columns in table
+        this.nRows; // Number of rows (e.g. devices or signals) present
+        this.nVisibleRows; // Number of rows actually visible to the user
+        this.nCols; // Number of columns in table
 
         // Should be passed a the node for the parent
         this.create_within = function(parent)
@@ -186,9 +185,9 @@ function listView(model)
             this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
             this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
-            //Create the header elements
-            //This assumes that we will never need more than 20 columns
-            //Creating and destroying th elements themselves screws up tablesorter
+            // Create the header elements
+            // This assumes that we will never need more than 20 columns
+            // Creating and destroying th elements themselves screws up tablesorter
             for (var i=0; i<20; i++) {
                 $(this.headerRow).append("<th class='invisible'></th>");
             }
@@ -213,7 +212,7 @@ function listView(model)
             $(this.tbody).empty();
             for (var row in tableData)
             {
-                //If there is only one row, make it of even class for styling
+                // If there is only one row, make it of even class for styling
                 var newRow = "<tr>";
                 for (var col in tableData[row]) {
                     if (tableData[row][col]==undefined)
@@ -230,7 +229,7 @@ function listView(model)
 
         this.set_status = function()
         {
-            var name; //Devices or signals
+            var name; // Devices or signals
             if (selectedTab == all_devices) {
                 name = "devices";
             }
@@ -366,7 +365,7 @@ function listView(model)
         arrows = [];
     }
 
-    //What the heck is this?
+    // What the heck is this?
     $.expr[":"].endswith = function(obj, index, meta, stack)
     {
         return (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) >=0 && (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) == ((obj.textContent || obj.innerText || $(obj).text() || "").length - meta[3].length);
@@ -392,7 +391,7 @@ function listView(model)
                         function(i,e){
                             var right = e.parentNode;
                             var rightsel = $(right).hasClass('trsel');
-                            //Make sure that the row is not hidden
+                            // Make sure that the row is not hidden
                             if ($(left).css('display') != "none"
                                 && $(right).css('display') != "none") {
                                 create_arrow(left, right, leftsel && rightsel, 0);
@@ -407,10 +406,10 @@ function listView(model)
 
     }
 
-    //Because this is a heavy function, I want to prevent it from being called too rapidly
-    //(it is also never necessary to do so)
-    //It is currently called with a delay of 34ms, if it is called again within that delay
-    //The first call is forgotten.
+    // Because this is a heavy function, I want to prevent it from being called too rapidly
+    // (it is also never necessary to do so)
+    // It is currently called with a delay of 34ms, if it is called again within that delay
+    // The first call is forgotten.
     var arrowTimeout;
     var arrowCallable = true;
     var timesArrowsCalled = 0;
@@ -421,7 +420,6 @@ function listView(model)
             clearTimeout(arrowTimeout);
         }
         timesArrowsCalled++;
-        //console.log("Arrows: "+timesArrowsCalled);
 
         arrowCallable = false;
         arrowTimeout = setTimeout(function() {
@@ -454,7 +452,7 @@ function listView(model)
                         function(i,e){
                             var right = e.parentNode;
                             var rightsel = $(right).hasClass('trsel');
-                            //Are these rows being displayed?
+                            // Are these rows being displayed?
                             if ($(left).css('display') != 'none' && $(right).css('display') != 'none') {
                                 create_arrow(left, right, leftsel && rightsel, muted);
                                 n_visibleConnections++;
@@ -471,8 +469,8 @@ function listView(model)
             $('#saveButton').addClass('disabled');
     }
 
-    //A function for filtering out unconnected signals
-    //Or signals that do not match the search string
+    // A function for filtering out unconnected signals
+    // Or signals that do not match the search string
     function filter_view()
     {
         $('.displayTable tbody tr').each(function(i, row) {
@@ -496,7 +494,7 @@ function listView(model)
     {
         // The text in the search box
         var filterText;
-        //Test to see if the row is on the left or right table
+        // Test to see if the row is on the left or right table
         if ($(row).parents('.tableDiv').is('#leftTable'))
             filterText = $('#leftSearch').val();
         else if ($(row).parents('.tableDiv').is('#rightTable'))
@@ -542,7 +540,7 @@ function listView(model)
         }
 
         for (var i in srcNames) {
-            //Does the name match a string in the connections/links?
+            // Does the name match a string in the connections/links?
             if (srcNames[i] == name || destNames[i] == name)
                 return true;
         }
@@ -587,7 +585,7 @@ function listView(model)
 
         line.attr({
             "fill": "none",
-            "stroke-width": 2,
+            "stroke-width": "2px",
             "cursor": "pointer",
             "arrow-end": "classic-wide-long"
         });
@@ -599,14 +597,14 @@ function listView(model)
         arrows.push(line);
         $('#container').trigger("updateConnectionProperties");
 
-        //TODO move this with all the other UI handlers
+        // TODO move this with all the other UI handlers
         $(line.border.node).on('click', function(e) {
 
             var src = $(left).children('.name').text();
             var dst = $(right).children('.name').text();
 
 
-            //So that the arrow is deselected if both rows are selected
+            // So that the arrow is deselected if both rows are selected
             // selected, so deselect it
             if ($(right).hasClass('trsel') && $(left).hasClass('trsel')) {
                 select_tr(left);
@@ -665,7 +663,7 @@ function listView(model)
         var t = $(tr);
         var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
 
-        //Is the row on the left or right?
+        // Is the row on the left or right?
         var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
         if (i==null)
             return;
@@ -695,7 +693,7 @@ function listView(model)
         $('#container').trigger("updateConnectionProperties");
     }
 
-    //For selecting multiple rows with the 'shift' key
+    // For selecting multiple rows with the 'shift' key
     function full_select_tr(tr)
     {
         var targetTable = $(tr).parents('.tableDiv').attr('id') == 'leftTable' ? '#leftTable' : '#rightTable';
@@ -739,10 +737,9 @@ function listView(model)
     function select_all()
     {
         deselect_all();
-        // Need the var! Damn variable scope
         for (var i in arrows) {
-            //Test to see if those rows are already selected
-            //(select_tr() just toggles selection)
+            // Test to see if those rows are already selected
+            // (select_tr() just toggles selection)
             arrows[i].attr('stroke', 'red');
             if (! $(arrows[i].leftTr).hasClass('trsel'))
                 select_tr(arrows[i].leftTr);
@@ -865,7 +862,7 @@ function listView(model)
         leftTable = new listTable('leftTable');
         rightTable = new listTable('rightTable');
 
-        //Put the tables in the DOM
+        // Put the tables in the DOM
         leftTable.create_within($('#container')[0]);
         rightTable.create_within($('#container')[0]);
 
@@ -951,8 +948,9 @@ function listView(model)
         this.path[0][2] = this.clamptorow(this.sourceRow);
 
         // The actual line
-        this.line = svgArea.path().attr({'stroke-width': 2,
-                                        "arrow-end": "classic-wide-long"});
+        this.line = svgArea.path();
+        this.line.attr({"stroke-width": "2px",
+                       "arrow-end": "classic-wide-long"});
 
         this.update = function(moveEvent)
         {
@@ -978,8 +976,9 @@ function listView(model)
                 // Within clamping range?
                 if (absdiff < 50) {
                     // we can clamp to same side
+                    var startRow = this.findrow(start[1]);
                     var clampRow = this.findrow(end[1]);
-                    if (clampRow) {
+                    if (clampRow && clampRow != startRow) {
                         if (this.sourceTable == this.targetTable)
                             end[0] = start[0];
                         else
@@ -1007,8 +1006,6 @@ function listView(model)
             }
             // We're over a table row of the target table
             if ($(target).parents('tbody')[0] == this.targetTable.tbody) {
-                //var rowHeightPx = $(target).css('height');
-                //var rowHeight = +rowHeightPx.substring(0, rowHeightPx.length - 2);
                 var rowHeight = $(target).height();
                 this.checkTarget(target);
                 if (this.sourceTable == this.targetTable)
@@ -1018,7 +1015,7 @@ function listView(model)
                 end[1] = this.clamptorow(target);
             }
             this.path = get_bezier_path(start, end, c1, this.canvasWidth);
-            this.line.attr({'path': this.path});
+            this.line.attr({"path": this.path});
         };
 
         this.mouseup = function(mouseUpEvent) {
@@ -1135,7 +1132,7 @@ function listView(model)
             click: function(e) { e.stopPropagation(); }
         }, 'tr');
 
-        //For redrawing arrows upon table sort
+        // For redrawing arrows upon table sort
         $('.displayTable thead').on('click', 'th', function(e) {
             e.stopPropagation();
             $(this).parents(".displayTable").one('sortEnd', function() {
@@ -1152,8 +1149,8 @@ function listView(model)
                     on_connect(e);
             }
             else if (e.which == 8 || e.which == 46) { // disconnect on 'delete'
-                //Prevent the browser from going back a page
-                //but NOT if you're focus is an input and deleting text
+                // Prevent the browser from going back a page
+                // but NOT if you're focus is an input and deleting text
                 if (!$(':focus').is('input')) {
                     e.preventDefault();
                 }
@@ -1173,13 +1170,13 @@ function listView(model)
                 var n_tabs = $('.topTabs li').length;
                 var currentTabIndex = $('li.tabsel').index() + 1;
                 var nextTabIndex;
-                if (e.shiftKey == false) { //Tabbing forwards
+                if (e.shiftKey == false) { // Tabbing forwards
                     if (currentTabIndex < n_tabs)
                         nextTabIndex = currentTabIndex + 1;
                     else // If we're at the last tab, select the first one
                         nextTabIndex = 1;
                 }
-                else {  //Tabbing backwards
+                else {  // Tabbing backwards
                     if (currentTabIndex == 1) // At the first tab, go to the last
                         nextTabIndex = n_tabs;
                     else
