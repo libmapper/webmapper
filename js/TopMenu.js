@@ -1,38 +1,26 @@
-function TopMenu(container, model)
-{
+function TopMenu(container, model) {
     this._container = container;
     this.model = model;
-
-    this.connectionModesDisplayOrder = ["Byp", "Rev", "Line", "Calib", "Expr"];
-
-    this.connectionModeCommands = {"Byp": 'bypass',
-             "Rev": 'reverse',
-             "Line": 'linear',
-             "Calib": 'calibrate',
-             "Expr": 'expression'};
-
-    this.connectionModes = ["None", "Byp", "Line", "Expr", "Calib", "Rev"];
-
+    this.connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
+    this.connectionModeCommands = {"Byp": 'bypass', "Line": 'linear',
+                                   "Calib": 'calibrate', "Expr": 'expression' };
+    this.connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
     this.boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
-
     this.boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
-                         "boundaryMute", "boundaryClamp", "boundaryWrap"];
+                          "boundaryMute", "boundaryClamp", "boundaryWrap"];
 }
 
 TopMenu.prototype = {
-    /**
-     * Initialize the Top Menu Bar Component
-     */
-    init : function ()
-    {
-        var _self = this;                // to pass to context of THIS to event handlers
+    // Initialize the Top Menu Bar Component
+    init : function() {
+        var _self = this;   // to pass to context of THIS to event handlers
 
         $(this._container).empty();        // clear the container DIV
 
         window.saveLocation = '';        // Where the network will be saved
 
         $(this._container).append(
-                "<div class='topMenu'>"+
+            "<div class='topMenu'>"+
                 "<div class='utils'>"+
                     "<div id='refresh'></div>"+
                     "<div id='saveLoadDiv'>"+
@@ -46,8 +34,7 @@ TopMenu.prototype = {
                         "<option value='balloon'>Balloon</option></select>"+
                     "</div>"+
                 "</div>"+
-            "</div>"
-        );
+            "</div>");
 
         //Add the mode controls
         $('.topMenu').append("<div class='signalProps'>"+
@@ -94,20 +81,19 @@ TopMenu.prototype = {
         this.addHandlers();
     },
 
-    addHandlers : function ()
-    {
+    addHandlers : function() {
         var _self = this;
 
         //The expression and range input handlers
         $('.topMenu').on({
             keydown: function(e) {
                 e.stopPropagation();
-                if(e.which == 13){ //'enter' key
-                    _self.selected_connection_set_input( $(this).attr('id').split(' ')[0], this );
+                if (e.which == 13) { //'enter' key
+                    _self.selected_connection_set_input($(this).attr('id').split(' ')[0], this);
                 }
             },
             click: function(e) { e.stopPropagation(); },
-            blur: function() {_self.selected_connection_set_input( $(this).attr('id').split(' ')[0], this );}
+            blur: function() {_self.selected_connection_set_input($(this).attr('id').split(' ')[0], this);}
         }, 'input');
 
         //For the mode buttons
@@ -117,7 +103,7 @@ TopMenu.prototype = {
         });
 
         //For the visualization mode selection menu
-        $('#modeSelection').change( function(e) {
+        $('#modeSelection').change(function(e) {
             var newMode = $('#modeSelection').val();
             $(_self._container).trigger("switchView", [newMode]);    // trigger switch event
         });
@@ -142,22 +128,21 @@ TopMenu.prototype = {
         });
 
         $('body').on('keydown', function(e) {
-            if( e.which == 77 )
+            if (e.which == 77)
                 _self.mute_selected();
         });
 
         $('#refresh').on('click', function(e) {
             $(this).css({'-webkit-animation': 'refreshSpin 1s'});
             $(this._container).trigger("refreshAll");
-            setTimeout(function(){
+            setTimeout(function() {
                 $('#refresh').css({'-webkit-animation': ''});
             }, 1000);
         });
     },
 
     //clears and disables to connection properties bar
-    clearConnectionProperties : function ()
-    {
+    clearConnectionProperties : function() {
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
@@ -167,21 +152,18 @@ TopMenu.prototype = {
     },
 
     // conn object with arguments for the connection
-    updateConnectionPropertiesFor : function(conn)
-    {
+    updateConnectionPropertiesFor : function(conn) {
         var conns = this.get_selected_connections();
 
         if (conns.length == 1) {
             if (conns[0].src_name == conn.src_name
-                && conns[0].dest_name == conn.dest_name)
-            {
+                && conns[0].dest_name == conn.dest_name) {
                 this.updateConnectionProperties(conns);
             }
         }
     },
 
-    updateConnectionProperties : function()
-    {
+    updateConnectionProperties : function() {
         this.clearConnectionProperties();
 
         var conns = this.get_selected_connections();
@@ -194,23 +176,27 @@ TopMenu.prototype = {
             $('.signalControl').children('*').removeClass('disabled');
             $(".mode"+mode).addClass("modesel");
             $(".expression").val(c.expression);
-            if (c.src_min!=null) { $("#src_min").val(c.src_min); }
-            if (c.src_max!=null) { $("#src_max").val(c.src_max); }
-            if (c.dest_min!=null) { $("#dest_min").val(c.dest_min); }
-            if (c.dest_max!=null) { $("#dest_max").val(c.dest_max); }
-
-
-            if (c.bound_min!=null) { this.set_boundary($("#boundaryMin"),c.bound_min,0);};
-            if (c.bound_max!=null) { this.set_boundary($("#boundaryMax"),c.bound_max,1);};
+            if (c.src_min != null)
+                $("#src_min").val(c.src_min);
+            if (c.src_max != null)
+                $("#src_max").val(c.src_max);
+            if (c.dest_min != null)
+                $("#dest_min").val(c.dest_min);
+            if (c.dest_max != null)
+                $("#dest_max").val(c.dest_max);
+            if (c.bound_min != null)
+                this.set_boundary($("#boundaryMin"),c.bound_min, 0);
+            if (c.bound_max != null)
+                this.set_boundary($("#boundaryMax"),c.bound_max, 1);
         }
     },
 
-    selected_connection_set_input : function (what,field)
-    {
+    selected_connection_set_input : function(what, field) {
         if (what == 'srcRangeSwitch' || what == 'destRangeSwitch')
             return;
         var conns = this.get_selected_connections();
-        if (!conns.length) return;
+        if (!conns.length)
+            return;
 
         for (var i in conns) {
             if (conns[i][what] == field.value || conns[i][what] == parseFloat(field.value))
@@ -242,23 +228,21 @@ TopMenu.prototype = {
      * Gets the view's currently selected connections
      * All views except 'list view' use the model to store selected connections
      */
-    get_selected_connections : function ()
-    {
-        if( $('#modeSelection').val() == "list" )
+    get_selected_connections : function() {
+        if ($('#modeSelection').val() == "list")
             return view.get_selected_connections(model.connections);
         else
             return model.getSelectedConnections();
     },
 
-    selected_connection_set_mode : function (modestring)
-    {
+    selected_connection_set_mode : function(modestring) {
         var modecmd = this.connectionModeCommands[modestring];
         if (!modecmd) return;
 
         var conns = this.get_selected_connections();
         if (!conns.length) return;
 
-        var msg = { 'mode' : modecmd };
+        var msg = {'mode' : modecmd};
 
         for (var i in conns) {
             if (conns[i]['mode'] == modestring)
@@ -269,10 +253,9 @@ TopMenu.prototype = {
         }
     },
 
-    copy_selected_connection : function ()
-    {
+    copy_selected_connection : function() {
         var conns = this.get_selected_connections();
-        if (conns.length!=1) return;
+        if (conns.length != 1) return;
         var args = {};
 
         // copy existing connection properties
@@ -282,8 +265,7 @@ TopMenu.prototype = {
         return args;
     },
 
-    on_load : function()
-    {
+    on_load : function() {
         var _self = this;
 
         //A quick fix for now to get #container out of the way of the load dialogs
@@ -307,22 +289,22 @@ TopMenu.prototype = {
         l.appendChild(form);
         $('.topMenu').append(l);
 
-        iframe.onload = function(){
+        iframe.onload = function() {
             var t = $(iframe.contentDocument.body).text();
-            if (t.search('Success:')==-1 && t.search('Error:')==-1)
+            if (t.search('Success:') == -1 && t.search('Error:') == -1)
                 return;
             _self.notify($(iframe.contentDocument.body).text());
             $(l).remove();
             body.removeChild(iframe);
         };
 
-        $('#cancel',form).click(function(){
+        $('#cancel', form).click(function() {
             $(l).remove();
             $('#container').removeClass('onLoad');
             body.removeChild(iframe);
         });
 
-        form.firstChild.onchange = function(){
+        form.firstChild.onchange = function() {
 
             var fn = document.createElement('input');
             fn.type = 'hidden';
@@ -336,10 +318,10 @@ TopMenu.prototype = {
             var srcdevs = [];
             var destdevs = [];
             for (var i in devs.contents) {
-                if( devs.contents[i].num_outputs )
-                    srcdevs.push( devs.contents[i].name );
-                if( devs.contents[i].num_inputs )
-                    destdevs.push( devs.contents[i].name );
+                if (devs.contents[i].num_outputs)
+                    srcdevs.push(devs.contents[i].name);
+                if (devs.contents[i].num_inputs)
+                    destdevs.push(devs.contents[i].name);
             }
 
             //So that the monitor can see which devices are being looked at
@@ -359,8 +341,7 @@ TopMenu.prototype = {
         return false;
     },
 
-    selected_connection_switch_range : function(is_src, div)
-    {
+    selected_connection_switch_range : function(is_src, div) {
          var c = this.copy_selected_connection();
          if (!c) return;
 
@@ -378,8 +359,7 @@ TopMenu.prototype = {
          $(this._container).trigger("setConnection", msg);
     },
 
-    on_boundary : function(e, _self)
-    {
+    on_boundary : function(e, _self) {
         for (var i in this.boundaryIcons) {
             if ($(e.currentTarget).hasClass(this.boundaryIcons[i]))
                 break;
@@ -399,17 +379,16 @@ TopMenu.prototype = {
         // set_boundary($(e.currentTarget), b,
         //              e.currentTarget.id=='boundaryMax');
 
-        _self.selected_connection_set_boundary(b, e.currentTarget.id=='boundaryMax',
-                                         e.currentTarget);
+        _self.selected_connection_set_boundary(b,
+            e.currentTarget.id == 'boundaryMax', e.currentTarget);
 
         e.stopPropagation();
     },
 
-    selected_connection_set_boundary : function (boundarymode, ismax, div)
-    {
+    selected_connection_set_boundary : function(boundarymode, ismax, div) {
         var args = this.copy_selected_connection();
 
-        if( !args )
+        if (!args)
             return;
 
         // TODO: this is a bit out of hand, need to simplify the mode
@@ -428,23 +407,21 @@ TopMenu.prototype = {
         //$(div).addClass('waiting');
     },
 
-    notify : function (msg)
-    {
+    notify : function(msg) {
         var li = document.createElement('li');
         li.className = 'notification';
         li.innerHTML = msg;
         $('.topMenu').append(li);
-        setTimeout(function(){
-            $(li).fadeOut('slow', function(){ $(li).remove();});
+        setTimeout(function() {
+            $(li).fadeOut('slow', function() { $(li).remove();});
         }, 5000);
     },
 
-    set_boundary : function (boundaryElement, value, ismax)
-    {
+    set_boundary : function (boundaryElement, value, ismax) {
         for (var i in this.boundaryIcons)
             boundaryElement.removeClass(this.boundaryIcons[i]);
 
-        if (value == 0) {//'None' special case, icon depends on direction
+        if (value == 0) { //'None' special case, icon depends on direction
             if (ismax)
                 boundaryElement.addClass('boundaryUp');
             else
@@ -462,13 +439,12 @@ TopMenu.prototype = {
         }
     },
 
-    mute_selected : function()
-    {
+    mute_selected : function() {
         var conns = this.get_selected_connections();
 
-        for ( var i in conns ) {
+        for (var i in conns) {
             var args = conns[i];
-            if ( args.muted == 0 ) {
+            if (args.muted == 0) {
                 args.muted = 1;
             }
             else
@@ -486,13 +462,13 @@ TopMenu.prototype = {
      * Updates the save/loading functions based on the view's state
      * currently set up for the list view only
      */
-    updateSaveLocation : function (location)
-    {
+    updateSaveLocation : function(location) {
         console.log(location);
         // get the save location
-        if(location){
+        if (location) {
             window.saveLocation = location;
-        }else{
+        }
+        else {
             window.saveLocation = '';
         }
 
@@ -500,13 +476,11 @@ TopMenu.prototype = {
         $('#saveButton').attr('href', window.saveLocation);
 
         // if saving is not ready, disable the save button
-        if(window.saveLocation == '')
-        {
+        if (window.saveLocation == '') {
             $('#saveButton, #loadButton').addClass('disabled');
         }
         // if saving is ready, enable the save button
-        else
-        {
+        else {
             $('#saveButton, #loadButton').removeClass('disabled');
         }
     }
