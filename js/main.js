@@ -1,42 +1,42 @@
 "use strict";
 var model = new LibMapperModel();
 
-var view;						// holds the current view object
-var viewIndex;					// index of current view
-var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+var view;                       // holds the current view object
+var viewIndex;                  // index of current view
+var viewData = new Array(3);    // data specific to the view, change 3 the number of views
 
 var topMenu;
 
-window.onload = init;			// Kick things off
+window.onload = init;           // Kick things off
 
 /* The main program. */
 function init()
 {
-	$('body').append("<div id='topMenuWrapper'></div>");	// add the top menu wrapper
-    $('body').append("<div id='container'></div>");			// add the view wrapper
-    $('body').attr('oncontextmenu',"return false;");		// ?
+    $('body').append("<div id='topMenuWrapper'></div>"); // add the top menu wrapper
+    $('body').append("<div id='container'></div>");      // add the view wrapper
+    $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
     topMenu = new TopMenu(document.getElementById("topMenuWrapper"), model);
-	topMenu.init();
+    topMenu.init();
 
-	// init controller
-	initMonitorCommands();
+    // init controller
+    initMonitorCommands();
     initViewCommands();
     initTopMenuCommands();
 
     // update container height based on height of top menu
     $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-    	$('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
-    	view.on_resize();
+        $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+        view.on_resize();
     };
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
     setTimeout(
         function(){
-        	switch_mode('list');
+            switch_mode('list');
             command.start();
             command.send('get_networks');
             command.send('all_devices');
@@ -45,7 +45,6 @@ function init()
             command.send('all_connections');
             network_selection();
         }, 100);
-
 }
 
 /**
@@ -81,15 +80,18 @@ function initMonitorCommands()
     });
     command.register("all_signals", function(cmd, args) {
         for (var d in args)
-            model.signals.add(args[d].device_name+args[d].name + '/_dir_'+args[d].direction, args[d]);
+            model.signals.add(args[d].device_name+args[d].name
+                              + '/_dir_'+args[d].direction, args[d]);
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device_name+args.name + '/_dir_'+args.direction, args);
+        model.signals.add(args.device_name+args.name
+                          + '/_dir_' + args.direction, args);
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device_name+args.name + '/_dir_'+args.direction);
+        model.signals.remove(args.device_name+args.name
+                             + '/_dir_'+args.direction);
         update_display();
     });
     command.register("all_links", function(cmd, args) {
@@ -134,15 +136,14 @@ function initMonitorCommands()
     command.register("active_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
     });
-    
 }
 /**
  * initialize the event listeners for events triggered by the views
  */
 function initViewCommands()
 {
-	// from list view
-	// requests links and connections from the selected source device (the selectedTab)
+    // from list view
+    // requests links and connections from the selected source device (the selectedTab)
     $("#container").on("tab", function(e, selectedTab){
         command.send('tab', selectedTab);
     });
@@ -178,27 +179,26 @@ function initViewCommands()
 
     // asks the view for the selected connections and updates the edit bar
     $("#container").on("updateConnectionProperties", function(e){
-    	topMenu.updateConnectionProperties();
+        topMenu.updateConnectionProperties();
     });
 
     // asks the view for the save button link (based on the active device)
     // currently implemented in List view only
     $("#container").on("updateSaveLocation", function(e){
-    	topMenu.updateSaveLocation(view.get_save_location());
+        topMenu.updateSaveLocation(view.get_save_location());
     });
-
 }
 
 function initTopMenuCommands()
 {
-	$("#topMenuWrapper").on("switchView", function(e, viewID){
-		switch_mode(viewID);
-	});
-	$("#topMenuWrapper").on("setConnection", function(e, args){
-		command.send('set_connection', args);
-	});
+    $("#topMenuWrapper").on("switchView", function(e, viewID){
+        switch_mode(viewID);
+    });
+    $("#topMenuWrapper").on("setConnection", function(e, args){
+        command.send('set_connection', args);
+    });
     $("#topMenuWrapper").on("refreshAll", function(e){
-    	refresh_all();
+        refresh_all();
     });
 }
 
@@ -225,23 +225,21 @@ function update_display() {
     });
 }
 
-
-
 /**
  * Called by the view selector to change the current view
  */
 function switch_mode(newMode)
 {
-	if(view)
-	{
-		// save view settings
-		if(typeof view.save_view_settings == 'function')
-			viewData[viewIndex] = view.save_view_settings();
-		
-		// tell the view to cleanup (ex: removing event listeners)
-		view.cleanup();
-	}
-	
+    if(view)
+    {
+        // save view settings
+        if(typeof view.save_view_settings == 'function')
+            viewData[viewIndex] = view.save_view_settings();
+        
+        // tell the view to cleanup (ex: removing event listeners)
+        view.cleanup();
+    }
+    
     $('#container').empty();
     switch(newMode)
     {
@@ -251,32 +249,32 @@ function switch_mode(newMode)
             view.init();
             break;
         case 'grid':
-        	view = new GridView(document.getElementById('container'), model);
-        	viewIndex = 1;
-        	$('#saveLoadDiv').removeClass('disabled');
-        	view.update_display();
-        	break;
+            view = new GridView(document.getElementById('container'), model);
+            viewIndex = 1;
+            $('#saveLoadDiv').removeClass('disabled');
+            view.update_display();
+            break;
         case 'hive':
-        	view = new HivePlotView(document.getElementById('container'), model);
-        	viewIndex = 2;
-        	view.on_resize();
-        	break;
+            view = new HivePlotView(document.getElementById('container'), model);
+            viewIndex = 2;
+            view.on_resize();
+            break;
         case 'balloon':
-        	view = new BalloonView(document.getElementById('container'), model);
-        	viewIndex = 3;
+            view = new BalloonView(document.getElementById('container'), model);
+            viewIndex = 3;
             view.init();
             if(viewData[viewIndex])
-      	    	view.load_view_settings(viewData[viewIndex]);
+                  view.load_view_settings(viewData[viewIndex]);
             view.update_display();
-        	break;
+            break;
         default:
             //console.log(newMode);
     }
 
     // load view settings (if any)
     if(viewData[viewIndex]){
-	    if(typeof view.load_view_settings == 'function')
-	    		view.load_view_settings(viewData[viewIndex]);
+        if(typeof view.load_view_settings == 'function')
+                view.load_view_settings(viewData[viewIndex]);
     }
 
     topMenu.clearConnectionProperties();
