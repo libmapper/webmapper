@@ -1165,7 +1165,7 @@ function listView(model)
                 select_all();
             }
             else if (e.which == 9 && e.altKey == true) {
-                     // Tabbing like in google chrome 'alt-tab'
+                // Tabbing like in google chrome 'alt-tab'
                 e.preventDefault();
                 var n_tabs = $('.topTabs li').length;
                 var currentTabIndex = $('li.tabsel').index() + 1;
@@ -1177,6 +1177,27 @@ function listView(model)
                         nextTabIndex = 1;
                 }
                 else {  // Tabbing backwards
+                    if (currentTabIndex == 1) // At the first tab, go to the last
+                        nextTabIndex = n_tabs;
+                    else
+                        nextTabIndex = currentTabIndex - 1;
+                }
+                select_tab($(tabList).children(':nth-child('+nextTabIndex+')')[0]);
+            }
+            else if ((e.which == 37 || e.which == 39)
+                     && e.altKey == true && e.metaKey == true) {
+                // Tabbing like in google chrome 'cmd-opt-left'
+                e.preventDefault();
+                var n_tabs = $('.topTabs li').length;
+                var currentTabIndex = $('li.tabsel').index() + 1;
+                var nextTabIndex;
+                if (e.which == 39) { // Tabbing forwards
+                    if (currentTabIndex < n_tabs)
+                        nextTabIndex = currentTabIndex + 1;
+                    else // If we're at the last tab, select the first one
+                        nextTabIndex = 1;
+                }
+                else if (e.which == 37) {  // Tabbing backwards
                     if (currentTabIndex == 1) // At the first tab, go to the last
                         nextTabIndex = n_tabs;
                     else
