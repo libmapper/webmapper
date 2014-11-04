@@ -88,9 +88,21 @@ LibMapperModel.prototype = {
 
     isLinked : function (src, dst)
     {
-        var link = this.getLink(src, dst);
-        if (link)
-            return true;
+        if (src && dst) {
+            var link = this.getLink(src, dst);
+            if (link)
+                return true;
+        }
+        else if (src) {
+            // check all links
+            var keypart = src + ">";
+            var links = this.links.keys();
+            for (var d in links) {
+                var k = links[d];
+                if (k.search(keypart) == 0)
+                    return true;
+            }
+        }
         return false;
     },
 

@@ -62,6 +62,10 @@ function listView(model)
         if (selectedTab == all_devices) {
             update_devices();
         }
+        else if (!model.isLinked(selectedTab, null)) {
+            select_tab(tabDevices);
+            return;
+        }
         else {
             update_signals(selectedTab);
         }
