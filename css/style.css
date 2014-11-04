@@ -299,7 +299,7 @@ form {
 
 #wsstatus {
     position: fixed;
-    bottom: 7px;
+    bottom: 1px;
     right: 14px;
     z-index: 9;
     opacity: 0.5;
@@ -324,7 +324,6 @@ form {
     }
 
     div.range {
-      margin-left: 10px;
       padding: 3px 3px;
       width: 100%;
     }
@@ -338,11 +337,6 @@ form {
     input.range, input.expression {
       height: 19px;
       font-size: 9pt;
-    }
-
-    /* For proper spacing of text of range divs */
-    #boundaryMin, #srcMin, input.expression {
-      margin-left: 5px
     }
 
     #saveLoadDiv {
@@ -401,7 +395,7 @@ input.range, input.expression {
 }
 
 /* For proper spacing of text of range divs */
-#boundaryMin, #srcMin, input.expression {
+input.expression {
     margin-left: 5px
 }
 
@@ -578,6 +572,7 @@ input.searchBar {
 /* The overall container of elements not in skeleton*/
 #container {
     width: 100%;
+    height: calc(100% - 85px);
     background-color: inherit;
     float: left;
     position: relative;

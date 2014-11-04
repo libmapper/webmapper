@@ -40,7 +40,8 @@ function listView(model)
         select_tab(tabDevices);
         $('#container').css({
             'min-width': '700px',
-            'min-height': '150px'
+            'min-height': '150px',
+            'height': 'calc(100% - 85px)'
         });
         this.update_display();
     };
@@ -288,11 +289,13 @@ function listView(model)
 	        var lnk = model.links.get(selectedTab+'>'+sig.device_name);
 	        var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');  // So that all browsers break the line properly
 	
-	        if (sig.device_name == selectedTab && sig.direction == 1){
-	            leftBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+	        if (sig.device_name == selectedTab && sig.direction == 1) {
+	            leftBodyContent.push([sig.device_name+sigName, sig.type,
+                                      sig.length, sig.unit, sig.min, sig.max]);
 	        }
 	        if (sig.direction == 0 && lnk!=null){
-	            rightBodyContent.push([sig.device_name+sigName, sig.type, sig.length, sig.unit, sig.min, sig.max]);
+	            rightBodyContent.push([sig.device_name+sigName, sig.type,
+                                       sig.length, sig.unit, sig.min, sig.max]);
 	        }
 	    }
 	

@@ -51,7 +51,7 @@ TopMenu.prototype = {
 
         //Add the mode controls
         $('.topMenu').append("<div class='signalProps'>"+
-                     "<div class='modesDiv signalControl disabled'>Mode: </div>"+
+                     "<div class='modesDiv signalControl disabled' style='width:50%'>Mode: </div>"+
                      "<div class='ranges' style='width:50%'></div>"+
                  "</div>");
 
@@ -66,28 +66,26 @@ TopMenu.prototype = {
 
         //Add the range controls
         $('.ranges').append(
-                 "<div id='srcRange' class='range signalControl disabled'><div style='width:108px'>Src Range:</div></div>"+
-                 "<div id='destRange' class='range signalControl disabled'>Dest Range:</div>");
-
-        $('.range').append("<input style='width:calc(50% - 60px)'><input>");
-        $('.range').children('input').each( function(i) {
-            var minOrMax = 'max';   // A variable storing minimum or maximum
-            var srcOrDest = 'src_';
-            if(i%2==0)  minOrMax = 'min';
-            if(i>1)     srcOrDest = 'dest_';
-            $(this).attr({
-                'maxLength': 25,
-                "size": 30,
-                // Previously this was stored as 'rangeMin' or 'rangeMax'
-                'class': 'range',
-                'id': srcOrDest+minOrMax
-            });
-        });
-
-        $("<div id='srcRangeSwitch' class='rangeSwitch'></div>").insertBefore('#src_max');
-        $("<div id='destRangeSwitch' class='rangeSwitch' type='button'></div>").insertBefore('#dest_max');
-        $("<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>").insertBefore('#dest_min');
-        $("<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>").insertAfter('#dest_max');
+            "<div id='srcRange' class='range signalControl disabled'>"+
+                "<div style='width:85px'>Src Range:</div>"+
+                "<div style='width:calc(100% - 85px)'>"+
+                    "<div style='width:24px'></div>"+
+                    "<input class='range' id='src_min' style='width:calc(50% - 34px)'></input>"+
+                    "<div id='srcRangeSwitch' class='rangeSwitch'></div>"+
+                    "<input class='range' id='src_max' style='width:calc(50% - 34px)'></input>"+
+                    "<div style='width:24px'></div>"+
+                "</div>"+
+            "</div>"+
+            "<div id='destRange' class='range signalControl disabled'>"+
+                "<div style='width:85px'>Dest Range:</div>"+
+                "<div style='width:calc(100% - 85px)'>"+
+                    "<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>"+
+                    "<input class='range' id='dest_min' style='width:calc(50% - 34px)'></input>"+
+                    "<div id='destRangeSwitch' class='rangeSwitch'></div>"+
+                    "<input class='range' id='dest_max' style='width:calc(50% - 34px)'></input>"+
+                    "<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>"+
+                "</div>"+
+            "</div>");
 
         // extra tools
         $('.topMenu').append(
