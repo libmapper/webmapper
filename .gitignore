@@ -1,4 +1,5 @@
 .DS_Store
-.pyc
+*.pyc
 mapper.py
+_mapper.so
 
