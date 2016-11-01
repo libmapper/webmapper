@@ -25,23 +25,26 @@ def serialise(monitor, device):
                mapper.BA_WRAP: 'wrap'}
 
     for c in monitor.db.connections_by_device_name(device):
-      
         this_connection = {
           'src': [ c['src_name'] ],
           'dest': [ c['dest_name'] ],
           'mute': c['muted'],
           'mode': modeStr[c['mode']],
-          'srcMin': c['src_min'],
-          'srcMax': c['src_max'],
-          'destMin': c['dest_min'],
-          'destMax': c['dest_max'],
-          'expression': c['expression'],
           'boundMin': boundStr[c['bound_min']],
           'boundMax': boundStr[c['bound_max']]
         }
-        # To get proper expression nomenclature
-        # dest[0] = src[0] NOT y = x
-        this_connection['expression'] = this_connection['expression'].replace('y', 'dest[0]').replace('x', 'src[0]')
+        if 'src_min' in c:
+            this_connection['srcMin'] = c['src_min']
+        if 'src_max' in c:
+            this_connection['srcMax'] = c['src_max']
+        if 'dest_min' in c:
+            this_connection['destMin'] = c['dest_min']
+        if 'dest_max' in c:
+            this_connection['destMax'] = c['dest_max']
+        if 'expression' in c:
+            # To get proper expression nomenclature
+            # dest[0] = src[0] NOT y = x
+            this_connection['expression'] = c['expression'].replace('y', 'dest[0]').replace('x', 'src[0]')
         new_connections.append(this_connection);
 
         """
