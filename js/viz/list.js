@@ -276,6 +276,19 @@ function listView(model)
 
     function update_signals()
     {
+        console.log("update_signals()");
+        var srcDev = selectedTab;
+        console.log("  srcDev = ", srcDev);
+        var dstDev = [];
+        var linkedDevs = model.getLinked(srcDev);
+        for (var i in linkedDevs) {
+            var d = model.devices.get(linkedDevs[i]);
+            console.log("  got linked device from key "+i);
+            console.log(d);
+            if (d && d.num_inputs > 0)
+                dstDev.push(d.name);
+        }
+        console.log("  dstDev = ", dstDev);
         var keys = model.signals.keys();
 
         var leftBodyContent = [];
@@ -283,15 +296,19 @@ function listView(model)
 
         for (var s in keys) {
             var k = keys[s];
+            console.log("  checking sig ", s, " = ", k);
             var sig = model.signals.get(k);
-            var lnk = model.links.get(selectedTab+'>'+sig.device_name);
+            console.log()
+
             // So that all browsers break the line properly
             var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');
-            if (sig.device_name == selectedTab && sig.direction == 1){
+            if (sig.device_name == selectedTab && sig.direction == 2){
+                console.log("     adding to sources");
                 leftBodyContent.push([sig.device_name+sigName, sig.type,
                                       sig.length, sig.unit, sig.min, sig.max]);
             }
-            if (sig.direction == 0 && lnk!=null){
+            else if (sig.direction == 1 && dstDev.indexOf(sig.device_name) > -1){
+                console.log("     adding to destinations");
                 rightBodyContent.push([sig.device_name+sigName, sig.type,
                                        sig.length, sig.unit, sig.min, sig.max]);
             }
@@ -307,10 +324,13 @@ function listView(model)
     function update_tabs()
     {
         var t = tabDevices;
-        var keys = model.links.keys();
+        var keys = model.devices.keys();
         var srcs = {};
-        for (var l in keys)
-            srcs[model.links.get(keys[l]).src_name] = null;
+        for (var k in keys) {
+            var d = model.devices.get(keys[k])
+            if (d.num_outputs > 0 && model.isLinked(d.name))
+                srcs[d.name] = null;
+        }
         for (var s in srcs) {
             if (t.nextSibling)
                 t = t.nextSibling;
@@ -383,11 +403,27 @@ function listView(model)
             // TODO: need to use exact match instead of endswith here since
             // names are arbitrary and could have substring matches
             var l = model.links.get(keys[k]);
-            $('td:endswith('+l.src_name+')', leftTable.table).each(
+            $('td:endswith('+l.src+')', leftTable.table).each(
                 function(i,e){
                     var left = e.parentNode;
                     var leftsel = $(left).hasClass('trsel');
-                    $('td:endswith('+l.dest_name+')', rightTable.table).each(
+                    $('td:endswith('+l.dst+')', rightTable.table).each(
+                        function(i,e){
+                            var right = e.parentNode;
+                            var rightsel = $(right).hasClass('trsel');
+                            // Make sure that the row is not hidden
+                            if ($(left).css('display') != "none"
+                                && $(right).css('display') != "none") {
+                                create_arrow(left, right, leftsel && rightsel, 0);
+                                n_visibleLinks++;
+                            }
+                        });
+                });
+            $('td:endswith('+l.dst+')', leftTable.table).each(
+                function(i,e){
+                    var left = e.parentNode;
+                    var leftsel = $(left).hasClass('trsel');
+                    $('td:endswith('+l.src+')', rightTable.table).each(
                         function(i,e){
                             var right = e.parentNode;
                             var rightsel = $(right).hasClass('trsel');
@@ -444,11 +480,11 @@ function listView(model)
             var muted = c.muted;
             // TODO: need to use exact match instead of endswith here since
             // names are arbitrary and could have substring matches
-            $('td:endswith('+c.src_name+')', leftTable.table).each(
+            $('td:endswith('+c.src+')', leftTable.table).each(
                 function(i,e){
                     var left = e.parentNode;
                     var leftsel = $(left).hasClass('trsel');
-                    $('td:endswith('+c.dest_name+')', rightTable.table).each(
+                    $('td:endswith('+c.dst+')', rightTable.table).each(
                         function(i,e){
                             var right = e.parentNode;
                             var rightsel = $(right).hasClass('trsel');

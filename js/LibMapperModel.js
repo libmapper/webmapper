@@ -73,7 +73,12 @@ LibMapperModel.prototype = {
 
     getLink : function(src, dst) {
         var key = src + ">" + dst;
-        return this.links.get(key);
+        var link = this.links.get(key);
+        if (!link) {
+            key = dst + ">" + src;
+            link = this.links.get(key);
+        }
+        return link;
     },
 
     isLinked : function(src, dst) {
@@ -84,15 +89,28 @@ LibMapperModel.prototype = {
         }
         else if (src) {
             // check all links
-            var keypart = src + ">";
-            var links = this.links.keys();
-            for (var d in links) {
-                var k = links[d];
-                if (k.search(keypart) == 0)
+            var keypart1 = src + ">";
+            var keypart2 = ">" + src;
+            var keys = this.links.keys();
+            for (var k in keys) {
+                if (keys[k].startsWith(keypart1) || keys[k].endsWith(keypart2))
                     return true;
             }
         }
         return false;
+    },
+
+    getLinked : function(dev) {
+        var dst = [];
+        var keys = this.links.keys();
+        for (var k in keys) {
+            var devNames = keys[k].split(">");
+            if (dev == devNames[0] && dst.indexOf(devNames[1]) == -1)
+                dst.push(devNames[1]);
+            else if (dev == devNames[1] && dst.indexOf(devNames[0]) == -1)
+                dst.push(devNames[0]);
+        }
+        return dst;
     },
 
     // returns devices split into sources and destinations

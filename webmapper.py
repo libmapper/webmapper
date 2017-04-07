@@ -40,118 +40,145 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-monitor = mapper.monitor(autosubscribe_flags=mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT)
+db = mapper.database(subscribe_flags=mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+
+def dev_props(dev):
+    props = dev.properties.copy()
+    props['synced'] = props['synced'].get_double()
+    return props
+
+def link_props(link):
+    return {'src' : link.device(0).name, 'dst' : link.device(1).name}
+
+def sig_props(sig):
+    props = sig.properties.copy()
+    props['device_id'] = sig.device().id
+    props['device_name'] = sig.device().name
+    return props
+
+def map_props(map):
+    props = map.properties.copy()
+    props['src'] = map.source().signal().name
+    props['dst'] = map.destination().signal().name
+    return props
 
 def on_device(dev, action):
-    if action == mapper.MDB_NEW:
-        server.send_command("new_device", dev)
-    if action == mapper.MDB_MODIFY:
-        server.send_command("mod_device", dev)
-    if action == mapper.MDB_REMOVE:
-        server.send_command("del_device", dev)
-
-def on_signal(sig, action):
-    if action == mapper.MDB_NEW:
-        server.send_command("new_signal", sig)
-    if action == mapper.MDB_MODIFY:
-        server.send_command("mod_signal", sig)
-    if action == mapper.MDB_REMOVE:
-        server.send_command("del_signal", sig)
+    if action == mapper.REMOVED:
+        server.send_command("del_device", dev.id)
+    else:
+        if action == mapper.ADDED:
+            server.send_command("new_device", dev_props(dev))
+        elif action == mapper.MODIFIED:
+            server.send_command("mod_device", dev_props(dev))
 
 def on_link(link, action):
-    if action == mapper.MDB_NEW:
-        server.send_command("new_link", link)
-    if action == mapper.MDB_MODIFY:
-        server.send_command("mod_link", link)
-    if action == mapper.MDB_REMOVE:
-        server.send_command("del_link", link)
+    if action == mapper.REMOVED:
+        server.send_command("del_link", link.id)
+    else:
+        if action == mapper.ADDED:
+            server.send_command("new_link", link_props(link))
+        elif action == mapper.MODIFIED:
+            server.send_command("mod_link", link_props(link))
 
-def on_connection(con, action):
-    if action == mapper.MDB_NEW:
-        server.send_command("new_connection", con)
-    if action == mapper.MDB_MODIFY:
-        server.send_command("mod_connection", con)
-    if action == mapper.MDB_REMOVE:
-        server.send_command("del_connection", con)
+def on_signal(sig, action):
+    if action == mapper.REMOVED:
+        server.send_command("del_signal", sig.id)
+    else:
+        if action == mapper.ADDED:
+            server.send_command("new_signal", sig_props(sig))
+        elif action == mapper.MODIFIED:
+            server.send_command("mod_signal", sig_props(sig))
 
-def set_connection(con):
-    if con.has_key('mode'):
-        con['mode'] = {'bypass': mapper.MO_BYPASS,
-                       'reverse': mapper.MO_REVERSE,
-                       'linear': mapper.MO_LINEAR,
-                       'calibrate': mapper.MO_CALIBRATE,
-                       'expression': mapper.MO_EXPRESSION}[con['mode']]
-    if (con.has_key('src_min')):
-        if (type(con['src_min']) is int or type(con['src_min']) is float):
-            con['src_min'] = float(con['src_min'])
-            numargs = 1;
+def on_map(map, action):
+    if action == mapper.REMOVED:
+        server.send_command("del_map", map.id)
+    else:
+        if action == mapper.ADDED:
+            server.send_command("new_map", map_props(map))
+        elif action == mapper.MODIFIED:
+            server.send_command("mod_map", map_props(map))
+
+def set_map_properties(props):
+    if not props.has_key('id'):
+        return
+    map = database.map(props['id'])
+    if not map:
+        return
+    if props.has_key('mode'):
+        mode = props['mode']
+        if mode == 'bypass':
+            map.mode = mapper.MODE_EXPRESSION
+            map.expression = "y=x"
+        elif mode == 'reverse':
+            src = map.source().signal()
+            dst = map.destination().signal()
+            map.release()
+            map = mapper.map(dst, src).push()
+        elif mode == 'linear':
+            map.mode = mapper.MODE_LINEAR
+        elif mode == 'calibrate':
+            map.source().calibrating = True
+        elif mode == 'expression':
+            map.mode = mapper.MODE_EXPRESSION
+    if (props.has_key('src_min')):
+        if (type(props['src_min']) is int or type(props['src_min']) is float):
+            map.source().minimum = float(props['src_min'])
         else:
-            if (type(con['src_min']) is str):
-                con['src_min'] = con['src_min'].replace(',',' ').split()
-            numargs = len(con['src_min'])
+            if (type(props['src_min']) is str):
+                props['src_min'] = props['src_min'].replace(',',' ').split()
+            numargs = len(props['src_max'])
             for i in range(numargs):
-                con['src_min'][i] = float(con['src_min'][i])
-            if numargs == 1:
-                con['src_min'] = con['src_min'][0]
-        con['src_type'] = 'f'
-    if (con.has_key('src_max')):
-        if (type(con['src_max']) is int or type(con['src_max']) is float):
-            con['src_max'] = float(con['src_max'])
-            numargs = 1;
+                props['src_min'][i] = float(props['src_min'][i])
+            map.source().minimum = props['src_min']
+    if (props.has_key('src_max')):
+        if (type(props['src_max']) is int or type(props['src_max']) is float):
+            map.source().maximum = float(props['src_max'])
         else:
-            if (type(con['src_max']) is str):
-                con['src_max'] = con['src_max'].replace(',',' ').split()
-            numargs = len(con['src_max'])
+            if (type(props['src_max']) is str):
+                props['src_max'] = props['src_max'].replace(',',' ').split()
+            numargs = len(props['src_max'])
             for i in range(numargs):
-                con['src_max'][i] = float(con['src_max'][i])
-            if numargs == 1:
-                con['src_max'] = con['src_max'][0]
-        con['src_type'] = 'f'
-    if (con.has_key('dest_min')):
-        if (type(con['dest_min']) is int or type(con['dest_min']) is float):
-            con['dest_min'] = float(con['dest_min'])
-            numargs = 1;
+                props['src_max'][i] = float(props['src_max'][i])
+            map.source().maximum = props['src_max']
+    if (props.has_key('dest_min')):
+        if (type(props['dest_min']) is int or type(props['dest_min']) is float):
+            map.destination().minimum = float(props['dest_min'])
         else:
-            if (type(con['dest_min']) is str):
-                con['dest_min'] = con['dest_min'].replace(',',' ').split()
-            numargs = len(con['dest_min'])
+            if (type(props['dest_min']) is str):
+                props['dest_min'] = props['dest_min'].replace(',',' ').split()
+            numargs = len(props['dest_min'])
             for i in range(numargs):
-                con['dest_min'][i] = float(con['dest_min'][i])
-            if numargs == 1:
-                con['dest_min'] = con['dest_min'][0]
-        con['src_type'] = 'f'
-    if (con.has_key('dest_max')):
-        if (type(con['dest_max']) is int or type(con['dest_max']) is float):
-            con['dest_max'] = float(con['dest_max'])
-            numargs = 1;
+                props['dest_min'][i] = float(props['dest_min'][i])
+            map.destination().minimum = props['dest_min']
+    if (props.has_key('dest_max')):
+        if (type(props['dest_max']) is int or type(props['dest_max']) is float):
+            map.destination().maximum = float(props['dest_max'])
         else:
-            if (type(con['dest_max']) is str):
-                con['dest_max'] = con['dest_max'].replace(',',' ').split()
-            numargs = len(con['dest_max'])
+            if (type(props['dest_max']) is str):
+                props['dest_max'] = props['dest_max'].replace(',',' ').split()
+            numargs = len(props['dest_max'])
             for i in range(numargs):
-                con['dest_max'][i] = float(con['dest_max'][i])
-            if numargs == 1:
-                con['dest_max'] = con['dest_max'][0]
-        con['src_type'] = 'f'
-    monitor.modify_connection(con['src_name'], con['dest_name'], con)
+                props['dest_max'][i] = float(props['dest_max'][i])
+            map.destination().maximum = props['dest_max']
+    map.push()
 
 def on_refresh(arg):
-    global monitor
-    del monitor
-    admin = mapper.admin(networkInterfaces['active'])
-    monitor = mapper.monitor(admin, autosubscribe_flags=mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT)
-    init_monitor()
+    global db
+    del db
+    net = mapper.network(networkInterfaces['active'])
+    db = mapper.database(net, subscribe_flags=mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+    init_database()
 
 def on_save(arg):
-    ds = list(monitor.db.match_devices_by_name(arg['dev']))
-    fn = '/'.join(ds[0]['name'].split('/')[1:])
+    ds = list(db.devices(arg['dev']))
+    fn = '/'.join(ds[0].name.split('/')[1:])
     fn.replace('/','_')
     fn = '.'.join(fn.split('.')[:-1]+['json'])
-    return fn, mapperstorage.serialise(monitor, arg['dev'])
+    return fn, mapperstorage.serialise(db, arg['dev'])
 
 def on_load(mapping_json, devices):
     # pdb.set_trace()
-    mapperstorage.deserialise(monitor, mapping_json, devices)
+    mapperstorage.deserialise(db, mapping_json, devices)
 
 def select_network(newNetwork):
     # print 'select_network', newNetwork
@@ -175,65 +202,56 @@ def get_active_network(arg):
     server.send_command("active_network", networkInterfaces['active'])
 
 
-def init_monitor():
-    monitor.db.add_device_callback(on_device)
-    monitor.db.add_signal_callback(on_signal)
-    monitor.db.add_link_callback(on_link)
-    monitor.db.add_connection_callback(on_connection)
+def init_database():
+    db.add_device_callback(on_device)
+    db.add_link_callback(on_link)
+    db.add_signal_callback(on_signal)
+    db.add_map_callback(on_map)
 
-init_monitor()
+init_database()
 
 server.add_command_handler("all_devices",
                            lambda x: ("all_devices",
-                                      list(monitor.db.all_devices())))
+                                      map(dev_props, db.devices())))
 
-def select_tab(src_dev):
-    # TODO:
-    # if src_dev != focus_dev and focus_dev != "All Devices":
-    #     # revert device subscription back to only device and link metadata
-    #     monitor.subscribe(focus_dev, mapper.SUB_DEVICE | mapper.SUB_DEVICE_LINKS_OUT, -1)
-    if src_dev != "All Devices":
-        monitor.subscribe(src_dev, mapper.SUB_DEVICE_OUTPUTS | mapper.SUB_DEVICE_CONNECTIONS_OUT, -1)
-        links = monitor.db.links_by_src_device_name(src_dev)
-        for i in links:
-            monitor.subscribe(i["dest_name"], mapper.SUB_DEVICE_INPUTS, -1)
+def subscribe(device):
+    # cancel current subscriptions
+    db.unsubscribe()
 
-def new_connection(args):
-    source = str(args[0])
-    dest = str(args[1])
-    options = {}
-    if( len(args) > 2 ): # See if the connection message has been supplied with options
-        if( type(args[2]) is dict ): # Make sure they are the proper format
-            options = args[2]
-    monitor.connect(source, dest, options)
+    if device == "All Devices":
+        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+    else:
+        # todo: only subscribe to inputs and outputs as needed
+        dev = db.device(device)
+        if dev:
+            db.subscribe(dev, mapper.OBJ_OUTPUT_SIGNALS | mapper.OBJ_OUTGOING_MAPS)
 
-server.add_command_handler("tab", lambda x: select_tab(x))
+def new_map(args):
+    src = db.signal(args[0])
+    dst = db.signal(args[1])
+    if not src or not dst:
+        return
+    map = mapper.map(src, dst)
+    if (len(args) > 2 and type(args[2]) is dict):
+        map.set_properties(args[2])
+    map.push()
+
+server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("all_signals",
-                           lambda x: ("all_signals",
-                                      list(monitor.db.all_inputs())
-                                      + list(monitor.db.all_outputs())))
+                           lambda x: ("all_signals", map(sig_props, db.signals())))
 
 server.add_command_handler("all_links",
-                           lambda x: ("all_links",
-                                      list(monitor.db.all_links())))
+                           lambda x: ("all_links", map(link_props, db.links())))
 
 server.add_command_handler("all_connections",
-                           lambda x: ("all_connections",
-                                      list(monitor.db.all_connections())))
+                           lambda x: ("all_connections", map(map_props, db.maps())))
 
-server.add_command_handler("set_connection", set_connection)
+server.add_command_handler("set_map", set_map_properties)
 
-server.add_command_handler("link",
-                           lambda x: monitor.link(*map(str,x)))
+server.add_command_handler("map", lambda x: new_map(x))
 
-server.add_command_handler("unlink",
-                           lambda x: monitor.unlink(*map(str,x)))
-
-server.add_command_handler("connect", lambda x: new_connection(x))
-
-server.add_command_handler("disconnect",
-                           lambda x: monitor.disconnect(*map(str,x)))
+server.add_command_handler("unmap", lambda x: db.map(x).release())
 
 server.add_command_handler("refresh", on_refresh)
 
@@ -263,6 +281,6 @@ if not '--no-browser' in sys.argv and not '-n' in sys.argv:
 
 
 
-server.serve(port=port, poll=lambda: monitor.poll(100), on_open=on_open,
+server.serve(port=port, poll=lambda: db.poll(100), on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)
 

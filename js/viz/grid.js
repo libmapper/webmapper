@@ -603,9 +603,9 @@ GridView.prototype = {
 		var l = this.model.links.keys();
 		for (var i=0; i<l.length; i++)			
 		{
-			var src = this.model.links.get(l[i]).src_name;
-			var dst = this.model.links.get(l[i]).dest_name;
-			links.push([src,dst]);
+			var src = this.model.links.get(l[i]).src;
+			var dst = this.model.links.get(l[i]).dst;
+			links.push([src, dst]);
 		}
 		
 		this.devGrid.updateDisplayData(devs[0], devs[1], links);
@@ -643,9 +643,9 @@ GridView.prototype = {
 		for (var i=0; i<c.length; i++)			
 		{
 			var con = this.model.connections.get(c[i]);
-			var src = this.model.connections.get(c[i]).src_name;
-			var dst = this.model.connections.get(c[i]).dest_name;
-			connections.push([src,dst]);
+			var src = this.model.connections.get(c[i]).src;
+			var dst = this.model.connections.get(c[i]).dst;
+			connections.push([src, dst]);
 		}
 	    
 		this.sigGrid.updateDisplayData(srcSigs, dstSigs, connections);

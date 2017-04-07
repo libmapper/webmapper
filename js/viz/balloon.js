@@ -117,8 +117,8 @@ BalloonView.prototype = {
 				for(i=0; i<keys.length; i++)
 				{
 					var conn = this.model.selectedConnections.get(keys[i]);
-					var src = conn.src_name;
-					var dst = conn.dest_name;
+					var src = conn.src;
+					var dst = conn.dst;
 					if(this.model.isConnected(src, dst) == true){
 						$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 						this.model.selectedConnections.remove(keys[i]);

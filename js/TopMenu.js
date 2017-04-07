@@ -156,8 +156,8 @@ TopMenu.prototype = {
         var conns = this.get_selected_connections();
 
         if (conns.length == 1) {
-            if (conns[0].src_name == conn.src_name
-                && conns[0].dest_name == conn.dest_name) {
+            if (conns[0].src == conn.src
+                && conns[0].dst == conn.dst) {
                 this.updateConnectionProperties(conns);
             }
         }
@@ -204,8 +204,8 @@ TopMenu.prototype = {
             var msg = {};
 
             // copy src and dest names
-            msg['src_name'] = conns[i]['src_name'];
-            msg['dest_name'] = conns[i]['dest_name'];
+            msg['src'] = conns[i]['src'];
+            msg['dst'] = conns[i]['dst'];
 
             // set the property being modified
             if (what == 'mode')
@@ -247,8 +247,8 @@ TopMenu.prototype = {
         for (var i in conns) {
             if (conns[i]['mode'] == modestring)
                 continue;
-            msg['src_name'] = conns[i]['src_name'];
-            msg['dest_name'] = conns[i]['dest_name'];
+            msg['src'] = conns[i]['src'];
+            msg['dst'] = conns[i]['dst'];
             $(this._container).trigger("setConnection", [msg]);    // trigger switch event
         }
     },
@@ -354,8 +354,8 @@ TopMenu.prototype = {
              msg['dest_max'] = String(c['dest_min']);
              msg['dest_min'] = String(c['dest_max']);
          }
-         msg['src_name'] = c['src_name'];
-         msg['dest_name'] = c['dest_name'];
+         msg['src'] = c['src'];
+         msg['dst'] = c['dst'];
          $(this._container).trigger("setConnection", msg);
     },
 
