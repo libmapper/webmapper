@@ -444,11 +444,11 @@ TopMenu.prototype = {
 
         for (var i in conns) {
             var args = conns[i];
-            if (args.muted == 0) {
-                args.muted = 1;
+            if (args.muted == false) {
+                args.muted = true;
             }
             else
-                args.muted = 0;
+                args.muted = false;
 
             // TODO: why modes aren't just stored as their strings, I don't know
             var modecmd = connectionModeCommands[connectionModes[args['mode']]];

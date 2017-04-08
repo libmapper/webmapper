@@ -56,10 +56,13 @@ def sig_props(sig):
     props['device_name'] = sig.device().name
     return props
 
+def full_signame(sig):
+    return sig.device().name + '/' + sig.name
+
 def map_props(map):
     props = map.properties.copy()
-    props['src'] = map.source().signal().name
-    props['dst'] = map.destination().signal().name
+    props['src'] = full_signame(map.source().signal())
+    props['dst'] = full_signame(map.destination().signal())
     return props
 
 def on_device(dev, action):
@@ -91,12 +94,12 @@ def on_signal(sig, action):
 
 def on_map(map, action):
     if action == mapper.REMOVED:
-        server.send_command("del_map", map.id)
+        server.send_command("del_connection", map_props(map))
     else:
         if action == mapper.ADDED:
-            server.send_command("new_map", map_props(map))
+            server.send_command("new_connection", map_props(map))
         elif action == mapper.MODIFIED:
-            server.send_command("mod_map", map_props(map))
+            server.send_command("mod_connection", map_props(map))
 
 def set_map_properties(props):
     if not props.has_key('id'):
@@ -226,15 +229,27 @@ def subscribe(device):
         if dev:
             db.subscribe(dev, mapper.OBJ_OUTPUT_SIGNALS | mapper.OBJ_OUTGOING_MAPS)
 
+def find_sig(fullname):
+    names = fullname.split('/', 1)
+    dev = db.device(names[0])
+    if not dev:
+        return null
+    return dev.signal(names[1])
+
 def new_map(args):
-    src = db.signal(args[0])
-    dst = db.signal(args[1])
-    if not src or not dst:
-        return
-    map = mapper.map(src, dst)
+    map = mapper.map(find_sig(args[0]), find_sig(args[1]))
     if (len(args) > 2 and type(args[2]) is dict):
+        print "setting map props with dict: ", args[2]
         map.set_properties(args[2])
     map.push()
+
+def release_map(args):
+    print 'release map!'
+#    src = find_sig(args[0])
+#    dst = find_sig(args[1])
+#    if src and dst:
+#        src.map(dst).release()
+    find_sig(args[0]).maps().intersect(find_sig(args[1]).maps()).release()
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
@@ -251,7 +266,7 @@ server.add_command_handler("set_map", set_map_properties)
 
 server.add_command_handler("map", lambda x: new_map(x))
 
-server.add_command_handler("unmap", lambda x: db.map(x).release())
+server.add_command_handler("unmap", lambda x: release_map(x))
 
 server.add_command_handler("refresh", on_refresh)
 

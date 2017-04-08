@@ -37,7 +37,7 @@ def serialise(db, device):
         this_map = {
           'src': [ src.device().name + '/' + src.name ],
           'dest': [ dst.device().name + '/' + destination.name ],
-          'mute': 1 if m.muted else 0,
+          'mute': true if m.muted else false,
           'mode': mode,
           'boundMin': boundStr[m.destination().bound_min],
           'boundMax': boundStr[m.destination().bound_max]

@@ -304,12 +304,12 @@ function listView(model)
             var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');
             if (sig.device_name == selectedTab && sig.direction == 2){
                 console.log("     adding to sources");
-                leftBodyContent.push([sig.device_name+sigName, sig.type,
+                leftBodyContent.push([sig.device_name+'/'+sigName, sig.type,
                                       sig.length, sig.unit, sig.min, sig.max]);
             }
             else if (sig.direction == 1 && dstDev.indexOf(sig.device_name) > -1){
                 console.log("     adding to destinations");
-                rightBodyContent.push([sig.device_name+sigName, sig.type,
+                rightBodyContent.push([sig.device_name+'/'+sigName, sig.type,
                                        sig.length, sig.unit, sig.min, sig.max]);
             }
         }
