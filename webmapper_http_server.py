@@ -354,7 +354,6 @@ def handler_wait_command(out, args):
                               "args": msg[1]} )
 
 def handler_send_command(out, args):
-    print 'handler_send_command', args
     try:
         msgstring = args['msg']
         vals = json.loads(msgstring)

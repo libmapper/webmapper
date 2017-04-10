@@ -32,7 +32,6 @@ LibMapperModel.prototype = {
         if (conn) {
             if (!this.selectedConnections.get(key)) {
                 this.selectedConnections.add(key, conn);
-                console.log(this.selectedConnections.keys());
             }
         }
     },
@@ -41,7 +40,6 @@ LibMapperModel.prototype = {
         var key = src + ">" + dst;
         if (this.selectedConnections.get(key)) {
             this.selectedConnections.remove(key);
-            console.log(this.selectedConnections.keys());
         }
     },
 
@@ -56,7 +54,6 @@ LibMapperModel.prototype = {
 
     selectedConnections_clearAll : function() {
         this.selectedConnections = new Assoc();
-        console.log(this.selectedConnections.keys());
     },
 
     getConnection : function(src, dst) {

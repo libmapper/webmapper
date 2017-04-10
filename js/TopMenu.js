@@ -1,10 +1,8 @@
 function TopMenu(container, model) {
     this._container = container;
     this.model = model;
-    this.connectionModesDisplayOrder = ["Byp", "Line", "Calib", "Expr"];
-    this.connectionModeCommands = {"Byp": 'bypass', "Line": 'linear',
-                                   "Calib": 'calibrate', "Expr": 'expression' };
-    this.connectionModes = ["None", "Byp", "Line", "Expr", "Calib"];
+    this.connectionModeCommands = {"Linear": 'linear', "Expression": 'expression' };
+    this.connectionModes = ["Linear", "Expression"];
     this.boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
     this.boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                           "boundaryMute", "boundaryClamp", "boundaryWrap"];
@@ -42,9 +40,9 @@ TopMenu.prototype = {
                      "<div class='ranges' style='width:50%'></div>"+
                  "</div>");
 
-        for (var m in this.connectionModesDisplayOrder) {
+        for (var m in this.connectionModes) {
             $('.modesDiv').append(
-                "<div class='mode mode"+this.connectionModesDisplayOrder[m]+"'>"+this.connectionModesDisplayOrder[m]+"</div>");
+                "<div class='mode mode"+this.connectionModes[m]+"'>"+this.connectionModes[m]+"</div>");
         }
 
         $('.modesDiv').append("<div style='width:100%'>Expression: "+
@@ -171,7 +169,9 @@ TopMenu.prototype = {
         // if there is one connection selected, display its properties on top
         if (conns.length == 1) {
             var c = conns[0];
-            var mode = this.connectionModes[c.mode];
+            var mode = c.mode;
+            // capitalize first letter
+            mode = mode.charAt(0).toUpperCase() + mode.slice(1);
             $('.signalControl').removeClass('disabled');
             $('.signalControl').children('*').removeClass('disabled');
             $(".mode"+mode).addClass("modesel");
@@ -443,18 +443,18 @@ TopMenu.prototype = {
         var conns = this.get_selected_connections();
 
         for (var i in conns) {
-            var args = conns[i];
-            if (args.muted == false) {
-                args.muted = true;
-            }
-            else
-                args.muted = false;
+            var c = conns[i];
+            var msg = {};
+            msg['src'] = c['src'];
+            msg['dst'] = c['dst'];
+            msg['muted'] = !c.muted;
 
-            // TODO: why modes aren't just stored as their strings, I don't know
-            var modecmd = connectionModeCommands[connectionModes[args['mode']]];
-            args['mode'] = modecmd;
+//            // TODO: why modes aren't just stored as their strings, I don't know
+//            var modecmd = this.connectionModeCommands[this.connectionModes[args['mode']]];
+//            args['mode'] = modecmd;
+            console.log("should be setting mute to", msg);
 
-            $(this._container).trigger("setConnection", [args]);
+            $(this._container).trigger("setConnection", msg);
         }
     },
 

@@ -54,13 +54,11 @@ function initMonitorCommands()
 {
     command.register("all_devices", function(cmd, args) {
         for (var d in args) {
-            console.log("device1: ", d);
             model.devices.add(args[d].name, args[d]);
         }
         update_display();
     });
     command.register("new_device", function(cmd, args) {
-        console.log("device2: ", args);
         model.devices.add(args.name, args);
         update_display();
     });
@@ -82,17 +80,13 @@ function initMonitorCommands()
         update_display();
     });
     command.register("all_signals", function(cmd, args) {
-        console.log("all_signals");
         for (var d in args) {
-            console.log("  "+d+": "+args[d].device_name+'/'+args[d].name + '/_dir_'+args[d].direction);
             model.signals.add(args[d].device_name+'/'+args[d].name
                               + '/_dir_'+args[d].direction, args[d]);
         }
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        console.log("new_signal");
-        console.log("  "+args.device_name+'/'+args.name + '/_dir_'+args.direction);
         model.signals.add(args.device_name+'/'+args.name
                           + '/_dir_' + args.direction, args);
         update_display();
@@ -108,7 +102,6 @@ function initMonitorCommands()
         update_display();
     });
     command.register("new_link", function(cmd, args) {
-        console.log("new link: ", args.src, " <-> ", args.dst);
         if (!model.getLink(args.src, args.dst))
             model.links.add(args.src+'>'+args.dst, args);
         update_display();

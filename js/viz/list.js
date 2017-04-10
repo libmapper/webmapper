@@ -276,19 +276,14 @@ function listView(model)
 
     function update_signals()
     {
-        console.log("update_signals()");
         var srcDev = selectedTab;
-        console.log("  srcDev = ", srcDev);
         var dstDev = [];
         var linkedDevs = model.getLinked(srcDev);
         for (var i in linkedDevs) {
             var d = model.devices.get(linkedDevs[i]);
-            console.log("  got linked device from key "+i);
-            console.log(d);
             if (d && d.num_inputs > 0)
                 dstDev.push(d.name);
         }
-        console.log("  dstDev = ", dstDev);
         var keys = model.signals.keys();
 
         var leftBodyContent = [];
@@ -296,19 +291,15 @@ function listView(model)
 
         for (var s in keys) {
             var k = keys[s];
-            console.log("  checking sig ", s, " = ", k);
             var sig = model.signals.get(k);
-            console.log()
 
             // So that all browsers break the line properly
             var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');
-            if (sig.device_name == selectedTab && sig.direction == 2){
-                console.log("     adding to sources");
+            if (sig.device_name == selectedTab && sig.direction == 2) {
                 leftBodyContent.push([sig.device_name+'/'+sigName, sig.type,
                                       sig.length, sig.unit, sig.min, sig.max]);
             }
-            else if (sig.direction == 1 && dstDev.indexOf(sig.device_name) > -1){
-                console.log("     adding to destinations");
+            else if (sig.direction == 1 && dstDev.indexOf(sig.device_name) > -1) {
                 rightBodyContent.push([sig.device_name+'/'+sigName, sig.type,
                                        sig.length, sig.unit, sig.min, sig.max]);
             }

@@ -44,7 +44,8 @@ db = mapper.database(subscribe_flags=mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
 
 def dev_props(dev):
     props = dev.properties.copy()
-    props['synced'] = props['synced'].get_double()
+    if 'synced' in props:
+        props['synced'] = props['synced'].get_double()
     return props
 
 def link_props(link):
@@ -61,108 +62,128 @@ def full_signame(sig):
 
 def map_props(map):
     props = map.properties.copy()
+#    print 'translating map props: ', props
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
+    # translate some other properties
+    if props['mode'] == mapper.MODE_LINEAR:
+        props['mode'] = 'linear'
+    elif props['mode'] == mapper.MODE_EXPRESSION:
+        props['mode'] = 'expression'
+    slotprops = map.source().properties
+    if slotprops.has_key('min'):
+        props['src_min'] = slotprops['min']
+    if slotprops.has_key('max'):
+        props['src_max'] = slotprops['max']
+    slotprops = map.destination().properties
+    if slotprops.has_key('min'):
+        props['dest_min'] = slotprops['min']
+    if slotprops.has_key('max'):
+        props['dest_max'] = slotprops['max']
+#    print 'translated to: ', props
     return props
 
 def on_device(dev, action):
-    if action == mapper.REMOVED:
-        server.send_command("del_device", dev.id)
-    else:
-        if action == mapper.ADDED:
-            server.send_command("new_device", dev_props(dev))
-        elif action == mapper.MODIFIED:
-            server.send_command("mod_device", dev_props(dev))
+    if action == mapper.ADDED:
+        server.send_command("new_device", dev_props(dev))
+    elif action == mapper.MODIFIED:
+        server.send_command("mod_device", dev_props(dev))
+    elif action == mapper.REMOVED:
+        server.send_command("del_device", dev_props(dev))
 
 def on_link(link, action):
-    if action == mapper.REMOVED:
-        server.send_command("del_link", link.id)
-    else:
-        if action == mapper.ADDED:
-            server.send_command("new_link", link_props(link))
-        elif action == mapper.MODIFIED:
-            server.send_command("mod_link", link_props(link))
+    if action == mapper.ADDED:
+        server.send_command("new_link", link_props(link))
+    elif action == mapper.MODIFIED:
+        server.send_command("mod_link", link_props(link))
+    elif action == mapper.REMOVED:
+        server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
-    if action == mapper.REMOVED:
-        server.send_command("del_signal", sig.id)
-    else:
-        if action == mapper.ADDED:
-            server.send_command("new_signal", sig_props(sig))
-        elif action == mapper.MODIFIED:
-            server.send_command("mod_signal", sig_props(sig))
+    if action == mapper.ADDED:
+        server.send_command("new_signal", sig_props(sig))
+    elif action == mapper.MODIFIED:
+        server.send_command("mod_signal", sig_props(sig))
+    elif action == mapper.REMOVED:
+        server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
-    if action == mapper.REMOVED:
+    if action == mapper.ADDED:
+        server.send_command("new_connection", map_props(map))
+    elif action == mapper.MODIFIED:
+        server.send_command("mod_connection", map_props(map))
+    elif action == mapper.REMOVED:
         server.send_command("del_connection", map_props(map))
-    else:
-        if action == mapper.ADDED:
-            server.send_command("new_connection", map_props(map))
-        elif action == mapper.MODIFIED:
-            server.send_command("mod_connection", map_props(map))
 
 def set_map_properties(props):
-    if not props.has_key('id'):
-        return
-    map = database.map(props['id'])
+#    print 'set_map_properties: ', props
+    # todo: check for convergent maps, only release selected
+    maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
+    map = maps.next()
     if not map:
+        print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
         return
     if props.has_key('mode'):
-        mode = props['mode']
-        if mode == 'bypass':
-            map.mode = mapper.MODE_EXPRESSION
-            map.expression = "y=x"
-        elif mode == 'reverse':
-            src = map.source().signal()
-            dst = map.destination().signal()
-            map.release()
-            map = mapper.map(dst, src).push()
-        elif mode == 'linear':
+        if props['mode'] == 'linear':
             map.mode = mapper.MODE_LINEAR
-        elif mode == 'calibrate':
-            map.source().calibrating = True
-        elif mode == 'expression':
+        elif props['mode'] == 'expression':
             map.mode = mapper.MODE_EXPRESSION
-    if (props.has_key('src_min')):
-        if (type(props['src_min']) is int or type(props['src_min']) is float):
+        else:
+            print 'error: unknown mode ', props['mode']
+    if props.has_key('expression'):
+        map.expression = props['expression']
+    if props.has_key('src_min'):
+        if type(props['src_min']) is int or type(props['src_min']) is float:
             map.source().minimum = float(props['src_min'])
         else:
-            if (type(props['src_min']) is str):
+            if type(props['src_min']) is str:
                 props['src_min'] = props['src_min'].replace(',',' ').split()
             numargs = len(props['src_max'])
             for i in range(numargs):
                 props['src_min'][i] = float(props['src_min'][i])
+            if numargs == 1:
+                props['src_min'] = props['src_min'][0]
             map.source().minimum = props['src_min']
-    if (props.has_key('src_max')):
-        if (type(props['src_max']) is int or type(props['src_max']) is float):
+    if props.has_key('src_max'):
+        if type(props['src_max']) is int or type(props['src_max']) is float:
             map.source().maximum = float(props['src_max'])
         else:
-            if (type(props['src_max']) is str):
+            if type(props['src_max']) is str:
                 props['src_max'] = props['src_max'].replace(',',' ').split()
             numargs = len(props['src_max'])
             for i in range(numargs):
                 props['src_max'][i] = float(props['src_max'][i])
+            if numargs == 1:
+                props['src_max'] = props['src_max'][0]
             map.source().maximum = props['src_max']
-    if (props.has_key('dest_min')):
-        if (type(props['dest_min']) is int or type(props['dest_min']) is float):
+    if props.has_key('dest_min'):
+        if type(props['dest_min']) is int or type(props['dest_min']) is float:
             map.destination().minimum = float(props['dest_min'])
         else:
-            if (type(props['dest_min']) is str):
+            if type(props['dest_min']) is str:
                 props['dest_min'] = props['dest_min'].replace(',',' ').split()
             numargs = len(props['dest_min'])
             for i in range(numargs):
                 props['dest_min'][i] = float(props['dest_min'][i])
+            if numargs == 1:
+                props['dest_min'] = props['dest_min'][0]
             map.destination().minimum = props['dest_min']
-    if (props.has_key('dest_max')):
-        if (type(props['dest_max']) is int or type(props['dest_max']) is float):
+    if props.has_key('dest_max'):
+        if type(props['dest_max']) is int or type(props['dest_max']) is float:
             map.destination().maximum = float(props['dest_max'])
         else:
-            if (type(props['dest_max']) is str):
+            if type(props['dest_max']) is str:
                 props['dest_max'] = props['dest_max'].replace(',',' ').split()
             numargs = len(props['dest_max'])
             for i in range(numargs):
                 props['dest_max'][i] = float(props['dest_max'][i])
+            if numargs == 1:
+                props['dest_max'] = props['dest_max'][0]
             map.destination().maximum = props['dest_max']
+    if props.has_key('calibrating'):
+        map.destination().calibrating = props['calibrating']
+    if props.has_key('muted'):
+        map.muted = props['muted']
     map.push()
 
 def on_refresh(arg):
@@ -214,8 +235,7 @@ def init_database():
 init_database()
 
 server.add_command_handler("all_devices",
-                           lambda x: ("all_devices",
-                                      map(dev_props, db.devices())))
+                           lambda x: ("all_devices", map(dev_props, db.devices())))
 
 def subscribe(device):
     # cancel current subscriptions
@@ -238,17 +258,12 @@ def find_sig(fullname):
 
 def new_map(args):
     map = mapper.map(find_sig(args[0]), find_sig(args[1]))
-    if (len(args) > 2 and type(args[2]) is dict):
-        print "setting map props with dict: ", args[2]
+    if len(args) > 2 and type(args[2]) is dict:
         map.set_properties(args[2])
     map.push()
 
 def release_map(args):
-    print 'release map!'
-#    src = find_sig(args[0])
-#    dst = find_sig(args[1])
-#    if src and dst:
-#        src.map(dst).release()
+    # todo: check for convergent maps, only release selected
     find_sig(args[0]).maps().intersect(find_sig(args[1]).maps()).release()
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
@@ -262,7 +277,7 @@ server.add_command_handler("all_links",
 server.add_command_handler("all_connections",
                            lambda x: ("all_connections", map(map_props, db.maps())))
 
-server.add_command_handler("set_map", set_map_properties)
+server.add_command_handler("set_connection", lambda x: set_map_properties(x))
 
 server.add_command_handler("map", lambda x: new_map(x))
 
