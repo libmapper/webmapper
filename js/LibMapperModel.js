@@ -3,6 +3,7 @@ function LibMapperModel() {
     this.signals = new Assoc();
     this.links = new Assoc();
     this.connections = new Assoc();
+    this.selectedLinks = new Assoc();
     this.selectedConnections = new Assoc();
 
     this.networkInterfaces = {'selected': null, 'available': []};
@@ -12,16 +13,8 @@ function LibMapperModel() {
 };
 
 LibMapperModel.prototype = {
-    // returns an ARRAY with the selected connections
-    getSelectedConnections : function() {
-        var result = new Array();
-        var k = this.selectedConnections.keys();
-        for (var key in k)
-            result.push(this.selectedConnections.get(k));
-        return result;
-    },
 
-    selectedConnections_addConnection : function(src, dst) {
+    selectedConnections_toggleConnection : function(src, dst) {
         // no polymorphism in JS... arrg!
         // called with no 'dst' if the full key is passed in src
         var key = src;
@@ -32,15 +25,12 @@ LibMapperModel.prototype = {
         if (conn) {
             if (!this.selectedConnections.get(key)) {
                 this.selectedConnections.add(key, conn);
+                return 1;
             }
+            else
+                this.selectedConnections.remove(key);
         }
-    },
-
-    selectedConnections_removeConnection : function(src, dst) {
-        var key = src + ">" + dst;
-        if (this.selectedConnections.get(key)) {
-            this.selectedConnections.remove(key);
-        }
+        return 0;
     },
 
     selectedConnections_isSelected : function(src, dst) {
@@ -68,26 +58,48 @@ LibMapperModel.prototype = {
         return false;
     },
 
-    getLink : function(src, dst) {
-        var key = src + ">" + dst;
+    selectedLinks_toggleLink : function(src, dst) {
+        // no polymorphism in JS... arrg!
+        // called with no 'dst' if the full key is passed in src
+        var key = src;
+        if (dst != null)
+            key += ">" + dst;
+
         var link = this.links.get(key);
-        if (!link) {
-            key = dst + ">" + src;
-            link = this.links.get(key);
+        if (link) {
+            if (!this.selectedLinks.get(key)) {
+                this.selectedLinks.add(key, link);
+                return 1;
+            }
+            else
+                this.selectedLinks.remove(key);
         }
-        return link;
+        return 0;
     },
 
-    isLinked : function(src, dst) {
-        if (src && dst) {
-            var link = this.getLink(src, dst);
+    selectedLinks_clearAll : function() {
+        this.selectedLinks = new Assoc();
+    },
+
+    getLink : function(dev1, dev2) {
+        var key = 0;
+        if (dev1 < dev2)
+            key = dev1 + ">" + dev2;
+        else
+            key = dev2 + ">" + dev1;
+        return this.links.get(key);
+    },
+
+    isLinked : function(dev1, dev2) {
+        if (dev1 && dev2) {
+            var link = this.getLink(dev1, dev2);
             if (link)
                 return true;
         }
-        else if (src) {
+        else if (dev1) {
             // check all links
-            var keypart1 = src + ">";
-            var keypart2 = ">" + src;
+            var keypart1 = dev1 + ">";
+            var keypart2 = ">" + dev1;
             var keys = this.links.keys();
             for (var k in keys) {
                 if (keys[k].startsWith(keypart1) || keys[k].endsWith(keypart2))

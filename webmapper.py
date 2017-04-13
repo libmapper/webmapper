@@ -53,8 +53,8 @@ def link_props(link):
 
 def sig_props(sig):
     props = sig.properties.copy()
-    props['device_id'] = sig.device().id
-    props['device_name'] = sig.device().name
+#    props['device_id'] = sig.device().id
+    props['device'] = sig.device().name
     return props
 
 def full_signame(sig):
@@ -62,7 +62,6 @@ def full_signame(sig):
 
 def map_props(map):
     props = map.properties.copy()
-#    print 'translating map props: ', props
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
     # translate some other properties
@@ -77,10 +76,9 @@ def map_props(map):
         props['src_max'] = slotprops['max']
     slotprops = map.destination().properties
     if slotprops.has_key('min'):
-        props['dest_min'] = slotprops['min']
+        props['dst_min'] = slotprops['min']
     if slotprops.has_key('max'):
-        props['dest_max'] = slotprops['max']
-#    print 'translated to: ', props
+        props['dst_max'] = slotprops['max']
     return props
 
 def on_device(dev, action):
@@ -116,7 +114,6 @@ def on_map(map, action):
         server.send_command("del_connection", map_props(map))
 
 def set_map_properties(props):
-#    print 'set_map_properties: ', props
     # todo: check for convergent maps, only release selected
     maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
     map = maps.next()
@@ -156,30 +153,30 @@ def set_map_properties(props):
             if numargs == 1:
                 props['src_max'] = props['src_max'][0]
             map.source().maximum = props['src_max']
-    if props.has_key('dest_min'):
-        if type(props['dest_min']) is int or type(props['dest_min']) is float:
-            map.destination().minimum = float(props['dest_min'])
+    if props.has_key('dst_min'):
+        if type(props['dst_min']) is int or type(props['dst_min']) is float:
+            map.destination().minimum = float(props['dst_min'])
         else:
-            if type(props['dest_min']) is str:
-                props['dest_min'] = props['dest_min'].replace(',',' ').split()
-            numargs = len(props['dest_min'])
+            if type(props['dst_min']) is str:
+                props['dst_min'] = props['dst_min'].replace(',',' ').split()
+            numargs = len(props['dst_min'])
             for i in range(numargs):
-                props['dest_min'][i] = float(props['dest_min'][i])
+                props['dst_min'][i] = float(props['dst_min'][i])
             if numargs == 1:
-                props['dest_min'] = props['dest_min'][0]
-            map.destination().minimum = props['dest_min']
-    if props.has_key('dest_max'):
-        if type(props['dest_max']) is int or type(props['dest_max']) is float:
-            map.destination().maximum = float(props['dest_max'])
+                props['dst_min'] = props['dst_min'][0]
+            map.destination().minimum = props['dst_min']
+    if props.has_key('dst_max'):
+        if type(props['dst_max']) is int or type(props['dst_max']) is float:
+            map.destination().maximum = float(props['dst_max'])
         else:
-            if type(props['dest_max']) is str:
-                props['dest_max'] = props['dest_max'].replace(',',' ').split()
-            numargs = len(props['dest_max'])
+            if type(props['dst_max']) is str:
+                props['dst_max'] = props['dst_max'].replace(',',' ').split()
+            numargs = len(props['dst_max'])
             for i in range(numargs):
-                props['dest_max'][i] = float(props['dest_max'][i])
+                props['dst_max'][i] = float(props['dst_max'][i])
             if numargs == 1:
-                props['dest_max'] = props['dest_max'][0]
-            map.destination().maximum = props['dest_max']
+                props['dst_max'] = props['dst_max'][0]
+            map.destination().maximum = props['dst_max']
     if props.has_key('calibrating'):
         map.destination().calibrating = props['calibrating']
     if props.has_key('muted'):
@@ -194,10 +191,8 @@ def on_refresh(arg):
     init_database()
 
 def on_save(arg):
-    ds = list(db.devices(arg['dev']))
-    fn = '/'.join(ds[0].name.split('/')[1:])
-    fn.replace('/','_')
-    fn = '.'.join(fn.split('.')[:-1]+['json'])
+    d = db.device(arg['dev'])
+    fn = d.name+'.json'
     return fn, mapperstorage.serialise(db, arg['dev'])
 
 def on_load(mapping_json, devices):
@@ -205,7 +200,6 @@ def on_load(mapping_json, devices):
     mapperstorage.deserialise(db, mapping_json, devices)
 
 def select_network(newNetwork):
-    # print 'select_network', newNetwork
     networkInterfaces['active'] = newNetwork
     server.send_command('set_network', newNetwork)
 

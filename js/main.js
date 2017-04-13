@@ -81,18 +81,18 @@ function initMonitorCommands()
     });
     command.register("all_signals", function(cmd, args) {
         for (var d in args) {
-            model.signals.add(args[d].device_name+'/'+args[d].name
+            model.signals.add(args[d].device+'/'+args[d].name
                               + '/_dir_'+args[d].direction, args[d]);
         }
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device_name+'/'+args.name
+        model.signals.add(args.device+'/'+args.name
                           + '/_dir_' + args.direction, args);
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device_name+'/'+args.name
+        model.signals.remove(args.device+'/'+args.name
                              + '/_dir_'+args.direction);
         update_display();
     });
@@ -151,7 +151,7 @@ function initViewCommands()
     // requests links and connections from the selected source device (the selectedTab)
     $("#container").on("tab", function(e, selectedTab){
         if (selectedTab != 'All Devices') {
-            // retrieve linked destinatino devices
+            // retrieve linked destination devices
             model.getLinked(selectedTab);
             for (var i in model.getLinked(selectedTab))
                 command.send('subscribe', i);

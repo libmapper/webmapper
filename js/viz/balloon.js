@@ -971,8 +971,8 @@ BalloonView.prototype = {
 	    for (var i=0; i<keys.length; i++) 
 	    {
 	    	var sig = this.model.signals.get(keys[i]);
-	    	var devName = sig.device_name;
-	        var sigName = sig.device_name + sig.name;
+	    	var devName = sig.device;
+	        var sigName = sig.device + sig.name;
 	        var namespaces = sigName.split("/").filter(function(e) { return e; });// splits and removes empty strings
 	        this.addSignal(devName, sigName, namespaces, this.trees[1-sig.direction], 0, 1-sig.direction);	// FIX sig.direction will become an ENUM constant
 	    }

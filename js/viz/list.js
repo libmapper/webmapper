@@ -17,14 +17,17 @@ function listView(model)
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
 
-    var sourceDeviceHeaders = ["name", "outputs", "IP", "port"];
-    var destinationDeviceHeaders = ["name", "inputs", "IP", "port"];
+    var srcDeviceHeaders = ["name", "outputs", "IP", "port"];
+    var dstDeviceHeaders = ["name", "inputs", "IP", "port"];
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     // "use strict";
     this.type = 'list';
     this.unconnectedVisible = true; // Are unconnected devices/signals visible?
     this.focusedDevices = []; // An array containing devices seen in the display
+
+    var leftBodyContent = [];
+    var rightBodyContent = [];
 
     this.init = function()
     {
@@ -68,7 +71,6 @@ function listView(model)
             update_signals(selectedTab);
         }
 
-        update_selection();
         filter_view();
         // update_row_heights();
 
@@ -84,27 +86,6 @@ function listView(model)
         else {
             return '/save?dev='+encodeURIComponent(selectedTab);
         }
-    };
-
-    this.get_selected_connections = function()
-    {
-        var list = model.connections;
-
-        var L = $('.trsel', leftTable.table);
-        var R = $('.trsel', rightTable.table);
-        var vals = [];
-
-        L.map(function() {
-            var left = this;
-            R.map(function() {
-                var right = this;
-                var key = left.firstChild.innerHTML.replace(/<wbr>/g, '')+'>'+right.firstChild.innerHTML.replace(/<wbr>/g, '');
-                var v = list.get(key);
-                if (v)
-                    vals.push(v);
-            });
-        });
-        return vals;
     };
 
     this.get_selected_tab = function()
@@ -127,8 +108,12 @@ function listView(model)
         for (var i in links) {
             var devs = links[i].split('>');
             if (devs[0] == sourceDevice.name) {
-                var destD = model.devices.get(devs[1]);
-                focusedDevices.add(destD.name, destD);
+                var dstD = model.devices.get(devs[1]);
+                focusedDevices.add(dstD.name, dstD);
+            }
+            else if (devs[1] == sourceDevice.name) {
+                var dstD = model.devices.get(devs[0]);
+                focusedDevices.add(dstD.name, dstD);
             }
         }
 
@@ -248,20 +233,20 @@ function listView(model)
     {
         var keys = model.devices.keys();
 
-        var leftBodyContent = [];
-        var rightBodyContent = [];
+        leftBodyContent = [];
+        rightBodyContent = [];
 
-        leftTable.set_headers(sourceDeviceHeaders);
-        rightTable.set_headers(destinationDeviceHeaders);
+        leftTable.set_headers(srcDeviceHeaders);
+        rightTable.set_headers(dstDeviceHeaders);
 
         for (var d in keys) {
             var k = keys[d];
             var dev = model.devices.get(k);
 
-            if (dev.num_outputs){
+            if (dev.num_inputs > dev.num_outputs) {
                 leftBodyContent.push([dev.name, dev.num_outputs,
                                       dev.host, dev.port]);}
-            if (dev.num_inputs){
+            else {
                 rightBodyContent.push([dev.name, dev.num_inputs,
                                        dev.host, dev.port]);}
 
@@ -270,12 +255,13 @@ function listView(model)
         leftTable.set_status();
         rightTable.set_status();
 
-        leftTable.update(leftBodyContent, sourceDeviceHeaders);
-        rightTable.update(rightBodyContent, destinationDeviceHeaders);
+        leftTable.update(leftBodyContent, srcDeviceHeaders);
+        rightTable.update(rightBodyContent, dstDeviceHeaders);
     }
 
-    function update_signals()
-    {
+    function update_signals() {
+        // display all signals of selected device and linked devices
+
         var srcDev = selectedTab;
         var dstDev = [];
         var linkedDevs = model.getLinked(srcDev);
@@ -286,21 +272,25 @@ function listView(model)
         }
         var keys = model.signals.keys();
 
-        var leftBodyContent = [];
-        var rightBodyContent = [];
+        leftBodyContent = [];
+        rightBodyContent = [];
 
         for (var s in keys) {
             var k = keys[s];
             var sig = model.signals.get(k);
+            var lnk1 = model.links.get(selectedTab+'>'+sig.device);
+            var lnk2 = model.links.get(sig.device+'>'+selectedTab);
+            if (sig.device != selectedTab && lnk1 == null && lnk2 == null)
+                continue;
 
             // So that all browsers break the line properly
             var sigName = sig.name.replace(RegExp('/','g'), '<wbr>/');
-            if (sig.device_name == selectedTab && sig.direction == 2) {
-                leftBodyContent.push([sig.device_name+'/'+sigName, sig.type,
+            if (sig.direction == 2) {
+                leftBodyContent.push([sig.device+'/'+sigName, sig.type,
                                       sig.length, sig.unit, sig.min, sig.max]);
             }
-            else if (sig.direction == 1 && dstDev.indexOf(sig.device_name) > -1) {
-                rightBodyContent.push([sig.device_name+'/'+sigName, sig.type,
+            else {
+                rightBodyContent.push([sig.device+'/'+sigName, sig.type,
                                        sig.length, sig.unit, sig.min, sig.max]);
             }
         }
@@ -319,7 +309,7 @@ function listView(model)
         var srcs = {};
         for (var k in keys) {
             var d = model.devices.get(keys[k])
-            if (d.num_outputs > 0 && model.isLinked(d.name))
+            if (model.isLinked(d.name))
                 srcs[d.name] = null;
         }
         for (var s in srcs) {
@@ -344,29 +334,6 @@ function listView(model)
         }
     }
 
-    function update_selection()
-    {
-        var l = selectLists[selectedTab];
-        if (!l) return;
-
-        function checksel(table, i) {
-            if (!selectLists[selectedTab])
-                return;
-            var l = selectLists[selectedTab][i];
-            var tr = $(table).children('tbody').children('tr')[0];
-            while (tr && tr.firstChild) {
-                if (l.get(tr.firstChild.innerHTML.replace(/<wbr>/g, '')))
-                    $(tr).addClass("trsel");
-                else
-                    $(tr).removeClass("trsel");
-                tr = tr.nextSibling;
-            }
-        }
-
-        checksel(leftTable.table, 0);
-        checksel(rightTable.table, 1);
-    }
-
     function cleanup_arrows()
     {
         for (var a in arrows) {
@@ -375,12 +342,6 @@ function listView(model)
         }
         arrows = [];
     }
-
-    // What the heck is this?
-    $.expr[":"].endswith = function(obj, index, meta, stack)
-    {
-        return (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) >=0 && (obj.textContent || obj.innerText || $(obj).text() || "").indexOf(meta[3]) == ((obj.textContent || obj.innerText || $(obj).text() || "").length - meta[3].length);
-    };
 
     function update_links()
     {
@@ -391,52 +352,59 @@ function listView(model)
 
         var keys = model.links.keys();
         for (var k in keys) {
-            // TODO: need to use exact match instead of endswith here since
-            // names are arbitrary and could have substring matches
             var l = model.links.get(keys[k]);
-            $('td:endswith('+l.src+')', leftTable.table).each(
-                function(i,e){
-                    var left = e.parentNode;
-                    var leftsel = $(left).hasClass('trsel');
-                    $('td:endswith('+l.dst+')', rightTable.table).each(
-                        function(i,e){
-                            var right = e.parentNode;
-                            var rightsel = $(right).hasClass('trsel');
-                            // Make sure that the row is not hidden
-                            if ($(left).css('display') != "none"
-                                && $(right).css('display') != "none") {
-                                create_arrow(left, right, leftsel && rightsel, 0);
-                                n_visibleLinks++;
-                            }
-                        });
-                });
-            $('td:endswith('+l.dst+')', leftTable.table).each(
-                function(i,e){
-                    var left = e.parentNode;
-                    var leftsel = $(left).hasClass('trsel');
-                    $('td:endswith('+l.src+')', rightTable.table).each(
-                        function(i,e){
-                            var right = e.parentNode;
-                            var rightsel = $(right).hasClass('trsel');
-                            // Make sure that the row is not hidden
-                            if ($(left).css('display') != "none"
-                                && $(right).css('display') != "none") {
-                                create_arrow(left, right, leftsel && rightsel, 0);
-                                n_visibleLinks++;
-                            }
-                        });
-                });
+            var src_found = 0;
+            var dst_found = 0;
+            var sel = 0;
+
+            for (var i = 0, row; row = leftTable.table.rows[i]; i++) {
+                if (row.cells[0].textContent == l.src) {
+                    var src = row;
+                    src_found = 1;
+                }
+                if (row.cells[0].textContent == l.dst) {
+                    var dst = row;
+                    dst_found = 1;
+                }
+                if (src_found && dst_found)
+                    break;
+            }
+            if (!src_found || !dst_found) {
+                for (var i = 0, row; row = rightTable.table.rows[i]; i++) {
+                    if (row.cells[0].textContent == l.src) {
+                        var src = row;
+                        src_found = 2;
+                    }
+                    if (row.cells[0].textContent == l.dst) {
+                        var dst = row;
+                        dst_found = 2;
+                    }
+                    if (src_found && dst_found)
+                        break;
+                    }
+                }
+            if (src_found && dst_found) {
+                if (selectedTab == all_devices) {
+                    if (model.selectedLinks.get(keys[k]))
+                        sel = 1;
+                }
+                else if (model.selectedConnections.get(keys[k]))
+                    sel = 1;
+                // Are these rows being displayed?
+                if ($(src).css('display') != 'none'
+                    && $(dst).css('display') != 'none') {
+                    create_arrow(src, dst, src_found | (dst_found << 2),
+                                 sel, 0);
+                    n_visibleLinks++;
+                }
+            }
         }
 
         $('.status.middle').text(
             n_visibleLinks + " of " + model.links.keys().length + " links");
-
     }
 
-    // Because this is a heavy function, I want to prevent it from being called too rapidly
-    // (it is also never necessary to do so)
-    // It is currently called with a delay of 34ms, if it is called again within that delay
-    // The first call is forgotten.
+    // Prevent this function from being called more than once within timeout.
     var arrowTimeout;
     var arrowCallable = true;
     var timesArrowsCalled = 0;
@@ -469,24 +437,52 @@ function listView(model)
         for (var k in keys) {
             var c = model.connections.get(keys[k]);
             var muted = c.muted;
-            // TODO: need to use exact match instead of endswith here since
-            // names are arbitrary and could have substring matches
-            $('td:endswith('+c.src+')', leftTable.table).each(
-                function(i,e){
-                    var left = e.parentNode;
-                    var leftsel = $(left).hasClass('trsel');
-                    $('td:endswith('+c.dst+')', rightTable.table).each(
-                        function(i,e){
-                            var right = e.parentNode;
-                            var rightsel = $(right).hasClass('trsel');
-                            // Are these rows being displayed?
-                            if ($(left).css('display') != 'none' && $(right).css('display') != 'none') {
-                                create_arrow(left, right, leftsel && rightsel, muted);
-                                n_visibleConnections++;
-                            }
-                            n_connections++;
-                        });
-                });
+            var src_found = 0;
+            var dst_found = 0;
+            var sel = 0;
+
+            for (var i = 0, row; row = leftTable.table.rows[i]; i++) {
+                if (row.cells[0].textContent == c.src) {
+                    var src = row;
+                    src_found = 1;
+                }
+                else if (row.cells[0].textContent == c.dst) {
+                    var dst = row;
+                    dst_found = 1;
+                }
+                if (src_found && dst_found)
+                    break;
+            }
+            if (!src_found || !dst_found) {
+                for (var i = 0, row; row = rightTable.table.rows[i]; i++) {
+                    if (row.cells[0].textContent == c.src) {
+                        var src = row;
+                        src_found = 2;
+                    }
+                    else if (row.cells[0].textContent == c.dst) {
+                        var dst = row;
+                        dst_found = 2;
+                    }
+                    if (src_found && dst_found)
+                        break;
+                }
+            }
+            if (src_found && dst_found) {
+                if (selectedTab == all_devices) {
+                    if (model.selectedLinks.get(keys[k]))
+                        sel = 1;
+                }
+                else if (model.selectedConnections.get(keys[k]))
+                    sel = 1;
+                // Are these rows being displayed?
+                if ($(src).css('display') != 'none'
+                    && $(dst).css('display') != 'none') {
+                    create_arrow(src, dst, src_found | (dst_found << 2),
+                                 sel, c.muted);
+                    n_visibleConnections++;
+                }
+                n_connections++;
+            }
         }
 
         $('.status.middle').text(
@@ -496,10 +492,8 @@ function listView(model)
             $('#saveButton').addClass('disabled');
     }
 
-    // A function for filtering out unconnected signals
-    // Or signals that do not match the search string
-    function filter_view()
-    {
+    // Filter out unconnected signals or signals that do not match the search string
+    function filter_view() {
         $('.displayTable tbody tr').each(function(i, row) {
             if ((view.unconnectedVisible || is_connected(this)) && filter_match(this))
                 $(this).removeClass('invisible');
@@ -545,30 +539,29 @@ function listView(model)
             return false;
     }
 
-    // Returns whether a row has a connection, have to do it based on monitor.connections
-    // not arrows themselves
-    function is_connected(row)
-    {
+    /* Returns whether a row has a connection, have to do it based on
+     * monitor.connections not arrows themselves. */
+    function is_connected(row) {
         // What is the name of the signal/link?
         var name = $(row).children('.name').text();
         var linkConList = [];   // A list of all links or connections in 'devA>devB' form
         var srcNames = [];      // All source names as strings
-        var destNames = [];     // All dest names as strings
+        var dstNames = [];     // All destination names as strings
 
-        if (selectedTab == all_devices) {
+        if (selectedTab == all_devices)
             linkConList = model.links.keys();
-        }
-        else linkConList = model.connections.keys();
+        else
+            linkConList = model.connections.keys();
 
         for (var i in linkConList) {
             var sd = linkConList[i].split('>');
             srcNames[i] = sd[0];
-            destNames[i] = sd[1];
+            dstNames[i] = sd[1];
         }
 
         for (var i in srcNames) {
             // Does the name match a string in the connections/links?
-            if (srcNames[i] == name || destNames[i] == name)
+            if (srcNames[i] == name || dstNames[i] == name)
                 return true;
         }
 
@@ -576,9 +569,9 @@ function listView(model)
     }
 
     /* params are TR elements, one from each table */
-    function create_arrow(left, right, sel, muted)
-    {
+    function create_arrow(src, dst, geometry, sel, muted) {
         var line = svgArea.path();
+        var bidirectional = 0;//selectedTab == all_devices;
 
         line.border = svgArea.path();
         line.border.attr({
@@ -590,17 +583,24 @@ function listView(model)
             "border": "1px solid blue"
         });
 
-        var L = fullOffset(left);
-        var R = fullOffset(right);
-        var S = fullOffset($('#svgDiv')[0]);
+        var S = fullOffset(src);
+        var D = fullOffset(dst);
+        var frame = fullOffset($('#svgDiv')[0]);
 
-        var x1 = 0;
-        var y1 = L.top+L.height/2-S.top;
+        if (geometry & 1)
+            var x1 = bidirectional ? 5 : 0;
+        else
+            var x1 = frame.width - bidirectional * 5;
+        var y1 = S.top + S.height / 3 - frame.top;
 
-        var x2 = S.width;
-        var y2 = R.top+R.height/2-S.top;
+        if ((geometry >> 2) & 1)
+            var x2 = 5;
+        else
+            var x2 = frame.width - 5;
+        var y2 = D.top + D.height / 1.5 - frame.top;
 
-        var path = [["M", x1, y1] , ["C", (x1+x2)/2, y1, (x1+x2)/2, y2, x2, y2]];
+        var path = [["M", x1, y1],
+                    ["C", frame.width / 2, y1, frame.width / 2, y2, x2, y2]];
 
         line.attr({"path": path});
         line.border.attr({"path": path});
@@ -616,10 +616,12 @@ function listView(model)
             "cursor": "pointer",
             "arrow-end": "classic-wide-long"
         });
+        if (bidirectional)
+            line.attr({"arrow-start": "classic-wide-long"});
 
         // So that the arrow remembers which rows it is attached to
-        line.rightTr = right;
-        line.leftTr = left;
+        line.srcTr = src;
+        line.dstTr = dst;
 
         arrows.push(line);
         $('#container').trigger("updateConnectionProperties");
@@ -627,29 +629,24 @@ function listView(model)
         // TODO move this with all the other UI handlers
         $(line.border.node).on('click', function(e) {
 
-            var src = $(left).children('.name').text();
-            var dst = $(right).children('.name').text();
+            var _src = $(src).children('.name').text();
+            var _dst = $(dst).children('.name').text();
 
 
             // So that the arrow is deselected if both rows are selected
             // selected, so deselect it
-            if ($(right).hasClass('trsel') && $(left).hasClass('trsel')) {
-                select_tr(left);
-                select_tr(right);
-                line.node.classList.remove('selected');
-                if (selectedTab != all_devices)
-                    model.selectedConnections_removeConnection(src, dst);
+            if (selectedTab == all_devices) {
+                if (e.shiftKey == false)
+                    deselect_all();
+                    if (model.selectedLinks_toggleLink(_src, _dst))
+                        update_arrows();
             }
-
             // not selected, so select it
             else {
-                if (! $(left).hasClass('trsel'))
-                    select_tr(left);
-                if (! $(right).hasClass('trsel'))
-                    select_tr(right);
-                line.node.classList.add('selected');
-                if (selectedTab != all_devices)
-                    model.selectedConnections_addConnection(src, dst);
+                if (e.shiftKey == false)
+                    deselect_all();
+                if (model.selectedConnections_toggleConnection(_src, _dst))
+                    update_arrows();
             }
             $('#container').trigger("updateConnectionProperties");
 
@@ -665,8 +662,8 @@ function listView(model)
 
         if (tab == tabDevices) {
             $('#svgTitle').text("Links");
-            leftTable.set_headers(sourceDeviceHeaders);
-            rightTable.set_headers(destinationDeviceHeaders);
+            leftTable.set_headers(srcDeviceHeaders);
+            rightTable.set_headers(dstDeviceHeaders);
             $('#saveLoadDiv').addClass('disabled');
         }
         else {
@@ -721,8 +718,7 @@ function listView(model)
     }
 
     // For selecting multiple rows with the 'shift' key
-    function full_select_tr(tr)
-    {
+    function full_select_tr(tr) {
         var targetTable = $(tr).parents('.tableDiv').attr('id') == 'leftTable' ? '#leftTable' : '#rightTable';
         var trStart = targetTable == '#leftTable' ? lastSelectedTr.left : lastSelectedTr.right;
         if (!trStart) {
@@ -757,6 +753,7 @@ function listView(model)
         lastSelectedTr.left = null;
         lastSelectedTr.right = null;
         update_arrows();
+        model.selectedLinks_clearAll();
         model.selectedConnections_clearAll();
         $('#container').trigger("updateConnectionProperties");
     }
@@ -768,11 +765,19 @@ function listView(model)
             // Test to see if those rows are already selected
             // (select_tr() just toggles selection)
             arrows[i].attr('stroke', 'red');
-            if (! $(arrows[i].leftTr).hasClass('trsel'))
-                select_tr(arrows[i].leftTr);
-            if (! $(arrows[i].rightTr).hasClass('trsel'))
-                select_tr(arrows[i].rightTr);
+            if (! $(arrows[i].srcTr).hasClass('trsel'))
+                select_tr(arrows[i].srcTr);
+            if (! $(arrows[i].dstTr).hasClass('trsel'))
+                select_tr(arrows[i].dstTr);
+
+            var _src = arrows[i].srcTr.cells[0].textContent;
+            var _dst = arrows[i].dstTr.cells[0].textContent;
+            if (selectedTab == all_devices)
+                model.selectedLinks_toggleLink(_src, _dst);
+            else
+                model.selectedConnections_toggleConnection(_src, _dst);
         }
+        update_arrows();
     }
 
     function on_table_scroll()
@@ -785,77 +790,39 @@ function listView(model)
             update_connections();
     }
 
-    function apply_selected(f)
-    {
-        $('tr.trsel', leftTable.table).each(
-        function(i,e){
-            var left = e;
-            $('tr.trsel', rightTable.table).each(
-                function(i,e){
-                    var right = e;
-                    f(left, right);
-                });
-        });
-    }
-
-    function apply_selected_pairs(f, list)
-    {
-        var L = $('.trsel', leftTable.table);
-        var R = $('.trsel', rightTable.table);
-
-        L.map(function() {
-            var left = this;
-            R.map(function() {
-                var right = this;
-                var key = left.firstChild.innerHTML.replace(/<wbr>/g, '')+'>'+right.firstChild.innerHTML.replace(/<wbr>/g, '');
-                var v = list.get(key);
-                if (v) {
-                    f(left, right);
-                }
-            });
-        });
-    }
-
-    function on_link(e)
-    {
-        function do_link(l, r) {
-            $('#container').trigger("link", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
-        }
-        apply_selected(do_link);
+    function on_link(e, start, end) {
+        if (start && end)
+            $('#container').trigger("link", [start.cells[0].textContent,
+                                             end.cells[0].textContent]);
         e.stopPropagation();
     }
 
-    function on_unlink(e)
-    {
-        function do_unlink(l, r) {
-            $('#container').trigger("unlink", [l.firstChild.innerHTML, r.firstChild.innerHTML]);
+    function on_unlink(e) {
+        var keys = model.selectedLinks.keys();
+
+        for (var k in keys) {
+            var l = model.selectedLinks.get(keys[k]);
+            $('#container').trigger("unlink", [l.src, l.dst]);
         }
-        apply_selected_pairs(do_unlink, model.links);
         e.stopPropagation();
     }
 
-    function on_connect(e, args)
-    {
+    function on_connect(e, start, end, args) {
         if (model.mKey) {
             args['muted'] = true;
         }
-        function do_connect(l, r) {
-            var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
-            var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
-            $('#container').trigger("connect", [sig1, sig2, args]);
-        }
-        apply_selected(do_connect);
+        $('#container').trigger("connect", [start.cells[0].textContent,
+                                            end.cells[0].textContent, args]);
         e.stopPropagation();
     }
 
-    function on_disconnect(e)
-    {
-        function do_disconnect(l, r) {
-            var sig1 = l.firstChild.innerHTML.replace(/<wbr>/g, '');
-            var sig2 = r.firstChild.innerHTML.replace(/<wbr>/g, '');
-            $('#container').trigger("disconnect", [sig1, sig2]);
+    function on_disconnect(e) {
+        var keys = model.selectedConnections.keys();
+
+        for (var k in keys) {
+            var c = model.selectedConnections.get(keys[k]);
+            $('#container').trigger("disconnect", [c.src, c.dst]);
         }
-        apply_selected_pairs(do_disconnect, model.connections);
         e.stopPropagation();
     }
 
@@ -933,6 +900,7 @@ function listView(model)
         this.sourceRow = sourceRow;
         this.targetRow;
         this.muted = false;
+        var allow_self_link = selectedTab == all_devices;
 
         this.canvasWidth = $('#svgDiv').width();
 
@@ -944,7 +912,7 @@ function listView(model)
         };
 
         this.findrow = function (y) {
-            // The upper position of the canvas (so that we can find the absolute position)
+            // The upper position of the canvas (to find the absolute position)
             var svgTop = $('#svgDiv').offset().top;
 
             // Left edge of the target table
@@ -953,13 +921,15 @@ function listView(model)
             // Closest table element (probably a <td> cell)
             var td = document.elementFromPoint(ttleft, svgTop + y);
             var row = $(td).parents('tr')[0];
-            return row;
+            var incompatible = $(row).hasClass('incompatible');
+            if (!incompatible)
+                return row;
         };
 
         // Our bezier curve points
         this.path = [["M"], ["C"]];
 
-        // Are we aiming for the left or right table?
+        // Are we starting from for the left or right table?
         this.sourceTable;
         this.targetTable;
         if ($(this.sourceRow).parents('.tableDiv').attr('id') == "leftTable") {
@@ -977,12 +947,11 @@ function listView(model)
         // The actual line
         this.line = svgArea.path();
         this.line.attr({"stroke-width": "2px",
-                       "arrow-end": "classic-wide-long"});
+                        "arrow-end": "classic-wide-long"});
 
-        this.update = function(moveEvent)
-        {
-            moveEvent.offsetX = moveEvent.pageX-$('#svgDiv').offset().left;
-            moveEvent.offsetY = moveEvent.pageY-$('#svgDiv').offset().top;
+        this.update = function(moveEvent) {
+            moveEvent.offsetX = moveEvent.pageX - $('#svgDiv').offset().left;
+            moveEvent.offsetY = moveEvent.pageY - $('#svgDiv').offset().top;
 
             var target = moveEvent.currentTarget;
             var start = [this.path[0][1], this.path[0][2]];
@@ -993,19 +962,27 @@ function listView(model)
                 var absdiff = Math.abs(end[0] - start[0]);
 
                 // get targetTable
+                var newTargetTable;
                 if (absdiff < this.canvasWidth/2)
-                    this.targetTable = this.sourceTable;
+                    newTargetTable = this.sourceTable;
                 else if (this.sourceTable == leftTable)
-                    this.targetTable = rightTable;
+                    newTargetTable = rightTable;
                 else
-                    this.targetTable = leftTable;
+                    newTargetTable = leftTable;
+                if (this.targetTable != newTargetTable) {
+                    this.targetTable = newTargetTable;
+                    // Fade out incompatible signals
+                    if (selectedTab != all_devices)
+                        fade_incompatible_signals(this.sourceRow,
+                                                  this.targetTable.tbody);
+                }
 
                 // Within clamping range?
                 if (absdiff < 50) {
                     // we can clamp to same side
                     var startRow = this.findrow(start[1]);
                     var clampRow = this.findrow(end[1]);
-                    if (clampRow && clampRow != startRow) {
+                    if (clampRow && (allow_self_link || clampRow != startRow)) {
                         if (this.sourceTable == this.targetTable)
                             end[0] = start[0];
                         else
@@ -1047,49 +1024,69 @@ function listView(model)
 
         this.mouseup = function(mouseUpEvent) {
             if (selectedTab == all_devices)
-                on_link(mouseUpEvent);
-            else if (this.targetRow)
-                on_connect(mouseUpEvent, {'muted': this.muted});
-            $("*").off('.drawing');
+                on_link(mouseUpEvent, this.sourceRow, this.targetRow);
+            else if (this.targetRow) {
+                on_connect(mouseUpEvent, this.sourceRow,
+                           this.targetRow, {'muted': this.muted});
+            }
+            $("*").off('.drawing').removeClass('incompatible');
             $(document).off('.drawing');
             self.line.remove();
         };
 
         // Check if we have a new target row, select it if necessary
         this.checkTarget = function(mousedOverRow) {
-            if (this.targetRow != mousedOverRow) {
-                if (this.targetRow != null);
-                    select_tr(this.targetRow);
-
-                this.targetRow = mousedOverRow;
-
-                if (this.targetRow)
-                    select_tr(this.targetRow);
+            if (this.targetRow == mousedOverRow
+                || $(mousedOverRow).hasClass('incompatible')
+                || (this.sourceRow == this.targetRow && !allow_self_link))
+                return;
+            if (this.targetRow != null) {
+                // deselect previous
+                select_tr(this.targetRow);
             }
+            this.targetRow = mousedOverRow;
+            select_tr(this.targetRow);
         };
     }
 
     // Finds a bezier curve between two points
-    function get_bezier_path(start, end, controlEnd, width)
-    {
+    function get_bezier_path(start, end, controlEnd, width) {
         // 'Move to': (x0, y0), 'Control': (C1, C2, end)
         var path = [["M", start[0], start[1]], ["C"]];
 
         // x-coordinate of both control points
         path[1][1] = path[1][3] = width / 2;
         // y-coordinate of first control point
-        path[1][2] = start[1];
-        // y-coordinate of second control point
-        if (controlEnd)
-            path[1][4] = controlEnd;
-        else
-            path[1][4] = end[1];
+        if (start[0] == end[0] && start[1] == end[1]) {
+            path[1][2] = start[1] + 40;
+            if (controlEnd)
+                path[1][4] = controlEnd - 40;
+            else
+                path[1][4] = end[1] - 40;
+        }
+        else {
+            path[1][2] = start[1];
+            // y-coordinate of second control point
+            if (controlEnd)
+                path[1][4] = controlEnd;
+            else
+                path[1][4] = end[1];
+        }
 
         // Finally, the end points
         path[1][5] = end[0];
         path[1][6] = end[1];
 
         return path;
+    }
+
+    function fade_incompatible_signals(row, targetTableBody) {
+        for (var i in arrows) {
+            if (arrows[i].srcTr == row)
+                $(arrows[i].dstTr).addClass('incompatible');
+            else if (arrows[i].dstTr == row)
+                $(arrows[i].srcTr).addClass('incompatible');
+        }
     }
 
     function drawing_handlers()
@@ -1137,7 +1134,7 @@ function listView(model)
             });
 
             $(document).one('mouseup.drawing', function(mouseUpEvent) {
-                $("*").off('.drawing');
+                $("*").off('.drawing').removeClass('incompatible');
                 $(document).off('.drawing');
             });
         });
@@ -1153,6 +1150,8 @@ function listView(model)
             mousedown: function(e) {
                 if (e.shiftKey == true)    // For selecting multiple rows at once
                     full_select_tr(this);
+                else
+                    deselect_all();
                 select_tr(this);
                 update_arrows();
             },
@@ -1169,13 +1168,7 @@ function listView(model)
 
         // Various keyhandlers
         $('body').on('keydown.list', function(e) {
-            if (e.which == 67) { // connect on 'c'
-                if (selectedTab == all_devices)
-                    on_link(e);
-                else
-                    on_connect(e);
-            }
-            else if (e.which == 8 || e.which == 46) { // disconnect on 'delete'
+            if (e.which == 8 || e.which == 46) { // disconnect on 'delete'
                 // Prevent the browser from going back a page
                 // but NOT if you're focus is an input and deleting text
                 if (!$(':focus').is('input')) {

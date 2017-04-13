@@ -529,6 +529,9 @@ input.expression {
     top: 0px;
     cursor: pointer;
 }
+.incompatible {
+    opacity: 0.5;
+}
 /****************/
 
 

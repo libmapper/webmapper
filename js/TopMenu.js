@@ -61,13 +61,13 @@ TopMenu.prototype = {
                     "<div style='width:24px'></div>"+
                 "</div>"+
             "</div>"+
-            "<div id='destRange' class='range signalControl disabled'>"+
+            "<div id='dstRange' class='range signalControl disabled'>"+
                 "<div style='width:85px'>Dest Range:</div>"+
                 "<div style='width:calc(100% - 85px)'>"+
                     "<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>"+
-                    "<input class='range' id='dest_min' style='width:calc(50% - 34px)'></input>"+
-                    "<div id='destRangeSwitch' class='rangeSwitch'></div>"+
-                    "<input class='range' id='dest_max' style='width:calc(50% - 34px)'></input>"+
+                    "<input class='range' id='dst_min' style='width:calc(50% - 34px)'></input>"+
+                    "<div id='dstRangeSwitch' class='rangeSwitch'></div>"+
+                    "<input class='range' id='dst_max' style='width:calc(50% - 34px)'></input>"+
                     "<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>"+
                 "</div>"+
             "</div>");
@@ -151,7 +151,7 @@ TopMenu.prototype = {
 
     // conn object with arguments for the connection
     updateConnectionPropertiesFor : function(conn) {
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections;
 
         if (conns.length == 1) {
             if (conns[0].src == conn.src
@@ -164,7 +164,7 @@ TopMenu.prototype = {
     updateConnectionProperties : function() {
         this.clearConnectionProperties();
 
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections;
 
         // if there is one connection selected, display its properties on top
         if (conns.length == 1) {
@@ -180,10 +180,10 @@ TopMenu.prototype = {
                 $("#src_min").val(c.src_min);
             if (c.src_max != null)
                 $("#src_max").val(c.src_max);
-            if (c.dest_min != null)
-                $("#dest_min").val(c.dest_min);
-            if (c.dest_max != null)
-                $("#dest_max").val(c.dest_max);
+            if (c.dst_min != null)
+                $("#dst_min").val(c.dst_min);
+            if (c.dst_max != null)
+                $("#dst_max").val(c.dst_max);
             if (c.bound_min != null)
                 this.set_boundary($("#boundaryMin"),c.bound_min, 0);
             if (c.bound_max != null)
@@ -192,9 +192,9 @@ TopMenu.prototype = {
     },
 
     selected_connection_set_input : function(what, field) {
-        if (what == 'srcRangeSwitch' || what == 'destRangeSwitch')
+        if (what == 'srcRangeSwitch' || what == 'dstRangeSwitch')
             return;
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections;
         if (!conns.length)
             return;
 
@@ -203,7 +203,7 @@ TopMenu.prototype = {
                 continue;
             var msg = {};
 
-            // copy src and dest names
+            // copy src and dst names
             msg['src'] = conns[i]['src'];
             msg['dst'] = conns[i]['dst'];
 
@@ -224,22 +224,11 @@ TopMenu.prototype = {
         }
     },
 
-    /*
-     * Gets the view's currently selected connections
-     * All views except 'list view' use the model to store selected connections
-     */
-    get_selected_connections : function() {
-        if ($('#modeSelection').val() == "list")
-            return view.get_selected_connections(model.connections);
-        else
-            return model.getSelectedConnections();
-    },
-
     selected_connection_set_mode : function(modestring) {
         var modecmd = this.connectionModeCommands[modestring];
         if (!modecmd) return;
 
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections();
         if (!conns.length) return;
 
         var msg = {'mode' : modecmd};
@@ -254,7 +243,7 @@ TopMenu.prototype = {
     },
 
     copy_selected_connection : function() {
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections();
         if (conns.length != 1) return;
         var args = {};
 
@@ -316,12 +305,12 @@ TopMenu.prototype = {
             var devs = view.get_focused_devices();
             // Split them into sources and destinations
             var srcdevs = [];
-            var destdevs = [];
+            var dstdevs = [];
             for (var i in devs.contents) {
                 if (devs.contents[i].num_outputs)
                     srcdevs.push(devs.contents[i].name);
                 if (devs.contents[i].num_inputs)
-                    destdevs.push(devs.contents[i].name);
+                    dstdevs.push(devs.contents[i].name);
             }
 
             //So that the monitor can see which devices are being looked at
@@ -330,11 +319,11 @@ TopMenu.prototype = {
             srcs.name = 'sources';
             srcs.value = srcdevs.join();
             form.appendChild(srcs);
-            var dests = document.createElement('input');
-            dests.type = 'hidden';
-            dests.name = 'destinations';
-            dests.value = destdevs.join();
-            form.appendChild(dests);
+            var dsts = document.createElement('input');
+            dsts.type = 'hidden';
+            dsts.name = 'destinations';
+            dsts.value = dstdevs.join();
+            form.appendChild(dsts);
 
             form.submit();
         };
@@ -351,8 +340,8 @@ TopMenu.prototype = {
              msg['src_min'] = String(c['src_max']);
          }
          else {
-             msg['dest_max'] = String(c['dest_min']);
-             msg['dest_min'] = String(c['dest_max']);
+             msg['dst_max'] = String(c['dst_min']);
+             msg['dst_min'] = String(c['dst_max']);
          }
          msg['src'] = c['src'];
          msg['dst'] = c['dst'];
@@ -440,7 +429,7 @@ TopMenu.prototype = {
     },
 
     mute_selected : function() {
-        var conns = this.get_selected_connections();
+        var conns = this.model.selectedConnections;
 
         for (var i in conns) {
             var c = conns[i];
@@ -452,7 +441,6 @@ TopMenu.prototype = {
 //            // TODO: why modes aren't just stored as their strings, I don't know
 //            var modecmd = this.connectionModeCommands[this.connectionModes[args['mode']]];
 //            args['mode'] = modecmd;
-            console.log("should be setting mute to", msg);
 
             $(this._container).trigger("setConnection", msg);
         }
@@ -463,7 +451,6 @@ TopMenu.prototype = {
      * currently set up for the list view only
      */
     updateSaveLocation : function(location) {
-        console.log(location);
         // get the save location
         if (location) {
             window.saveLocation = location;

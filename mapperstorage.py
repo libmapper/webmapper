@@ -14,21 +14,21 @@ def serialise(db, device):
     next_src = 0
     next_dest = 0
     next_connection = 0
-    modeStr = {mapper.MODE_RAW: 'bypass',
-               mapper.MODE_LINEAR: 'linear',
+    modeStr = {mapper.MODE_LINEAR: 'linear',
                mapper.MODE_EXPRESSION: 'expression'}
-    boundStr = {mapper.BOUND_NONE: 'none',
-               mapper.BOUND_MUTE: 'mute',
-               mapper.BOUND_CLAMP: 'clamp',
-               mapper.BOUND_FOLD: 'fold',
-               mapper.BOUND_WRAP: 'wrap'}
+    boundStr = {mapper.BOUND_UNDEFINED: 'undefined',
+                mapper.BOUND_NONE: 'none',
+                mapper.BOUND_MUTE: 'mute',
+                mapper.BOUND_CLAMP: 'clamp',
+                mapper.BOUND_FOLD: 'fold',
+                mapper.BOUND_WRAP: 'wrap'}
 
     regexx = re.compile('x([0-9]+)')
     regexy = re.compile('y([0-9]+)')
 
     for m in db.device(device).maps():
-        src = m.source().signal
-        dst = m.destination().signal
+        src = m.source().signal()
+        dst = m.destination().signal()
         mode = modeStr[m.mode]
         if m.source().calibrating:
             mode = 'calibrating'
@@ -36,8 +36,8 @@ def serialise(db, device):
             mode = 'reverse'
         this_map = {
           'src': [ src.device().name + '/' + src.name ],
-          'dest': [ dst.device().name + '/' + destination.name ],
-          'mute': true if m.muted else false,
+          'dest': [ dst.device().name + '/' + dst.name ],
+          'muted': True if m.muted else False,
           'mode': mode,
           'boundMin': boundStr[m.destination().bound_min],
           'boundMax': boundStr[m.destination().bound_max]
@@ -56,7 +56,7 @@ def serialise(db, device):
             this_map['expression'] = m.expression.replace('y', 'dest[0]').replace('x', 'src[0]')
         new_maps.append(this_map);
     
-    contents = {"fileversion": "2.1", "mapping": { "connections": new_maps } }
+    contents = {"fileversion": "2.2", "mapping": { "connections": new_maps } }
 
     return json.dumps(contents, indent=4)
 
@@ -93,7 +93,6 @@ def deserialise(db, mapping_json, devices):
                 src = db.signal(s + srcsig)
                 if not src:
                     continue
-                print 'using srcname', srcname
                 for d in devices['destinations']:
                     dst = db.signal(d + destsig)
                     if not dst:
