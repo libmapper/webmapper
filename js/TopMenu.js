@@ -279,9 +279,9 @@ TopMenu.prototype = {
         $('.topMenu').append(l);
 
         iframe.onload = function() {
-            var t = $(iframe.contentDocument.body).text();
-            if (t.search('Success:') == -1 && t.search('Error:') == -1)
-                return;
+//            var t = $(iframe.contentDocument.body).text();
+//            if (t.search('Success:') == -1 && t.search('Error:') == -1)
+//                return;
             _self.notify($(iframe.contentDocument.body).text());
             $(l).remove();
             body.removeChild(iframe);
@@ -319,6 +319,7 @@ TopMenu.prototype = {
             srcs.name = 'sources';
             srcs.value = srcdevs.join();
             form.appendChild(srcs);
+
             var dsts = document.createElement('input');
             dsts.type = 'hidden';
             dsts.name = 'destinations';

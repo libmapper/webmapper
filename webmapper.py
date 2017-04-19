@@ -195,9 +195,9 @@ def on_save(arg):
     fn = d.name+'.json'
     return fn, mapperstorage.serialise(db, arg['dev'])
 
-def on_load(mapping_json, devices):
+def on_load(arg):
     # pdb.set_trace()
-    mapperstorage.deserialise(db, mapping_json, devices)
+    mapperstorage.deserialise(db, arg['sources'], arg['destinations'], arg['loading'])
 
 def select_network(newNetwork):
     networkInterfaces['active'] = newNetwork

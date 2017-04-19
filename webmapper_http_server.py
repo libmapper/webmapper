@@ -55,8 +55,9 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 er = 2
                 sources = query['sources'][0].split(',')
                 destinations = query['destinations'][0].split(',')
-                devices = {'sources': sources, 'destinations': destinations}
-                cmd_handlers['load'](query['mapping_json'][0], devices)
+                msg = {'sources': sources, 'destinations': destinations,
+                       'loading': query['mapping_json'][0]}
+                cmd_handlers['load'](msg)
             print >>self.wfile, "Success: %s loaded successfully."%fn
         except Exception, e:
             print >>self.wfile, "Error: loading %s (%d)."%(fn,er)
