@@ -91,6 +91,11 @@ function initMonitorCommands()
                           + '/_dir_' + args.direction, args);
         update_display();
     });
+    command.register("mod_signal", function(cmd, args) {
+        model.signals.add(args.device+'/'+args.name
+                          + '/_dir_' + args.direction, args);
+        update_display();
+    });
     command.register("del_signal", function(cmd, args) {
         model.signals.remove(args.device+'/'+args.name
                              + '/_dir_'+args.direction);
@@ -102,8 +107,12 @@ function initMonitorCommands()
         update_display();
     });
     command.register("new_link", function(cmd, args) {
-        if (!model.getLink(args.src, args.dst))
-            model.links.add(args.src+'>'+args.dst, args);
+        model.links.add(args.src+'>'+args.dst, args);
+        update_display();
+    });
+    command.register("mod_link", function(cmd, args) {
+        console.log("adding/modding link to model: ", args);
+        model.links.add(args.src+'>'+args.dst, args);
         update_display();
     });
     command.register("del_link", function(cmd, args) {
@@ -163,7 +172,8 @@ function initViewCommands()
     // src = "/devicename"
     // dst = "/devicename"
     $("#container").on("link", function(e, src, dst){
-        model.links.add(src + '>'+ dst, { 'src' : src, 'dst' : dst });
+        model.links.add(src + '>'+ dst, { 'src' : src, 'dst' : dst,
+                        'num_maps': [0, 0] });
         update_display();
     });
 

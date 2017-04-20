@@ -243,10 +243,10 @@ function listView(model)
             var k = keys[d];
             var dev = model.devices.get(k);
 
-            if (dev.num_inputs > dev.num_outputs) {
+            if (dev.num_outputs) {
                 leftBodyContent.push([dev.name, dev.num_outputs,
                                       dev.host, dev.port]);}
-            else {
+            if (dev.num_inputs) {
                 rightBodyContent.push([dev.name, dev.num_inputs,
                                        dev.host, dev.port]);}
 
@@ -338,6 +338,10 @@ function listView(model)
     {
         for (var a in arrows) {
             arrows[a].border.remove();
+            if (arrows[a].label)
+                arrows[a].label.remove();
+            if (arrows[a].label_background)
+                arrows[a].label_background.remove();
             arrows[a].remove();
         }
         arrows = [];
@@ -381,20 +385,17 @@ function listView(model)
                     }
                     if (src_found && dst_found)
                         break;
-                    }
                 }
+            }
             if (src_found && dst_found) {
-                if (selectedTab == all_devices) {
-                    if (model.selectedLinks.get(keys[k]))
-                        sel = 1;
-                }
-                else if (model.selectedConnections.get(keys[k]))
+                if (model.selectedLinks.get(keys[k]))
                     sel = 1;
                 // Are these rows being displayed?
                 if ($(src).css('display') != 'none'
                     && $(dst).css('display') != 'none') {
+                    var num_maps = (l.num_maps[0] + l.num_maps[1]);
                     create_arrow(src, dst, src_found | (dst_found << 2),
-                                 sel, 0);
+                                 sel, 0, l.num_maps, num_maps.toString());
                     n_visibleLinks++;
                 }
             }
@@ -478,7 +479,7 @@ function listView(model)
                 if ($(src).css('display') != 'none'
                     && $(dst).css('display') != 'none') {
                     create_arrow(src, dst, src_found | (dst_found << 2),
-                                 sel, c.muted);
+                                 sel, c.muted, [1, 0], null);
                     n_visibleConnections++;
                 }
                 n_connections++;
@@ -486,7 +487,7 @@ function listView(model)
         }
 
         $('.status.middle').text(
-            n_visibleConnections + " of " + n_connections + " connections");
+            n_visibleConnections + " of " + n_connections + " maps");
 
         if (!n_connections)
             $('#saveButton').addClass('disabled');
@@ -539,8 +540,8 @@ function listView(model)
             return false;
     }
 
-    /* Returns whether a row has a connection, have to do it based on
-     * monitor.connections not arrows themselves. */
+    /* Returns whether a row has a map, have to do it based on db.maps not
+     * arrows themselves. */
     function is_connected(row) {
         // What is the name of the signal/link?
         var name = $(row).children('.name').text();
@@ -569,7 +570,7 @@ function listView(model)
     }
 
     /* params are TR elements, one from each table */
-    function create_arrow(src, dst, geometry, sel, muted) {
+    function create_arrow(src, dst, geometry, sel, muted, arrowheads, label) {
         var line = svgArea.path();
         var bidirectional = 0;//selectedTab == all_devices;
 
@@ -583,20 +584,22 @@ function listView(model)
             "border": "1px solid blue"
         });
 
+        var arrow_offset = 6;
+
         var S = fullOffset(src);
         var D = fullOffset(dst);
         var frame = fullOffset($('#svgDiv')[0]);
 
         if (geometry & 1)
-            var x1 = bidirectional ? 5 : 0;
+            var x1 = arrowheads[1] ? arrow_offset : 0;
         else
-            var x1 = frame.width - bidirectional * 5;
+            var x1 = frame.width - (arrowheads[1] ? arrow_offset : 0);
         var y1 = S.top + S.height / 3 - frame.top;
 
         if ((geometry >> 2) & 1)
-            var x2 = 5;
+            var x2 = arrowheads[0] ? arrow_offset : 0;
         else
-            var x2 = frame.width - 5;
+            var x2 = frame.width - (arrowheads[0] ? arrow_offset : 0);
         var y2 = D.top + D.height / 1.5 - frame.top;
 
         var path = [["M", x1, y1],
@@ -604,20 +607,42 @@ function listView(model)
 
         line.attr({"path": path});
         line.border.attr({"path": path});
+        line.attr({
+            "fill": "none",
+            "stroke-width": "2px",
+            "cursor": "pointer",
+        });
+        if (arrowheads[0] > 0)
+            line.attr({"arrow-end": "classic-wide-long"});
+        if (arrowheads[1] > 0)
+            line.attr({"arrow-start": "classic-wide-long"});
+
+        if (label != null) {
+            width = label.length * 12;
+            if (width < 20)
+                width = 20;
+            if (Math.abs(x1 - x2) <= arrow_offset)
+                center_x = frame.width / 2 + (x1 <= arrow_offset ? -35 : 35);
+            else
+                center_x = frame.width / 2;
+            center_y = (y1 + y2) / 2;
+            var rect = svgArea.rect(center_x - width/2, center_y-10, width, 20, 10);
+            // todo: move to css
+            if (sel)
+                rect.attr({"fill": "red", "stroke": "none"});
+            else
+                rect.attr({"fill": "black", "stroke": "none"});
+            var text = svgArea.text(center_x, center_y, label);
+            text.attr({"font-size": 14, "fill": "#FFF", "text-align": "center"});
+
+            line.label = text;
+            line.label_background = rect;
+        }
 
         if (sel)
             line.node.classList.add('selected');
         if (muted)
             line.node.classList.add('muted');
-
-        line.attr({
-            "fill": "none",
-            "stroke-width": "2px",
-            "cursor": "pointer",
-            "arrow-end": "classic-wide-long"
-        });
-        if (bidirectional)
-            line.attr({"arrow-start": "classic-wide-long"});
 
         // So that the arrow remembers which rows it is attached to
         line.srcTr = src;
@@ -631,7 +656,6 @@ function listView(model)
 
             var _src = $(src).children('.name').text();
             var _dst = $(dst).children('.name').text();
-
 
             // So that the arrow is deselected if both rows are selected
             // selected, so deselect it
@@ -667,7 +691,7 @@ function listView(model)
             $('#saveLoadDiv').addClass('disabled');
         }
         else {
-            $('#svgTitle').text("Connections");
+            $('#svgTitle').text("Maps");
             leftTable.set_headers(signalHeaders);
             rightTable.set_headers(signalHeaders);
             $('#saveLoadDiv').removeClass('disabled');

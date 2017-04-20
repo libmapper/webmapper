@@ -49,7 +49,10 @@ def dev_props(dev):
     return props
 
 def link_props(link):
-    return {'src' : link.device(0).name, 'dst' : link.device(1).name}
+    props = link.properties.copy()
+    props['src'] = link.device(0).name
+    props['dst'] = link.device(1).name
+    return props
 
 def sig_props(sig):
     props = sig.properties.copy()
