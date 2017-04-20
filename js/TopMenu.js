@@ -153,7 +153,7 @@ TopMenu.prototype = {
     updateConnectionPropertiesFor : function(conn) {
         var conns = this.model.selectedConnections;
 
-        if (conns.length == 1) {
+        if (conns.length() == 1) {
             if (conns[0].src == conn.src
                 && conns[0].dst == conn.dst) {
                 this.updateConnectionProperties(conns);
@@ -164,38 +164,94 @@ TopMenu.prototype = {
     updateConnectionProperties : function() {
         this.clearConnectionProperties();
 
-        var conns = this.model.selectedConnections;
+        var maps = this.model.selectedConnections;
 
-        // if there is one connection selected, display its properties on top
-        if (conns.length == 1) {
-            var c = conns[0];
-            var mode = c.mode;
-            // capitalize first letter
-            mode = mode.charAt(0).toUpperCase() + mode.slice(1);
-            $('.signalControl').removeClass('disabled');
-            $('.signalControl').children('*').removeClass('disabled');
-            $(".mode"+mode).addClass("modesel");
-            $(".expression").val(c.expression);
-            if (c.src_min != null)
-                $("#src_min").val(c.src_min);
-            if (c.src_max != null)
-                $("#src_max").val(c.src_max);
-            if (c.dst_min != null)
-                $("#dst_min").val(c.dst_min);
-            if (c.dst_max != null)
-                $("#dst_max").val(c.dst_max);
-            if (c.bound_min != null)
-                this.set_boundary($("#boundaryMin"),c.bound_min, 0);
-            if (c.bound_max != null)
-                this.set_boundary($("#boundaryMax"),c.bound_max, 1);
+        if (maps.length() == 0)
+            return;
+
+        var mode = null;
+        var expression = null;
+        var src_min = null;
+        var src_max = null;
+        var dst_min = null;
+        var dst_max = null;
+        var src_calibrating = false;
+        var dst_calibrating = false;
+        var dst_bound_min = 'none';
+        var dst_bound_max = 'none';
+
+        $('.signalControl').removeClass('disabled');
+        $('.signalControl').children('*').removeClass('disabled');
+
+        for (var i in maps.contents) {
+            var m = maps.contents[i];
+
+            if (mode == null)
+                mode = m.mode;
+            else if (mode != m.mode)
+                mode = 'multiple'
+
+            if (expression == null)
+                expression = m.expression;
+            else if (expression != m.expression)
+                expression = 'multiple';
+
+            if (src_min == null)
+                src_min = m.src_min;
+            else if (src_min != m.src_min)
+                src_min = 'multiple';
+            if (src_max == null)
+                src_max = m.src_max;
+            else if (src_max != m.src_max)
+                src_max = 'multiple';
+            if (dst_min == null)
+                dst_min = m.dst_min;
+            else if (dst_min != m.dst_min)
+                dst_min = 'multiple';
+            if (dst_max == null)
+                dst_max = m.dst_max;
+            else if (dst_max != m.dst_max)
+                dst_max = 'multiple';
+
+            if (dst_bound_min == null)
+                dst_bound_min = m.bound_min;
+            else if (dst_bound_min != m.bound_min)
+                dst_bound_min = 'multiple';
+            if (dst_bound_max == null)
+                dst_bound_max = m.bound_max;
+            else if (dst_bound_max != m.bound_max)
+                dst_bound_max = 'multiple';
         }
+
+        if (mode != null && mode != 'multiple') {
+            // capitalize first letter of mode
+            mode = mode.charAt(0).toUpperCase() + mode.slice(1);
+            $(".mode"+mode).addClass("modesel");
+        }
+
+        if (expression != null && expression != 'multiple')
+            $(".expression").val(expression);
+
+        if (src_min != null && src_min != 'multiple')
+            $("#src_min").val(src_min);
+        if (src_max != null && src_max != 'multiple')
+            $("#src_max").val(src_max);
+        if (dst_min != null && dst_min != 'multiple')
+            $("#dst_min").val(dst_min);
+        if (dst_max != null && dst_max != 'multiple')
+            $("#dst_max").val(dst_max);
+
+        if (dst_bound_min != null)
+            this.set_boundary($("#boundaryMin"), dst_bound_min, 0);
+        if (dst_bound_max != null)
+            this.set_boundary($("#boundaryMax"), dst_bound_max, 1);
     },
 
     selected_connection_set_input : function(what, field) {
         if (what == 'srcRangeSwitch' || what == 'dstRangeSwitch')
             return;
         var conns = this.model.selectedConnections;
-        if (!conns.length)
+        if (!conns.length())
             return;
 
         for (var i in conns) {
@@ -229,7 +285,7 @@ TopMenu.prototype = {
         if (!modecmd) return;
 
         var conns = this.model.selectedConnections();
-        if (!conns.length) return;
+        if (!conns.length()) return;
 
         var msg = {'mode' : modecmd};
 
@@ -244,7 +300,7 @@ TopMenu.prototype = {
 
     copy_selected_connection : function() {
         var conns = this.model.selectedConnections();
-        if (conns.length != 1) return;
+        if (conns.length() != 1) return;
         var args = {};
 
         // copy existing connection properties
