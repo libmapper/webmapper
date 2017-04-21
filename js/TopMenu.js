@@ -1,8 +1,8 @@
 function TopMenu(container, model) {
     this._container = container;
     this.model = model;
-    this.connectionModeCommands = {"Linear": 'linear', "Expression": 'expression' };
-    this.connectionModes = ["Linear", "Expression"];
+    this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
+    this.mapModes = ["Linear", "Expression"];
     this.boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
     this.boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
                           "boundaryMute", "boundaryClamp", "boundaryWrap"];
@@ -40,9 +40,9 @@ TopMenu.prototype = {
                      "<div class='ranges' style='width:50%'></div>"+
                  "</div>");
 
-        for (var m in this.connectionModes) {
+        for (var m in this.mapModes) {
             $('.modesDiv').append(
-                "<div class='mode mode"+this.connectionModes[m]+"'>"+this.connectionModes[m]+"</div>");
+                "<div class='mode mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
         }
 
         $('.modesDiv').append("<div style='width:100%'>Expression: "+
@@ -87,17 +87,17 @@ TopMenu.prototype = {
             keydown: function(e) {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
-                    _self.selected_connection_set_input($(this).attr('id').split(' ')[0], this);
+                    _self.selected_map_set_input($(this).attr('id').split(' ')[0], this);
                 }
             },
             click: function(e) { e.stopPropagation(); },
-            blur: function() {_self.selected_connection_set_input($(this).attr('id').split(' ')[0], this);}
+            blur: function() {_self.selected_map_set_input($(this).attr('id').split(' ')[0], this);}
         }, 'input');
 
         //For the mode buttons
         $('.topMenu').on("click", '.mode', function(e) {
             e.stopPropagation();
-            _self.selected_connection_set_mode(e.currentTarget.innerHTML);
+            _self.selected_map_set_mode(e.currentTarget.innerHTML);
         });
 
         //For the visualization mode selection menu
@@ -121,8 +121,8 @@ TopMenu.prototype = {
 
         $('.rangeSwitch').click(function(e) {
             e.stopPropagation();
-            _self.selected_connection_switch_range(e.currentTarget.id=='srcRangeSwitch',
-                                                   e.currentTarget);
+            _self.selected_map_switch_range(e.currentTarget.id=='srcRangeSwitch',
+                                            e.currentTarget);
         });
 
         $('body').on('keydown', function(e) {
@@ -139,8 +139,8 @@ TopMenu.prototype = {
         });
     },
 
-    //clears and disables to connection properties bar
-    clearConnectionProperties : function() {
+    // clears and disables the map properties bar
+    clearMapProperties : function() {
         $(".mode").removeClass("modesel");
         $("*").removeClass('waiting');
         $(".topMenu input").val('');
@@ -149,24 +149,11 @@ TopMenu.prototype = {
         $('.signalControl').addClass('disabled');
     },
 
-    // conn object with arguments for the connection
-    updateConnectionPropertiesFor : function(conn) {
-        var conns = this.model.selectedConnections;
+    updateMapProperties : function() {
+        this.clearMapProperties();
 
-        if (conns.length() == 1) {
-            if (conns[0].src == conn.src
-                && conns[0].dst == conn.dst) {
-                this.updateConnectionProperties(conns);
-            }
-        }
-    },
-
-    updateConnectionProperties : function() {
-        this.clearConnectionProperties();
-
-        var maps = this.model.selectedConnections;
-
-        if (maps.length() == 0)
+        var keys = this.model.selectedMaps;
+        if (keys.length == 0)
             return;
 
         var mode = null;
@@ -183,43 +170,45 @@ TopMenu.prototype = {
         $('.signalControl').removeClass('disabled');
         $('.signalControl').children('*').removeClass('disabled');
 
-        for (var i in maps.contents) {
-            var m = maps.contents[i];
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
 
             if (mode == null)
-                mode = m.mode;
-            else if (mode != m.mode)
+                mode = map.mode;
+            else if (mode != map.mode)
                 mode = 'multiple'
 
             if (expression == null)
-                expression = m.expression;
-            else if (expression != m.expression)
+                expression = map.expression;
+            else if (expression != map.expression)
                 expression = 'multiple';
 
             if (src_min == null)
-                src_min = m.src_min;
-            else if (src_min != m.src_min)
+                src_min = map.src_min;
+            else if (src_min != map.src_min)
                 src_min = 'multiple';
             if (src_max == null)
-                src_max = m.src_max;
-            else if (src_max != m.src_max)
+                src_max = map.src_max;
+            else if (src_max != map.src_max)
                 src_max = 'multiple';
             if (dst_min == null)
-                dst_min = m.dst_min;
-            else if (dst_min != m.dst_min)
+                dst_min = map.dst_min;
+            else if (dst_min != map.dst_min)
                 dst_min = 'multiple';
             if (dst_max == null)
-                dst_max = m.dst_max;
-            else if (dst_max != m.dst_max)
+                dst_max = map.dst_max;
+            else if (dst_max != map.dst_max)
                 dst_max = 'multiple';
 
             if (dst_bound_min == null)
-                dst_bound_min = m.bound_min;
-            else if (dst_bound_min != m.bound_min)
+                dst_bound_min = map.bound_min;
+            else if (dst_bound_min != map.bound_min)
                 dst_bound_min = 'multiple';
             if (dst_bound_max == null)
-                dst_bound_max = m.bound_max;
-            else if (dst_bound_max != m.bound_max)
+                dst_bound_max = map.bound_max;
+            else if (dst_bound_max != map.bound_max)
                 dst_bound_max = 'multiple';
         }
 
@@ -247,65 +236,86 @@ TopMenu.prototype = {
             this.set_boundary($("#boundaryMax"), dst_bound_max, 1);
     },
 
-    selected_connection_set_input : function(what, field) {
+    // object with arguments for the map
+    updateMapPropertiesFor : function(map) {
+        // check if map is selected
+        if (this.model.selectedMaps_isSelected(map.src, map.dst))
+            this.updateMapProperties();
+    },
+
+    selected_map_set_input : function(what, field) {
         if (what == 'srcRangeSwitch' || what == 'dstRangeSwitch')
             return;
-        var conns = this.model.selectedConnections;
-        if (!conns.length())
+        var keys = this.model.selectedMaps;
+        if (keys.length == 0)
             return;
 
-        for (var i in conns) {
-            if (conns[i][what] == field.value || conns[i][what] == parseFloat(field.value))
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
+
+            if (map[what] == field.value || map[what] == parseFloat(field.value))
                 continue;
             var msg = {};
 
             // copy src and dst names
-            msg['src'] = conns[i]['src'];
-            msg['dst'] = conns[i]['dst'];
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
 
             // set the property being modified
             if (what == 'mode')
-                msg[what] = connectionModeCommands[connectionModes[conns[i][what]]];
+                msg[what] = mapModeCommands[mapModes[map[what]]];
             else
                 msg[what] = field.value;
 
             // is expression is edited, switch to expression mode
-            if (what == 'expression' && conns[i]['mode'] != 'Expr')
+            if (what == 'expression' && map['mode'] != 'Expr')
                 msg['mode'] = 'expression';
 
-            // send the command, should receive a /connection/modify message after.
-            $(this._container).trigger("setConnection", [msg]);
+            // send the command, should receive a /mapped message after.
+            $(this._container).trigger("setMap", [msg]);
 
             $(field).addClass('waiting');
         }
     },
 
-    selected_connection_set_mode : function(modestring) {
-        var modecmd = this.connectionModeCommands[modestring];
+    selected_map_set_mode : function(modestring) {
+        var modecmd = this.mapModeCommands[modestring];
         if (!modecmd) return;
 
-        var conns = this.model.selectedConnections();
-        if (!conns.length()) return;
+        var keys = this.model.selectedMaps;
+        if (keys.length == 0)
+            return;
 
         var msg = {'mode' : modecmd};
 
-        for (var i in conns) {
-            if (conns[i]['mode'] == modestring)
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
                 continue;
-            msg['src'] = conns[i]['src'];
-            msg['dst'] = conns[i]['dst'];
-            $(this._container).trigger("setConnection", [msg]);    // trigger switch event
+
+            if (map['mode'] == modestring)
+                continue;
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
+
+            // trigger switch event
+            $(this._container).trigger("setMap", [msg]);
         }
     },
 
-    copy_selected_connection : function() {
-        var conns = this.model.selectedConnections();
-        if (conns.length() != 1) return;
+    copy_selected_map : function() {
+        var keys = this.model.selectedMaps;
+        if (keys.length != 1)
+            return;
+
         var args = {};
 
-        // copy existing connection properties
-        for (var c in conns[0]) {
-            args[c] = conns[0][c];
+        // copy existing map properties
+        var map = this.model.maps.get(keys[0]);
+        for (var p in map) {
+            args[p] = map[p];
         }
         return args;
     },
@@ -387,22 +397,23 @@ TopMenu.prototype = {
         return false;
     },
 
-    selected_connection_switch_range : function(is_src, div) {
-         var c = this.copy_selected_connection();
-         if (!c) return;
+    selected_map_switch_range : function(is_src, div) {
+         var map = this.copy_selected_map();
+         if (!map)
+             return;
 
          var msg = {};
          if (is_src) {
-             msg['src_max'] = String(c['src_min']);
-             msg['src_min'] = String(c['src_max']);
+             msg['src_max'] = String(map['src_min']);
+             msg['src_min'] = String(map['src_max']);
          }
          else {
-             msg['dst_max'] = String(c['dst_min']);
-             msg['dst_min'] = String(c['dst_max']);
+             msg['dst_max'] = String(map['dst_min']);
+             msg['dst_min'] = String(map['dst_max']);
          }
-         msg['src'] = c['src'];
-         msg['dst'] = c['dst'];
-         $(this._container).trigger("setConnection", msg);
+         msg['src'] = map['src'];
+         msg['dst'] = map['dst'];
+         $(this._container).trigger("setMap", msg);
     },
 
     on_boundary : function(e, _self) {
@@ -425,28 +436,28 @@ TopMenu.prototype = {
         // set_boundary($(e.currentTarget), b,
         //              e.currentTarget.id=='boundaryMax');
 
-        _self.selected_connection_set_boundary(b,
+        _self.selected_map_set_boundary(b,
             e.currentTarget.id == 'boundaryMax', e.currentTarget);
 
         e.stopPropagation();
     },
 
-    selected_connection_set_boundary : function(boundarymode, ismax, div) {
-        var args = this.copy_selected_connection();
+    selected_map_set_boundary : function(boundarymode, ismax, div) {
+        var args = this.copy_selected_map();
 
         if (!args)
             return;
 
         // TODO: this is a bit out of hand, need to simplify the mode
         // strings and indexes.
-        var modecmd = this.connectionModeCommands[this.connectionModes[args['mode']]];
+        var modecmd = this.mapModeCommands[this.mapModes[args['mode']]];
         args['mode'] = modecmd;
 
         var c = ismax ? 'bound_max' : 'bound_min';
         args[c] = boundarymode;
 
-        // send the command, should receive a /connection/modify message after.
-        $(this._container).trigger("setConnection", [args]);
+        // send the command, should receive a /mapped message after.
+        $(this._container).trigger("setMap", [args]);
 
         // Do not set the background color, since background is used to
         // display icon.  Enable this if a better style decision is made.
@@ -486,20 +497,23 @@ TopMenu.prototype = {
     },
 
     mute_selected : function() {
-        var conns = this.model.selectedConnections;
+        var keys = this.model.selectedMaps;
 
-        for (var i in conns) {
-            var c = conns[i];
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
+
             var msg = {};
-            msg['src'] = c['src'];
-            msg['dst'] = c['dst'];
-            msg['muted'] = !c.muted;
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
+            msg['muted'] = !map.muted;
 
 //            // TODO: why modes aren't just stored as their strings, I don't know
-//            var modecmd = this.connectionModeCommands[this.connectionModes[args['mode']]];
+//            var modecmd = this.mapModeCommands[this.mapModes[args['mode']]];
 //            args['mode'] = modecmd;
 
-            $(this._container).trigger("setConnection", msg);
+            $(this._container).trigger("setMap", msg);
         }
     },
 

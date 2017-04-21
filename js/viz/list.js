@@ -23,7 +23,7 @@ function listView(model)
 
     // "use strict";
     this.type = 'list';
-    this.unconnectedVisible = true; // Are unconnected devices/signals visible?
+    this.unmappedVisible = true; // Are unmapped devices/signals visible?
     this.focusedDevices = []; // An array containing devices seen in the display
 
     var leftBodyContent = [];
@@ -388,7 +388,7 @@ function listView(model)
                 }
             }
             if (src_found && dst_found) {
-                if (model.selectedLinks.get(keys[k]))
+                if (model.selectedLinks.indexOf(keys[k]) > -1)
                     sel = 1;
                 // Are these rows being displayed?
                 if ($(src).css('display') != 'none'
@@ -423,20 +423,20 @@ function listView(model)
             if (selectedTab == all_devices)
                 update_links();
             else
-                update_connections();
+                update_maps();
             arrowCallable = true;
         }, 0);
     }
 
-    function update_connections()
+    function update_maps()
     {
         cleanup_arrows();
-        var n_connections = 0;
-        var n_visibleConnections = 0;
+        var n_maps = 0;
+        var n_visibleMaps = 0;
 
-        var keys = model.connections.keys();
+        var keys = model.maps.keys();
         for (var k in keys) {
-            var c = model.connections.get(keys[k]);
+            var c = model.maps.get(keys[k]);
             var muted = c.muted;
             var src_found = 0;
             var dst_found = 0;
@@ -470,33 +470,33 @@ function listView(model)
             }
             if (src_found && dst_found) {
                 if (selectedTab == all_devices) {
-                    if (model.selectedLinks.get(keys[k]))
+                    if (model.selectedLinks.indexOf(keys[k]) > -1)
                         sel = 1;
                 }
-                else if (model.selectedConnections.get(keys[k]))
+                else if (model.selectedMaps.indexOf(keys[k]) > -1)
                     sel = 1;
                 // Are these rows being displayed?
                 if ($(src).css('display') != 'none'
                     && $(dst).css('display') != 'none') {
                     create_arrow(src, dst, src_found | (dst_found << 2),
                                  sel, c.muted, [1, 0], null);
-                    n_visibleConnections++;
+                    n_visibleMaps++;
                 }
-                n_connections++;
+                n_maps++;
             }
         }
 
         $('.status.middle').text(
-            n_visibleConnections + " of " + n_connections + " maps");
+            n_visibleMaps + " of " + n_maps + " maps");
 
-        if (!n_connections)
+        if (!n_maps)
             $('#saveButton').addClass('disabled');
     }
 
-    // Filter out unconnected signals or signals that do not match the search string
+    // Filter out unmapped signals or signals that do not match the search string
     function filter_view() {
         $('.displayTable tbody tr').each(function(i, row) {
-            if ((view.unconnectedVisible || is_connected(this)) && filter_match(this))
+            if ((view.unmappedVisible || is_mapped(this)) && filter_match(this))
                 $(this).removeClass('invisible');
             else
                 $(this).addClass('invisible');
@@ -542,17 +542,17 @@ function listView(model)
 
     /* Returns whether a row has a map, have to do it based on db.maps not
      * arrows themselves. */
-    function is_connected(row) {
+    function is_mapped(row) {
         // What is the name of the signal/link?
         var name = $(row).children('.name').text();
-        var linkConList = [];   // A list of all links or connections in 'devA>devB' form
+        var linkConList = [];   // A list of all links or maps in 'devA>devB' form
         var srcNames = [];      // All source names as strings
         var dstNames = [];     // All destination names as strings
 
         if (selectedTab == all_devices)
             linkConList = model.links.keys();
         else
-            linkConList = model.connections.keys();
+            linkConList = model.maps.keys();
 
         for (var i in linkConList) {
             var sd = linkConList[i].split('>');
@@ -561,7 +561,7 @@ function listView(model)
         }
 
         for (var i in srcNames) {
-            // Does the name match a string in the connections/links?
+            // Does the name match a string in the maps/links?
             if (srcNames[i] == name || dstNames[i] == name)
                 return true;
         }
@@ -649,7 +649,7 @@ function listView(model)
         line.dstTr = dst;
 
         arrows.push(line);
-        $('#container').trigger("updateConnectionProperties");
+        $('#container').trigger("updateMapProperties");
 
         // TODO move this with all the other UI handlers
         $(line.border.node).on('click', function(e) {
@@ -669,10 +669,10 @@ function listView(model)
             else {
                 if (e.shiftKey == false)
                     deselect_all();
-                if (model.selectedConnections_toggleConnection(_src, _dst))
+                if (model.selectedMaps_toggleMap(_src, _dst))
                     update_arrows();
             }
-            $('#container').trigger("updateConnectionProperties");
+            $('#container').trigger("updateMapProperties");
 
             e.stopPropagation();
         });
@@ -697,7 +697,7 @@ function listView(model)
             $('#saveLoadDiv').removeClass('disabled');
         }
 
-        $('#svgTop').text('hide unconnected');
+        $('#svgTop').text('hide unmapped');
         $('#leftSearch, #rightSearch').val('');
 
         $('#container').trigger("tab", selectedTab);
@@ -738,7 +738,7 @@ function listView(model)
             lastSelectedTr.right = tr;
 
         selectLists[selectedTab][i] = l;
-        $('#container').trigger("updateConnectionProperties");
+        $('#container').trigger("updateMapProperties");
     }
 
     // For selecting multiple rows with the 'shift' key
@@ -759,7 +759,7 @@ function listView(model)
             if (i > startIndex && i < endIndex
                 && !$(e).hasClass('invisible') && !$(e).hasClass('trsel')){
                 select_tr(e);
-                $('#container').trigger("updateConnectionProperties");
+                $('#container').trigger("updateMapProperties");
             }
         });
     }
@@ -778,8 +778,8 @@ function listView(model)
         lastSelectedTr.right = null;
         update_arrows();
         model.selectedLinks_clearAll();
-        model.selectedConnections_clearAll();
-        $('#container').trigger("updateConnectionProperties");
+        model.selectedMaps_clearAll();
+        $('#container').trigger("updateMapProperties");
     }
 
     function select_all()
@@ -799,7 +799,7 @@ function listView(model)
             if (selectedTab == all_devices)
                 model.selectedLinks_toggleLink(_src, _dst);
             else
-                model.selectedConnections_toggleConnection(_src, _dst);
+                model.selectedMaps_toggleMap(_src, _dst);
         }
         update_arrows();
     }
@@ -811,7 +811,7 @@ function listView(model)
             update_links();
         }
         else
-            update_connections();
+            update_maps();
     }
 
     function on_link(e, start, end) {
@@ -822,30 +822,26 @@ function listView(model)
     }
 
     function on_unlink(e) {
-        var keys = model.selectedLinks.keys();
-
-        for (var k in keys) {
-            var l = model.selectedLinks.get(keys[k]);
-            $('#container').trigger("unlink", [l.src, l.dst]);
+        for (var key in model.selectedLinks) {
+            var link = model.links.get(key);
+            $('#container').trigger("unlink", [link.src, link.dst]);
         }
         e.stopPropagation();
     }
 
-    function on_connect(e, start, end, args) {
+    function on_map(e, start, end, args) {
         if (model.mKey) {
             args['muted'] = true;
         }
-        $('#container').trigger("connect", [start.cells[0].textContent,
-                                            end.cells[0].textContent, args]);
+        $('#container').trigger("map", [start.cells[0].textContent,
+                                        end.cells[0].textContent, args]);
         e.stopPropagation();
     }
 
-    function on_disconnect(e) {
-        var keys = model.selectedConnections.keys();
-
-        for (var k in keys) {
-            var c = model.selectedConnections.get(keys[k]);
-            $('#container').trigger("disconnect", [c.src, c.dst]);
+    function on_unmap(e) {
+        for (var key in model.selectedMaps) {
+            var map = model.maps.get(key);
+            $('#container').trigger("unmap", [map.src, map.dst]);
         }
         e.stopPropagation();
     }
@@ -896,7 +892,7 @@ function listView(model)
     {
         $('#container').append(
             "<div id='svgDiv'>"+
-                "<div id='svgTop'>hide unconnected</div>"+
+                "<div id='svgTop'>hide unmapped</div>"+
             "</div>");
 
         svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
@@ -1050,8 +1046,8 @@ function listView(model)
             if (selectedTab == all_devices)
                 on_link(mouseUpEvent, this.sourceRow, this.targetRow);
             else if (this.targetRow) {
-                on_connect(mouseUpEvent, this.sourceRow,
-                           this.targetRow, {'muted': this.muted});
+                on_map(mouseUpEvent, this.sourceRow,
+                       this.targetRow, {'muted': this.muted});
             }
             $("*").off('.drawing').removeClass('incompatible');
             $(document).off('.drawing');
@@ -1129,7 +1125,7 @@ function listView(model)
                 // Make sure only the proper row is selected
                 deselect_all();
                 select_tr(curve.sourceRow);
-                $('#container').trigger("updateConnectionProperties");
+                $('#container').trigger("updateMapProperties");
 
                 // Moving about the canvas
                 $('svg, .displayTable tbody tr').on('mousemove.drawing',
@@ -1143,7 +1139,7 @@ function listView(model)
 
                 $(document).on('keydown.drawing', function(keyPressEvent) {
                     if (selectedTab != all_devices && keyPressEvent.which == 77) {
-                        // Change if the user is drawing a muted connection
+                        // Change if the user is drawing a muted map
                         if (curve.muted == true) {
                             curve.muted = false;
                             curve.line.node.classList.remove('muted');
@@ -1192,7 +1188,7 @@ function listView(model)
 
         // Various keyhandlers
         $('body').on('keydown.list', function(e) {
-            if (e.which == 8 || e.which == 46) { // disconnect on 'delete'
+            if (e.which == 8 || e.which == 46) { // unmap on 'delete'
                 // Prevent the browser from going back a page
                 // but NOT if you're focus is an input and deleting text
                 if (!$(':focus').is('input')) {
@@ -1201,7 +1197,7 @@ function listView(model)
                 if (selectedTab == all_devices)
                     on_unlink(e);
                 else
-                    on_disconnect(e);
+                    on_unmap(e);
                 deselect_all();
             }
             else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
@@ -1269,13 +1265,13 @@ function listView(model)
 
         $('#svgTop').on('click', function(e) {
             e.stopPropagation();
-            if (view.unconnectedVisible == true) {
-                view.unconnectedVisible = false;
-                $('#svgTop').text('show unconnected');
+            if (view.unmappedVisible == true) {
+                view.unmappedVisible = false;
+                $('#svgTop').text('show unmapped');
             }
             else {
-                view.unconnectedVisible = true;
-                $('#svgTop').text('hide unconnected');
+                view.unmappedVisible = true;
+                $('#svgTop').text('hide unmapped');
             }
             filter_view();
         });

@@ -43,7 +43,7 @@ function BalloonView(container, model)
 	$('body').on('keydown.balloon', function(e){
 		_self.keyboardHandler(e);
 	});
-	this.selectedConnections = [];
+	this.selectedMaps = [];
 		
 }
 
@@ -83,7 +83,7 @@ BalloonView.prototype = {
 		this.svg.setAttribute("height", this.svgDim[1]);
 		this.svg.setAttribute("style", "float:left;margin: 0 auto;");
 		this.svg.addEventListener("click", function(evt){
-			_self.clearSelectedConnections();
+			_self.clearSelectedMaps();
 		});
 		wrapperDiv.appendChild(this.svg);	
 		
@@ -106,26 +106,26 @@ BalloonView.prototype = {
 	{
 		console.log(e.which);
 		
-		// 'delete' to remove a connection
+		// 'delete' to remove a map
 		if (e.which == 46 || e.which == 8)  // disconnect on 'delete'
 		{
 			e.preventDefault();
-			var n = this.model.selectedConnections.length();
+			var n = this.model.selectedMaps.length();
 			if(n > 0)
 			{
-				var keys = this.model.selectedConnections.keys();
+				var keys = this.model.selectedMaps.keys();
 				for(i=0; i<keys.length; i++)
 				{
-					var conn = this.model.selectedConnections.get(keys[i]);
+					var conn = this.model.selectedMaps.get(keys[i]);
 					var src = conn.src;
 					var dst = conn.dst;
 					if(this.model.isConnected(src, dst) == true){
 						$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
-						this.model.selectedConnections.remove(keys[i]);
+						this.model.selectedMaps.remove(keys[i]);
 					}
 				}
 			}
-			$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
+			$(this._container).trigger("updateMapProperties");	// tell main to update edit bar
 			this.refreshSVG();
 		}
 		
@@ -144,8 +144,8 @@ BalloonView.prototype = {
 	{
 		var data = [];
 		data.push(this.viewNodes);						// 0
-		model.selectedConnections_clearAll();
-		//data.push(this.model.selectedConnections);		// 1
+		model.selectedMaps_clearAll();
+		//data.push(this.model.selectedMaps);		// 1
 		return data;
 		
 	},
@@ -153,7 +153,7 @@ BalloonView.prototype = {
 	load_view_settings : function (data)
 	{
 		this.viewNodes = data[0];
-		//this.model.selectedConnections = data[1];
+		//this.model.selectedMaps = data[1];
 	},
 	
 	/**
@@ -434,12 +434,12 @@ BalloonView.prototype = {
 	},
 	
 	/**
-	 * Draws the connections between all terminal nodes
+	 * Draws the maps between all terminal nodes
 	 * 
-	 * Connection = connection between leaf nodes
+	 * Map = connection between leaf nodes
 	 * Link = connection between nodes that have connected child nodes (not used currently)
 	 */
-	drawConnections : function()
+	drawMaps : function()
 	{
 		// for each SOURCE node in the display
 		for(var i=0; i<this.viewNodes[0].childNodes.length; i++)
@@ -450,11 +450,11 @@ BalloonView.prototype = {
 			for(var j=0; j<descendantNodes.length; j++)
 			{
 				var curNode = descendantNodes[j];
-				var connections = curNode.getConnected(this.viewNodes[1].childNodes);
+				var maps = curNode.getConnected(this.viewNodes[1].childNodes);
 
-				for(var k=0; k<connections.length; k++)
+				for(var k=0; k<maps.length; k++)
 				{
-					this.drawConnection(curNode, connections[k]);
+					this.drawMap(curNode, maps[k]);
 				}
 			}
 		}
@@ -462,12 +462,12 @@ BalloonView.prototype = {
 	},
 	
 	/**
-	 * creates the SVG element for a connection
+	 * creates the SVG element for a map
 	 * 
 	 * @param src node
 	 * @param dst node
 	 */
-	drawConnection : function(src, dst)
+	drawMap : function(src, dst)
 	{
 		var ctX1 =  this.svgDim[0]/2;
 		var ctY1 =  this.svgDim[1]/2;
@@ -481,7 +481,7 @@ BalloonView.prototype = {
 		// create the SVG line element to handle mouse interaction
 		var line = document.createElementNS(this.svgNS,"path");
 		line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
-		line.setAttribute("class", "balloonConnectionHandler");
+		line.setAttribute("class", "balloonMapHandler");
 		$(line).data("srcNode", src);
 		$(line).data("dstNode", dst);
 		
@@ -489,29 +489,29 @@ BalloonView.prototype = {
 		var line2 = document.createElementNS(this.svgNS,"path");
 		line2.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 		
-		var c = model.connections.get(src.signalName + ">" + dst.signalName);
+		var c = model.maps.get(src.signalName + ">" + dst.signalName);
 		if(c.muted)
-			line2.setAttribute("class", "balloonConnection_muted");
+			line2.setAttribute("class", "balloonMap_muted");
 		else
-			line2.setAttribute("class", "balloonConnection");
+			line2.setAttribute("class", "balloonMap");
 		
-		if(this.model.selectedConnections_isSelected(src.signalName, dst.signalName))
+		if(this.model.selectedMaps_isSelected(src.signalName, dst.signalName))
 		{
-			line2.classList.add("balloonConnection_selected");
+			line2.classList.add("balloonMap_selected");
 		}
 		
 		line.addEventListener("mouseover", function(evt){
 			var displayLine = $(this).data("displayObject");
-			displayLine.classList.add("balloonConnection_over");
+			displayLine.classList.add("balloonMap_over");
 		});
 		line.addEventListener("mouseout", function(evt){
 			var displayLine = $(this).data("displayObject");
 			if(displayLine)
-				displayLine.classList.remove("balloonConnection_over");
+				displayLine.classList.remove("balloonMap_over");
 		});
 		line.addEventListener("click", function(evt){
 			evt.stopPropagation();
-			_self.onConnectionClick(this) ;
+			_self.onMapClick(this) ;
 		});
 		
 		
@@ -693,7 +693,7 @@ BalloonView.prototype = {
 		}
 	},
 	
-	onConnectionClick : function (line)
+	onMapClick : function (line)
 	{
 		var displayLine = $(line).data("displayObject");
 		
@@ -701,29 +701,29 @@ BalloonView.prototype = {
 		var dstNode = $(line).data("dstNode");
 		
 		// is already selected
-		if(displayLine.classList.contains("balloonConnection_selected"))
+		if(displayLine.classList.contains("balloonMap_selected"))
 		{
-			displayLine.classList.remove("balloonConnection_selected");
-			this.model.selectedConnections_removeConnection(srcNode.signalName, dstNode.signalName);
+			displayLine.classList.remove("balloonMap_selected");
+			this.model.selectedMaps_removeMap(srcNode.signalName, dstNode.signalName);
 		}
 		else{
-			displayLine.classList.add("balloonConnection_selected");
-			this.model.selectedConnections_addConnection(srcNode.signalName, dstNode.signalName);
+			displayLine.classList.add("balloonMap_selected");
+			this.model.selectedMaps_addMap(srcNode.signalName, dstNode.signalName);
 		}	
 		
-		$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
+		$(this._container).trigger("updateMapProperties");	// tell main to update edit bar
 		
 	},
 
-	clearSelectedConnections : function ()
+	clearSelectedMaps : function ()
 	{
-		this.model.selectedConnections_clearAll();
-		$(this._container).trigger("updateConnectionProperties");	// tell main to update edit bar
+		this.model.selectedMaps_clearAll();
+		$(this._container).trigger("updateMapProperties");	// tell main to update edit bar
 		this.refreshSVG();
 	},
 	
 	/**
-	 * starts the dragging process for creating connections (mousedown on leaf node)
+	 * starts the dragging process for creating maps (mousedown on leaf node)
 	 */
 	dragStart : function (evt) 
 	{
@@ -758,7 +758,7 @@ BalloonView.prototype = {
 
 	/**
 	 * handles dragging after drag has started (window mousemove)
-	 * follows the mouse to draw a connection line from the drag source
+	 * follows the mouse to draw a map line from the drag source
 	 * checks if the target is a leaf node and snaps the line
 	 */
 	drag : function (evt)
@@ -964,7 +964,7 @@ BalloonView.prototype = {
 			var k = keys[d];
 			var dev = this.model.devices.get(k);
 			$(this._container).trigger("getSignalsByDevice", dev.name);
-			$(this._container).trigger("get_links_or_connections_by_device_name", dev.name);
+			$(this._container).trigger("get_links_or_maps_by_device_name", dev.name);
 		}
 		
 		var keys = this.model.signals.keys();
@@ -1139,7 +1139,7 @@ BalloonView.prototype = {
 	},
 	
 	/**
-	 * Used to redraw all the SVG elements (source/destination nodes and connection lines)
+	 * Used to redraw all the SVG elements (source/destination nodes and map lines)
 	 */
 	refreshSVG : function ()
 	{
@@ -1158,8 +1158,8 @@ BalloonView.prototype = {
 		this.drawNodes(0, this.viewNodes[0].childNodes, origin, dim);
     	this.drawNodes(1, this.viewNodes[1].childNodes, origin, dim);
     	
-    	// draw connections
-    	this.drawConnections();
+    	// draw maps
+    	this.drawMaps();
 	},
 
 	connect : function (src, dst)
@@ -1168,8 +1168,6 @@ BalloonView.prototype = {
 		{
 			var srcDev = src.deviceName;
 			var dstDev = dst.deviceName;
-			if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
-					$(this._container).trigger("link", [srcDev, dstDev]);	// trigger link event
 			$(this._container).trigger("connect", [src.signalName, dst.signalName]);	// trigger connect event
 			
 			this.refreshSVG();

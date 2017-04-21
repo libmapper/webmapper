@@ -2,9 +2,9 @@ function LibMapperModel() {
     this.devices = new Assoc();
     this.signals = new Assoc();
     this.links = new Assoc();
-    this.connections = new Assoc();
-    this.selectedLinks = new Assoc();
-    this.selectedConnections = new Assoc();
+    this.maps = new Assoc();
+    this.selectedLinks = [];
+    this.selectedMaps = [];
 
     this.networkInterfaces = {'selected': null, 'available': []};
 
@@ -14,46 +14,47 @@ function LibMapperModel() {
 
 LibMapperModel.prototype = {
 
-    selectedConnections_toggleConnection : function(src, dst) {
+    selectedMaps_toggleMap : function(src, dst) {
         // no polymorphism in JS... arrg!
         // called with no 'dst' if the full key is passed in src
         var key = src;
         if (dst != null)
             key += ">" + dst;
 
-        var conn = this.connections.get(key);
-        if (conn) {
-            if (!this.selectedConnections.get(key)) {
-                this.selectedConnections.add(key, conn);
+        var map = this.maps.get(key);
+        if (map) {
+            var index = this.selectedMaps.indexOf(key);
+            if (index == -1) {
+                this.selectedMaps.push(key);
                 return 1;
             }
             else
-                this.selectedConnections.remove(key);
+                this.selectedMaps.splice(index, 1);
         }
         return 0;
     },
 
-    selectedConnections_isSelected : function(src, dst) {
+    selectedMaps_isSelected : function(src, dst) {
         var key = src + ">" + dst;
-        var conn = this.selectedConnections.get(key);
-        if (conn)
+        var index = this.selectedMaps.indexOf(key);
+        if (index > -1)
             return true;
         else
             return false;
     },
 
-    selectedConnections_clearAll : function() {
-        this.selectedConnections = new Assoc();
+    selectedMaps_clearAll : function() {
+        this.selectedMaps = [];
     },
 
-    getConnection : function(src, dst) {
+    getMap : function(src, dst) {
         var key = src + ">" + dst;
-        return this.connections.get(key);
+        return this.maps.get(key);
     },
 
-    isConnected : function(src, dst) {
-        var conn = this.getConnection(src, dst);
-        if (conn)
+    isMapped : function(src, dst) {
+        var map = this.getMap(src, dst);
+        if (map)
             return true;
         return false;
     },
@@ -67,18 +68,19 @@ LibMapperModel.prototype = {
 
         var link = this.links.get(key);
         if (link) {
-            if (!this.selectedLinks.get(key)) {
-                this.selectedLinks.add(key, link);
+            var index = this.selectedLinks.indexOf(key);
+            if (index == -1) {
+                this.selectedLinks.push(key);
                 return 1;
             }
             else
-                this.selectedLinks.remove(key);
+                this.selectedLinks.splice(index, 1);
         }
         return 0;
     },
 
     selectedLinks_clearAll : function() {
-        this.selectedLinks = new Assoc();
+        this.selectedLinks = [];
     },
 
     getLink : function(dev1, dev2) {
@@ -138,5 +140,9 @@ LibMapperModel.prototype = {
                 dstDevs.push(dev);
         }
         return [srcDevs, dstDevs];
+    },
+
+    removeSignal : function(name) {
+        model.signals.remove(name);
     }
 };

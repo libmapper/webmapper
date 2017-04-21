@@ -17,7 +17,7 @@ function GridSVG()
     this.filteredData = [[],[]];    // [col, rows]
     this.data = [[],[]];            // [col, rows]
 
-    this.connectionsArray = new Array();
+    this.mapsArray = new Array();
 
     this.scrollBarDim = [30,30];
     this.svgMinDim = [33, 33];
@@ -260,7 +260,7 @@ GridSVG.prototype = {
                          +"opacity: 0.5; margin: 0 -2px 0 18px;");
         div.appendChild(img);
 
-        //connection buttons
+        // mapping buttons
         btn = document.createElement("button");
         btn.innerHTML = "O";
         btn.title = "connect the selected cell(s) (C)";
@@ -281,7 +281,7 @@ GridSVG.prototype = {
         btn.innerHTML = "O|X";
         btn.title = "toggle the selected cell(s)  (ENTER)";
         btn.addEventListener("click", function(evt) {
-            _self.toggleConnection();
+            _self.toggleMap();
         });
         div.appendChild(btn);
 
@@ -395,7 +395,7 @@ GridSVG.prototype = {
     },
 
     /* on cell mouseover, highlights corresponding row and columns must handle
-     * special cases: if the cell is the selected cell or has a connection. */
+     * special cases: if the cell is the selected cell or has a map. */
     onCellMouseOver : function(evt) {
         if (this.mousedOverCell)
             this.onCellMouseOut();
@@ -471,7 +471,7 @@ GridSVG.prototype = {
             }
         }
 
-        $(this._container).trigger("updateConnectionProperties");
+        $(this._container).trigger("updateMapProperties");
 
         // load cell details into info PANE
         //
@@ -486,11 +486,11 @@ GridSVG.prototype = {
         // add to view's array of selected cells
         this.selectedCells.push(cell);
 
-        // if cell is a connection, add to model's array of selected connections
+        // if cell is a map, add to model's array of selected maps
         var src = cell.getAttribute("data-src");
         var dst = cell.getAttribute("data-dst");
         if (this.model.isConnected(src, dst))
-            this.model.selectedConnections_addConnection(src, dst);
+            this.model.selectedMaps_addMap(src, dst);
     },
 
     /* deselect a cell in the grid */
@@ -504,11 +504,11 @@ GridSVG.prototype = {
             this.selectedCells.splice(index, 1);
         }
 
-        // if cell is a connection, remove from model's array of selected connections
+        // if cell is a map, remove from model's array of selected maps
         var src = cell.getAttribute("data-src");
         var dst = cell.getAttribute("data-dst");
         if (this.model.isConnected(src, dst))
-            this.model.selectedConnections_removeConnection(src, dst);
+            this.model.selectedMaps_removeMap(src, dst);
     },
 
     /* deselect all cells in the grid */
@@ -519,11 +519,11 @@ GridSVG.prototype = {
             // remove style
             cell.classList.remove('cell_selected');
 
-            // if cell is a connection, remove from model's array of selected connections
+            // if cell is a map, remove from model's array of selected maps
             var src = cell.getAttribute("data-src");
             var dst = cell.getAttribute("data-dst");
             if (this.model.isConnected(src, dst))
-                this.model.selectedConnections_removeConnection(src, dst);
+                this.model.selectedMaps_removeMap(src, dst);
         }
 
         // clear the view's array of selected cells
@@ -770,10 +770,10 @@ GridSVG.prototype = {
         if (this.nCols == 0 || this.nRows == 0)
             return;
 
-        // enter or space to toggle a connection
+        // enter or space to toggle a map
         if (e.keyCode == 13 || e.keyCode == 32) {
             if (this.selectedCells.length > 0)
-                this.toggleConnection();
+                this.toggleMap();
         }
 
         // 'c' to connect
@@ -962,22 +962,22 @@ GridSVG.prototype = {
         }
     },
 
-    updateDisplayData: function(cols, rows, connections) {
+    updateDisplayData: function(cols, rows, maps) {
         this.data = [cols, rows];
-        this.connectionsArray = connections;
+        this.mapsArray = maps;
         this.filterData();
 
-        // check for selected connections
+        // check for selected maps
         for (var i = 0; i < this.selectedCells.length; i++) {
             var selectedCell = this.selectedCells[i];
             var src = selectedCell.getAttribute("data-src");
             var dst = selectedCell.getAttribute("data-dst");
 
-            for (var j = 0; j < connections.length; j++) {
-                var cSrc = connections[j][0];
-                var cDst = connections[j][1];
+            for (var j = 0; j < maps.length; j++) {
+                var cSrc = maps[j][0];
+                var cDst = maps[j][1];
                 if (src == cSrc && dst == cDst){
-                    this.model.selectedConnections_addConnection(src, dst);
+                    this.model.selectedMaps_addMap(src, dst);
                 }
             }
         }
@@ -1006,15 +1006,15 @@ GridSVG.prototype = {
             */
     },
 
-    /* toggles a connection
-     * checks if the cell already has a connection then toggles */
-    toggleConnection : function() {
+    /* toggles a map
+     * checks if the cell already has a map then toggles */
+    toggleMap : function() {
         if (this.selectedCells.length == 0)
             return;
 
         for (var i = 0; i < this.selectedCells.length; i++) {
             var cell = this.selectedCells[i];
-            $(this._container).trigger("toggleConnection", cell);
+            $(this._container).trigger("toggleMap", cell);
         }
     },
     connect : function() {
@@ -1038,10 +1038,10 @@ GridSVG.prototype = {
             // trigger the disconnect event
             $(this._container).trigger("disconnect", cell);
 
-            // remove from model's array of selected connections
+            // remove from model's array of selected maps
             var src = cell.getAttribute("data-src");
             var dst = cell.getAttribute("data-dst");
-            this.model.selectedConnections_removeConnection(src, dst);
+            this.model.selectedMaps_removeMap(src, dst);
         }
     },
     getSelectedCells : function() {

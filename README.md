@@ -6,15 +6,15 @@ A browser-based GUI for libmapper network
 - Discussion: [https://groups.google.com/forum/#!forum/dot_mapper](https://groups.google.com/forum/#!forum/dot_mapper)
 - Web: [http://libmapper.org](http://libmapper.org)
 
-During a variety of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) command the library to create connections between signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript. 
+During a variety of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) command the library to create maps between signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript. 
 
-All libmapper GUIs function as “dumb terminals” — no handling of mapping connection commands takes place in the GUI, but rather they are only responsible for representing the current state of the network links and connections, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
+All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network links and maps, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
 ### GUI functionality:
 
 * browsing active devices and their signals
 * drag-and-drop mapping connections
-* mode and function editor for connections
+* mode and function editor for maps
 * collaborative undo/redo
 * filtering parameter lists by OSC prefix or string-matching
 * saving and loading mapping sets (including consideration of mapping transportability per the GDIF project)
@@ -31,7 +31,7 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 
 ### A note on saving and loading:
 
-As of now saving and loading work via a naïve approach. In the list view (currently the only view tested for saving and loading) the `save` button saves data for the active tab. Similarly, loading only loads connections for signals in the active tab. Our development roadmap includes improvements to the save/load functionality.
+As of now saving and loading work via a naïve approach. In the list view (currently the only view tested for saving and loading) the `save` button saves data for the active tab. Similarly, loading only loads maps for signals in the active tab. Our development roadmap includes improvements to the save/load functionality.
 
 
 Views:
@@ -44,16 +44,16 @@ We have explored several alternative visualization and interaction techniques, w
 
 ### List view:
 
-The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the connections, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right. Lines representing inter-device links and inter-signal connections may be drawn between the entities on each side, and properties are set by first selecting the connection(s) to work on and then setting properties in a separate “edit bar”. The GUI contains multiple "tabs": the leftmost tab always displays the network overview (links between devices) and subsequent tabs provide sub-graph representations of the connections belonging to a specific linked device.
+The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right. Lines representing inter-device links and inter-signal maps may be drawn between the entities on each side, and properties are set by first selecting the map(s) to work on and then setting properties in a separate “edit bar”. The GUI contains multiple "tabs": the leftmost tab always displays the network overview (links between devices) and subsequent tabs provide sub-graph representations of the maps belonging to a specific linked device.
 
 **Shortcut keys:**
 
-* 'c' : Connect selected devices/signals
-* 'delete': Delete selected links/connections
-* 'cmd+a'    : Select all links/connections
+* 'c' : Connect/Map selected devices/signals
+* 'delete': Delete selected links/maps
+* 'cmd+a'    : Select all links/maps
 * 'alt+tab' : Change tab to the right
 * 'alt+shift+tab' : Change tab to the left
-* hold down 'm' while connecting to create muted connection
+* hold down 'm' while connecting to create muted maps
 
 
 ### Grid View (tested on Chrome only):
@@ -93,7 +93,7 @@ Note the keyboard shortcuts for changing the active grid, moving the selected ce
 
 The hive plot is a method for visualizing networks. In this view, the upper half of the plot is designated for source devices, and the lower for destinations. In view mode 1, an adapted hive plot, each device is given its own axis. In view mode 2, a traditional hive plot, source/destination devices are grouped along a single axis. 
 
-Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure connections. Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. Select signals by clicking its name in the list (or its node in the plot). Once a source and destination signal is selected, you can create or remove the connection by clicking on the blue bar at the bottom (or by using the keyboard shortcuts). 
+Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure maps. Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. Select signals by clicking its name in the list (or its node in the plot). Once a source and destination signal is selected, you can create or remove the map by clicking on the blue bar at the bottom (or by using the keyboard shortcuts). 
 
 Connections on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.
 

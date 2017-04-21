@@ -110,11 +110,11 @@ def on_signal(sig, action):
 
 def on_map(map, action):
     if action == mapper.ADDED:
-        server.send_command("new_connection", map_props(map))
+        server.send_command("new_map", map_props(map))
     elif action == mapper.MODIFIED:
-        server.send_command("mod_connection", map_props(map))
+        server.send_command("mod_map", map_props(map))
     elif action == mapper.REMOVED:
-        server.send_command("del_connection", map_props(map))
+        server.send_command("del_map", map_props(map))
 
 def set_map_properties(props):
     # todo: check for convergent maps, only release selected
@@ -271,10 +271,10 @@ server.add_command_handler("all_signals",
 server.add_command_handler("all_links",
                            lambda x: ("all_links", map(link_props, db.links())))
 
-server.add_command_handler("all_connections",
-                           lambda x: ("all_connections", map(map_props, db.maps())))
+server.add_command_handler("all_maps",
+                           lambda x: ("all_maps", map(map_props, db.maps())))
 
-server.add_command_handler("set_connection", lambda x: set_map_properties(x))
+server.add_command_handler("set_map", lambda x: set_map_properties(x))
 
 server.add_command_handler("map", lambda x: new_map(x))
 

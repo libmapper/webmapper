@@ -42,7 +42,7 @@ function init()
             command.send('all_devices');
             command.send('all_signals');
             command.send('all_links');
-            command.send('all_connections');
+            command.send('all_maps');
             network_selection();
         }, 100);
 }
@@ -81,24 +81,20 @@ function initMonitorCommands()
     });
     command.register("all_signals", function(cmd, args) {
         for (var d in args) {
-            model.signals.add(args[d].device+'/'+args[d].name
-                              + '/_dir_'+args[d].direction, args[d]);
+            model.signals.add(args[d].device+'/'+args[d].name, args[d]);
         }
         update_display();
     });
     command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device+'/'+args.name
-                          + '/_dir_' + args.direction, args);
+        model.signals.add(args.device+'/'+args.name, args);
         update_display();
     });
     command.register("mod_signal", function(cmd, args) {
-        model.signals.add(args.device+'/'+args.name
-                          + '/_dir_' + args.direction, args);
+        model.signals.add(args.device+'/'+args.name, args);
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device+'/'+args.name
-                             + '/_dir_'+args.direction);
+        model.signals.remove(args.device+'/'+args.name);
         update_display();
     });
     command.register("all_links", function(cmd, args) {
@@ -111,7 +107,6 @@ function initMonitorCommands()
         update_display();
     });
     command.register("mod_link", function(cmd, args) {
-        console.log("adding/modding link to model: ", args);
         model.links.add(args.src+'>'+args.dst, args);
         update_display();
     });
@@ -121,27 +116,27 @@ function initMonitorCommands()
             model.links.remove(args.src+'>' + args.dst);
         update_display();
     });
-    command.register("all_connections", function(cmd, args) {
+    command.register("all_maps", function(cmd, args) {
         for (var d in args)
-            model.connections.add(args[d].src + '>' + args[d].dst, args[d]);
+            model.maps.add(args[d].src + '>' + args[d].dst, args[d]);
         update_display();
         for (var d in args)
-            topMenu.updateConnectionPropertiesFor(args[d]);
+            topMenu.updateMapPropertiesFor(args[d]);
     });
-    command.register("new_connection", function(cmd, args) {
-        model.connections.add(args.src + '>' + args.dst, args);
+    command.register("new_map", function(cmd, args) {
+        model.maps.add(args.src + '>' + args.dst, args);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args);
+        topMenu.updateMapPropertiesFor(args);
     });
-    command.register("mod_connection", function(cmd, args) {
-        model.connections.add(args.src + '>' + args.dst, args);
+    command.register("mod_map", function(cmd, args) {
+        model.maps.add(args.src + '>' + args.dst, args);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args);
+        topMenu.updateMapPropertiesFor(args);
     });
-    command.register("del_connection", function(cmd, args) {
-        model.connections.remove(args.src+'>'+args.dst);
+    command.register("del_map", function(cmd, args) {
+        model.maps.remove(args.src+'>'+args.dst);
         update_display();
-        topMenu.updateConnectionPropertiesFor(args);
+        topMenu.updateMapPropertiesFor(args);
     });
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
@@ -157,7 +152,7 @@ function initMonitorCommands()
 function initViewCommands()
 {
     // from list view
-    // requests links and connections from the selected source device (the selectedTab)
+    // requests links and maps from the selected source device (the selectedTab)
     $("#container").on("tab", function(e, selectedTab){
         if (selectedTab != 'All Devices') {
             // retrieve linked destination devices
@@ -186,23 +181,23 @@ function initViewCommands()
         update_display();
     });
 
-    // connect command
+    // map command
     // src = "/devicename/signalname"
     // dst = "/devicename/signalname"
-    $("#container").on("connect", function(e, src, dst, args){
+    $("#container").on("map", function(e, src, dst, args){
         command.send('map', [src, dst, args]);
     });
 
-    // disconnect command
+    // unmap command
     // src = "/devicename/signalname"
     // dst = "/devicename/signalname"
-    $("#container").on("disconnect", function(e, src, dst){
+    $("#container").on("unmap", function(e, src, dst){
         command.send('unmap', [src, dst]);
     });
 
-    // asks the view for the selected connections and updates the edit bar
-    $("#container").on("updateConnectionProperties", function(e){
-        topMenu.updateConnectionProperties();
+    // asks the view for the selected maps and updates the edit bar
+    $("#container").on("updateMapProperties", function(e){
+        topMenu.updateMapProperties();
     });
 
     // asks the view for the save button link (based on the active device)
@@ -217,8 +212,8 @@ function initTopMenuCommands()
     $("#topMenuWrapper").on("switchView", function(e, viewID){
         switch_mode(viewID);
     });
-    $("#topMenuWrapper").on("setConnection", function(e, args){
-        command.send('set_connection', args);
+    $("#topMenuWrapper").on("setMap", function(e, args){
+        command.send('set_map', args);
     });
     $("#topMenuWrapper").on("refreshAll", function(e){
         refresh_all();
@@ -230,7 +225,7 @@ function refresh_all()
     model.devices = new Assoc();
     model.signals = new Assoc();
     model.links = new Assoc();
-    model.connections = new Assoc();
+    model.maps = new Assoc();
     view.update_display();
     command.send('refresh');
 }
@@ -244,7 +239,7 @@ function update_display() {
     updateCallable = false;
     updateTimeout = setTimeout(function() {
         view.update_display();
-        topMenu.updateConnectionProperties();
+        topMenu.updateMapProperties();
     });
 }
 
@@ -300,7 +295,7 @@ function switch_mode(newMode)
                 view.load_view_settings(viewData[viewIndex]);
     }
 
-    topMenu.clearConnectionProperties();
+    topMenu.clearMapProperties();
 }
 
 function network_selection()

@@ -27,12 +27,12 @@ function HivePlotView(container, model)
 	
 	// SVG display items
 	this.nodes = [[],[]];
-	this.connectionsLines = [];
+	this.mapLines = [];
 	this.deviceLines = [];
 	
 	this.excludedDevs = [[],[]];
 	this.selectedCells = [[],[]];
-	this.selectedConnections = [];
+	this.selectedMaps = [];
 	this.expandedDevices = [[],[]];
 	this.filters = ["", ""];
 
@@ -158,7 +158,7 @@ HivePlotView.prototype = {
 		this.devs = [[],[]];
 		this.sigs = [[],[]];
 		this.nodes = [[],[]];
-		this.connectionsLines = [];
+		this.mapLines = [];
 		this.deviceLines = [];
 		this.initColorPointers();
 		
@@ -189,12 +189,12 @@ HivePlotView.prototype = {
 		// add display bar 
 	    div = document.createElement("div");
 		div.setAttribute("id", "hive_actionBar");
-		div.title = "click to toggle a connection";
+		div.title = "click to toggle a map";
 //		div.setAttribute("style", "width: "+ (this.svgDim[0] + (2*this.inclusionTablePadding)) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
 //		div.setAttribute("style", "width: "+ (this.svgDim[0] ) + "px; height: "+ (this.actionBarHeight - (2*this.actionBarPadding)) + "px; padding: " + this.actionBarPadding + "px; ");
 		div.setAttribute("style", "width: 100%; height: "+ (this.actionBarHeight) + "px;");
 		div.addEventListener("click", function(evt){
-			_self.toggleConnection();
+			_self.toggleMap();
 		});
 		this._container.appendChild(div);
 	    
@@ -238,9 +238,9 @@ HivePlotView.prototype = {
 
 		var defs = document.createElementNS(this.svgNS, "defs");
 		
-		// circle marker for endpoints of connection line
+		// circle marker for endpoints of map line
 		var marker = document.createElementNS(this.svgNS, "marker");
-		marker.setAttribute('id', "hive_connectionMarker");
+		marker.setAttribute('id', "hive_mapMarker");
 		marker.setAttribute('markerWidth', 7);
 		marker.setAttribute('markerHeight', 7);
 		marker.setAttribute('refX', 5);
@@ -289,7 +289,7 @@ HivePlotView.prototype = {
 		}
 		this.drawInclusionTable();
 		this.drawNodes();	// drawn separately and later for z-index
-		this.drawConnections();
+		this.drawMaps();
 		this.drawActionBar();
 		
 	},
@@ -878,11 +878,11 @@ HivePlotView.prototype = {
 		}
 	},
 	
-	// draw all connections as lines connecting from source node to destination node
-	drawConnections : function()
+	// draw all maps as lines connecting from source node to destination node
+	drawMaps : function()
 	{
 		var _self = this;
-		this.model.selectedConnections_clearAll();
+		this.model.selectedMaps_clearAll();
 		
 		for(var i=0; i<this.sigs[0].length; i++)
 		{
@@ -893,7 +893,7 @@ HivePlotView.prototype = {
 				
 				var src = s.device_name + s.name;
 				var dst = d.device_name + d.name;
-				if(this.model.isConnected(src, dst))
+				if(this.model.isMapped(src, dst))
 				{
 					var node1 = this.nodes[0][i];
 					var node2 = this.nodes[1][j];
@@ -917,37 +917,37 @@ HivePlotView.prototype = {
 					line.setAttribute("data-srcSignal", s.name);
 					line.setAttribute("data-dstSignal", d.name);
 					if(this.mode == 1){
-						line.setAttribute("marker-start" , "url(#hive_connectionMarker)");
-						line.setAttribute("marker-end" , "url(#hive_connectionMarker)");
+						line.setAttribute("marker-start" , "url(#hive_mapMarker)");
+						line.setAttribute("marker-end" , "url(#hive_mapMarker)");
 					}
 //					line.setAttribute("d", "M " + x1 + " " + y1 + " L " + x2 + " " + y2);
 					line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
 					if( arrIsUnique(s.device_name, this.excludedDevs[0]) && arrIsUnique(d.device_name, this.excludedDevs[1]))
-						line.setAttribute("class", "hive_connection");
+						line.setAttribute("class", "hive_map");
 					else
-						line.setAttribute("class", "hive_connection_hidden");
+						line.setAttribute("class", "hive_map_hidden");
 					
 					line.addEventListener("mouseover", function(evt){
-						this.classList.add("hive_connection_over");
+						this.classList.add("hive_map_over");
 					});
 					line.addEventListener("mouseout", function(evt){
-						this.classList.remove("hive_connection_over");
+						this.classList.remove("hive_map_over");
 					});
 					line.addEventListener("click", function(evt){
-						_self.onConnectionClick(this) ;
+						_self.onMapClick(this) ;
 					});
 					
 					// if line is selected
-					if(this.selectedConnections_getIndex(key) != -1)
+					if(this.selectedMaps_getIndex(key) != -1)
 					{
 						// add the selected style
-						line.classList.add("hive_connection_selected");
+						line.classList.add("hive_map_selected");
 						
-						// add to model's array of selected connections
-						this.model.selectedConnections_addConnection(key, null);
+						// add to model's array of selected maps
+						this.model.selectedMaps_addMap(key, null);
 					}
 					
-					this.connectionsLines.push(line);
+					this.mapLines.push(line);
 					this.svg.appendChild(line);
 				}
 			}
@@ -984,16 +984,16 @@ HivePlotView.prototype = {
 				line.setAttribute("class", "hive_axis_over");
 			}
 		}
-		for (var i=0; i<this.connectionsLines.length; i++)
+		for (var i=0; i<this.mapLines.length; i++)
 		{
-			var con = this.connectionsLines[i];
+			var con = this.mapLines[i];
 			if(con.getAttribute("data-src") == devName ||  con.getAttribute("data-dst") == devName )
 			{
-				con.setAttribute("class", "hive_connection_over");
+				con.setAttribute("class", "hive_map_over");
 			}
-			if(this.selectedConnections_getIndex(con.getAttribute("data-fullname")) != -1)
+			if(this.selectedMaps_getIndex(con.getAttribute("data-fullname")) != -1)
 			{
-				con.classList.add("hive_connection_selected");
+				con.classList.add("hive_map_selected");
 			}
 		}
 	},
@@ -1006,18 +1006,18 @@ HivePlotView.prototype = {
 			var line = this.deviceLines[i];
 			line.setAttribute("class", "hive_axis");
 		}
-		for (var i=0; i<this.connectionsLines.length; i++)
+		for (var i=0; i<this.mapLines.length; i++)
 		{
-			var con = this.connectionsLines[i];
+			var con = this.mapLines[i];
 			if(con.getAttribute("data-src") == devName || con.getAttribute("data-dst") == devName ){
 				if(arrIsUnique(con.getAttribute("data-src"), this.excludedDevs[0]) && arrIsUnique(con.getAttribute("data-dst"), this.excludedDevs[1]) )
-					con.setAttribute("class", "hive_connection");
+					con.setAttribute("class", "hive_map");
 				else
-					con.setAttribute("class", "hive_connection_hidden");
+					con.setAttribute("class", "hive_map_hidden");
 				
-				if(this.selectedConnections_getIndex(con.getAttribute("data-fullname")) != -1)
+				if(this.selectedMaps_getIndex(con.getAttribute("data-fullname")) != -1)
 				{
-					con.classList.add("hive_connection_selected");
+					con.classList.add("hive_map_selected");
 				}
 			}
 		}
@@ -1035,10 +1035,10 @@ HivePlotView.prototype = {
 				node2.classList.add("hive_node_over");
 		}
 		
-		// set mouseover style of connection
-		for (var i=0; i<this.connectionsLines.length; i++)
+		// set mouseover style of map
+		for (var i=0; i<this.mapLines.length; i++)
 		{
-			var con = this.connectionsLines[i];
+			var con = this.mapLines[i];
 			if( (con.getAttribute("data-src") == node.getAttribute("data-src") && 
 					con.getAttribute("data-srcSignal") == node.getAttribute("data-srcSignal"))
 					||
@@ -1046,10 +1046,10 @@ HivePlotView.prototype = {
 							con.getAttribute("data-dstSignal") == node.getAttribute("data-srcSignal"))
 			  )
 			{
-				con.setAttribute("class", "hive_connection_over");
-				if(this.selectedConnections_getIndex(con.getAttribute("data-fullname")) != -1)
+				con.setAttribute("class", "hive_map_over");
+				if(this.selectedMaps_getIndex(con.getAttribute("data-fullname")) != -1)
 				{
-					con.classList.add("hive_connection_selected");
+					con.classList.add("hive_map_selected");
 				}
 			}
 		}
@@ -1068,18 +1068,18 @@ HivePlotView.prototype = {
 				node2.classList.add('Node_selected');
 		}
 		
-		// set mouseover style of connection
-		for (var i=0; i<this.connectionsLines.length; i++)
+		// set mouseover style of map
+		for (var i=0; i<this.mapLines.length; i++)
 		{
-			var con = this.connectionsLines[i];
+			var con = this.mapLines[i];
 			if(arrIsUnique(con.getAttribute("data-src"), this.excludedDevs[0]) && arrIsUnique(con.getAttribute("data-dst"), this.excludedDevs[1]))
-				con.setAttribute("class", "hive_connection");
+				con.setAttribute("class", "hive_map");
 			else
-				con.setAttribute("class", "hive_connection_hidden");
+				con.setAttribute("class", "hive_map_hidden");
 			
-			if(this.selectedConnections_getIndex(con.getAttribute("data-fullname")) != -1)
+			if(this.selectedMaps_getIndex(con.getAttribute("data-fullname")) != -1)
 			{
-				con.classList.add("hive_connection_selected");
+				con.classList.add("hive_map_selected");
 			}
 		}
 	},
@@ -1147,7 +1147,7 @@ HivePlotView.prototype = {
 	// methods for storing selected nodes
 	onNodeClick : function(node)
 	{
-		this.selectedConnections_clearAll();	// nodes and connections can't be selected at the same time
+		this.selectedMaps_clearAll();	// nodes and maps can't be selected at the same time
 		
 		var ind = node.getAttribute("data-ind");
 		
@@ -1183,14 +1183,14 @@ HivePlotView.prototype = {
 			}
 		}
 
-		// if there's a connection, select is also
+		// if there's a map, select is also
 		if(this.selectedCells[0].length == 1 && this.selectedCells[1].length == 1){
 			
 			var src = this.selectedCells[0][0].getAttribute("data-src") + this.selectedCells[0][0].getAttribute("data-srcSignal");
 			var dst = this.selectedCells[1][0].getAttribute("data-src") + this.selectedCells[1][0].getAttribute("data-srcSignal");
-			if(this.model.isConnected(src, dst))
+			if(this.model.isMapped(src, dst))
 			{
-				this.selectedConnections.push(src+">"+dst);
+				this.selectedMaps.push(src+">"+dst);
 			}
 		}
 		this.update_display();
@@ -1234,8 +1234,8 @@ HivePlotView.prototype = {
 	},
 	// END methods for storing selected nodes
 	
-	// methods for storing selected connections
-	onConnectionClick : function(con)
+	// methods for storing selected maps
+	onMapClick : function(con)
 	{
 		
 		this.selectedCells_clearAll(0);
@@ -1243,10 +1243,10 @@ HivePlotView.prototype = {
 		
 		var name = con.getAttribute("data-fullname");
 		
-		if(arrIsUnique(name, this.selectedConnections))
+		if(arrIsUnique(name, this.selectedMaps))
 		{
-			this.selectedConnections_clearAll();
-			this.selectedConnections_add(con);
+			this.selectedMaps_clearAll();
+			this.selectedMaps_add(con);
 			
 			// select corresponding nodes as well
 			var fakeSrc = document.createElement("p");
@@ -1262,33 +1262,33 @@ HivePlotView.prototype = {
 			
 		}
 		else{
-			this.selectedConnections_clearAll();
+			this.selectedMaps_clearAll();
 		}
 		
 		
 		this.update_display();
-		$(this._container).trigger("updateConnectionProperties");	// trigger update topMenu event
+		$(this._container).trigger("updateMapProperties");	// trigger update topMenu event
 	},
 	
-	selectedConnections_add : function (con)
+	selectedMaps_add : function (con)
 	{
-		// add to the view's array of selected connections
-		this.selectedConnections.push(con.getAttribute("data-fullname"));
+		// add to the view's array of selected maps
+		this.selectedMaps.push(con.getAttribute("data-fullname"));
 		
-		// add selected style to the connection line
-		con.classList.add("hive_connection_selected");
+		// add selected style to the map line
+		con.classList.add("hive_map_selected");
 	},
 	
-	selectedConnections_clearAll : function ()
+	selectedMaps_clearAll : function ()
 	{
-		this.selectedConnections = [];
+		this.selectedMaps = [];
 	},
-	selectedConnections_getIndex : function (fullname)
+	selectedMaps_getIndex : function (fullname)
 	{
 		var index = -1;
-		for(var i=0; i<this.selectedConnections.length; i++)
+		for(var i=0; i<this.selectedMaps.length; i++)
 		{
-			var con2 = this.selectedConnections[i]; 
+			var con2 = this.selectedMaps[i];
 			if (fullname == con2)
 			{
 				index = i;
@@ -1297,9 +1297,9 @@ HivePlotView.prototype = {
 		}
 		return index;
 	},
-	// END methods for storing selected connections
+	// END methods for storing selected maps
 	
-	// create a new connection
+	// create a new map
 	connect : function()
 	{
 		if(this.selectedCells[0].length == 0 || this.selectedCells[1].length == 0 )	
@@ -1316,43 +1316,41 @@ HivePlotView.prototype = {
 				var d = this.selectedCells[1][j];
 				var dstDev = d.getAttribute("data-src");
 				var dstSig = d.getAttribute("data-srcSignal");
-				
-				if(this.model.isLinked(srcDev, dstDev) == false)				// devices must be linked before a connection can be made
-					$(this._container).trigger("link", [srcDev, dstDev]);		// trigger link event
+
 				$(this._container).trigger("connect", [srcDev+srcSig, dstDev+dstSig]);	// trigger connect event
-				this.selectedConnections.push(srcDev+srcSig+">"+dstDev+dstSig);
+				this.selectedMaps.push(srcDev+srcSig+">"+dstDev+dstSig);
 			}
 		}
 		this.update_display();
 	},
 
-	// remove an existing connection
+	// remove an existing map
 	disconnect : function (e)
 	{
-		if(this.selectedConnections.length == 0)
+		if(this.selectedMaps.length == 0)
 			return;
 		
-		var con = this.selectedConnections[0].split(">");
+		var con = this.selectedMaps[0].split(">");
 		var src = con[0];
 		var dst = con[1];
 		//var src = con.getAttribute("data-src") + con.getAttribute("data-srcSignal"); 
 		//var dst = con.getAttribute("data-dst") + con.getAttribute("data-dstSignal");
 		
-		if(this.model.isConnected(src, dst) == true)
+		if(this.model.isMapped(src, dst) == true)
 			$(this._container).trigger("disconnect", [src, dst]);	// trigger disconnect event
 		
-		this.selectedConnections_clearAll();
-		this.model.selectedConnections_clearAll();
+		this.selectedMaps_clearAll();
+		this.model.selectedMaps_clearAll();
 	},
 	
-	// toggle a connection
-	toggleConnection : function ()
+	// toggle a map
+	toggleMap : function ()
 	{
 		// need to have a selected src and dst
 		if(this.selectedCells[0].length != 1 || this.selectedCells[1].length != 1 )
 			return;
 			
-		if(this.selectedConnections.length == 1)
+		if(this.selectedMaps.length == 1)
 			this.disconnect();
 		else
 			this.connect();
