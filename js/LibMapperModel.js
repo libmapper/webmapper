@@ -14,6 +14,26 @@ function LibMapperModel() {
 
 LibMapperModel.prototype = {
 
+    removeDevice : function(name) {
+        this.devices.remove(name);
+    },
+
+    removeLink : function(key) {
+        this.links.remove(key);
+        // also remove from selectedLinks
+        var index = this.selectedLinks.indexOf(key);
+        if (index > -1)
+            this.selectedLinks.splice(index, 1);
+    },
+
+    removeMap : function(key) {
+        this.maps.remove(key);
+        // also remove from selectedMaps
+        var index = this.selectedMaps.indexOf(key);
+        if (index > -1)
+            this.selectedMaps.splice(index, 1);
+    },
+
     selectedMaps_toggleMap : function(src, dst) {
         // no polymorphism in JS... arrg!
         // called with no 'dst' if the full key is passed in src

@@ -63,12 +63,12 @@ function initMonitorCommands()
         update_display();
     });
     command.register("del_device", function(cmd, args) {
-        model.devices.remove(args.name);
+        model.removeDevice(args.name);
         update_display();
     });
     command.register("mod_device", function(cmd, args) {
         // Remove original device
-        model.devices.remove(args.name);
+        model.removeDevice(args.name);
         // Remove all child signals before syncing
         // var sigs = model.signals.keys();
         // for (var i in sigs ) {
@@ -94,7 +94,7 @@ function initMonitorCommands()
         update_display();
     });
     command.register("del_signal", function(cmd, args) {
-        model.signals.remove(args.device+'/'+args.name);
+        model.removeSignal(args.device+'/'+args.name);
         update_display();
     });
     command.register("all_links", function(cmd, args) {
@@ -113,7 +113,7 @@ function initMonitorCommands()
     command.register("del_link", function(cmd, args) {
         var link = model.getLink(args.src, args.dst);
         if (link && !link.local)
-            model.links.remove(args.src+'>' + args.dst);
+            model.removeLink(args.src+'>' + args.dst);
         update_display();
     });
     command.register("all_maps", function(cmd, args) {
@@ -134,7 +134,7 @@ function initMonitorCommands()
         topMenu.updateMapPropertiesFor(args);
     });
     command.register("del_map", function(cmd, args) {
-        model.maps.remove(args.src+'>'+args.dst);
+        model.removeMap(args.src+'>'+args.dst);
         update_display();
         topMenu.updateMapPropertiesFor(args);
     });
@@ -177,7 +177,7 @@ function initViewCommands()
     // dst = "/devicename"
     $("#container").on("unlink", function(e, src, dst){
         command.send('unlink', [src, dst]);
-        model.links.remove(src + '>' + dst);
+        model.removeLink(src + '>' + dst);
         update_display();
     });
 
