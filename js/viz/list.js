@@ -839,8 +839,9 @@ function listView(model)
     }
 
     function on_unmap(e) {
-        for (var key in model.selectedMaps) {
-            var map = model.maps.get(key);
+        var keys = model.selectedMaps;
+        for (var i in keys) {
+            var map = model.maps.get(keys[i]);
             $('#container').trigger("unmap", [map.src, map.dst]);
         }
         e.stopPropagation();

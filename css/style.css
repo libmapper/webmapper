@@ -219,7 +219,7 @@ form {
     cursor: pointer;
     border: none;
     position: relative;
-    top: 3px;
+    top: 0px;
 }
 
 /* Just the boundary icons */
@@ -232,7 +232,7 @@ form {
     border: none;
     margin-top: -5px;
     position: relative;
-    top: 4px;
+    top: 2px;
 }
 .boundaryNone {
     background-position: 0px 0px;
