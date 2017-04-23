@@ -9,6 +9,14 @@ from random import randint
 
 networkInterfaces = {'active': '', 'available': []}
 
+boundaryModes = ['Undefined', 'None', 'Mute', 'Clamp', 'Fold', 'Wrap']
+boundaryStrings = { 'Undefined': mapper.BOUND_UNDEFINED,
+                    'None': mapper.BOUND_NONE,
+                    'Mute': mapper.BOUND_MUTE,
+                    'Clamp': mapper.BOUND_CLAMP,
+                    'Fold': mapper.BOUND_FOLD,
+                    'Wrap': mapper.BOUND_WRAP }
+
 dirname = os.path.dirname(__file__)
 if dirname:
    os.chdir(os.path.dirname(__file__))
@@ -77,11 +85,19 @@ def map_props(map):
         props['src_min'] = slotprops['min']
     if slotprops.has_key('max'):
         props['src_max'] = slotprops['max']
+    if slotprops.has_key('bound_min'):
+        props['src_bound_min'] = boundaryModes[slotprops['bound_min']]
+    if slotprops.has_key('bound_max'):
+        props['src_bound_max'] = boundaryModes[slotprops['bound_max']]
     slotprops = map.destination().properties
     if slotprops.has_key('min'):
         props['dst_min'] = slotprops['min']
     if slotprops.has_key('max'):
         props['dst_max'] = slotprops['max']
+    if slotprops.has_key('bound_min'):
+        props['dst_bound_min'] = boundaryModes[slotprops['bound_min']]
+    if slotprops.has_key('bound_max'):
+        props['dst_bound_max'] = boundaryModes[slotprops['bound_max']]
     return props
 
 def on_device(dev, action):
@@ -138,7 +154,7 @@ def set_map_properties(props):
         else:
             if type(props['src_min']) is str:
                 props['src_min'] = props['src_min'].replace(',',' ').split()
-            numargs = len(props['src_max'])
+            numargs = len(props['src_min'])
             for i in range(numargs):
                 props['src_min'][i] = float(props['src_min'][i])
             if numargs == 1:
@@ -184,6 +200,14 @@ def set_map_properties(props):
         map.destination().calibrating = props['calibrating']
     if props.has_key('muted'):
         map.muted = props['muted']
+    if props.has_key('src_bound_min'):
+        map.source().bound_min = boundaryStrings[props['src_bound_min']]
+    if props.has_key('src_bound_max'):
+        map.source().bound_max = boundaryStrings[props['src_bound_max']]
+    if props.has_key('dst_bound_min'):
+        map.destination().bound_min = boundaryStrings[props['dst_bound_min']]
+    if props.has_key('dst_bound_max'):
+        map.destination().bound_max = boundaryStrings[props['dst_bound_max']]
     map.push()
 
 def on_refresh(arg):

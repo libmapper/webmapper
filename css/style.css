@@ -237,10 +237,10 @@ form {
 .boundaryNone {
     background-position: 0px 0px;
 }
-.boundaryUp {
+.boundaryRight {
     background-position: -24px 0px;
 }
-.boundaryDown {
+.boundaryLeft {
     background-position: -48px 0px;
 }
 .boundaryMute {

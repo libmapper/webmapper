@@ -3,9 +3,7 @@ function TopMenu(container, model) {
     this.model = model;
     this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
     this.mapModes = ["Linear", "Expression"];
-    this.boundaryModes = ["None", "Mute", "Clamp", "Fold", "Wrap"];
-    this.boundaryIcons = ["boundaryNone", "boundaryUp", "boundaryDown",
-                          "boundaryMute", "boundaryClamp", "boundaryWrap"];
+    this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
 }
 
 TopMenu.prototype = {
@@ -164,8 +162,8 @@ TopMenu.prototype = {
         var dst_max = null;
         var src_calibrating = false;
         var dst_calibrating = false;
-        var dst_bound_min = 'none';
-        var dst_bound_max = 'none';
+        var dst_bound_min = null;
+        var dst_bound_max = null;
 
         $('.signalControl').removeClass('disabled');
         $('.signalControl').children('*').removeClass('disabled');
@@ -203,12 +201,12 @@ TopMenu.prototype = {
                 dst_max = 'multiple';
 
             if (dst_bound_min == null)
-                dst_bound_min = map.bound_min;
-            else if (dst_bound_min != map.bound_min)
+                dst_bound_min = map.dst_bound_min;
+            else if (dst_bound_min != map.dst_bound_min)
                 dst_bound_min = 'multiple';
             if (dst_bound_max == null)
-                dst_bound_max = map.bound_max;
-            else if (dst_bound_max != map.bound_max)
+                dst_bound_max = map.dst_bound_max;
+            else if (dst_bound_max != map.dst_bound_max)
                 dst_bound_max = 'multiple';
         }
 
@@ -379,7 +377,7 @@ TopMenu.prototype = {
                     dstdevs.push(devs.contents[i].name);
             }
 
-            //So that the monitor can see which devices are being looked at
+            // So that the monitor can see which devices are being looked at
             var srcs = document.createElement('input');
             srcs.type = 'hidden';
             srcs.name = 'sources';
@@ -398,70 +396,89 @@ TopMenu.prototype = {
     },
 
     selected_map_switch_range : function(is_src, div) {
-         var map = this.copy_selected_map();
-         if (!map)
-             return;
+        // todo: only do this if associated ranges are being displayed
+        var keys = this.model.selectedMaps;
 
-         var msg = {};
-         if (is_src) {
-             msg['src_max'] = String(map['src_min']);
-             msg['src_min'] = String(map['src_max']);
-         }
-         else {
-             msg['dst_max'] = String(map['dst_min']);
-             msg['dst_min'] = String(map['dst_max']);
-         }
-         msg['src'] = map['src'];
-         msg['dst'] = map['dst'];
-         $(this._container).trigger("setMap", msg);
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
+
+            var msg = {};
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
+            if (is_src) {
+                msg['src_max'] = String(map['src_min']);
+                msg['src_min'] = String(map['src_max']);
+            }
+            else {
+                msg['dst_max'] = String(map['dst_min']);
+                msg['dst_min'] = String(map['dst_max']);
+            }
+
+            $(this._container).trigger("setMap", msg);
+        }
     },
 
     on_boundary : function(e, _self) {
+        var boundaryMode = null;
         for (var i in this.boundaryIcons) {
-            if ($(e.currentTarget).hasClass(this.boundaryIcons[i]))
+            if ($(e.currentTarget).hasClass("boundary"+this.boundaryIcons[i])) {
+                boundaryMode = this.boundaryIcons[i];
                 break;
+            }
         }
         if (i >= this.boundaryIcons.length)
             return;
 
-        var b = [0, 3, 3, 1, 2, 4][i];
-        b = b + 1;
-        if (b >= this.boundaryModes.length)
-            b = 0;
-
-        // Enable this to set the icon immediately. Currently disabled
-        // since the 'waiting' style is not used to indicate tentative
-        // settings for boundary modes.
-
-        // set_boundary($(e.currentTarget), b,
-        //              e.currentTarget.id=='boundaryMax');
-
-        _self.selected_map_set_boundary(b,
-            e.currentTarget.id == 'boundaryMax', e.currentTarget);
-
+        var is_max = (e.currentTarget.id == 'boundaryMax');
+        switch (boundaryMode) {
+            case 'Left':
+                if (is_max)
+                    boundaryMode = 'Wrap'; // fold -> wrap
+                else
+                    boundaryMode = 'Mute'; // none -> mute
+                break;
+            case 'Right':
+                if (is_max)
+                    boundaryMode = 'Mute'; // none -> mute
+                else
+                    boundaryMode = 'Wrap'; // fold -> wrap
+                break;
+            case 'Mute':
+                boundaryMode = 'Clamp'; // mute -> clamp
+                break;
+            case 'Clamp':
+                boundaryMode = 'Fold'; // clamp -> fold
+                break;
+            case 'Wrap':
+                boundaryMode = 'None'; // wrap -> none
+                break;
+            default:
+                break;
+        }
+        if (boundaryMode != null)
+            _self.selected_map_set_boundary(boundaryMode, is_max, e.currentTarget);
         e.stopPropagation();
     },
 
-    selected_map_set_boundary : function(boundarymode, ismax, div) {
-        var args = this.copy_selected_map();
+    selected_map_set_boundary : function(boundarymode, is_max, div) {
+        var keys = this.model.selectedMaps;
 
-        if (!args)
-            return;
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
 
-        // TODO: this is a bit out of hand, need to simplify the mode
-        // strings and indexes.
-        var modecmd = this.mapModeCommands[this.mapModes[args['mode']]];
-        args['mode'] = modecmd;
-
-        var c = ismax ? 'bound_max' : 'bound_min';
-        args[c] = boundarymode;
-
-        // send the command, should receive a /mapped message after.
-        $(this._container).trigger("setMap", [args]);
-
-        // Do not set the background color, since background is used to
-        // display icon.  Enable this if a better style decision is made.
-        //$(div).addClass('waiting');
+            var msg = {};
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
+            if (is_max)
+                msg['dst_bound_max'] = boundarymode;
+            else
+                msg['dst_bound_min'] = boundarymode;
+            $(this._container).trigger("setMap", msg);
+        }
     },
 
     notify : function(msg) {
@@ -476,23 +493,22 @@ TopMenu.prototype = {
 
     set_boundary : function (boundaryElement, value, ismax) {
         for (var i in this.boundaryIcons)
-            boundaryElement.removeClass(this.boundaryIcons[i]);
+            boundaryElement.removeClass("boundary"+this.boundaryIcons[i]);
 
-        if (value == 0) { //'None' special case, icon depends on direction
+        if (value == 'None') { // special case, icon depends on direction
             if (ismax)
-                boundaryElement.addClass('boundaryUp');
+                boundaryElement.addClass('boundaryRight');
             else
-                boundaryElement.addClass('boundaryDown');
+                boundaryElement.addClass('boundaryLeft');
         }
-
-        if (value == 3) { //'Fold' special case, icon depends on direction
+        else if (value == 'Fold') { // special case, icon depends on direction
             if (ismax)
-                boundaryElement.addClass('boundaryDown');
+                boundaryElement.addClass('boundaryLeft');
             else
-                boundaryElement.addClass('boundaryUp');
+                boundaryElement.addClass('boundaryRight');
         }
-        else if (value < 5) {
-            boundaryElement.addClass('boundary'+ this.boundaryModes[value]);
+        else if (value != null) {
+            boundaryElement.addClass('boundary'+value);
         }
     },
 
@@ -508,10 +524,6 @@ TopMenu.prototype = {
             msg['src'] = map['src'];
             msg['dst'] = map['dst'];
             msg['muted'] = !map.muted;
-
-//            // TODO: why modes aren't just stored as their strings, I don't know
-//            var modecmd = this.mapModeCommands[this.mapModes[args['mode']]];
-//            args['mode'] = modecmd;
 
             $(this._container).trigger("setMap", msg);
         }
