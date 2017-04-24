@@ -309,55 +309,11 @@ form {
     z-index: 1;
     position: relative;
 }
-  
-<<<<<<< HEAD
-    .modesDiv {
-      padding: 0 10px;
-      width: 50%;
-      float: left;
-    }
-    .modesDiv div {
-      padding-right: 3pt;
-      margin-bottom: 10px;
-      cursor: pointer;
-      display: inline-block;
-    }
 
-    div.range {
-      padding: 3px 3px;
-      width: 100%;
-    }
-    input.range {
-      text-align: center;
-      margin: 0;
-    }
-    #srcMin, #destMin {
-      border-right: 0;
-    }
-    input.range, input.expression {
-      height: 19px;
-      font-size: 9pt;
-    }
+#saveLoadDiv {
+    padding: 2px;
+}
 
-    #saveLoadDiv {
-      padding: 2px;
-    }
-
-    #networkMenu {
-      position: absolute;
-      z-index: 2;
-      left: 37px;
-      top: 30px;
-    }
-
-    #networkMenu td, #networkMenu th {
-      opacity: 1;
-    }
-
-    #networkMenu td, #logo {
-      cursor: pointer;
-    }
-=======
 .modesDiv {
     padding: 0 10px;
     width: 50%;
@@ -413,7 +369,6 @@ input.expression {
 #networkMenu td, #logo {
     cursor: pointer;
 }
->>>>>>> joe/master
 
 /****************/
 
