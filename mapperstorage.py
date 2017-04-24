@@ -126,6 +126,53 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
         print "error loading file: couldn't find devices in database"
         return
 
+    if version == '2.1':
+        # we need to modify a few things for compatibility
+        f['maps'] = []
+        for connection in f['connections']:
+            if not connection.has_key('mode'):
+                continue;
+            map = {}
+            src = { 'name': connection['source'][0] }
+            dst = { 'name': connection['destination'][0] }
+            if connection.has_key('mute'):
+                map['muted'] = connection['mute']
+            if connection.has_key('expression'):
+                map['expression'] = connection['expression']
+            if connection.has_key('srcMin'):
+                src['minimum'] = connection['srcMin']
+            if connection.has_key('srcMax'):
+                src['maximum'] = connection['srcMax']
+            if connection.has_key('destMin'):
+                dst['minimum'] = connection['destMin']
+            if connection.has_key('destMax'):
+                dst['maximum'] = connection['destMax']
+            if connection.has_key('boundMin'):
+                dst['bound_min'] = connection['boundMin']
+            if connection.has_key('boundMax'):
+                dst['bound_max'] = connection['boundMax']
+
+            mode = connection['mode']
+            if mode == 'reverse':
+                map['mode'] = 'expression'
+                map['expression'] = 'y=x'
+                map['sources'] = [ dst ]
+                map['destinations'] = [ src ]
+            else:
+                if mode == 'calibrate':
+                    map['mode'] = 'linear'
+                    dst['calibrating'] = true
+                else:
+                    map['mode'] = mode
+                map['sources'] = [ src ]
+                map['destinations'] = [ dst ]
+
+            f['maps'].append(map)
+
+        del f['connections']
+        # "upgrade" version to 2.2
+        version = '2.2'
+
     # This is a version 2.2 save file
     if version == '2.2':
         # todo: we need to enable users to explictly define device matching
@@ -211,68 +258,6 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                     map.properties[prop] = map_props[prop]
 
             map.push()
-
-    # This is a version 2.1 save file
-#    elif version == '2.1':
-#        f = f['mapping']
-#
-#        for c in f['connections']:
-#            # The name of the source signal without device
-#            srcsig = str(c['src'][0]).split('/')[2]
-#            # And the destination signal
-#            destsig = str(c['dest'][0]).split('/')[2]
-#
-#            for s in devices['sources']:
-#                src = db.signal(s + srcsig)
-#                if not src:
-#                    continue
-#                for d in devices['destinations']:
-#                    dst = db.signal(d + destsig)
-#                    if not dst:
-#                        continue
-#
-#                    map = 0
-#                    mode = 0
-#                    if 'mode' in c:
-#                        mode = c['mode']
-#                        if mode is reverse:
-#                            map = mapper.map(dst, src)
-#                            if not map:
-#                                print 'unable to create map', dst.name, '->', src.name
-#                                continue
-#                        else:
-#                            map = mapper.map(src, dst)
-#                            if not map:
-#                                print 'unable to create map', src.name, '->', dst.name
-#                                continue
-#
-#                        if mode is 'reverse':
-#                            map.mode = 'expression'
-#                            map.expression = 'y=x'
-#                        elif mode is 'calibrating':
-#                            map.destination().calibrate = True
-#                        else:
-#                            map.mode = modeIdx[mode]
-#                    if 'expression' in c and mode is not 'reverse':
-#                        map.expression = str(c['expression']
-#                                             .replace('src[0]', 'x')
-#                                             .replace('dest[0]', 'y'))
-#                    if 'srcMin' in c:
-#                        map.source().minimum = c['srcMin']
-#                    if 'srcMax' in c:
-#                        map.source().maximum = c['srcMax']
-#                    if 'destMin' in c:
-#                        map.destination().minimum = c['destMin']
-#                    if 'destMax' in c:
-#                        map.destination().maximum = c['destMax']
-#                    if 'boundMin' in c:
-#                        map.destination().bound_min = boundIdx[c['boundMin']]
-#                    if 'boundMax' in c:
-#                        map.destination().bound_max = boundIdx[c['boundMax']]
-#                    if 'mute' in c:
-#                        map.muted = c['mute']
-#
-#                    map.push()
 
     else:
         print 'Unknown file version'
