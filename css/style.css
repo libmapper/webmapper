@@ -76,7 +76,11 @@ thead, #svgTop, #networkMenu {
 }
 
 /* highlights */
-.modesel, .displayTable tr.trsel.even, #networkMenu td:hover  {
+.modesel, .calibratesel .displayTable tr.trsel.even, #networkMenu td:hover  {
+    background-color: #9CC2CF;
+}
+
+.calibratesel {
     background-color: #9CC2CF;
 }
 
@@ -189,7 +193,6 @@ form {
     position: relative;
 }
 
-
 .topMenu li a {
     color: black;
     text-decoration: none;
@@ -220,6 +223,10 @@ form {
     border: none;
     position: relative;
     top: 0px;
+}
+
+.calibrate {
+    cursor: pointer;
 }
 
 /* Just the boundary icons */

@@ -80,6 +80,7 @@ def map_props(map):
         props['mode'] = 'linear'
     elif props['mode'] == mapper.MODE_EXPRESSION:
         props['mode'] = 'expression'
+
     slotprops = map.source().properties
     if slotprops.has_key('min'):
         props['src_min'] = slotprops['min']
@@ -89,6 +90,9 @@ def map_props(map):
         props['src_bound_min'] = boundaryModes[slotprops['bound_min']]
     if slotprops.has_key('bound_max'):
         props['src_bound_max'] = boundaryModes[slotprops['bound_max']]
+    if slotprops.has_key('calibrating'):
+        props['src_calibrating'] = slotprops['calibrating']
+
     slotprops = map.destination().properties
     if slotprops.has_key('min'):
         props['dst_min'] = slotprops['min']
@@ -98,6 +102,8 @@ def map_props(map):
         props['dst_bound_min'] = boundaryModes[slotprops['bound_min']]
     if slotprops.has_key('bound_max'):
         props['dst_bound_max'] = boundaryModes[slotprops['bound_max']]
+    if slotprops.has_key('calibrating'):
+        props['dst_calibrating'] = slotprops['calibrating']
     return props
 
 def on_device(dev, action):
@@ -148,9 +154,13 @@ def set_map_properties(props):
             print 'error: unknown mode ', props['mode']
     if props.has_key('expression'):
         map.expression = props['expression']
+    if props.has_key('muted'):
+        map.muted = props['muted']
+
+    slot = map.source()
     if props.has_key('src_min'):
         if type(props['src_min']) is int or type(props['src_min']) is float:
-            map.source().minimum = float(props['src_min'])
+            slot.minimum = float(props['src_min'])
         else:
             if type(props['src_min']) is str:
                 props['src_min'] = props['src_min'].replace(',',' ').split()
@@ -159,10 +169,10 @@ def set_map_properties(props):
                 props['src_min'][i] = float(props['src_min'][i])
             if numargs == 1:
                 props['src_min'] = props['src_min'][0]
-            map.source().minimum = props['src_min']
+            slot.minimum = props['src_min']
     if props.has_key('src_max'):
         if type(props['src_max']) is int or type(props['src_max']) is float:
-            map.source().maximum = float(props['src_max'])
+            slot.maximum = float(props['src_max'])
         else:
             if type(props['src_max']) is str:
                 props['src_max'] = props['src_max'].replace(',',' ').split()
@@ -171,10 +181,18 @@ def set_map_properties(props):
                 props['src_max'][i] = float(props['src_max'][i])
             if numargs == 1:
                 props['src_max'] = props['src_max'][0]
-            map.source().maximum = props['src_max']
+            slot.maximum = props['src_max']
+    if props.has_key('src_calibrating'):
+        slot.calibrating = props['src_calibrating']
+    if props.has_key('src_bound_min'):
+        slot.bound_min = boundaryStrings[props['src_bound_min']]
+    if props.has_key('src_bound_max'):
+        slot.bound_max = boundaryStrings[props['src_bound_max']]
+
+    slot = map.destination()
     if props.has_key('dst_min'):
         if type(props['dst_min']) is int or type(props['dst_min']) is float:
-            map.destination().minimum = float(props['dst_min'])
+            slot.minimum = float(props['dst_min'])
         else:
             if type(props['dst_min']) is str:
                 props['dst_min'] = props['dst_min'].replace(',',' ').split()
@@ -183,10 +201,10 @@ def set_map_properties(props):
                 props['dst_min'][i] = float(props['dst_min'][i])
             if numargs == 1:
                 props['dst_min'] = props['dst_min'][0]
-            map.destination().minimum = props['dst_min']
+            slot.minimum = props['dst_min']
     if props.has_key('dst_max'):
         if type(props['dst_max']) is int or type(props['dst_max']) is float:
-            map.destination().maximum = float(props['dst_max'])
+            slot.maximum = float(props['dst_max'])
         else:
             if type(props['dst_max']) is str:
                 props['dst_max'] = props['dst_max'].replace(',',' ').split()
@@ -195,19 +213,14 @@ def set_map_properties(props):
                 props['dst_max'][i] = float(props['dst_max'][i])
             if numargs == 1:
                 props['dst_max'] = props['dst_max'][0]
-            map.destination().maximum = props['dst_max']
-    if props.has_key('calibrating'):
-        map.destination().calibrating = props['calibrating']
-    if props.has_key('muted'):
-        map.muted = props['muted']
-    if props.has_key('src_bound_min'):
-        map.source().bound_min = boundaryStrings[props['src_bound_min']]
-    if props.has_key('src_bound_max'):
-        map.source().bound_max = boundaryStrings[props['src_bound_max']]
+            slot.maximum = props['dst_max']
+    if props.has_key('dst_calibrating'):
+        slot.calibrating = props['dst_calibrating']
     if props.has_key('dst_bound_min'):
-        map.destination().bound_min = boundaryStrings[props['dst_bound_min']]
+        slot.bound_min = boundaryStrings[props['dst_bound_min']]
     if props.has_key('dst_bound_max'):
-        map.destination().bound_max = boundaryStrings[props['dst_bound_max']]
+        slot.bound_max = boundaryStrings[props['dst_bound_max']]
+
     map.push()
 
 def on_refresh(arg):

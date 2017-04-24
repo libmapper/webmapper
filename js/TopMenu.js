@@ -51,23 +51,25 @@ TopMenu.prototype = {
         $('.ranges').append(
             "<div id='srcRange' class='range signalControl disabled'>"+
                 "<div style='width:85px'>Src Range:</div>"+
-                "<div style='width:calc(100% - 85px)'>"+
+                "<div style='width:calc(100% - 120px)'>"+
                     "<div style='width:24px'></div>"+
                     "<input class='range' id='src_min' style='width:calc(50% - 34px)'></input>"+
                     "<div id='srcRangeSwitch' class='rangeSwitch'></div>"+
                     "<input class='range' id='src_max' style='width:calc(50% - 34px)'></input>"+
                     "<div style='width:24px'></div>"+
                 "</div>"+
+                "<div id='srcCalibrate' class='calibrate'>Calib</div>"+
             "</div>"+
             "<div id='dstRange' class='range signalControl disabled'>"+
                 "<div style='width:85px'>Dest Range:</div>"+
-                "<div style='width:calc(100% - 85px)'>"+
+                "<div style='width:calc(100% - 120px)'>"+
                     "<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>"+
                     "<input class='range' id='dst_min' style='width:calc(50% - 34px)'></input>"+
                     "<div id='dstRangeSwitch' class='rangeSwitch'></div>"+
                     "<input class='range' id='dst_max' style='width:calc(50% - 34px)'></input>"+
                     "<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>"+
                 "</div>"+
+//                "<div id='dstCalibrate' class='calibrate' type='button'>Calib</div>"+
             "</div>");
 
         // extra tools
@@ -123,6 +125,12 @@ TopMenu.prototype = {
                                             e.currentTarget);
         });
 
+        $('.calibrate').click(function(e) {
+            e.stopPropagation();
+            _self.selected_map_toggle_calibrate(e.currentTarget.id=='srcCalibrate',
+                                                e.currentTarget);
+        });
+
         $('body').on('keydown', function(e) {
             if (e.which == 77)
                 _self.mute_selected();
@@ -145,6 +153,7 @@ TopMenu.prototype = {
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
+        $('.calibrate').removeClass('calibratesel');
     },
 
     updateMapProperties : function() {
@@ -160,8 +169,8 @@ TopMenu.prototype = {
         var src_max = null;
         var dst_min = null;
         var dst_max = null;
-        var src_calibrating = false;
-        var dst_calibrating = false;
+        var src_calibrating = null;
+        var dst_calibrating = null;
         var dst_bound_min = null;
         var dst_bound_max = null;
 
@@ -191,6 +200,11 @@ TopMenu.prototype = {
                 src_max = map.src_max;
             else if (src_max != map.src_max)
                 src_max = 'multiple';
+            if (src_calibrating == null)
+                src_calibrating = map.src_calibrating;
+            else if (src_calibrating != map.src_calibrating)
+                src_calibrating = 'multiple';
+
             if (dst_min == null)
                 dst_min = map.dst_min;
             else if (dst_min != map.dst_min)
@@ -199,6 +213,10 @@ TopMenu.prototype = {
                 dst_max = map.dst_max;
             else if (dst_max != map.dst_max)
                 dst_max = 'multiple';
+            if (dst_calibrating == null)
+                dst_calibrating = map.dst_calibrating;
+            else if (dst_calibrating != map.dst_calibrating)
+                dst_calibrating = 'multiple';
 
             if (dst_bound_min == null)
                 dst_bound_min = map.dst_bound_min;
@@ -227,6 +245,15 @@ TopMenu.prototype = {
             $("#dst_min").val(dst_min);
         if (dst_max != null && dst_max != 'multiple')
             $("#dst_max").val(dst_max);
+
+        if (src_calibrating == true)
+            $("#srcCalibrate").addClass("calibratesel");
+        else if (src_calibrating == false)
+            $("#srcCalibrate").removeClass("calibratesel");
+        if (dst_calibrating == true)
+            $("#dstCalibrate").addClass("calibratesel");
+        else if (dst_calibrating == false)
+            $("#dstCalibrate").removeClass("calibratesel");
 
         if (dst_bound_min != null)
             this.set_boundary($("#boundaryMin"), dst_bound_min, 0);
@@ -414,6 +441,28 @@ TopMenu.prototype = {
             else {
                 msg['dst_max'] = String(map['dst_min']);
                 msg['dst_min'] = String(map['dst_max']);
+            }
+
+            $(this._container).trigger("setMap", msg);
+        }
+    },
+
+    selected_map_toggle_calibrate : function(is_src, div) {
+        var keys = this.model.selectedMaps;
+
+        for (var i in keys) {
+            var map = this.model.maps.get(keys[i]);
+            if (!map)
+                continue;
+
+            var msg = {};
+            msg['src'] = map['src'];
+            msg['dst'] = map['dst'];
+            if (is_src) {
+                msg['src_calibrating'] = !map['src_calibrating'];
+            }
+            else {
+                msg['dst_calibrating'] = !map['dst_calibrating'];
             }
 
             $(this._container).trigger("setMap", msg);
