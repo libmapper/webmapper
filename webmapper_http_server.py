@@ -297,7 +297,7 @@ def handler_page(out, args):
 
 <!-- List View includes -->
 <script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="includes/raphael.js"></script>
+<script type="text/javascript" src="includes/raphael.min.js"></script>
 <script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
 
