@@ -176,7 +176,6 @@ function initViewCommands()
     // src = "/devicename"
     // dst = "/devicename"
     $("#container").on("unlink", function(e, src, dst){
-        command.send('unlink', [src, dst]);
         model.removeLink(src + '>' + dst);
         update_display();
     });

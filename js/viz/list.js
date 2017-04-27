@@ -342,6 +342,10 @@ function listView(model)
                 arrows[a].label.remove();
             if (arrows[a].label_background)
                 arrows[a].label_background.remove();
+            if (arrows[a].arrow_start)
+                arrows[a].arrow_start.remove();
+            if (arrows[a].arrow_end)
+                arrows[a].arrow_end.remove();
             arrows[a].remove();
         }
         arrows = [];
@@ -584,11 +588,12 @@ function listView(model)
             "border": "1px solid blue"
         });
 
-        var arrow_offset = 6;
+        var arrow_offset = 2;
 
         var S = fullOffset(src);
         var D = fullOffset(dst);
         var frame = fullOffset($('#svgDiv')[0]);
+        var h_center = frame.width / 2;
 
         if (geometry & 1)
             var x1 = arrowheads[1] ? arrow_offset : 0;
@@ -603,7 +608,7 @@ function listView(model)
         var y2 = D.top + D.height / 1.5 - frame.top;
 
         var path = [["M", x1, y1],
-                    ["C", frame.width / 2, y1, frame.width / 2, y2, x2, y2]];
+                    ["C", h_center, y1, h_center, y2, x2, y2]];
 
         line.attr({"path": path});
         line.border.attr({"path": path});
@@ -612,10 +617,30 @@ function listView(model)
             "stroke-width": "2px",
             "cursor": "pointer",
         });
-        if (arrowheads[0] > 0)
-            line.attr({"arrow-end": "classic-wide-long"});
-        if (arrowheads[1] > 0)
-            line.attr({"arrow-start": "classic-wide-long"});
+        if (arrowheads[0] > 0) {
+            var arrow;
+            if (x2 > h_center)
+                arrow = svgArea.path("M"+x2+" "+y2+"l-10 -6l0 12z");
+            else
+                arrow = svgArea.path("M"+x2+" "+y2+"l10 -6l0 12z");
+            if (sel)
+                arrow.attr({"fill": "red"});
+            else
+                arrow.attr({"fill": "black"});
+            line.arrow_end = arrow;
+        }
+        if (arrowheads[1] > 0) {
+            var arrow;
+            if (x1 > h_center)
+                arrow = svgArea.path("M"+x1+" "+y1+"l-10 -6l0 12z");
+            else
+                arrow = svgArea.path("M"+x1+" "+y1+"l10 -6l0 12z");
+            if (sel)
+                arrow.attr({"fill": "red"});
+            else
+                arrow.attr({"fill": "black"});
+            line.arrow_start = arrow;
+        }
 
         if (label != null) {
             width = label.length * 12;
@@ -639,8 +664,13 @@ function listView(model)
             line.label_background = rect;
         }
 
-        if (sel)
+        if (sel) {
             line.node.classList.add('selected');
+            if (line.arrow_start)
+                line.arrow_start.node.classList.add('selected');
+            if (line.arrow_end)
+                line.arrow_end.node.classList.add('selected');
+        }
         if (muted)
             line.node.classList.add('muted');
 
@@ -822,9 +852,9 @@ function listView(model)
     }
 
     function on_unlink(e) {
-        for (var key in model.selectedLinks) {
-            var link = model.links.get(key);
-            $('#container').trigger("unlink", [link.src, link.dst]);
+        for (var i in model.selectedLinks) {
+            names = model.selectedLinks[i].split('>');
+            $('#container').trigger("unlink", [names[0], names[1]]);
         }
         e.stopPropagation();
     }
@@ -925,10 +955,11 @@ function listView(model)
 
         this.canvasWidth = $('#svgDiv').width();
 
-        this.clamptorow = function(row) {
+        this.clamptorow = function(row, is_dst) {
             var svgPos = fullOffset($('#svgDiv')[0]);
             var rowPos = fullOffset(row);
-            var y = rowPos.top + rowPos.height/2 - svgPos.top;
+            var divisor = is_dst ? 1.5 : 3;
+            var y = rowPos.top + rowPos.height/divisor - svgPos.top;
             return y;
         };
 
@@ -943,8 +974,7 @@ function listView(model)
             var td = document.elementFromPoint(ttleft, svgTop + y);
             var row = $(td).parents('tr')[0];
             var incompatible = $(row).hasClass('incompatible');
-            if (!incompatible)
-                return row;
+            return incompatible ? null : row;
         };
 
         // Our bezier curve points
@@ -963,12 +993,14 @@ function listView(model)
         }
 
         // And in the middle of the starting row
-        this.path[0][2] = this.clamptorow(this.sourceRow);
+        this.path[0][2] = this.clamptorow(this.sourceRow, 0);
 
         // The actual line
         this.line = svgArea.path();
-        this.line.attr({"stroke-width": "2px",
-                        "arrow-end": "classic-wide-long"});
+        this.line.attr({"stroke-width": "2px"});
+        this.arrow = svgArea.path();
+        this.arrow.attr({"stroke-width": "2px", "fill": "black"});
+        this.arrow.attr({"path": "M0 0l7 -6l0 12z"});
 
         this.update = function(moveEvent) {
             moveEvent.offsetX = moveEvent.pageX - $('#svgDiv').offset().left;
@@ -994,8 +1026,7 @@ function listView(model)
                     this.targetTable = newTargetTable;
                     // Fade out incompatible signals
                     if (selectedTab != all_devices)
-                        fade_incompatible_signals(this.sourceRow,
-                                                  this.targetTable.tbody);
+                        fade_incompatible_signals(this.sourceRow);
                 }
 
                 // Within clamping range?
@@ -1007,9 +1038,9 @@ function listView(model)
                         if (this.sourceTable == this.targetTable)
                             end[0] = start[0];
                         else
-                            end[0] = this.canvasWidth - start[0];
+                            end[0] = this.canvasWidth - start[0] - 2;
                         c1 = end[1];
-                        end[1] = this.clamptorow(clampRow);
+                        end[1] = this.clamptorow(clampRow, 1);
                         this.checkTarget(clampRow);
                     }
                     else
@@ -1018,9 +1049,9 @@ function listView(model)
                 else if (this.canvasWidth - absdiff < 50) {
                     var clampRow = this.findrow(end[1]);
                     if (clampRow) {
-                        end[0] = this.canvasWidth - start[0];
+                        end[0] = this.canvasWidth - start[0] - 2;
                         c1 = end[1];
-                        end[1] = this.clamptorow(clampRow);
+                        end[1] = this.clamptorow(clampRow, 1);
                         this.checkTarget(clampRow);
                     }
                     else
@@ -1033,14 +1064,27 @@ function listView(model)
             if ($(target).parents('tbody')[0] == this.targetTable.tbody) {
                 var rowHeight = $(target).height();
                 this.checkTarget(target);
-                if (this.sourceTable == this.targetTable)
+                if (this.sourceTable == this.targetTable) {
                     end[0] = start[0];
-                else
+                    if (!($(target).hasClass('incompatible')))
+                        end[1] = this.clamptorow(target, 1);
+                    else
+                        end[1] = moveEvent.offsetY;
+                }
+                else {
                     end[0] = this.canvasWidth - start[0];
-                end[1] = this.clamptorow(target);
+                    if (!($(target).hasClass('incompatible')))
+                        end[1] = this.clamptorow(target, 0);
+                    else
+                        end[1] = moveEvent.offsetY;
+                }
             }
             this.path = get_bezier_path(start, end, c1, this.canvasWidth);
             this.line.attr({"path": this.path});
+            this.arrow.transform("");
+            var angle = (end[0] > this.canvasWidth/2) ? 180 : 0
+            this.arrow.transform([["r", angle, end[0], end[1]],
+                                  ["t", end[0], end[1]]]);
         };
 
         this.mouseup = function(mouseUpEvent) {
@@ -1053,14 +1097,18 @@ function listView(model)
             $("*").off('.drawing').removeClass('incompatible');
             $(document).off('.drawing');
             self.line.remove();
+            self.arrow.remove();
         };
 
         // Check if we have a new target row, select it if necessary
         this.checkTarget = function(mousedOverRow) {
             if (this.targetRow == mousedOverRow
-                || $(mousedOverRow).hasClass('incompatible')
                 || (this.sourceRow == this.targetRow && !allow_self_link))
                 return;
+            if ($(mousedOverRow).hasClass('incompatible')) {
+                this.targetRow = null;
+                return;
+            }
             if (this.targetRow != null) {
                 // deselect previous
                 select_tr(this.targetRow);
@@ -1101,7 +1149,8 @@ function listView(model)
         return path;
     }
 
-    function fade_incompatible_signals(row, targetTableBody) {
+    function fade_incompatible_signals(row) {
+        $(row).addClass('incompatible');
         for (var i in arrows) {
             if (arrows[i].srcTr == row)
                 $(arrows[i].dstTr).addClass('incompatible');

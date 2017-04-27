@@ -292,6 +292,9 @@ def find_sig(fullname):
 
 def new_map(args):
     map = mapper.map(find_sig(args[0]), find_sig(args[1]))
+    if not map:
+        print 'error: failed to create map', args[0], "->", args[1]
+        return;
     if len(args) > 2 and type(args[2]) is dict:
         map.set_properties(args[2])
     map.push()
