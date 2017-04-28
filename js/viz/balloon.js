@@ -102,22 +102,22 @@ BalloonView.prototype = {
     },
 
     keyboardHandler : function (e) {
-        console.log(e.which);
+//        console.log(e.which);
 
         // 'delete' to remove a map
         // disconnect on 'delete'
         if (e.which == 46 || e.which == 8) {
             e.preventDefault();
-            var n = this.model.selectedMaps.length();
+            var n = this.model.selectedMaps.length;
             if (n > 0) {
                 var keys = this.model.selectedMaps.keys();
                 for (i = 0; i < keys.length; i++) {
-                    var conn = this.model.selectedMaps.get(keys[i]);
-                    var src = conn.src;
-                    var dst = conn.dst;
-                    if (this.model.isConnected(src, dst) == true) {
-                        // trigger disconnect event
-                        $(this._container).trigger("disconnect", [src, dst]);
+                    var map = this.model.maps.get(keys[i]);
+                    var src = map.src;
+                    var dst = map.dst;
+                    if (this.model.isMapped(src, dst) == true) {
+                        // trigger unmap event
+                        $(this._container).trigger("unmap", [src, dst]);
                         this.model.selectedMaps.remove(keys[i]);
                     }
                 }
@@ -675,13 +675,13 @@ BalloonView.prototype = {
         // is already selected
         if (displayLine.classList.contains("balloonMap_selected")) {
             displayLine.classList.remove("balloonMap_selected");
-            this.model.selectedMaps_removeMap(srcNode.signalName,
+            this.model.selectedMaps_toggleMap(srcNode.signalName,
                                               dstNode.signalName);
         }
         else {
             displayLine.classList.add("balloonMap_selected");
-            this.model.selectedMaps_addMap(srcNode.signalName,
-                                           dstNode.signalName);
+            this.model.selectedMaps_toggleMap(srcNode.signalName,
+                                              dstNode.signalName);
         }
 
         // tell main to update edit bar
@@ -771,12 +771,7 @@ BalloonView.prototype = {
             var src = $(_this.dragSource).data("node");
             var dst = $(_this.dragTarget).data("node");
 
-            // ensure proper direction for connecting
-            if (src.direction == 0)
-                _this.connect(src, dst);
-            else
-                _this.connect(dst, src);
-
+            _this.connect(src, dst);
             // send connect event
         }
 
@@ -914,24 +909,24 @@ BalloonView.prototype = {
         for (var d in keys) {
             var k = keys[d];
             var dev = this.model.devices.get(k);
-            $(this._container).trigger("getSignalsByDevice", dev.name);
-            $(this._container).trigger("get_links_or_maps_by_device_name",
-                                       dev.name);
+//            $(this._container).trigger("getSignalsByDevice", dev.name);
+//            $(this._container).trigger("get_links_or_maps_by_device_name",
+//                                       dev.name);
         }
 
         var keys = this.model.signals.keys();
         for (var i = 0; i < keys.length; i++) {
             var sig = this.model.signals.get(keys[i]);
             var devName = sig.device;
-            var sigName = sig.device + sig.name;
 
             // splits and removes empty strings
-            var namespaces = sigName.split("/").filter(function(e) {
+            var namespaces = keys[i].split("/").filter(function(e) {
                                                            return e;
                                                        });
             // FIX sig.direction will become an ENUM constant
-            this.addSignal(devName, sigName, namespaces,
-                           this.trees[1-sig.direction], 0, 1-sig.direction);
+            var dir = (sig.direction == 2);
+            this.addSignal(devName, keys[i], namespaces,
+                           this.trees[1 - dir], 0, 1 - dir);
         }
 
         // if view level is not set by user, set it to the root
@@ -1105,12 +1100,12 @@ BalloonView.prototype = {
     },
 
     connect : function (src, dst) {
-        if (this.model.isConnected(src.signalName, dst.signalName) == false) {
+        if (this.model.isMapped(src.signalName, dst.signalName) == false) {
             var srcDev = src.deviceName;
             var dstDev = dst.deviceName;
             // trigger connect event
-            $(this._container).trigger("connect", [src.signalName,
-                                                   dst.signalName]);
+            $(this._container).trigger("map", [src.signalName,
+                                               dst.signalName]);
 
             this.refreshSVG();
         }
@@ -1228,7 +1223,7 @@ BalloonNode.prototype = {
 
             // if leaf, simple check
             if (node.isLeaf()) {
-                if (model.isConnected(this.signalName, node.signalName)) {
+                if (model.isMapped(this.signalName, node.signalName)) {
                     result.push(node);
                 }
             }
