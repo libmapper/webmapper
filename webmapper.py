@@ -286,9 +286,12 @@ def subscribe(device):
 def find_sig(fullname):
     names = fullname.split('/', 1)
     dev = db.device(names[0])
-    if not dev:
-        return null
-    return dev.signal(names[1])
+    if dev:
+        sig = dev.signal(names[1])
+        print 'returning signal', sig
+        return sig
+    else:
+        print 'error: could not find device', dev
 
 def new_map(args):
     map = mapper.map(find_sig(args[0]), find_sig(args[1]))
