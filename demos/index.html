@@ -41,7 +41,7 @@
 body{ font-family: helvetica, arial, sans-serif}
 #menuWrapper button{ font-size: 12px; border-radius: 3px; -moz-border-radius: 3px; -webkit-border-radius: 3px; border: 1px solid #ccc; background: #ccc; padding: 6px 8px; color: #fff; }
 #menuWrapper button:hover, #menuWrapper #helpbutton:hover { background-color: #EEE8AA; }
-#menuWrapper button:active{	background-color: #FFFFF0; }
+#menuWrapper button:active{    background-color: #FFFFF0; }
 #menuWrapper #helpbutton{ width: 28px; margin-right: 5px; background-color: #ffffff; border: 1px solid #1f628d; color: #1f628d; border-radius: 26px; -moz-border-radius: 26x; -webkit-border-radius: 26px; }
 
 #helpWrapper { position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: rgba(0,0,0, 0.75); z-index: 3; }
@@ -64,34 +64,34 @@ body{ font-family: helvetica, arial, sans-serif}
 var model;
 
 var view;
-var viewIndex;					// to index into viewData 
-var viewData = new Array(3);	// data specific to the view, change 3 the number of views
+var viewIndex;                    // to index into viewData
+var viewData = new Array(3);    // data specific to the view, change 3 the number of views
 
-var nSrcDevices = 0;	// used for labels of fake src devices
-var nDstDevices = 0;	// used for labels of fake dst devices
+var nSrcDevices = 0;    // used for labels of fake src devices
+var nDstDevices = 0;    // used for labels of fake dst devices
 
 function init()
 {
 
-	closeHelp();
-	$( "#helpWrapper" ).load( "../js/help.html" );
-	
-	$('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
+    closeHelp();
+    $( "#helpWrapper" ).load( "../js/help.html" );
+
+    $('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
     window.onresize = function (e) {
-    	$('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
-    	view.on_resize();
+        $('#container').css('height', ($(window).height() - $('#menuWrapper').height()) + 'px' );
+        view.on_resize();
     };
 
     model = new LibMapperModel();
     model.pathToImages = "../" + model.pathToImages;
-    
-	initFakeData(4, 6, 4);
 
-	switch_mode("list");
-	document.getElementById('modeSelection').value = "list";
+    initFakeData(4, 6, 4);
 
-	
-	// controller (from view)  
+    switch_mode("list");
+    document.getElementById('modeSelection').value = "list";
+
+
+    // controller (from view)
     $("#container").on("link", function(e, src, dst){
         link(src, dst);
         view.update_display();
@@ -100,243 +100,224 @@ function init()
         unlink(src, dst);
         view.update_display();
     });
-    $("#container").on("connect", function(e, src, dst){
-        connect(src, dst);
+    $("#container").on("map", function(e, src, dst){
+        map(src, dst);
         view.update_display();
     });
-    $("#container").on("disconnect", function(e, src, dst){
-        disconnect(src, dst);
+    $("#container").on("unmap", function(e, src, dst){
+        unmap(src, dst);
         view.update_display();
     });
 }
 
 
-//init with fake data 
-function initFakeData(nIn, nOut, nSigs)
-{
-	// add sources
-	for(var i=0; i<nIn;i++)
-		addDevice("/Source" + nSrcDevices++, 0, nSigs);
-		//addDevice("/Source" + Math.floor(Math.random()*50), 0, nSigs);
+//init with fake data
+function initFakeData(nIn, nOut, nSigs) {
+    // add sources
+    for (var i = 0; i < nIn;i++)
+        addDevice("/Source" + nSrcDevices++, 0, nSigs);
+        //addDevice("/Source" + Math.floor(Math.random()*50), 0, nSigs);
 
-	// add destinations
-	for(var i=0; i<nOut;i++)
-		addDevice("/Destination" + nDstDevices++, nSigs, 0);
-	
-	// connect everything
-	for(var i=0; i<nSrcDevices; i++)
-	{
-		for(var j=0; j<nDstDevices; j++)
-		{
-			
-			for(var k=0; k<nSigs; k+=1){
-				for(var l=0; l<nSigs; l+=3, k+=1){
-					var rand = Math.random() * 10;
-					if(rand<2)
-					{
-						link("/Source" + i, "/Destination" + j);
-						connect("/Source" + i + "/Signal" + k, "/Destination" + j + "/Signal" + l);
-						k+=3;
-					}
-				}
-			}
-		}
-	}
+    // add destinations
+    for (var i = 0; i < nOut;i++)
+        addDevice("/Destination" + nDstDevices++, nSigs, 0);
+
+    // map everything
+    for (var i = 0; i < nSrcDevices; i++) {
+        for (var j = 0; j < nDstDevices; j++) {
+            for (var k = 0; k < nSigs; k+=1) {
+                for (var l = 0; l < nSigs; l+=3, k+=1) {
+                    var rand = Math.random() * 10;
+                    if (rand < 2) {
+                        map("Source" + i + "/Signal" + k, "Destination" + j + "/Signal" + l);
+                        k += 3;
+                    }
+                }
+            }
+        }
+    }
 }
 
-function addDevice(name, nIn, nOut)
-{
+function addDevice(name, nIn, nOut) {
 /*
-	var args = new Array();
-	args['name'] = name;
-	args['n_inputs'] = 2;
-	args['n_outputs'] = 0;
-	var device = model.new_device(args);
+    var args = new Array();
+    args['name'] = name;
+    args['n_inputs'] = 2;
+    args['n_outputs'] = 0;
+    var device = model.new_device(args);
 */
-	var args = new Object();
-	args.name = name;
-	args.num_inputs = nIn;
-	args.num_outputs = nOut;
-	model.devices.add(name, args);
+    var args = new Object();
+    args.name = name;
+    args.num_inputs = nIn;
+    args.num_outputs = nOut;
+    model.devices.add(name, args);
 
-	for(var j=0; j<nIn;j++)
-		addDevSignal("/Signal" + j, name, 0);	
-	for(var j=0; j<nOut;j++)
-		addDevSignal("/Signal" + j, name, 1);
+    for (var j = 0; j < nIn;j++)
+        addDevSignal("/Signal" + j, name, 0);
+    for (var j = 0; j < nOut;j++)
+        addDevSignal("/Signal" + j, name, 1);
 }
 
-function addDevSignal(name, device_name, direction)
-{
-	/*
-	var args = new Array(); 
-	args['device_name'] = device_name;
-	args['name'] = name;
-	var signal = model.new_signal(args);
-	*/
-	var args = new Object(); 
-	args.device_name = device_name;
-	args.name = name;
-	args.direction = direction;
-	model.signals.add(device_name+name, args);
+function addDevSignal(name, device_name, direction) {
+    /*
+    var args = new Array();
+    args['device_name'] = device_name;
+    args['name'] = name;
+    var signal = model.new_signal(args);
+    */
+    var args = new Object();
+    args.device_name = device_name;
+    args.name = name;
+    args.direction = direction;
+    model.signals.add(device_name+name, args);
 
 }
 
-function link(src, dst){
-	var key = src + ">" + dst;
-	var args = new Object(); 
-	args.src_name = src;
-	args.dest_name = dst;
-	model.links.add(key, args);
-}
-function unlink(src, dst){
-	var key = src + ">" + dst;
-	model.links.remove(key);
-}
-function connect(src, dst){
-	var key = src + ">" + dst;
-	var args = new Object(); 
-	args.src_name = src;
-	args.dest_name = dst;
-	args.bound_min = 0;
-	args.dest_length = 1;
-	args.src_length = 1;
-	args.bound_max = 0;
-	args.muted = 0;
-	args.range = [0.0, 10.0, 0.0, 1.0];
-	args.mode = 2;
-	args.src_type = 'f';
-	args.dest_type = 'f';
-	args.expression = 'y=x';
-	model.connections.add(key, args);
-}
-function disconnect(src, dst){
-	var key = src + ">" + dst;
-	model.connections.remove(key);
+function link(src, dst) {
+    var key = src + ">" + dst;
+    var args = new Object();
+    args.src_name = src;
+    args.dest_name = dst;
+    model.links.add(key, args);
 }
 
+function unlink(src, dst) {
+    var key = src + ">" + dst;
+    model.links.remove(key);
+}
 
-function switch_mode(newMode)
-{
-	if(view)
-	{
-		// save view settings
-		if(typeof view.save_view_settings == 'function')
-			viewData[viewIndex] = view.save_view_settings();
-		
-		// tell the view to cleanup (ex: removing event listeners)
-		view.cleanup();
-	}
-	
+function map(src, dst) {
+    var key = src + ">" + dst;
+    var args = new Object();
+    args.src_name = src;
+    args.dest_name = dst;
+    args.bound_min = 0;
+    args.dest_length = 1;
+    args.src_length = 1;
+    args.bound_max = 0;
+    args.muted = 0;
+    args.range = [0.0, 10.0, 0.0, 1.0];
+    args.mode = 2;
+    args.src_type = 'f';
+    args.dest_type = 'f';
+    args.expression = 'y=x';
+    model.maps.add(key, args);
+}
+
+function unmap(src, dst) {
+    var key = src + ">" + dst;
+    model.maps.remove(key);
+}
+
+function switch_mode(newMode) {
+    if(view) {
+        // save view settings
+        if(typeof view.save_view_settings == 'function')
+            viewData[viewIndex] = view.save_view_settings();
+
+        // tell the view to cleanup (ex: removing event listeners)
+        view.cleanup();
+    }
+
     $('#container').empty();
-    switch(newMode)
-    {
+    switch(newMode) {
         case 'list':
             view = new listView(model);
             viewIndex = 0;
             view.init();
             break;
         case 'grid':
-        	view = new GridView(document.getElementById('container'), model);
-        	viewIndex = 1;
-        	$('#saveLoadDiv').removeClass('disabled');
-        	view.update_display();
-        	break;
+            view = new GridView(document.getElementById('container'), model);
+            viewIndex = 1;
+            $('#saveLoadDiv').removeClass('disabled');
+            view.update_display();
+            break;
         case 'hive':
-        	view = new HivePlotView(document.getElementById('container'), model);
-        	viewIndex = 2;
+            view = new HivePlotView(document.getElementById('container'), model);
+            viewIndex = 2;
             view.on_resize();
-        	break;
+            break;
         case 'balloon':
-        	view = new BalloonView(document.getElementById('container'), model);
-        	viewIndex = 3;
+            view = new BalloonView(document.getElementById('container'), model);
+            viewIndex = 3;
             view.init();
             if(viewData[viewIndex])
-      	    	view.load_view_settings(viewData[viewIndex]);
+                  view.load_view_settings(viewData[viewIndex]);
             view.update_display();
-        	break;
-        
+            break;
+
         default:
             //console.log(newMode);
     }
-    
+
     // load view settings if any
-    if(viewData[viewIndex]){
-	    if(typeof view.load_view_settings == 'function')
-	    		view.load_view_settings(viewData[viewIndex]);
+    if (viewData[viewIndex]) {
+        if (typeof view.load_view_settings == 'function')
+                view.load_view_settings(viewData[viewIndex]);
     }
 }
 
-function btnHandler(val)
-{
-		if(val=="dst"){
-			addDevice("Destination " + nDstDevices++, 2, 0);
-		}else if(val=="src"){
-			addDevice("Source " + nSrcDevices++, 0, 2);		
-		}else if(val=="init"){
-			initFakeData(5, 5, 5);		
-		}
-		view.update_display();
+function btnHandler(val) {
+    if (val=="dst"){
+        addDevice("Destination " + nDstDevices++, 2, 0);
+    }
+    else if (val == "src"){
+        addDevice("Source " + nSrcDevices++, 0, 2);
+    }
+    else if (val == "init"){
+        initFakeData(5, 5, 5);
+    }
+    view.update_display();
 }
 
-
-	
-function closeHelp()
-{
-	$('#helpWrapper').hide();
+function closeHelp() {
+    $('#helpWrapper').hide();
 }
-function openHelp()
-{
-	$('#helpWrapper').show();
+
+function openHelp() {
+    $('#helpWrapper').show();
 }
 
 --></script>
 <style>
-	body{margin: 0;}
+    body{margin: 0;}
 </style>
 </head>
 
-
-
-
 <body onload="init()">
 <div style="margin: 0 auto;" id="menuWrapper">
-	<table width="100%">
-	<tr width="100%">
-		<td width="40%" align="left">
-			<img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
-					style="vertical-align: middle; position:relative; top: -3px" />
-			<span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
-	<select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">
-		<option value='none'>None</option>
-		<option value='list' selected>List Demo</option>"+
-		<option value='grid' >Grid Demo</option>"+
-		<option value='hive' >Hive Demo</option>"+
-		<option value='balloon' >Balloon Demo</option>"+
-	</select>
-			
-		</td>
-		
-		<td align="right">
-			<button onclick="btnHandler('src')">Add Source Device</button>
-			<button onclick="btnHandler('dst')">Add Destination Device</button>
-			<button onclick="btnHandler('init')">Add 5x5 Devices</button>
-			<button onclick="openHelp()" id="helpbutton">?</button>
-		</td>
-	</table>
-</div> 
+    <table width="100%">
+    <tr width="100%">
+        <td width="40%" align="left">
+            <img alt="webmapper logo" src="../images/webmapperlogo.png" width="44"
+                    style="vertical-align: middle; position:relative; top: -3px" />
+            <span style="font-size: 18px; position:relative; top: 1px;">Webmapper</span>
+    <select id='modeSelection' onchange="switch_mode(document.getElementById('modeSelection').value)">
+        <option value='none'>None</option>
+        <option value='list' selected>List Demo</option>"+
+        <option value='grid' >Grid Demo</option>"+
+        <option value='hive' >Hive Demo</option>"+
+        <option value='balloon' >Balloon Demo</option>"+
+    </select>
+
+        </td>
+
+        <td align="right">
+            <button onclick="btnHandler('src')">Add Source Device</button>
+            <button onclick="btnHandler('dst')">Add Destination Device</button>
+            <button onclick="btnHandler('init')">Add 5x5 Devices</button>
+            <button onclick="openHelp()" id="helpbutton">?</button>
+        </td>
+    </table>
+</div>
 
 <div id="container">
-
-	<!-- views load here -->
-
+    <!-- views load here -->
 </div>
 
 <div id="helpWrapper">
-
-	<!-- help content loads here -->
-
-</div>	
-	
+    <!-- help content loads here -->
+</div>
 
 </body>
 </html>

@@ -29,8 +29,7 @@ function listView(model)
     var leftBodyContent = [];
     var rightBodyContent = [];
 
-    this.init = function()
-    {
+    this.init = function() {
         add_tabs();
         add_title_bar();
         add_display_tables();
@@ -46,15 +45,13 @@ function listView(model)
         this.update_display();
     };
 
-    this.cleanup = function()
-    {
+    this.cleanup = function() {
         // Remove view specific handlers
         $('*').off('.list');
         $(document).off('.list');
     };
 
-    this.update_display = function()
-    {
+    this.update_display = function() {
         // Removes 'invisible' classes which can muddle with display updating
         $('tr.invisible').removeClass('invisible');
         update_arrows();
@@ -63,7 +60,8 @@ function listView(model)
         if (selectedTab == all_devices) {
             update_devices();
         }
-        else if (!model.isLinked(selectedTab, null)) {
+        else if (   !model.devices.get(selectedTab)
+                 || !model.isLinked(selectedTab, null)) {
             select_tab(tabDevices);
             return;
         }
@@ -77,8 +75,7 @@ function listView(model)
         $('#container').trigger("updateSaveLocation");    // trigger update save location event
     };
 
-    this.get_save_location = function ()
-    {
+    this.get_save_location = function () {
         if (selectedTab == all_devices){
             // nothing to save if in the devices tab
             return '';
@@ -88,13 +85,11 @@ function listView(model)
         }
     };
 
-    this.get_selected_tab = function()
-    {
+    this.get_selected_tab = function() {
         return selectedTab;
     }
 
-    this.get_focused_devices = function()
-    {
+    this.get_focused_devices = function() {
         if (selectedTab == all_devices) {
             return null;
         }
@@ -120,15 +115,13 @@ function listView(model)
         return focusedDevices;
     };
 
-    this.on_resize = function()
-    {
+    this.on_resize = function() {
         update_arrows();
         update_row_heights();
     };
 
     // A function to make sure that rows fill up the available space, in testing for now
-    function update_row_heights()
-    {
+    function update_row_heights() {
         var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
         var leftHeight = Math.floor(tableHeight/leftTable.nVisibleRows);
         var rightHeight = Math.floor(tableHeight/rightTable.nVisibleRows);
@@ -138,8 +131,7 @@ function listView(model)
     }
 
     // An object for the left and right tables, listing devices and signals
-    function listTable(id)
-    {
+    function listTable(id) {
         this.id = id; // Something like "leftTable"
         this.parent; // The node containing the table
         this.div; // The div node (and status)
@@ -153,8 +145,7 @@ function listView(model)
         this.nCols; // Number of columns in table
 
         // Should be passed a the node for the parent
-        this.create_within = function(parent)
-        {
+        this.create_within = function(parent) {
             this.parent = parent;
             // Create the div containing the table
             $(this.parent).append("<div class='tableDiv' id='"+id+"'></div>");
@@ -179,8 +170,7 @@ function listView(model)
         };
 
         // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
-        this.set_headers = function(headerStrings)
-        {
+        this.set_headers = function(headerStrings) {
             this.nCols = headerStrings.length;
 
             $(this.headerRow).children('th').each(function(index) {
@@ -192,11 +182,9 @@ function listView(model)
         };
 
         // For when something changes on the network
-        this.update = function(tableData, headerStrings)
-        {
+        this.update = function(tableData, headerStrings) {
             $(this.tbody).empty();
-            for (var row in tableData)
-            {
+            for (var row in tableData) {
                 // If there is only one row, make it of even class for styling
                 var newRow = "<tr>";
                 for (var col in tableData[row]) {
@@ -212,8 +200,7 @@ function listView(model)
             $(this.table).trigger('update');
         };
 
-        this.set_status = function()
-        {
+        this.set_status = function() {
             var name; // Devices or signals
             if (selectedTab == all_devices) {
                 name = "devices";
@@ -229,8 +216,7 @@ function listView(model)
 
     }
 
-    function update_devices()
-    {
+    function update_devices() {
         var keys = model.devices.keys();
 
         leftBodyContent = [];
@@ -302,8 +288,7 @@ function listView(model)
         rightTable.update(rightBodyContent, signalHeaders);
     }
 
-    function update_tabs()
-    {
+    function update_tabs() {
         var t = tabDevices;
         var keys = model.devices.keys();
         var srcs = {};
@@ -334,8 +319,7 @@ function listView(model)
         }
     }
 
-    function cleanup_arrows()
-    {
+    function cleanup_arrows() {
         for (var a in arrows) {
             arrows[a].border.remove();
             if (arrows[a].label)
@@ -351,8 +335,7 @@ function listView(model)
         arrows = [];
     }
 
-    function update_links()
-    {
+    function update_links() {
         cleanup_arrows();
 
         // How many are actually being displayed?
@@ -414,8 +397,7 @@ function listView(model)
     var arrowCallable = true;
     var timesArrowsCalled = 0;
 
-    function update_arrows()
-    {
+    function update_arrows() {
         if (arrowCallable == false) {
             clearTimeout(arrowTimeout);
         }
@@ -432,8 +414,7 @@ function listView(model)
         }, 0);
     }
 
-    function update_maps()
-    {
+    function update_maps() {
         cleanup_arrows();
         var n_maps = 0;
         var n_visibleMaps = 0;
@@ -516,8 +497,7 @@ function listView(model)
         update_row_heights();
     }
 
-    function filter_match(row)
-    {
+    function filter_match(row) {
         // The text in the search box
         var filterText;
         // Test to see if the row is on the left or right table
@@ -708,8 +688,7 @@ function listView(model)
         });
     }
 
-    function select_tab(tab)
-    {
+    function select_tab(tab) {
         selectedTab = tab.innerHTML;
         $(".tabsel").removeClass("tabsel");
         $(tab).addClass("tabsel");
@@ -734,9 +713,9 @@ function listView(model)
         view.update_display();
     }
 
-    function select_tr(tr)
-    {
-        if (!tr) return;
+    function select_tr(tr) {
+        if (!tr)
+            return;
 
         var t = $(tr);
         var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
@@ -794,8 +773,7 @@ function listView(model)
         });
     }
 
-    function deselect_all()
-    {
+    function deselect_all() {
         $('tr.trsel', leftTable.table).each(function(i,e) {
             selectLists[selectedTab][0].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
             $(this).removeClass('trsel');
@@ -812,8 +790,7 @@ function listView(model)
         $('#container').trigger("updateMapProperties");
     }
 
-    function select_all()
-    {
+    function select_all() {
         deselect_all();
         for (var i in arrows) {
             // Test to see if those rows are already selected
@@ -834,8 +811,7 @@ function listView(model)
         update_arrows();
     }
 
-    function on_table_scroll()
-    {
+    function on_table_scroll() {
         if (selectedTab == all_devices) {
             // TODO: should check first to see if scroll was vertical
             update_links();
@@ -877,8 +853,7 @@ function listView(model)
         e.stopPropagation();
     }
 
-    function add_tabs()
-    {
+    function add_tabs() {
         $('#container').append(
             "<ul class='topTabs'>"+
                 "<li id='allDevices'>"+all_devices+"</li>"+
@@ -889,8 +864,7 @@ function listView(model)
         selectedTab = all_devices;
     }
 
-    function add_title_bar()
-    {
+    function add_title_bar() {
         $('#container').append(
             "<div id='titleSearchDiv'>"+
                 "<h2 id='leftTitle' class='searchBar'>Sources</h2></li>"+
@@ -902,8 +876,7 @@ function listView(model)
         var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
     }
 
-    function add_display_tables()
-    {
+    function add_display_tables() {
         leftTable = new listTable('leftTable');
         rightTable = new listTable('rightTable');
 
@@ -919,8 +892,7 @@ function listView(model)
     }
 
 
-    function add_svg_area()
-    {
+    function add_svg_area() {
         $('#container').append(
             "<div id='svgDiv'>"+
                 "<div id='svgTop'>hide unmapped</div>"+
@@ -930,8 +902,7 @@ function listView(model)
 
     }
 
-    function add_status_bar()
-    {
+    function add_status_bar() {
         $('#container').append(
             "<table id='statusBar'>"+
                 "<tr>"+
@@ -945,8 +916,7 @@ function listView(model)
         rightTable.footer = $("#statusBar .right")[0];
     }
 
-    function drawing_curve(sourceRow)
-    {
+    function drawing_curve(sourceRow) {
         var self = this;
         this.sourceRow = sourceRow;
         this.targetRow;
@@ -958,7 +928,7 @@ function listView(model)
         this.clamptorow = function(row, is_dst) {
             var svgPos = fullOffset($('#svgDiv')[0]);
             var rowPos = fullOffset(row);
-            var divisor = is_dst ? 1.5 : 3;
+            var divisor = 1.5;
             var y = rowPos.top + rowPos.height/divisor - svgPos.top;
             return y;
         };
@@ -1072,7 +1042,7 @@ function listView(model)
                         end[1] = moveEvent.offsetY;
                 }
                 else {
-                    end[0] = this.canvasWidth - start[0];
+                    end[0] = this.canvasWidth - start[0] - 2;
                     if (!($(target).hasClass('incompatible')))
                         end[1] = this.clamptorow(target, 0);
                     else
@@ -1159,8 +1129,7 @@ function listView(model)
         }
     }
 
-    function drawing_handlers()
-    {
+    function drawing_handlers() {
         // Wait for a mousedown on either table
         // Handler is attached to table, but 'this' is the table row
         $('.displayTable').on('mousedown', 'tr', function(tableClick) {
@@ -1210,8 +1179,7 @@ function listView(model)
         });
     }
 
-    this.add_handlers = function()
-    {
+    this.add_handlers = function() {
         $('#container').on('click.list', function() {
             deselect_all();
         });

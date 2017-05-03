@@ -298,6 +298,8 @@ def new_map(args):
     if not map:
         print 'error: failed to create map', args[0], "->", args[1]
         return;
+    else:
+        print 'created map: ', args[0], ' -> ', args[1]
     if len(args) > 2 and type(args[2]) is dict:
         map.set_properties(args[2])
     map.push()

@@ -1,5 +1,5 @@
 //+++++++++++++++++++++++++++++++++++++++++++ //
-//                   Hive View Class          //
+//              Hive View Class               //
 //+++++++++++++++++++++++++++++++++++++++++++ //
 
 function HivePlotView(container, model)
@@ -301,14 +301,14 @@ HivePlotView.prototype = {
     keyboardHandler: function (e) {
         //console.log(e.keyCode);
 
-        // 'c' to connect
+        // 'm' to map
         if (e.keyCode == 67) {
-                this.connect();
+                this.map();
         }
 
-        // 'd' to disconnect
+        // 'u' to unmap
         else if (e.keyCode == 68) {
-                this.disconnect();
+                this.unmap();
         }
         // 'ctrl' + '1 / 2' to change view modes
         else if (e.keyCode == 49 && e.ctrlKey)
@@ -402,21 +402,21 @@ HivePlotView.prototype = {
 
         table.appendChild(document.createElement('br'));
 
-        // connect button
+        // map button
         btn = document.createElement("button");
-        btn.innerHTML = "Connect";
-        btn.title = "connect the selected node(s) (C)";
+        btn.innerHTML = "Map";
+        btn.title = "map the selected node(s) (M)";
         btn.addEventListener("click", function(evt) {
-            _self.connect();
+            _self.map();
         });
         table.appendChild(btn);
 
-        // disconnect button
+        // unmap button
         btn = document.createElement("button");
-        btn.innerHTML = "Disconnect";
-        btn.title = "disconnect the selected connection) (D)";
+        btn.innerHTML = "Unmap";
+        btn.title = "remove the selected map) (D)";
         btn.addEventListener("click", function(evt) {
-            _self.disconnect();
+            _self.unmap();
         });
         table.appendChild(btn);
 
@@ -604,7 +604,7 @@ HivePlotView.prototype = {
     },
 
     // bar on bottom showing the names of the selected nodes
-    // bar can also be clicked on to toggle a connection
+    // bar can also be clicked on to toggle a map
     drawActionBar : function() {
         var _self = this;
         var table = document.getElementById("hive_actionBar");
@@ -1228,7 +1228,7 @@ HivePlotView.prototype = {
     // END methods for storing selected maps
 
     // create a new map
-    connect : function() {
+    map : function() {
         if (   this.selectedCells[0].length == 0
             || this.selectedCells[1].length == 0 )
             return;
@@ -1243,7 +1243,7 @@ HivePlotView.prototype = {
                 var dstDev = d.getAttribute("data-src");
                 var dstSig = d.getAttribute("data-srcSignal");
 
-                // trigger connect event
+                // trigger map event
                 $(this._container).trigger("map", [srcDev+'/'+srcSig, dstDev+'/'+dstSig]);
                 this.selectedMaps.push(srcDev+'/'+srcSig+">"+dstDev+'/'+dstSig);
             }
@@ -1252,7 +1252,7 @@ HivePlotView.prototype = {
     },
 
     // remove an existing map
-    disconnect : function (e) {
+    unmap : function (e) {
         if (this.selectedMaps.length == 0)
             return;
 
@@ -1263,7 +1263,7 @@ HivePlotView.prototype = {
         //var dst = con.getAttribute("data-dst") + con.getAttribute("data-dstSignal");
 
         if (this.model.isMapped(src, dst) == true) {
-            // trigger disconnect event
+            // trigger unmap event
             $(this._container).trigger("unmap", [src, dst]);
         }
 
@@ -1280,9 +1280,9 @@ HivePlotView.prototype = {
         }
 
         if (this.selectedMaps.length == 1)
-            this.disconnect();
+            this.unmap();
         else
-            this.connect();
+            this.map();
 
     },
 

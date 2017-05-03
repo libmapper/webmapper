@@ -10,9 +10,9 @@
 <h2>List View Commands:</h2>
 
 <ul>
-	<li>'c' : Connect selected devices/signals</li>
-	<li>'delete': Delete selected links/connections</li>
-	<li>'cmd+a'	: Select all links/connections</li>
+	<li>'m' : Map selected signals</li>
+	<li>'delete': Delete selected links/maps</li>
+	<li>'cmd+a'	: Select all links/maps</li>
 	<li>'alt+tab' : Change tab to the right</li>
 	<li>'alt+shift+tab' : Change tab to the left</li>
 </ul>
@@ -27,7 +27,7 @@
 
 <p>When the grid view is initialized, both grids are visible; the devices grid is populated by all devices declared on the network, and the signals grid is initially empty.</p> 
 
-<p>To make connections between signals, devices must first be added to the signals grid. To do this, 
+<p>To make maps between signals, devices must first be added to the signals grid. To do this,
 select a device's label (or a cell corresponding to a pair of devices) and then press the "Add" button; signals of 
 the added devices will then be displayed in the signals grid. 
 A device can be removed from the signals grid in the same manner using the "remove" button. 
@@ -52,11 +52,11 @@ the upper left corner of each grid.</p>
 	<li>SHIFT + ARROW KEYS: move selected cell by 3 spaces</li>
 </ul>
 
-<h3>Connecting</h3>
+<h3>Mapping</h3>
 <ul>
 	<li>space: toggle selected cell(s)</li>
-	<li>c: connect selected cell(s)</li>
-	<li>d: disconnect selected cell(s)</li>
+	<li>m: map selected cell(s)</li>
+	<li>u: unmap selected cell(s)</li>
 </ul>
 
 <h3>Viewing</h3>	
@@ -84,20 +84,20 @@ the upper left corner of each grid.</p>
 and the lower for destinations. In view mode 1, an adapted hive plot, each device is given its own axis. In view mode 2, a traditional hive plot, 
 source/destination devices are grouped along a single axis.</p>
 
-<p>Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure connections. 
-Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. 
+<p>Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure maps.
+Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its maps.
 Select signals by clicking its name in the list (or its node in the plot). 
-Once a source and destination signal is selected, you can create or remove the connection by clicking on the blue 
+Once a source and destination signal is selected, you can create or remove the map by clicking on the blue
 bar at the bottom (or by using the keyboard shortcuts).</p> 
 
-<p>Connections on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.</p>
+<p>Maps on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.</p>
 
 
 <h2>Keyboard Commands:</h2>
 
 <ul>
-	<li>c: connect selected signals</li>
-	<li>d: disconnect selected signals</li>
+	<li>m: map selected signals</li>
+	<li>u: unmap selected signals</li>
 	<br />
 	<li>CTRL 1: switch to view mode 1 (adapted Hive plot)</li>
 	<li>CTRL 2: switch to view mode 2 (Hive plot)</li>

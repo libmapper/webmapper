@@ -253,7 +253,7 @@ GridSVG.prototype = {
         }
 
         img = document.createElement("img");
-        img.setAttribute("src", this.model.pathToImages + "grid/connect.png");
+        img.setAttribute("src", this.model.pathToImages + "grid/map.png");
         img.setAttribute("width", "16px");
         img.setAttribute("height", "16px");
         img.setAttribute("style", "position: relative; top: 4px; right: 3px;"
@@ -263,17 +263,17 @@ GridSVG.prototype = {
         // mapping buttons
         btn = document.createElement("button");
         btn.innerHTML = "O";
-        btn.title = "connect the selected cell(s) (C)";
+        btn.title = "map the selected cell(s) (M)";
         btn.addEventListener("click", function(evt) {
-            _self.connect();
+            _self.map();
         });
         div.appendChild(btn);
 
         btn = document.createElement("button");
         btn.innerHTML = "X";
-        btn.title = "disconnect the selected cell(s) (D)";
+        btn.title = "unmap the selected cell(s) (U)";
         btn.addEventListener("click", function(evt) {
-            _self.disconnect();
+            _self.unmap();
         });
         div.appendChild(btn);
 
@@ -371,7 +371,7 @@ GridSVG.prototype = {
         for (var i = 0; i < this.cells.length; i++) {
             var curCell = this.cells[i];
             var className = curCell.getAttribute("class");
-            if (className.indexOf("cell_connected") == -1) {
+            if (className.indexOf("cell_mapped") == -1) {
                 className = ((className.indexOf("cell_selected") == -1)
                              ? "" : "cell_selected ");
                 curCell.setAttribute("class", className
@@ -411,7 +411,7 @@ GridSVG.prototype = {
             var curCol = curCell.getAttribute("data-col");;
             if (curRow == selectedRow || curCol == selectedCol) {
                 var className = curCell.getAttribute("class");
-                if (className.indexOf("cell_connected") == -1) {
+                if (className.indexOf("cell_mapped") == -1) {
                     className = ((className.indexOf("cell_selected") == -1)
                                  ? "" : "cell_selected ");
                     curCell.setAttribute("class", className + "row_over");
@@ -489,8 +489,8 @@ GridSVG.prototype = {
         // if cell is a map, add to model's array of selected maps
         var src = cell.getAttribute("data-src");
         var dst = cell.getAttribute("data-dst");
-        if (this.model.isConnected(src, dst))
-            this.model.selectedMaps_addMap(src, dst);
+        if (this.model.isMapped(src, dst))
+            this.model.selectedMaps_toggleMap(src, dst);
     },
 
     /* deselect a cell in the grid */
@@ -507,8 +507,8 @@ GridSVG.prototype = {
         // if cell is a map, remove from model's array of selected maps
         var src = cell.getAttribute("data-src");
         var dst = cell.getAttribute("data-dst");
-        if (this.model.isConnected(src, dst))
-            this.model.selectedMaps_removeMap(src, dst);
+        if (this.model.isMapped(src, dst))
+            this.model.selectedMaps_toggleMap(src, dst);
     },
 
     /* deselect all cells in the grid */
@@ -522,8 +522,8 @@ GridSVG.prototype = {
             // if cell is a map, remove from model's array of selected maps
             var src = cell.getAttribute("data-src");
             var dst = cell.getAttribute("data-dst");
-            if (this.model.isConnected(src, dst))
-                this.model.selectedMaps_removeMap(src, dst);
+            if (this.model.isMapped(src, dst))
+                this.model.selectedMaps_toggleMap(src, dst);
         }
 
         // clear the view's array of selected cells
@@ -776,16 +776,16 @@ GridSVG.prototype = {
                 this.toggleMap();
         }
 
-        // 'c' to connect
-        else if (e.keyCode == 67) {
+        // 'm' to map
+        else if (e.keyCode == 109) {
             if (this.selectedCells.length > 0)
-                this.connect();
+                this.map();
         }
 
-        // 'd' to disconnect
-        else if (e.keyCode == 68) {
+        // 'u' to unmap
+        else if (e.keyCode == 117) {
             if (this.selectedCells.length > 0)
-                this.disconnect();
+                this.unmap();
         }
 
         // 'ctrl' + '+' to zoom in
@@ -977,7 +977,7 @@ GridSVG.prototype = {
                 var cSrc = maps[j][0];
                 var cDst = maps[j][1];
                 if (src == cSrc && dst == cDst){
-                    this.model.selectedMaps_addMap(src, dst);
+                    this.model.selectedMaps_toggleMap(src, dst);
                 }
             }
         }
@@ -1017,31 +1017,31 @@ GridSVG.prototype = {
             $(this._container).trigger("toggleMap", cell);
         }
     },
-    connect : function() {
+    map : function() {
         if (this.selectedCells.length == 0)
             return;
 
         for (var i = 0; i < this.selectedCells.length; i++) {
             var cell = this.selectedCells[i];
 
-            // trigger the connect event
-            $(this._container).trigger("connect", cell);
+            // trigger the map event
+            $(this._container).trigger("map", cell);
         }
     },
-    disconnect : function() {
+    unmap : function() {
         if (this.selectedCells.length == 0)
             return;
 
         for (var i = 0; i < this.selectedCells.length; i++) {
             var cell = this.selectedCells[i];
 
-            // trigger the disconnect event
-            $(this._container).trigger("disconnect", cell);
+            // trigger the unmap event
+            $(this._container).trigger("unmap", cell);
 
             // remove from model's array of selected maps
             var src = cell.getAttribute("data-src");
             var dst = cell.getAttribute("data-dst");
-            this.model.selectedMaps_removeMap(src, dst);
+            this.model.selectedMaps_toggleMap(src, dst);
         }
     },
     getSelectedCells : function() {

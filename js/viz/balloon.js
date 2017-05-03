@@ -102,10 +102,8 @@ BalloonView.prototype = {
     },
 
     keyboardHandler : function (e) {
-//        console.log(e.which);
 
         // 'delete' to remove a map
-        // disconnect on 'delete'
         if (e.which == 46 || e.which == 8) {
             e.preventDefault();
             var n = this.model.selectedMaps.length;
@@ -156,7 +154,7 @@ BalloonView.prototype = {
         var h = $(this._container).height();
 
         // set the new SVG dimensions
-        this.svgDim[0] = w - this.tableWidth*2;
+        this.svgDim[0] = w - this.tableWidth * 2;
         this.svgDim[1] = h;
 
         // update the GUI elements
@@ -189,7 +187,8 @@ BalloonView.prototype = {
             obj.setAttribute("height", this.svgDim[1]);
             obj.setAttribute("class", "BalloonCorner");
             obj.addEventListener("click", function(evt) {
-                evt.stopPropagation(); //prevents click reaching canvas and deselecting
+                // prevent click reaching canvas and deselecting
+                evt.stopPropagation();
                 _self.onBackClick(0);
             });
             this.svg.appendChild(obj);
@@ -203,7 +202,8 @@ BalloonView.prototype = {
             obj.setAttribute("height", this.svgDim[1]);
             obj.setAttribute("class", "BalloonCorner");
             obj.addEventListener("click", function(evt) {
-                evt.stopPropagation(); //prevents click reaching canvas and deselecting
+                // prevent click reaching canvas and deselecting
+                evt.stopPropagation();
                 _self.onBackClick(1);
             });
             this.svg.appendChild(obj);
@@ -255,7 +255,8 @@ BalloonView.prototype = {
         var range = angleTo - angleFrom;        // total arc size
         var angleInc = (n==1)? 0 : range/(n);   // angle to increment on each step
         var angleFromOffset = (ind==0)? Math.PI/2 : - Math.PI/2;    // offset sources and destinations to their respective sides
-        if (n==1) angleFromOffset += Math.PI/2;    // special case, if only one node then place it in the center
+        if (n == 1)
+            angleFromOffset += Math.PI/2;    // special case, if only one node then place it in the center
 
         //  plot helpers
         var w = dim[0] - r - 75 ;        // container ellipse width minus radius of node with extra padding
@@ -322,7 +323,7 @@ BalloonView.prototype = {
                                       function(evt) {
                                           _self.dragStart(evt);
                                       });
-            node.svg.classList.add("dragable");
+            node.svg.classList.add("draggable");
         }
         else {
             // for non-terminal node
@@ -385,19 +386,12 @@ BalloonView.prototype = {
             childNode.svg.setAttribute("class", childStyle);
             $(childNode.svg).data("node", childNode);
 
-//            childNode.svg.addEventListener("mouseover", function(evt) {
-//                _self.onChildNodeMouseOver(evt);
-//            });
-//            childNode.svg.addEventListener("mouseout", function(evt) {
-//                _self.onChildNodeMouseOut(evt);
-//            });
-
             // drag and drop functionality for leaves only
             if (childNode.isLeaf()) {
                 childNode.svg.addEventListener("mousedown", function(evt) {
                     _self.dragStart(evt);
                 });
-                childNode.svg.classList.add("dragable");
+                childNode.svg.classList.add("draggable");
             }
 
             // click functionality for branches
@@ -447,7 +441,7 @@ BalloonView.prototype = {
 
             for (var j = 0; j < descendantNodes.length; j++) {
                 var curNode = descendantNodes[j];
-                var maps = curNode.getConnected(this.viewNodes[1].childNodes);
+                var maps = curNode.getMapped(this.viewNodes[1].childNodes);
 
                 for (var k = 0; k < maps.length; k++) {
                     this.drawMap(curNode, maps[k]);
@@ -461,8 +455,7 @@ BalloonView.prototype = {
      * @param src node
      * @param dst node
      */
-    drawMap : function(src, dst)
-    {
+    drawMap : function(src, dst) {
         var ctX1 =  this.svgDim[0] / 2;
         var ctY1 =  this.svgDim[1] / 2;
         var x1, y1, x2, y2;
@@ -474,14 +467,16 @@ BalloonView.prototype = {
 
         // create the SVG line element to handle mouse interaction
         var line = document.createElementNS(this.svgNS, "path");
-        line.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
+        var pathString = ("M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " "
+                          + x2 + " " + y2);
+        line.setAttribute("d", pathString);
         line.setAttribute("class", "balloonMapHandler");
         $(line).data("srcNode", src);
         $(line).data("dstNode", dst);
 
         // create the SVG line element as the display object
         var line2 = document.createElementNS(this.svgNS, "path");
-        line2.setAttribute("d", "M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " " + x2 + " " + y2);
+        line2.setAttribute("d", pathString);
 
         var c = model.maps.get(src.signalName + ">" + dst.signalName);
         if (c.muted)
@@ -553,7 +548,6 @@ BalloonView.prototype = {
 //        var childIndex = node.childIndex;
         var ind = item.getAttribute("data-ind");
         this.viewNodes[ind] = node;
-//        console.log(this.viewNodes[ind]);
         this.refreshSVG();
         this.updateTable(ind);
     },
@@ -570,7 +564,6 @@ BalloonView.prototype = {
         this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
         this.refreshSVG();
         this.updateTable(ind);
-//        console.log("Child Clicked");
     },
 
     /**
@@ -699,8 +692,9 @@ BalloonView.prototype = {
      * starts the dragging process for creating maps (mousedown on leaf node)
      */
     dragStart : function (evt) {
-//        console.log("starting drag");
         var _self = this;
+        var ctX1 =  this.svgDim[0] / 2;
+        var ctY1 =  this.svgDim[1] / 2;
 
         // store the element clicked on
         this.dragSource = evt.target;
@@ -714,11 +708,12 @@ BalloonView.prototype = {
         this.dragMouseY = evt.clientY - bounds.top;
 
         // create the temporary drag line
-        this.dragLine = document.createElementNS(this.svgNS,"path");
+        this.dragLine = document.createElementNS(this.svgNS, "path");
         this.dragLine.id = "balloonDragLine";
         this.dragLine.setAttribute("class", "dragLine");
-        var pathString = "M " + this.dragSourceX + " " + this.dragSourceY + " L " + this.dragMouseX + " " + this.dragMouseY;
-        //dragLine.setAttribute("d", "M " + dragMouseX + " " + dragMouseY + " Q " + ctX1 + " " + ctY1 + " " + dragCurrentX + " " + dragCurrentY);
+        var pathString = ("M " + this.dragSourceX + " " + this.dragSourceY
+                          + " Q " + ctX1 + " " + ctY1 + " "
+                          + this.dragMouseX + " " + this.dragMouseY);
         this.dragLine.setAttribute("d", pathString);
         this.svg.appendChild(this.dragLine);
 
@@ -733,46 +728,52 @@ BalloonView.prototype = {
      * checks if the target is a leaf node and snaps the line
      */
     drag : function (evt) {
-        evt.data._self.dragTarget = null;
+        var _this = evt.data._self;
+        _this.dragTarget = null;
 
         var mouseTarget = document.elementFromPoint(evt.clientX, evt.clientY);
-        if (mouseTarget && mouseTarget.classList.contains("dragable")) {
-            var srcNode = $(evt.data._self.dragSource).data("node");
+        if (mouseTarget && mouseTarget.classList.contains("draggable")) {
+            var srcNode = $(_this.dragSource).data("node");
             var tgtNode =  $(mouseTarget).data("node");
-            if (srcNode.direction != tgtNode.direction )
-                evt.data._self.dragTarget = mouseTarget;
+            if (srcNode != tgtNode
+                && !_this.model.isMapped(srcNode.signalName, tgtNode.signalName))
+                _this.dragTarget = mouseTarget;
         }
 
         // if hovering over a terminal node, snap the line
-        if (evt.data._self.dragTarget) {
+        if (_this.dragTarget) {
             var x = mouseTarget.getAttribute("cx");
             var y = mouseTarget.getAttribute("cy");
-            evt.data._self.dragMouseX = x - 1;
-            evt.data._self.dragMouseY = y - 1;
+            _this.dragMouseX = x - 1;
+            _this.dragMouseY = y - 1;
         }
         else {
-            var offset = evt.data._self.svg.getBoundingClientRect();
-            evt.data._self.dragMouseX = evt.clientX - offset.left - 1;
-            evt.data._self.dragMouseY = evt.clientY - offset.top - 1;
+            var offset = _this.svg.getBoundingClientRect();
+            _this.dragMouseX = evt.clientX - offset.left - 1;
+            _this.dragMouseY = evt.clientY - offset.top - 1;
         }
 
-        var pathString = "M " + evt.data._self.dragSourceX + " " + evt.data._self.dragSourceY + " L " + evt.data._self.dragMouseX + " " + evt.data._self.dragMouseY;
-        evt.data._self.dragLine.setAttribute("d", pathString);
+        var ctX1 =  _this.svgDim[0] / 2;
+        var ctY1 =  _this.svgDim[1] / 2;
+
+        var pathString = ("M " + _this.dragSourceX + " " + _this.dragSourceY
+                          + " Q " + ctX1 + " " + ctY1 + " " + _this.dragMouseX
+                          + " " + _this.dragMouseY);
+        _this.dragLine.setAttribute("d", pathString);
     },
 
     /**
      * handles mouseup from the window to stop the dragging process
-     * triggers the connect event if a src and dst are valid
+     * triggers the map event if a src and dst are valid
      */
     dragStop : function (evt) {
         var _this = evt.data._self;
-//        console.log ("stop drag");
         if (_this.dragSource && _this.dragTarget) {
             var src = $(_this.dragSource).data("node");
             var dst = $(_this.dragTarget).data("node");
 
-            _this.connect(src, dst);
-            // send connect event
+            // send map event
+            _this.map(src, dst);
         }
 
         // delete the temporary line
@@ -1099,11 +1100,11 @@ BalloonView.prototype = {
         this.drawMaps();
     },
 
-    connect : function (src, dst) {
+    map : function (src, dst) {
         if (this.model.isMapped(src.signalName, dst.signalName) == false) {
             var srcDev = src.deviceName;
             var dstDev = dst.deviceName;
-            // trigger connect event
+            // trigger map event
             $(this._container).trigger("map", [src.signalName,
                                                dst.signalName]);
 
@@ -1211,7 +1212,7 @@ BalloonNode.prototype = {
      * @param nodes array of nodes to check
      * @returns    an array of the connected nodes
      */
-    getConnected : function(nodes) {
+    getMapped : function(nodes) {
         var result = [];
 
         if (!nodes || nodes.length < 1)
@@ -1229,7 +1230,7 @@ BalloonNode.prototype = {
             }
             // if branch, call recursive
             else {
-                result = result.concat(this.getConnected(node.childNodes));
+                result = result.concat(this.getMapped(node.childNodes));
             }
         }
         return result;
