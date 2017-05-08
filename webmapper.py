@@ -54,18 +54,25 @@ def dev_props(dev):
     props = dev.properties.copy()
     if 'synced' in props:
         props['synced'] = props['synced'].get_double()
+    del props['is_local']
     return props
 
 def link_props(link):
     props = link.properties.copy()
     props['src'] = link.device(0).name
     props['dst'] = link.device(1).name
+    del props['is_local']
     return props
 
 def sig_props(sig):
     props = sig.properties.copy()
 #    props['device_id'] = sig.device().id
     props['device'] = sig.device().name
+    del props['is_local']
+    if props['direction'] == mapper.DIR_INCOMING:
+        props['direction'] = 'input'
+    else:
+        props['direction'] = 'output'
     return props
 
 def full_signame(sig):
@@ -75,6 +82,7 @@ def map_props(map):
     props = map.properties.copy()
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
+    del props['is_local']
     # translate some other properties
     if props['mode'] == mapper.MODE_LINEAR:
         props['mode'] = 'linear'
@@ -107,38 +115,32 @@ def map_props(map):
     return props
 
 def on_device(dev, action):
-    if action == mapper.ADDED:
-        server.send_command("new_device", dev_props(dev))
-    elif action == mapper.MODIFIED:
-        server.send_command("mod_device", dev_props(dev))
+    if action == mapper.ADDED or action == mapper.MODIFIED:
+        server.send_command("add_device", dev_props(dev))
     elif action == mapper.REMOVED:
         server.send_command("del_device", dev_props(dev))
 
 def on_link(link, action):
-    if action == mapper.ADDED:
-        server.send_command("new_link", link_props(link))
-    elif action == mapper.MODIFIED:
-        server.send_command("mod_link", link_props(link))
+    if action == mapper.ADDED or action == mapper.MODIFIED:
+        server.send_command("add_link", link_props(link))
     elif action == mapper.REMOVED:
         server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
-    if action == mapper.ADDED:
-        server.send_command("new_signal", sig_props(sig))
-    elif action == mapper.MODIFIED:
-        server.send_command("mod_signal", sig_props(sig))
+    if action == mapper.ADDED or action == mapper.MODIFIED:
+        server.send_command("add_signal", sig_props(sig))
     elif action == mapper.REMOVED:
         server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
-    if action == mapper.ADDED:
-        server.send_command("new_map", map_props(map))
-    elif action == mapper.MODIFIED:
-        server.send_command("mod_map", map_props(map))
+    if action == mapper.ADDED or action == mapper.MODIFIED:
+        print 'on_map', map_props(map)
+        server.send_command("add_map", map_props(map))
     elif action == mapper.REMOVED:
         server.send_command("del_map", map_props(map))
 
 def set_map_properties(props):
+    print 'set_map_properties', props
     # todo: check for convergent maps, only release selected
     maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
     map = maps.next()
@@ -220,7 +222,7 @@ def set_map_properties(props):
         slot.bound_min = boundaryStrings[props['dst_bound_min']]
     if props.has_key('dst_bound_max'):
         slot.bound_max = boundaryStrings[props['dst_bound_max']]
-
+    print 'pushing map'
     map.push()
 
 def on_refresh(arg):
@@ -268,27 +270,26 @@ def init_database():
 
 init_database()
 
-server.add_command_handler("all_devices",
-                           lambda x: ("all_devices", map(dev_props, db.devices())))
+server.add_command_handler("add_devices",
+                           lambda x: ("add_devices", map(dev_props, db.devices())))
 
 def subscribe(device):
     # cancel current subscriptions
     db.unsubscribe()
 
-    if device == "All Devices":
+    if device == "all_devices":
         db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     else:
         # todo: only subscribe to inputs and outputs as needed
         dev = db.device(device)
         if dev:
-            db.subscribe(dev, mapper.OBJ_OUTPUT_SIGNALS | mapper.OBJ_OUTGOING_MAPS)
+            db.subscribe(dev, mapper.OBJ_SIGNALS | mapper.OBJ_MAPS)
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
     dev = db.device(names[0])
     if dev:
         sig = dev.signal(names[1])
-        print 'returning signal', sig
         return sig
     else:
         print 'error: could not find device', dev
@@ -310,14 +311,14 @@ def release_map(args):
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
-server.add_command_handler("all_signals",
-                           lambda x: ("all_signals", map(sig_props, db.signals())))
+server.add_command_handler("add_signals",
+                           lambda x: ("add_signals", map(sig_props, db.signals())))
 
-server.add_command_handler("all_links",
-                           lambda x: ("all_links", map(link_props, db.links())))
+server.add_command_handler("add_links",
+                           lambda x: ("add_links", map(link_props, db.links())))
 
-server.add_command_handler("all_maps",
-                           lambda x: ("all_maps", map(map_props, db.maps())))
+server.add_command_handler("add_maps",
+                           lambda x: ("add_maps", map(map_props, db.maps())))
 
 server.add_command_handler("set_map", lambda x: set_map_properties(x))
 

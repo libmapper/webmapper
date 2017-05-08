@@ -63,7 +63,7 @@ body, .svgDiv, .tableDiv {
 }
 
 /* blues */
-#statusBar,#titleSearchDiv, .topTabs li.tabsel {
+#statusBar, #titleSearchDiv, .topTabs li.tabsel {
     background: rgb(134,222,248) !important;
 }
 
@@ -72,11 +72,11 @@ thead, #svgTop, #networkMenu {
     background: #EEE;
 }
 .displayTable th:hover, #svgTop:hover {
-    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(238, 238, 238) 100%);
+    background: #DDD;
 }
 
 /* highlights */
-.modesel, .calibratesel .displayTable tr.trsel.even, #networkMenu td:hover  {
+.modesel, .calibratesel .displayTable tr.trsel.even, #networkMenu td:hover {
     background-color: #9CC2CF;
 }
 
@@ -96,6 +96,7 @@ thead, #svgTop, #networkMenu {
 
 /* others */
 .waiting {
+    color: red;
     background: #EEEEEE;
 }
 
@@ -105,7 +106,9 @@ input.range {
 
 /* paths */
 path {
+    stroke-width: 2px;
     stroke: black;
+    cursor: pointer;
 }
 path.selected {
     stroke: red;
@@ -137,6 +140,7 @@ path.muted {
     display: inline-block;
     list-style: none;
     cursor: pointer;
+    border-right: 1px solid white;
 }
 
 .topTabs li:hover {
@@ -306,8 +310,8 @@ form {
 
 #wsstatus {
     position: fixed;
-    bottom: 1px;
-    right: 14px;
+    bottom: 2px;
+    right: 8px;
     z-index: 9;
     opacity: 0.5;
 }

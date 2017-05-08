@@ -9,7 +9,7 @@ var viewData = new Array(3);    // data specific to the view, change 3 the numbe
 
 function init() {
     checkBrowserSupport();
-    model = new LibMapperModel();
+    model = new MapperModel();
 }
 
 

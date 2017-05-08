@@ -87,17 +87,17 @@ TopMenu.prototype = {
             keydown: function(e) {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
-                    _self.selected_map_set_input($(this).attr('id').split(' ')[0], this);
+                    _self.setMapProperty($(this).attr('id').split(' ')[0],
+                                         this.value);
                 }
             },
             click: function(e) { e.stopPropagation(); },
-            blur: function() {_self.selected_map_set_input($(this).attr('id').split(' ')[0], this);}
         }, 'input');
 
         //For the mode buttons
         $('.topMenu').on("click", '.mode', function(e) {
             e.stopPropagation();
-            _self.selected_map_set_mode(e.currentTarget.innerHTML);
+            _self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
         //For the visualization mode selection menu
@@ -121,19 +121,17 @@ TopMenu.prototype = {
 
         $('.rangeSwitch').click(function(e) {
             e.stopPropagation();
-            _self.selected_map_switch_range(e.currentTarget.id=='srcRangeSwitch',
-                                            e.currentTarget);
+            _self.setMapProperty(e.currentTarget.id, null);
         });
 
         $('.calibrate').click(function(e) {
             e.stopPropagation();
-            _self.selected_map_toggle_calibrate(e.currentTarget.id=='srcCalibrate',
-                                                e.currentTarget);
+            _self.setMapProperty(e.currentTarget.id, null);
         });
 
         $('body').on('keydown', function(e) {
             if (e.which == 77)
-                _self.mute_selected();
+                _self.setMapProperty("muted", null);
         });
 
         $('#refresh').on('click', function(e) {
@@ -148,20 +146,21 @@ TopMenu.prototype = {
     // clears and disables the map properties bar
     clearMapProperties : function() {
         $(".mode").removeClass("modesel");
-        $("*").removeClass('waiting');
         $(".topMenu input").val('');
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
         $('.calibrate').removeClass('calibratesel');
+        $('.expression').removeClass('waiting');
+        $('.ranges').children('*').removeClass('waiting');
+    },
+
+    selected : function(map) {
+        return map.selected;
     },
 
     updateMapProperties : function() {
         this.clearMapProperties();
-
-        var keys = this.model.selectedMaps;
-        if (keys.length == 0)
-            return;
 
         var mode = null;
         var expression = null;
@@ -177,11 +176,7 @@ TopMenu.prototype = {
         $('.signalControl').removeClass('disabled');
         $('.signalControl').children('*').removeClass('disabled');
 
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
+        this.model.maps.filter(this.selected).each(function(map) {
             if (mode == null)
                 mode = map.mode;
             else if (mode != map.mode)
@@ -226,7 +221,7 @@ TopMenu.prototype = {
                 dst_bound_max = map.dst_bound_max;
             else if (dst_bound_max != map.dst_bound_max)
                 dst_bound_max = 'multiple';
-        }
+        });
 
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
@@ -234,17 +229,32 @@ TopMenu.prototype = {
             $(".mode"+mode).addClass("modesel");
         }
 
-        if (expression != null && expression != 'multiple')
-            $(".expression").val(expression);
+        if (expression != null) {
+            $(".expression").removeClass('waiting');
+            if (expression != 'multiple')
+                $(".expression").val(expression);
+        }
 
-        if (src_min != null && src_min != 'multiple')
-            $("#src_min").val(src_min);
-        if (src_max != null && src_max != 'multiple')
-            $("#src_max").val(src_max);
-        if (dst_min != null && dst_min != 'multiple')
-            $("#dst_min").val(dst_min);
-        if (dst_max != null && dst_max != 'multiple')
-            $("#dst_max").val(dst_max);
+        if (src_min != null) {
+            $("#src_min").removeClass('waiting');
+            if (src_min != 'multiple')
+                $("#src_min").val(src_min);
+        }
+        if (src_max != null) {
+            $("#src_max").removeClass('waiting');
+            if (src_max != 'multiple')
+                $("#src_max").val(src_max);
+        }
+        if (dst_min != null) {
+            $("#dst_min").removeClass('waiting');
+            if (dst_min != 'multiple')
+                $("#dst_min").val(dst_min);
+        }
+        if (dst_max != null) {
+            $("#dst_max").removeClass('waiting');
+            if (dst_max != 'multiple')
+                $("#dst_max").val(dst_max);
+        }
 
         if (src_calibrating == true)
             $("#srcCalibrate").addClass("calibratesel");
@@ -262,87 +272,85 @@ TopMenu.prototype = {
     },
 
     // object with arguments for the map
-    updateMapPropertiesFor : function(map) {
+    updateMapPropertiesFor : function(key) {
         // check if map is selected
-        if (this.model.selectedMaps_isSelected(map.src, map.dst))
+        var map = this.model.maps.find(key);
+        if (map && map.selected == true)
             this.updateMapProperties();
     },
 
-    selected_map_set_input : function(what, field) {
-        if (what == 'srcRangeSwitch' || what == 'dstRangeSwitch')
-            return;
-        var keys = this.model.selectedMaps;
-        if (keys.length == 0)
-            return;
+    setMapProperty : function(key, value) {
+        let container = $(this._container);
+        let modes = this.mapModeCommands;
+        this.model.maps.filter(this.selected).each(function(map) {
+            if (map[key] == value || map[key] == parseFloat(value))
+                return;
 
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            if (map[what] == field.value || map[what] == parseFloat(field.value))
-                continue;
             var msg = {};
+
+            // set the property being modified
+            switch (key) {
+            case 'mode':
+                msg['mode'] = modes[value];
+                break;
+            case 'srcRangeSwitch':
+                msg['src_max'] = String(map['src_min']);
+                msg['src_min'] = String(map['src_max']);
+                break;
+            case 'dstRangeSwitch':
+                msg['dst_max'] = String(map['dst_min']);
+                msg['dst_min'] = String(map['dst_max']);
+                break;
+            case 'muted':
+                msg['muted'] = !map['muted'];
+                break;
+            case 'expression':
+                if (value == map.expression)
+                    return;
+                msg['expression'] = value;
+                $(".expression").addClass('waiting');
+                break;
+            case 'src_min':
+                if (value == map.src_min)
+                    return;
+                msg['src_min'] = value;
+                $("#src_min").addClass('waiting');
+                break;
+            case 'src_max':
+                if (value == map.src_max)
+                    return;
+                msg['src_max'] = value;
+                $("#src_max").addClass('waiting');
+                break;
+            case 'dst_min':
+                if (value == map.dst_min)
+                    return;
+                msg['dst_min'] = value;
+                $("#dst_min").addClass('waiting');
+                break;
+            case 'dst_max':
+                if (value == map.dst_max)
+                    return;
+                msg['dst_max'] = value;
+                $("#dst_max").addClass('waiting');
+                break;
+
+            default:
+                msg[key] = value;
+            }
+
+            // is expression is edited, switch to expression mode
+            if (key == 'expression' && map['mode'] != 'expression') {
+                msg['mode'] = 'expression';
+            }
 
             // copy src and dst names
             msg['src'] = map['src'];
             msg['dst'] = map['dst'];
 
-            // set the property being modified
-            if (what == 'mode')
-                msg[what] = mapModeCommands[mapModes[map[what]]];
-            else
-                msg[what] = field.value;
-
-            // is expression is edited, switch to expression mode
-            if (what == 'expression' && map['mode'] != 'Expr')
-                msg['mode'] = 'expression';
-
             // send the command, should receive a /mapped message after.
-            $(this._container).trigger("setMap", [msg]);
-
-            $(field).addClass('waiting');
-        }
-    },
-
-    selected_map_set_mode : function(modestring) {
-        var modecmd = this.mapModeCommands[modestring];
-        if (!modecmd) return;
-
-        var keys = this.model.selectedMaps;
-        if (keys.length == 0)
-            return;
-
-        var msg = {'mode' : modecmd};
-
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            if (map['mode'] == modestring)
-                continue;
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
-
-            // trigger switch event
-            $(this._container).trigger("setMap", [msg]);
-        }
-    },
-
-    copy_selected_map : function() {
-        var keys = this.model.selectedMaps;
-        if (keys.length != 1)
-            return;
-
-        var args = {};
-
-        // copy existing map properties
-        var map = this.model.maps.get(keys[0]);
-        for (var p in map) {
-            args[p] = map[p];
-        }
-        return args;
+            container.trigger("setMap", [msg]);
+        });
     },
 
     on_load : function() {
@@ -397,11 +405,11 @@ TopMenu.prototype = {
             // Split them into sources and destinations
             var srcdevs = [];
             var dstdevs = [];
-            for (var i in devs.contents) {
-                if (devs.contents[i].num_outputs)
-                    srcdevs.push(devs.contents[i].name);
-                if (devs.contents[i].num_inputs)
-                    dstdevs.push(devs.contents[i].name);
+            for (var i in devs) {
+                if (devs[i].num_outputs)
+                    srcdevs.push(devs[i].name);
+                if (devs[i].num_inputs)
+                    dstdevs.push(devs[i].name);
             }
 
             // So that the monitor can see which devices are being looked at
@@ -420,53 +428,6 @@ TopMenu.prototype = {
             form.submit();
         };
         return false;
-    },
-
-    selected_map_switch_range : function(is_src, div) {
-        // todo: only do this if associated ranges are being displayed
-        var keys = this.model.selectedMaps;
-
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            var msg = {};
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
-            if (is_src) {
-                msg['src_max'] = String(map['src_min']);
-                msg['src_min'] = String(map['src_max']);
-            }
-            else {
-                msg['dst_max'] = String(map['dst_min']);
-                msg['dst_min'] = String(map['dst_max']);
-            }
-
-            $(this._container).trigger("setMap", msg);
-        }
-    },
-
-    selected_map_toggle_calibrate : function(is_src, div) {
-        var keys = this.model.selectedMaps;
-
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            var msg = {};
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
-            if (is_src) {
-                msg['src_calibrating'] = !map['src_calibrating'];
-            }
-            else {
-                msg['dst_calibrating'] = !map['dst_calibrating'];
-            }
-
-            $(this._container).trigger("setMap", msg);
-        }
     },
 
     on_boundary : function(e, _self) {
@@ -507,27 +468,9 @@ TopMenu.prototype = {
                 break;
         }
         if (boundaryMode != null)
-            _self.selected_map_set_boundary(boundaryMode, is_max, e.currentTarget);
+            _self.setMapProperty(is_max ? "dst_bound_max" : 'dst_bound_min',
+                                 boundaryMode);
         e.stopPropagation();
-    },
-
-    selected_map_set_boundary : function(boundarymode, is_max, div) {
-        var keys = this.model.selectedMaps;
-
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            var msg = {};
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
-            if (is_max)
-                msg['dst_bound_max'] = boundarymode;
-            else
-                msg['dst_bound_min'] = boundarymode;
-            $(this._container).trigger("setMap", msg);
-        }
     },
 
     notify : function(msg) {
@@ -558,23 +501,6 @@ TopMenu.prototype = {
         }
         else if (value != null) {
             boundaryElement.addClass('boundary'+value);
-        }
-    },
-
-    mute_selected : function() {
-        var keys = this.model.selectedMaps;
-
-        for (var i in keys) {
-            var map = this.model.maps.get(keys[i]);
-            if (!map)
-                continue;
-
-            var msg = {};
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
-            msg['muted'] = !map.muted;
-
-            $(this._container).trigger("setMap", msg);
         }
     },
 

@@ -1,5 +1,5 @@
 "use strict";
-var model = new LibMapperModel();
+var model = new MapperModel();
 
 var view;                       // holds the current view object
 var viewIndex;                  // index of current view
@@ -10,8 +10,7 @@ var topMenu;
 window.onload = init;           // Kick things off
 
 /* The main program. */
-function init()
-{
+function init() {
     $('body').append("<div id='topMenuWrapper'></div>"); // add the top menu wrapper
     $('body').append("<div id='container'></div>");      // add the view wrapper
     $('body').attr('oncontextmenu',"return false;");     // ?
@@ -39,10 +38,11 @@ function init()
             switch_mode('list');
             command.start();
             command.send('get_networks');
-            command.send('all_devices');
-            command.send('all_signals');
-            command.send('all_links');
-            command.send('all_maps');
+            command.send('subscribe', 'all_devices');
+            command.send('add_devices');
+            command.send('add_signals');
+            command.send('add_links');
+            command.send('add_maps');
             network_selection();
         }, 100);
 }
@@ -50,93 +50,63 @@ function init()
 /**
  * initialize the event listeners for events triggered by the monitor
  */
-function initMonitorCommands()
-{
-    command.register("all_devices", function(cmd, args) {
-        for (var d in args) {
-            model.devices.add(args[d].name, args[d]);
-        }
+function initMonitorCommands() {
+    command.register("add_devices", function(cmd, devs) {
+        for (var i in devs)
+            model.devices.add(devs[i]);
         update_display();
     });
-    command.register("new_device", function(cmd, args) {
-        model.devices.add(args.name, args);
+    command.register("add_device", function(cmd, dev) {
+        model.devices.add(dev);
         update_display();
     });
-    command.register("del_device", function(cmd, args) {
-        model.removeDevice(args.name);
+    command.register("del_device", function(cmd, dev) {
+        model.devices.remove(dev.name);
         update_display();
     });
-    command.register("mod_device", function(cmd, args) {
-        // Remove original device
-        model.removeDevice(args.name);
-        // Remove all child signals before syncing
-        // var sigs = model.signals.keys();
-        // for (var i in sigs ) {
-        //     if ( sigs[i].search(args.name) == 0 ) {
-        //         model.signals.remove(sigs[i]);
-        //     }
-        // }
-        model.devices.add(args.name, args);
+    command.register("add_signals", function(cmd, sigs) {
+        for (var i in sigs)
+            model.signals.add(sigs[i]);
         update_display();
     });
-    command.register("all_signals", function(cmd, args) {
-        for (var d in args) {
-            model.signals.add(args[d].device+'/'+args[d].name, args[d]);
-        }
+    command.register("add_signal", function(cmd, sig) {
+        model.signals.add(sig);
         update_display();
     });
-    command.register("new_signal", function(cmd, args) {
-        model.signals.add(args.device+'/'+args.name, args);
+    command.register("del_signal", function(cmd, sig) {
+        model.signals.remove(sig.name);
         update_display();
     });
-    command.register("mod_signal", function(cmd, args) {
-        model.signals.add(args.device+'/'+args.name, args);
+    command.register("add_links", function(cmd, links) {
+        for (var i in links)
+            model.links.add(links[i]);
         update_display();
     });
-    command.register("del_signal", function(cmd, args) {
-        model.removeSignal(args.device+'/'+args.name);
+    command.register("add_link", function(cmd, link) {
+        model.links.add(link);
         update_display();
     });
-    command.register("all_links", function(cmd, args) {
-        for (var l in args)
-            model.links.add(args[l].src + '>' + args[l].dst, args[l]);
-        update_display();
-    });
-    command.register("new_link", function(cmd, args) {
-        model.links.add(args.src+'>'+args.dst, args);
-        update_display();
-    });
-    command.register("mod_link", function(cmd, args) {
-        model.links.add(args.src+'>'+args.dst, args);
-        update_display();
-    });
-    command.register("del_link", function(cmd, args) {
-        var link = model.getLink(args.src, args.dst);
+    command.register("del_link", function(cmd, link) {
         if (link && !link.local)
-            model.removeLink(args.src+'>' + args.dst);
+            model.links.remove(link.src, link.dst);
         update_display();
     });
-    command.register("all_maps", function(cmd, args) {
-        for (var d in args)
-            model.maps.add(args[d].src + '>' + args[d].dst, args[d]);
+    command.register("add_maps", function(cmd, maps) {
+        for (var i in maps) {
+            var key = model.maps.add(maps[i]);
+            topMenu.updateMapPropertiesFor(key);
+        }
         update_display();
-        for (var d in args)
-            topMenu.updateMapPropertiesFor(args[d]);
     });
-    command.register("new_map", function(cmd, args) {
-        model.maps.add(args.src + '>' + args.dst, args);
+    command.register("add_map", function(cmd, map) {
+        var key = model.maps.add(map);
+        topMenu.updateMapPropertiesFor(key);
         update_display();
-        topMenu.updateMapPropertiesFor(args);
     });
-    command.register("mod_map", function(cmd, args) {
-        model.maps.add(args.src + '>' + args.dst, args);
+    command.register("del_map", function(cmd, map) {
+        var key = model.maps.remove(map);
+        topMenu.updateMapPropertiesFor(key);
         update_display();
-        topMenu.updateMapPropertiesFor(args);
-    });
-    command.register("del_map", function(cmd, args) {
-        model.removeMap(args.src+'>'+args.dst);
-        update_display();
-        topMenu.updateMapPropertiesFor(args);
     });
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
@@ -152,44 +122,47 @@ function initMonitorCommands()
 function initViewCommands()
 {
     // from list view
-    // requests links and maps from the selected source device (the selectedTab)
-    $("#container").on("tab", function(e, selectedTab){
-        if (selectedTab != 'All Devices') {
+    // requests links and maps from the selected device (tab)
+    $("#container").on("tab", function(e, tab){
+        if (tab != 'All Devices') {
             // retrieve linked destination devices
-            model.getLinked(selectedTab);
-            for (var i in model.getLinked(selectedTab))
-                command.send('subscribe', i);
+            model.links.each(function(link) {
+                if (tab == link.src)
+                    command.send('subscribe', link.dst);
+                else if (tab == link.dst)
+                    command.send('subscribe', link.src);
+            });
+            command.send('subscribe', tab);
         }
-        command.send('subscribe', selectedTab);
     });
 
     // link command
-    // src = "/devicename"
-    // dst = "/devicename"
+    // src = "devicename"
+    // dst = "devicename"
     $("#container").on("link", function(e, src, dst){
-        model.links.add(src + '>'+ dst, { 'src' : src, 'dst' : dst,
+        model.links.add({ 'src' : src, 'dst' : dst,
                         'num_maps': [0, 0] });
         update_display();
     });
 
     // unlink command
-    // src = "/devicename"
-    // dst = "/devicename"
+    // src = "devicename"
+    // dst = "devicename"
     $("#container").on("unlink", function(e, src, dst){
-        model.removeLink(src + '>' + dst);
+        model.links.remove(src, dst);
         update_display();
     });
 
     // map command
-    // src = "/devicename/signalname"
-    // dst = "/devicename/signalname"
+    // src = "devicename/signalname"
+    // dst = "devicename/signalname"
     $("#container").on("map", function(e, src, dst, args){
         command.send('map', [src, dst, args]);
     });
 
     // unmap command
-    // src = "/devicename/signalname"
-    // dst = "/devicename/signalname"
+    // src = "devicename/signalname"
+    // dst = "devicename/signalname"
     $("#container").on("unmap", function(e, src, dst){
         command.send('unmap', [src, dst]);
     });
@@ -208,13 +181,13 @@ function initViewCommands()
 
 function initTopMenuCommands()
 {
-    $("#topMenuWrapper").on("switchView", function(e, viewID){
+    $("#topMenuWrapper").on("switchView", function(e, viewID) {
         switch_mode(viewID);
     });
-    $("#topMenuWrapper").on("setMap", function(e, args){
+    $("#topMenuWrapper").on("setMap", function(e, args) {
         command.send('set_map', args);
     });
-    $("#topMenuWrapper").on("refreshAll", function(e){
+    $("#topMenuWrapper").on("refreshAll", function(e) {
         refresh_all();
     });
 }
