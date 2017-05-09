@@ -156,7 +156,7 @@ TopMenu.prototype = {
     },
 
     selected : function(map) {
-        return map.selected;
+        return map.view && map.view.selected;
     },
 
     updateMapProperties : function() {

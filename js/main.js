@@ -192,12 +192,8 @@ function initTopMenuCommands()
     });
 }
 
-function refresh_all()
-{
-    model.devices = new Assoc();
-    model.signals = new Assoc();
-    model.links = new Assoc();
-    model.maps = new Assoc();
+function refresh_all() {
+    model = new MapperModel();
     view.update_display();
     command.send('refresh');
 }
@@ -205,7 +201,7 @@ function refresh_all()
 var updateCallable = true;
 var updateTimeout;
 function update_display() {
-    if(updateCallable == false) {
+    if (updateCallable == false) {
         clearTimeout(updateTimeout);
     }
     updateCallable = false;
@@ -262,8 +258,8 @@ function switch_mode(newMode)
     }
 
     // load view settings (if any)
-    if(viewData[viewIndex]){
-        if(typeof view.load_view_settings == 'function')
+    if (viewData[viewIndex]) {
+        if (typeof view.load_view_settings == 'function')
                 view.load_view_settings(viewData[viewIndex]);
     }
 

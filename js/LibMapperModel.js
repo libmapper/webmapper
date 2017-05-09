@@ -4,8 +4,8 @@ function MapperNodeArray() {
 
 MapperNodeArray.prototype = {
     filter : function(func) {
-        let obj = new MapperNodeArray();
-        for (var key in this.contents) {
+        let key, obj = new MapperNodeArray();
+        for (key in this.contents) {
             if (func(this.contents[key]))
                 obj.add(this.contents[key]);
         }
@@ -13,21 +13,22 @@ MapperNodeArray.prototype = {
     },
 
     reduce : function(func) {
-        let total = null;
-        for (var key in this.contents) {
+        let key, total = null;
+        for (key in this.contents) {
             total = func(total, this.contents[key]);
         }
         return total;
     },
 
     each : function(func) {
-        for (var key in this.contents) {
+        let key;
+        for (key in this.contents) {
             func(this.contents[key]);
         }
     },
 
     size : function() {
-        var size = 0, key;
+        let size = 0, key;
         for (key in this.contents) {
             if (this.contents.hasOwnProperty(key))
                 size++;
@@ -45,10 +46,20 @@ MapperNodeArray.prototype = {
 
     add : function(obj) {
         let key = this.getkey(obj);
-        if (this.contents[key])
-            obj.selected = this.contents[key].selected;
-        obj['key'] = key;
-        this.contents[key] = obj;
+        if (!key)
+            return null;
+        if (key in this.contents) {
+            let prop, existing = this.contents[key];
+            // copy properties from update
+            for (prop in obj) {
+                if (obj.hasOwnProperty(prop))
+                    existing[prop] = obj[prop];
+            }
+        }
+        else {
+            obj['key'] = key;
+            this.contents[key] = obj;
+        }
         return key;
     },
 
@@ -69,31 +80,33 @@ function MapperEdgeArray() {
 
 MapperEdgeArray.prototype = {
     filter : function(func) {
-        let obj = new MapperEdgeArray();
+        let key, obj = new MapperEdgeArray();
         obj.keygen = this.keygen;
-        for (var key in this.contents) {
-            if (func(this.contents[key]))
+        for (key in this.contents) {
+            if (func(this.contents[key])) {
                 obj.add(this.contents[key]);
+            }
         }
         return obj;
     },
 
     reduce : function(func) {
-        let total = null;
-        for (var key in this.contents) {
+        let key, total = null;
+        for (key in this.contents) {
             total = func(total, this.contents[key]);
         }
         return total;
     },
 
     each : function(func) {
-        for (var key in this.contents) {
+        let key;
+        for (key in this.contents) {
             func(this.contents[key]);
         }
     },
 
     size : function() {
-        var size = 0, key;
+        let size = 0, key;
         for (key in this.contents) {
             if (this.contents.hasOwnProperty(key))
                 size++;
@@ -138,9 +151,19 @@ MapperEdgeArray.prototype = {
 
     add : function(obj) {
         let key = this.getkey(obj);
-        if (key) {
-            if (this.contents[key])
-                obj.selected = this.contents[key].selected;
+        if (!key)
+            return null;
+
+        if (key in this.contents) {
+            let prop, existing = this.contents[key];
+            // copy properties from update
+            for (prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    existing[prop] = obj[prop];
+                }
+            }
+        }
+        else {
             obj['key'] = key;
             this.contents[key] = obj;
         }

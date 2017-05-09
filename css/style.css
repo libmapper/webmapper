@@ -107,7 +107,7 @@ input.range {
 /* paths */
 path {
     stroke-width: 2px;
-    stroke: black;
+/*    stroke: black;*/
     cursor: pointer;
 }
 path.selected {

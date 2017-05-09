@@ -11,9 +11,8 @@ function listView(model)
     var rightTable = null;
     var svgArea = null;
     var selectLists = {};
-    var devActions = null;
-    var sigActions = null;
-    var edges = [];
+    var edges = new MapperEdgeArray();
+
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
 
@@ -54,11 +53,11 @@ function listView(model)
     this.update_display = function() {
         // Removes 'invisible' classes which can muddle with display updating
         $('tr.invisible').removeClass('invisible');
-        update_edges();
         update_tabs();
 
         if (selectedTab == all_devices) {
             update_devices();
+            update_links();
         }
         else {
             var dev = model.devices.find(selectedTab);
@@ -68,11 +67,11 @@ function listView(model)
             }
             else {
                 update_signals(selectedTab);
+                update_maps();
             }
         }
 
         filter_view();
-        // update_row_heights();
 
         $('#container').trigger("updateSaveLocation");    // trigger update save location event
     };
@@ -116,7 +115,8 @@ function listView(model)
         update_row_heights();
     };
 
-    // A function to make sure that rows fill up the available space, in testing for now
+    /* A function to make sure that rows fill up the available space, in
+     * testing for now. */
     function update_row_heights() {
         var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
         var leftHeight = Math.floor(tableHeight/leftTable.nVisibleRows);
@@ -301,65 +301,74 @@ function listView(model)
         }
     }
 
-    function cleanup_edges() {
-        for (var i in edges) {
-            if (edges[i].label)
-                edges[i].label.remove();
-            if (edges[i].label_background)
-                edges[i].label_background.remove();
-            if (edges[i].arrowhead_start)
-                edges[i].arrowhead_start.remove();
-            if (edges[i].arrowhead_end)
-                edges[i].arrowhead_end.remove();
-            edges[i].remove();
+    function cleanup_edge(edge) {
+        if (edge.view) {
+            if (edge.view.label_text)
+                edge.view.label_text.remove();
+            if (edge.view.label_background)
+                edge.view.label_background.remove();
+            if (edge.view.arrowhead_start)
+                edge.view.arrowhead_start.remove();
+            if (edge.view.arrowhead_end)
+                edge.view.arrowhead_end.remove();
+            edge.view.remove();
         }
-        edges = [];
+        delete edge.view;
+        edges.remove(edge);
+    }
+
+    function cleanup_edges() {
+        edges.each(cleanup_edge);
+
     }
 
     function update_links() {
-        cleanup_edges();
+        // remove stale links
+        old_keys = [];
+        edges.each(function(edge) {
+            if (!model.links.find(edge) || !update_edge_endpoints(edge)) {
+                old_keys.push(edge.key);
+                cleanup_edge(edge);
+            }
+        });
 
-        // How many are actually being displayed?
-        var n_visible = 0;
+        var n_visible = edges.size();
 
+        // add views for new links
         model.links.each(function(link) {
-            n_visible += draw_edge(link,
-                                   String(link.num_maps[0] + link.num_maps[1]),
-                                   [link.num_maps[0] > 0, link.num_maps[1] > 0]);
+            if (edges.find(link))
+                return;
+            else if (add_edge_view(link, String(link.num_maps[0] + link.num_maps[1]),
+                                   [link.num_maps[0] > 0, link.num_maps[1] > 0])) {
+                edges.add(link);
+                ++n_visible;
+            }
         });
 
         $('.status.middle').text(
             n_visible + " of " + model.links.size() + " links");
     }
 
-    // Prevent this function from being called more than once within timeout.
-    var edgeTimeout;
-    var edgeCallable = true;
-    var timesEdgesCalled = 0;
-
-    function update_edges() {
-        if (edgeCallable == false) {
-            clearTimeout(edgeTimeout);
-        }
-        timesEdgesCalled++;
-
-        edgeCallable = false;
-        edgeTimeout = setTimeout(function() {
-
-            if (selectedTab == all_devices)
-                update_links();
-            else
-                update_maps();
-            edgeCallable = true;
-        }, 0);
-    }
-
     function update_maps() {
-        cleanup_edges();
-        var n_visible = 0;
+        // remove stale maps
+        old_keys = [];
+        edges.each(function(edge) {
+            if (!model.maps.find(edge) || !update_edge_endpoints(edge)) {
+                old_keys.push(edge.key);
+                cleanup_edge(edge);
+            }
+        });
 
+        var n_visible = edges.size();
+
+        // add views for new maps
         model.maps.each(function(map) {
-            n_visible += draw_edge(map, null, [1, 0]);
+            if (edges.find(map))
+                return;
+            else if (add_edge_view(map, null, [1, 0])) {
+                edges.add(map);
+                ++n_visible;
+            }
         });
 
         var n_maps = model.maps.size();
@@ -378,7 +387,10 @@ function listView(model)
                 $(this).addClass('invisible');
         });
 
-        update_edges();
+        if (selectedTab == all_devices)
+            update_links;
+        else
+            update_maps;
         $(leftTable.table).trigger('update');
         $(rightTable.table).trigger('update');
 
@@ -386,6 +398,7 @@ function listView(model)
         leftTable.set_status();
 
         update_row_heights();
+        update_edges();
     }
 
     function filter_match(row) {
@@ -415,163 +428,210 @@ function listView(model)
             return false;
     }
 
-    /* Returns whether a row has a map, have to do it based on db.maps not
-     * edges themselves. */
+    /* Returns whether a row has a map. */
     function is_mapped(row) {
         // What is the name of the signal/link?
         var name = $(row).children('.name').text();
-        var edges;
-        if (selectedTab == all_devices)
-            edges = model.links;
-        else
-            edges = model.maps;
-
-        return edges.reduce(function(result, edge) {
-            return result || name == edge.src || name == edge.dst;
-        });
+        if (selectedTab == all_devices) {
+            return model.links.reduce(function(result, edge) {
+                return result || name == edge.src || name == edge.dst;
+            });
+        }
+        else {
+            return model.maps.reduce(function(result, edge) {
+                return result || name == edge.src || name == edge.dst;
+            });
+        }
     }
 
-    function draw_edge(edge, label, arrowheads) {
-        var src_tr = null;
-        var dst_tr = null;
-        var src_loc = 0;
-        var dst_loc = 0;
+    function adjust_edge(edge) {
+        let view = edge.view;
 
-        for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
-            if (row.cells[0].textContent == edge.src) {
-                src_tr = row;
-                src_loc = 1;
-            }
-            if (row.cells[0].textContent == edge.dst) {
-                dst_tr = row;
-                dst_loc = 1;
-            }
-            if (src_loc && dst_loc)
-                break;
-        }
-        if (!src_loc || !dst_loc) {
-            for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
-                if (row.cells[0].textContent == edge.src) {
-                    var src_tr = row;
-                    src_found = 2;
-                }
-                if (row.cells[0].textContent == edge.dst) {
-                    var dst_tr = row;
-                    dst_found = 2;
-                }
-                if (src_loc && dst_loc)
-                    break;
-            }
-        }
-        // Are these rows being displayed?
-        if (src_loc == null || dst_loc == null || src_tr == null
-            || dst_tr == null || $(src_tr).css('display') == 'none'
-            || $(dst_tr).css('display') == 'none') {
-            return 0;
-        }
+        let arrowhead_offset = 7;
 
-        var line = svgArea.path();
+        let S = fullOffset(view.src_tr);
+        let D = fullOffset(view.dst_tr);
+        let frame = fullOffset($('#svgDiv')[0]);
+        let h_center = frame.width / 2;
 
-        var arrowhead_offset = 2;
-
-        var S = fullOffset(src_tr);
-        var D = fullOffset(dst_tr);
-        var frame = fullOffset($('#svgDiv')[0]);
-        var h_center = frame.width / 2;
-
-        if (src_loc & 1)
-            var x1 = arrowheads[1] ? arrowhead_offset : 0;
+        if (S.left < frame.left)
+            var x1 = view.arrowheads[1] ? arrowhead_offset : 0;
         else
-            var x1 = frame.width - (arrowheads[1] ? arrowhead_offset : 0);
-        var y1 = S.top + S.height / 2.2 - frame.top;
+            var x1 = frame.width - (view.arrowheads[1] ? arrowhead_offset : 0);
+        var y1 = S.top + S.height * view.src_offset - frame.top;
 
-        if (dst_loc & 1)
-            var x2 = arrowheads[0] ? arrowhead_offset : 0;
+        if (D.left < frame.left)
+            var x2 = view.arrowheads[0] ? arrowhead_offset : 0;
         else
-            var x2 = frame.width - (arrowheads[0] ? arrowhead_offset : 0);
-        var y2 = D.top + D.height / 1.8 - frame.top;
+            var x2 = frame.width - (view.arrowheads[0] ? arrowhead_offset : 0);
+        var y2 = D.top + D.height * view.dst_offset - frame.top;
+
+        let v_center = (y1 + y2) * 0.5;
+        let h_quarter = (h_center + x1) * 0.5;
 
         var path = [["M", x1, y1],
                     ["C", h_center, y1, h_center, y2, x2, y2]];
 
-        line.attr({"path": path});
-
-        if (arrowheads[0] > 0) {
-            var arrowhead;
-            if (x2 > h_center)
-                arrowhead = svgArea.path("M"+x2+" "+y2+"l-10 -6l0 12z");
-            else
-                arrowhead = svgArea.path("M"+x2+" "+y2+"l10 -6l0 12z");
-            if (edge.selected)
-                arrowhead.attr({"fill": "red"});
-            else
-                arrowhead.attr({"fill": "black"});
-            line.arrowhead_end = arrowhead;
+        if (view.new) {
+            view.attr({"path": [["M", x1, y1],
+                                ["C", x1, y1, x1, y1, x1, y1]]});
+            if (view.arrowheads[0])
+                view.attr({"arrow-end": "block-wide-long"});
+            if (view.arrowheads[1])
+                view.attr({"arrow-start": "block-wide-long"});
+            view.new = false;
+            view.animate({"path": [["M", x1, y1],
+                                   ["C", h_quarter, y1, h_center, v_center, h_center, v_center]]}, 250, "linear",
+                         function() { view.animate({"path": path}, 250, "linear")});
         }
-        if (arrowheads[1] > 0) {
-            var arrowhead;
-            if (x1 > h_center)
-                arrowhead = svgArea.path("M"+x1+" "+y1+"l-10 -6l0 12z");
-            else
-                arrowhead = svgArea.path("M"+x1+" "+y1+"l10 -6l0 12z");
-            if (edge.selected)
-                arrowhead.attr({"fill": "red"});
-            else
-                arrowhead.attr({"fill": "black"});
-            line.arrowhead_start = arrowhead;
+        else
+            view.animate({"path": path}, 250, "linear");
+
+//        if (view.label != null) {
+//            width = view.label.length * 12;
+//            if (width < 20)
+//                width = 20;
+//            if (Math.abs(x1 - x2) <= arrowhead_offset)
+//                center_x = frame.width / 2 + (x1 <= arrowhead_offset ? -35 : 35);
+//            else
+//                center_x = frame.width / 2;
+//            center_y = (y1 + y2) / 2;
+//            if (!view.label_background)
+//            view.label_background = svgArea.rect(center_x - width/2,
+//                                                 center_y-10, width, 20, 10);
+//            // todo: move to css
+//            if (view.selected)
+//                view.label_background.attr({"fill": "red", "stroke": "none"});
+//            else
+//                view.label_background.attr({"fill": "black", "stroke": "none"});
+//            if (!view.label_text) {
+//                view.label_text = svgArea.text(center_x, center_y, edge.label);
+//                view.label_text.attr({"font-size": 14, "fill": "white",
+//                                     "text-align": "center"});
+//            }
+//        }
+
+//        if (view.muted)
+//            view.node.classList.add('muted');
+    }
+
+    function update_edge_endpoints(edge) {
+        let found = 0
+        for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                edge.view.src_tr = row;
+                ++found;
+            }
+            if (row.cells[0].textContent == edge.dst) {
+                edge.view.dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
+                return true;
+        }
+        for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                edge.view.src_tr = row;
+                ++found;
+            }
+            if (row.cells[0].textContent == edge.dst) {
+                edge.view.dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
+                return true;
+        }
+        return false;
+    }
+
+    function add_edge_view(edge, label, arrowheads) {
+        let src_tr = null;
+        let dst_tr = null;
+        let found = 0;
+
+        for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                src_tr = row;
+                ++found;
+            }
+            if (row.cells[0].textContent == edge.dst) {
+                dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
+                break;
+        }
+        if (found < 2) {
+            for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
+                if (row.cells[0].textContent == edge.src) {
+                    src_tr = row;
+                    ++found;
+                }
+                if (row.cells[0].textContent == edge.dst) {
+                    dst_tr = row;
+                    ++found;
+                }
+                if (found >= 2)
+                    break;
+            }
+        }
+        // Are these rows being displayed?
+        if (found < 2 || $(src_tr).css('display') == 'none'
+            || $(dst_tr).css('display') == 'none') {
+            return 0;
         }
 
-        if (label != null) {
-            width = label.length * 12;
-            if (width < 20)
-                width = 20;
-            if (Math.abs(x1 - x2) <= arrowhead_offset)
-                center_x = frame.width / 2 + (x1 <= arrowhead_offset ? -35 : 35);
-            else
-                center_x = frame.width / 2;
-            center_y = (y1 + y2) / 2;
-            var rect = svgArea.rect(center_x - width/2, center_y-10, width, 20, 10);
-            // todo: move to css
-            if (edge.selected)
-                rect.attr({"fill": "red", "stroke": "none"});
-            else
-                rect.attr({"fill": "black", "stroke": "none"});
-            var text = svgArea.text(center_x, center_y, label);
-            text.attr({"font-size": 14, "fill": "white", "text-align": "center"});
+        var view = svgArea.path();
 
-            line.label = text;
-            line.label_background = rect;
-        }
+        view.src_tr = src_tr;
+        view.dst_tr = dst_tr;
+        view.label = label;
+        view.src_offset = 0.5;
+        view.dst_offset = 0.5;
+        view.arrowheads = arrowheads;
+        view.new = true;
 
-        if ($(src_tr).hasClass('even')) {
-            line.node.classList.add('even');
-        }
-        else if ($(src_tr).hasClass('odd')) {
-            line.node.classList.add('odd');
-        }
-
-        if (edge.selected) {
-            line.node.classList.add('selected');
-            if (line.arrowhead_start)
-                line.arrowhead_start.node.classList.add('selected');
-            if (line.arrowhead_end)
-                line.arrowhead_end.node.classList.add('selected');
-        }
-        if (edge.muted)
-            line.node.classList.add('muted');
-
-        // So that the edge remembers which rows it is attached to
-        line.srcTr = src_tr;
-        line.dstTr = dst_tr;
-        line.key = edge.key;
-
-        edges.push(line);
-        $('#container').trigger("updateMapProperties");
+        edge['view'] = view;
 
         return 1;
     }
 
+    function update_edges() {
+        this.touching = function(table) {
+            for (var i = 1, row; row = table.table.rows[i]; i++) {
+                // find edges touching this row
+                let t = [];
+                edges.each(function(edge) {
+                    if (edge.view.src_tr == row)
+                        t.push([edge.view, 0, fullOffset(edge.view.dst_tr).top]);
+                    if (edge.view.dst_tr == row)
+                        t.push([edge.view, 1, fullOffset(edge.view.src_tr).top]);
+                });
+                let len = t.length;
+                if (len <= 0)
+                    continue;
+                // sort based on vertical row position of other endpoint
+                t.sort(function(a, b) {
+                    return a[2] - b[2];
+                });
+                for (var j = 0; j < len; j++) {
+                    let offset = (j + 1) / (len + 1);
+                    if (t[j][1])
+                        t[j][0].dst_offset = offset;
+                    else
+                        t[j][0].src_offset = offset;
+                }
+            }
+        }
+        this.touching(leftTable);
+        this.touching(rightTable);
+        edges.each(adjust_edge);
+    }
+
     function select_tab(tab) {
+        if (selectedTab == tab.innerHTML)
+            return;
+
         selectedTab = tab.innerHTML;
         $(".tabsel").removeClass("tabsel");
         $(tab).addClass("tabsel");
@@ -593,6 +653,11 @@ function listView(model)
         $('#leftSearch, #rightSearch').val('');
 
         $('#container').trigger("tab", selectedTab);
+        cleanup_edges();
+        if (selectedTab == all_devices)
+            edges.keygen = model.links.keygen;
+        else
+            edges.keygen = model.maps.keygen;
         view.update_display();
     }
 
@@ -667,27 +732,27 @@ function listView(model)
         });
         lastSelectedTr.left = null;
         lastSelectedTr.right = null;
-        update_edges();
-        model.links.each(function(link) { link.selected = false });
-        model.maps.each(function(map) { map.selected = false });
+
+        edges.each(function(edge) {
+            if (edge.view.selected) {
+                edge.view.animate({"stroke": "black"}, 50);
+                edge.view.selected = false;
+            }
+        });
         $('#container').trigger("updateMapProperties");
     }
 
     function select_all() {
-        if (selectedTab == all_devices)
-            model.links.each(function(link) { link.selected = true; });
-        else
-            model.maps.each(function(map) { map.selected = true; });
-        update_edges();
+        edges.each(function(edge) {
+            if (!edge.view.selected) {
+                edge.view.animate({"stroke": "red"}, 50);
+                edge.view.selected = true;
+            }
+        });
     }
 
     function on_table_scroll() {
-        if (selectedTab == all_devices) {
-            // TODO: should check first to see if scroll was vertical
-            update_links();
-        }
-        else
-            update_maps();
+        update_edges();
     }
 
     function on_link(e, start, end) {
@@ -698,9 +763,9 @@ function listView(model)
     }
 
     function on_unlink(e) {
-        model.links.each(function(link) {
-            if (link.selected)
-                $('#container').trigger("unlink", [link.src, link.dst]);
+        edges.each(function(edge) {
+            if (edge.view.selected)
+                $('#container').trigger("unlink", [edge.src, edge.dst]);
         });
         e.stopPropagation();
     }
@@ -715,9 +780,9 @@ function listView(model)
     }
 
     function on_unmap(e) {
-        model.maps.each(function(map) {
-            if (map.selected)
-                $('#container').trigger("unmap", [map.src, map.dst]);
+        edges.each(function(edge) {
+            if (edge.view.selected)
+                $('#container').trigger("unmap", [edge.src, edge.dst]);
         });
         e.stopPropagation();
     }
@@ -990,12 +1055,12 @@ function listView(model)
 
     function fade_incompatible_signals(row) {
         $(row).addClass('incompatible');
-        for (var i in edges) {
-            if (edges[i].srcTr == row)
-                $(edges[i].dstTr).addClass('incompatible');
-            else if (edges[i].dstTr == row)
-                $(edges[i].srcTr).addClass('incompatible');
-        }
+        edges.each(function(edge) {
+            if (edge.view.src_tr == row)
+                $(edge.view.dst_tr).addClass('incompatible');
+            else if (edge.view.dst_tr == row)
+                $(edge.view.src_tr).addClass('incompatible');
+        });
     }
 
     function drawing_handlers() {
@@ -1065,9 +1130,11 @@ function listView(model)
                 if (stop == true)
                     return;
 
-                // calculate rect
                 let x2 = moveEvent.pageX - svgPos.left;
                 let y2 = moveEvent.pageY - svgPos.top;
+
+                if ((Math.abs(x1 - x2) + Math.abs(y1 - y2)) < 5)
+                    return;
 
                 // calculate intersections
                 // adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
@@ -1094,12 +1161,13 @@ function listView(model)
                 }
 
                 let updated = false;
-                for (var i in edges) {
-                    let len = edges[i].getTotalLength();
+                edges.each(function(edge) {
+                    let len = edge.view.getTotalLength();
                     let isect = false;
                     for (var j = 0; j < 10; j++) {
-                        let p1 = edges[i].getPointAtLength(len * j * 0.1);
-                        let p2 = edges[i].getPointAtLength(len * (j + 1) * 0.1);
+                        let p1 = edge.view.getPointAtLength(len * j * 0.1);
+                        let p2 = edge.view.getPointAtLength(len * (j + 1) * 0.1);
+
                         if (line_line_intersect(x1, y1, x2, y2,
                                                 p1.x, p1.y, p2.x, p2.y)) {
                            isect = true;
@@ -1107,17 +1175,16 @@ function listView(model)
                         }
                     }
                     if (!isect)
-                        continue;
-                    ++updated;
-                    if (selectedTab == 'All Devices')
-                        model.links.find(edges[i].key).selected = true;
-                    else
-                        model.maps.find(edges[i].key).selected = true;
+                        return;
+                    if (!edge.view.selected) {
+                        edge.view.selected = true;
+                        ++updated;
+                    }
                     if (updated) {
-                        update_edges();
+                        edge.view.animate({"stroke": "red"}, 50);
                         $('#container').trigger("updateMapProperties");
                     }
-                }
+                });
                 e.stopPropagation();
 
                 x1 = x2;
@@ -1141,7 +1208,6 @@ function listView(model)
                 else
                     deselect_all();
                 select_tr(this);
-                update_edges();
             },
             click: function(e) { e.stopPropagation(); }
         }, 'tr');
