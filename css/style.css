@@ -107,14 +107,7 @@ input.range {
 /* paths */
 path {
     stroke-width: 2px;
-/*    stroke: black;*/
     cursor: pointer;
-}
-path.selected {
-    stroke: red;
-}
-path.muted {
-    stroke-dasharray: 4;
 }
 /******************/
 

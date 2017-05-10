@@ -468,6 +468,7 @@ function listView(model)
 
         let v_center = (y1 + y2) * 0.5;
         let h_quarter = (h_center + x1) * 0.5;
+        let dasharray = edge.muted ? "--" : "";
 
         var path = [["M", x1, y1],
                     ["C", h_center, y1, h_center, y2, x2, y2]];
@@ -486,6 +487,7 @@ function listView(model)
         }
         else
             view.animate({"path": path}, 250, "linear");
+        view.attr({"stroke-dasharray": dasharray});
 
 //        if (view.label != null) {
 //            width = view.label.length * 12;
@@ -1113,6 +1115,62 @@ function listView(model)
         });
     }
 
+    // calculate intersections
+    // adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
+    function is_between(a, b1, b2, fudge) {
+        if ((a + fudge >= b1) && (a - fudge <= b2)) {
+            return true;
+        }
+        if ((a + fudge >= b2) && (a - fudge <= b1)) {
+            return true;
+        }
+        return false;
+    }
+
+    function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+        let m1 = (x1 == x2) ? 1000000 : (y1 - y2) / (x1 - x2);
+        let m2 = (x3 == x4) ? 1000000 : (y3 - y4) / (x3 - x4);
+        if (m1 == m2) {
+            // lines are parallel - todo check if same b, overlap
+            return false;
+        }
+        let b1 = y1 - x1 * m1;
+        let b2 = y3 - x3 * m2;
+        let isect_x = (b2 - b1) / (m1 - m2);
+        let isect_y = isect_x * m1 + b1;
+        return (   is_between(isect_x, x1, x2, 0.1)
+                && is_between(isect_x, x3, x4, 0.1)
+                && is_between(isect_y, y1, y2, 0.1)
+                && is_between(isect_y, y3, y4, 0.1));
+    }
+
+    function edge_intersection_select(x1, y1, x2, y2) {
+        let updated = false;
+        edges.each(function(edge) {
+            let len = edge.view.getTotalLength();
+            let isect = false;
+            for (var j = 0; j < 10; j++) {
+                let p1 = edge.view.getPointAtLength(len * j * 0.1);
+                let p2 = edge.view.getPointAtLength(len * (j + 1) * 0.1);
+
+                if (line_line_intersect(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)) {
+                   isect = true;
+                   break;
+                }
+            }
+            if (!isect)
+                return;
+            if (!edge.view.selected) {
+                edge.view.selected = true;
+                ++updated;
+            }
+            if (updated) {
+                edge.view.animate({"stroke": "red"}, 50);
+                $('#container').trigger("updateMapProperties");
+            }
+        });
+    }
+
     function selection_handlers() {
         $('.links').on('mousedown', function(e) {
             if (e.shiftKey == false) {
@@ -1123,6 +1181,10 @@ function listView(model)
             let svgPos = fullOffset($('#svgDiv')[0]);
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
+
+            // try intersection with 'X'around cursor for select on 'click'
+            edge_intersection_select(x1-3, y1-3, x1+3, y1+3);
+            edge_intersection_select(x1-3, y1+3, x1+3, y1-3);
 
             let stop = false;
             // Moving about the canvas
@@ -1136,55 +1198,8 @@ function listView(model)
                 if ((Math.abs(x1 - x2) + Math.abs(y1 - y2)) < 5)
                     return;
 
-                // calculate intersections
-                // adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
-                function btwn(a, b1, b2) {
-                    if ((a >= b1) && (a <= b2))
-                        { return true; }
-                    if ((a >= b2) && (a <= b1))
-                        { return true; }
-                    return false;
-                }
-                function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
-                    var pt_denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-                    var pt_x_num = (x1*y2 - y1*x2) * (x3 - x4) - (x1 - x2) * (x3*y4 - y3*x4);
-                    var pt_y_num = (x1*y2 - y1*x2) * (y3 - y4) - (y1 - y2) * (x3*y4 - y3*x4);
-                    if (pt_denom == 0)
-                       { return false; }
-                    else {
-                       var pt = {'x': pt_x_num / pt_denom, 'y': pt_y_num / pt_denom};
-                       if (btwn(pt.x, x1, x2) && btwn(pt.y, y1, y2) && btwn(pt.x, x3, x4) && btwn(pt.y, y3, y4))
-                           { return true; }
-                       else
-                           { return false; }
-                    }
-                }
+                edge_intersection_select(x1, y1, x2, y2);
 
-                let updated = false;
-                edges.each(function(edge) {
-                    let len = edge.view.getTotalLength();
-                    let isect = false;
-                    for (var j = 0; j < 10; j++) {
-                        let p1 = edge.view.getPointAtLength(len * j * 0.1);
-                        let p2 = edge.view.getPointAtLength(len * (j + 1) * 0.1);
-
-                        if (line_line_intersect(x1, y1, x2, y2,
-                                                p1.x, p1.y, p2.x, p2.y)) {
-                           isect = true;
-                           break;
-                        }
-                    }
-                    if (!isect)
-                        return;
-                    if (!edge.view.selected) {
-                        edge.view.selected = true;
-                        ++updated;
-                    }
-                    if (updated) {
-                        edge.view.animate({"stroke": "red"}, 50);
-                        $('#container').trigger("updateMapProperties");
-                    }
-                });
                 e.stopPropagation();
 
                 x1 = x2;
