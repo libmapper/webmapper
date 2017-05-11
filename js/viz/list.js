@@ -16,8 +16,8 @@ function listView(model)
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
 
-    var srcDeviceHeaders = ["name", "outputs", "IP", "port"];
-    var dstDeviceHeaders = ["name", "inputs", "IP", "port"];
+    var srcDeviceHeaders = ["name", "outputs", "host", "port"];
+    var dstDeviceHeaders = ["name", "inputs", "host", "port"];
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     // "use strict";
@@ -61,7 +61,7 @@ function listView(model)
         }
         else {
             var dev = model.devices.find(selectedTab);
-            if (!dev || !(dev.num_links)) {
+            if (!dev) {
                 select_tab(tabDevices);
                 return;
             }
@@ -219,12 +219,14 @@ function listView(model)
         leftTable.set_headers(srcDeviceHeaders);
         rightTable.set_headers(dstDeviceHeaders);
 
+        console.log('updating devices:', model.devices);
+
         model.devices.each(function(dev) {
             if (dev.num_outputs)
                 leftBodyContent.push([dev.name, dev.num_outputs,
                                       dev.host, dev.port]);
             if (dev.num_inputs)
-                rightBodyContent.push([dev.name, dev.num_outputs,
+                rightBodyContent.push([dev.name, dev.num_inputs,
                                        dev.host, dev.port]);
         });
 
@@ -470,12 +472,22 @@ function listView(model)
         let h_quarter = (h_center + x1) * 0.5;
         let dasharray = edge.muted ? "--" : "";
 
+        let y3 = y1 * 0.9 + v_center * 0.1;
+        let y4 = y2 * 0.9 + v_center * 0.1;
+
+        if (S.left == D.left) {
+            let mult = Math.abs(y1 - y2) * 0.25 + 35;
+            h_center = S.left < h_center ? mult : frame.width - mult;
+        }
+
         var path = [["M", x1, y1],
-                    ["C", h_center, y1, h_center, y2, x2, y2]];
+                    ["C", h_center, y3, h_center, y4, x2, y2]];
 
         if (view.new) {
             view.attr({"path": [["M", x1, y1],
-                                ["C", x1, y1, x1, y1, x1, y1]]});
+                                ["C", x1, y1, x1, y1, x1, y1]],
+                      "stroke-dasharray": dasharray,
+                      "text": "foo"});
             if (view.arrowheads[0])
                 view.attr({"arrow-end": "block-wide-long"});
             if (view.arrowheads[1])
@@ -512,9 +524,6 @@ function listView(model)
 //                                     "text-align": "center"});
 //            }
 //        }
-
-//        if (view.muted)
-//            view.node.classList.add('muted');
     }
 
     function update_edge_endpoints(edge) {
@@ -603,17 +612,34 @@ function listView(model)
             for (var i = 1, row; row = table.table.rows[i]; i++) {
                 // find edges touching this row
                 let t = [];
+                let row_fo = fullOffset(row);
                 edges.each(function(edge) {
-                    if (edge.view.src_tr == row)
-                        t.push([edge.view, 0, fullOffset(edge.view.dst_tr).top]);
-                    if (edge.view.dst_tr == row)
-                        t.push([edge.view, 1, fullOffset(edge.view.src_tr).top]);
+                    if (edge.view.src_tr == row) {
+                        let fo = fullOffset(edge.view.dst_tr);
+                        t.push([edge.view, 0, fo.top, fo.left, edge.key]);
+                    }
+                    if (edge.view.dst_tr == row) {
+                        let fo = fullOffset(edge.view.src_tr);
+                        t.push([edge.view, 1, fo.top, fo.left, edge.key]);
+                    }
                 });
                 let len = t.length;
                 if (len <= 0)
                     continue;
                 // sort based on vertical row position of other endpoint
                 t.sort(function(a, b) {
+                    if (a[3] != b[3]) {
+                       // targets are in different tables
+                       if (a[3] == row_fo.left)
+                           return a[2] - row_fo.top;
+                       else
+                           return row_fo.top - b[2];
+                    }
+                    else if (a[3] == row_fo.left
+                             && (b[2] > row_fo.top == a[2] > row_fo.top)) {
+                       // both targets on same side as src and both same direction
+                       return b[2] - a[2];
+                    }
                     return a[2] - b[2];
                 });
                 for (var j = 0; j < len; j++) {
@@ -797,7 +823,7 @@ function listView(model)
         tabList = $('.topTabs')[0];
         tabDevices = $('#allDevices')[0];
 
-        selectedTab = all_devices;
+//        selectedTab = all_devices;
     }
 
     function add_title_bar() {
@@ -820,8 +846,8 @@ function listView(model)
         leftTable.create_within($('#container')[0]);
         rightTable.create_within($('#container')[0]);
 
-        leftTable.set_headers(['device', 'outputs', 'IP', 'port']);
-        rightTable.set_headers(['device', 'input', 'IP', 'port']);
+        leftTable.set_headers(['device', 'outputs', 'host', 'port']);
+        rightTable.set_headers(['device', 'input', 'host', 'port']);
 
         $(leftTable.table).tablesorter({widgets: ['zebra']});
         $(rightTable.table).tablesorter({widgets: ['zebra']});

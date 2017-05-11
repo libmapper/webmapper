@@ -402,15 +402,15 @@ input.expression {
     border-collapse: collapse;
     width: 100.1%; /*Slightly more than 100%, cause 100% doesn't quite fill the frame for some reason*/
     overflow: scroll;
-    border: solid 0px black;
+/*    border: solid 0px black;*/
     font-size: 10pt;
 }
 #rightTable {
     left: 60%;
-    border-left: 0;
+    border-left: 2px solid #EEE;
 }
 #leftTable {
-    border-right: 0;
+    border-right: 2px solid #EEE;
 }
 
 /* Rows and headers */

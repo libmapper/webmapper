@@ -37,8 +37,11 @@ MapperNodeArray.prototype = {
     },
 
     getkey : function(arg) {
-        if (typeof(arg) == 'object')
+        if (typeof(arg) == 'object') {
+            if ('device' in arg)
+                return arg.device + ':' + arg.name
             return arg.name;
+        }
         else if (typeof(arg) == 'string')
             return arg;
         return null;
@@ -198,6 +201,13 @@ function MapperModel() {
 
     // config items
     this.pathToImages = "images/";
+
+    this.clearAll = function() {
+        this.maps.each(function(map) {this.maps.remove(map); });
+        this.links.each(function(link) {this.links.remove(link); });
+        this.signals.each(function(sig) {this.signals.remove(sig); });
+        this.devices.each(function(dev) {this.devices.remove(dev); });
+    };
 };
 
 //MapperModel.prototype = {

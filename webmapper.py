@@ -48,7 +48,8 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-db = mapper.database(subscribe_flags=mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+# TODO: make subsciptions more efficient
+db = mapper.database(subscribe_flags=mapper.OBJ_ALL)
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -115,27 +116,30 @@ def map_props(map):
     return props
 
 def on_device(dev, action):
+    print 'on_device', dev_props(dev)
     if action == mapper.ADDED or action == mapper.MODIFIED:
-        server.send_command("add_device", dev_props(dev))
+        server.send_command("add_devices", [dev_props(dev)])
     elif action == mapper.REMOVED:
         server.send_command("del_device", dev_props(dev))
 
 def on_link(link, action):
+    print 'on_link', link_props(link)
     if action == mapper.ADDED or action == mapper.MODIFIED:
-        server.send_command("add_link", link_props(link))
+        server.send_command("add_links", [link_props(link)])
     elif action == mapper.REMOVED:
         server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
+    print 'on_signal', sig_props(sig)
     if action == mapper.ADDED or action == mapper.MODIFIED:
-        server.send_command("add_signal", sig_props(sig))
+        server.send_command("add_signals", [sig_props(sig)])
     elif action == mapper.REMOVED:
         server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
         print 'on_map', map_props(map)
-        server.send_command("add_map", map_props(map))
+        server.send_command("add_maps", [map_props(map)])
     elif action == mapper.REMOVED:
         server.send_command("del_map", map_props(map))
 
@@ -229,7 +233,7 @@ def on_refresh(arg):
     global db
     del db
     net = mapper.network(networkInterfaces['active'])
-    db = mapper.database(net, subscribe_flags=mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+    db = mapper.database(net, subscribe_flags=mapper.OBJ_ALL)
     init_database()
 
 def on_save(arg):
@@ -278,12 +282,12 @@ def subscribe(device):
     db.unsubscribe()
 
     if device == "all_devices":
-        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+        db.subscribe(mapper.OBJ_ALL)
     else:
         # todo: only subscribe to inputs and outputs as needed
         dev = db.device(device)
         if dev:
-            db.subscribe(dev, mapper.OBJ_SIGNALS | mapper.OBJ_MAPS)
+            db.subscribe(dev, mapper.OBJ_ALL)
 
 def find_sig(fullname):
     names = fullname.split('/', 1)

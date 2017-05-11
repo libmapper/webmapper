@@ -56,10 +56,6 @@ function initMonitorCommands() {
             model.devices.add(devs[i]);
         update_display();
     });
-    command.register("add_device", function(cmd, dev) {
-        model.devices.add(dev);
-        update_display();
-    });
     command.register("del_device", function(cmd, dev) {
         model.devices.remove(dev.name);
         update_display();
@@ -67,10 +63,6 @@ function initMonitorCommands() {
     command.register("add_signals", function(cmd, sigs) {
         for (var i in sigs)
             model.signals.add(sigs[i]);
-        update_display();
-    });
-    command.register("add_signal", function(cmd, sig) {
-        model.signals.add(sig);
         update_display();
     });
     command.register("del_signal", function(cmd, sig) {
@@ -82,13 +74,9 @@ function initMonitorCommands() {
             model.links.add(links[i]);
         update_display();
     });
-    command.register("add_link", function(cmd, link) {
-        model.links.add(link);
-        update_display();
-    });
     command.register("del_link", function(cmd, link) {
         if (link && !link.local)
-            model.links.remove(link.src, link.dst);
+            model.links.remove(link);
         update_display();
     });
     command.register("add_maps", function(cmd, maps) {
@@ -96,11 +84,6 @@ function initMonitorCommands() {
             var key = model.maps.add(maps[i]);
             topMenu.updateMapPropertiesFor(key);
         }
-        update_display();
-    });
-    command.register("add_map", function(cmd, map) {
-        var key = model.maps.add(map);
-        topMenu.updateMapPropertiesFor(key);
         update_display();
     });
     command.register("del_map", function(cmd, map) {
@@ -140,8 +123,7 @@ function initViewCommands()
     // src = "devicename"
     // dst = "devicename"
     $("#container").on("link", function(e, src, dst){
-        model.links.add({ 'src' : src, 'dst' : dst,
-                        'num_maps': [0, 0] });
+        model.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
         update_display();
     });
 
@@ -193,7 +175,7 @@ function initTopMenuCommands()
 }
 
 function refresh_all() {
-    model = new MapperModel();
+    model.clearAll();
     view.update_display();
     command.send('refresh');
 }
