@@ -37,6 +37,7 @@ function init() {
         function(){
             switch_mode('list');
             command.start();
+            command.send('refresh');
             command.send('get_networks');
             command.send('subscribe', 'all_devices');
             command.send('add_devices');
@@ -52,41 +53,50 @@ function init() {
  */
 function initMonitorCommands() {
     command.register("add_devices", function(cmd, devs) {
+//        console.log('add devices');
         for (var i in devs)
             model.devices.add(devs[i]);
         update_display();
     });
     command.register("del_device", function(cmd, dev) {
+//        console.log('remove device');
         model.devices.remove(dev.name);
         update_display();
     });
     command.register("add_signals", function(cmd, sigs) {
+//        console.log('add signals', sigs);
         for (var i in sigs)
             model.signals.add(sigs[i]);
         update_display();
     });
     command.register("del_signal", function(cmd, sig) {
+//        console.log('remove signal');
         model.signals.remove(sig.name);
         update_display();
     });
     command.register("add_links", function(cmd, links) {
+//        console.log('add links');
         for (var i in links)
             model.links.add(links[i]);
         update_display();
     });
     command.register("del_link", function(cmd, link) {
+//        console.log('remove link');
         if (link && !link.local)
             model.links.remove(link);
         update_display();
     });
     command.register("add_maps", function(cmd, maps) {
+//        console.log('add maps', maps);
         for (var i in maps) {
+            maps[i].status = 'active';
             var key = model.maps.add(maps[i]);
             topMenu.updateMapPropertiesFor(key);
         }
         update_display();
     });
     command.register("del_map", function(cmd, map) {
+//        console.log('remove map');
         var key = model.maps.remove(map);
         topMenu.updateMapPropertiesFor(key);
         update_display();
@@ -198,10 +208,9 @@ function update_display() {
  */
 function switch_mode(newMode)
 {
-    if(view)
-    {
+    if (view) {
         // save view settings
-        if(typeof view.save_view_settings == 'function')
+        if (typeof view.save_view_settings == 'function')
             viewData[viewIndex] = view.save_view_settings();
         
         // tell the view to cleanup (ex: removing event listeners)
@@ -209,8 +218,7 @@ function switch_mode(newMode)
     }
     
     $('#container').empty();
-    switch(newMode)
-    {
+    switch(newMode) {
         case 'list':
             view = new listView(model);
             viewIndex = 0;

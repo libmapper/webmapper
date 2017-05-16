@@ -48,8 +48,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-# TODO: make subsciptions more efficient
-db = mapper.database(subscribe_flags=mapper.OBJ_ALL)
+db = mapper.database()
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -67,7 +66,6 @@ def link_props(link):
 
 def sig_props(sig):
     props = sig.properties.copy()
-#    props['device_id'] = sig.device().id
     props['device'] = sig.device().name
     del props['is_local']
     if props['direction'] == mapper.DIR_INCOMING:
@@ -116,35 +114,38 @@ def map_props(map):
     return props
 
 def on_device(dev, action):
-    print 'on_device', dev_props(dev)
+#    print 'ON_DEVICE', dev_props(dev)
     if action == mapper.ADDED or action == mapper.MODIFIED:
         server.send_command("add_devices", [dev_props(dev)])
     elif action == mapper.REMOVED:
         server.send_command("del_device", dev_props(dev))
+    elif action == mapper.UNRESPONSIVE:
+#        print 'removing unresponsive device', dev.name
+        server.send_command("del_device", dev_props(dev))
+        db.flush(30)
 
 def on_link(link, action):
-    print 'on_link', link_props(link)
+#    print 'ON_LINK', link_props(link)
     if action == mapper.ADDED or action == mapper.MODIFIED:
         server.send_command("add_links", [link_props(link)])
     elif action == mapper.REMOVED:
         server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
-    print 'on_signal', sig_props(sig)
+#    print 'ON_SIGNAL', sig, sig_props(sig)
     if action == mapper.ADDED or action == mapper.MODIFIED:
         server.send_command("add_signals", [sig_props(sig)])
     elif action == mapper.REMOVED:
         server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
+#    print 'ON_MAP', map_props(map)
     if action == mapper.ADDED or action == mapper.MODIFIED:
-        print 'on_map', map_props(map)
         server.send_command("add_maps", [map_props(map)])
     elif action == mapper.REMOVED:
         server.send_command("del_map", map_props(map))
 
 def set_map_properties(props):
-    print 'set_map_properties', props
     # todo: check for convergent maps, only release selected
     maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
     map = maps.next()
@@ -226,15 +227,8 @@ def set_map_properties(props):
         slot.bound_min = boundaryStrings[props['dst_bound_min']]
     if props.has_key('dst_bound_max'):
         slot.bound_max = boundaryStrings[props['dst_bound_max']]
-    print 'pushing map'
+#    print 'pushing map'
     map.push()
-
-def on_refresh(arg):
-    global db
-    del db
-    net = mapper.network(networkInterfaces['active'])
-    db = mapper.database(net, subscribe_flags=mapper.OBJ_ALL)
-    init_database()
 
 def on_save(arg):
     d = db.device(arg['dev'])
@@ -242,11 +236,13 @@ def on_save(arg):
     return fn, mapperstorage.serialise(db, arg['dev'])
 
 def on_load(arg):
-    # pdb.set_trace()
     mapperstorage.deserialise(db, arg['sources'], arg['destinations'], arg['loading'])
 
 def select_network(newNetwork):
+    global db
     networkInterfaces['active'] = newNetwork
+    net = mapper.network(networkInterfaces['active'])
+    db.mapper.database(net, mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     server.send_command('set_network', newNetwork)
 
 def get_networks(arg):
@@ -261,18 +257,14 @@ def get_networks(arg):
     networkInterfaces['available'] = connectedInterfaces
     server.send_command("active_network", networkInterfaces['active'])
 
-def get_active_network(arg):
-    print networkInterfaces['active']
-    server.send_command("active_network", networkInterfaces['active'])
-
-
-def init_database():
+def init_database(arg):
+    global db
+    db.unsubscribe()
+    db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     db.add_device_callback(on_device)
     db.add_link_callback(on_link)
     db.add_signal_callback(on_signal)
     db.add_map_callback(on_map)
-
-init_database()
 
 server.add_command_handler("add_devices",
                            lambda x: ("add_devices", map(dev_props, db.devices())))
@@ -282,7 +274,7 @@ def subscribe(device):
     db.unsubscribe()
 
     if device == "all_devices":
-        db.subscribe(mapper.OBJ_ALL)
+        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     else:
         # todo: only subscribe to inputs and outputs as needed
         dev = db.device(device)
@@ -330,7 +322,7 @@ server.add_command_handler("map", lambda x: new_map(x))
 
 server.add_command_handler("unmap", lambda x: release_map(x))
 
-server.add_command_handler("refresh", on_refresh)
+server.add_command_handler("refresh", init_database)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
@@ -355,8 +347,6 @@ except:
 on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
-
-
 
 server.serve(port=port, poll=lambda: db.poll(100), on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)

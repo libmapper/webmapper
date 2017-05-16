@@ -18,7 +18,7 @@ TopMenu.prototype = {
         $(this._container).append(
             "<div class='topMenu'>"+
                 "<div class='utils'>"+
-                    "<div id='refresh'></div>"+
+                    "<div id='refreshButton'></div>"+
                     "<div id='saveLoadDiv'>"+
                         "<div><a id='loadButton'>Load</a></div>"+
                         "<div><a id='saveButton'>Save</a></div>"+
@@ -134,8 +134,8 @@ TopMenu.prototype = {
                 _self.setMapProperty("muted", null);
         });
 
-        $('#refresh').on('click', function(e) {
-            $(this).css({'-webkit-animation': 'refreshSpin 1s'});
+        $('#refreshButton').on('click', function(e) {
+            $(this).css({'-webkit-animation': 'refreshButtonSpin 1s'});
             $(this._container).trigger("refreshAll");
             setTimeout(function() {
                 $('#refresh').css({'-webkit-animation': ''});

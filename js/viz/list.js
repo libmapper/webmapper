@@ -16,8 +16,7 @@ function listView(model)
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
 
-    var srcDeviceHeaders = ["name", "outputs", "host", "port"];
-    var dstDeviceHeaders = ["name", "inputs", "host", "port"];
+    var deviceHeaders = ["name", "inputs", "outputs", "address"];
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     // "use strict";
@@ -160,7 +159,7 @@ function listView(model)
             // Create the header elements
             // This assumes that we will never need more than 20 columns
             // Creating and destroying th elements themselves screws up tablesorter
-            for (var i=0; i<20; i++) {
+            for (var i = 0; i < 20; i++) {
                 $(this.headerRow).append("<th class='invisible'></th>");
             }
         };
@@ -216,25 +215,30 @@ function listView(model)
         leftBodyContent = [];
         rightBodyContent = [];
 
-        leftTable.set_headers(srcDeviceHeaders);
-        rightTable.set_headers(dstDeviceHeaders);
+        leftTable.set_headers(deviceHeaders);
+        rightTable.set_headers(deviceHeaders);
 
-        console.log('updating devices:', model.devices);
+        /* We will place the device in the left or right table depending on its
+         * ratio of inputs and outputs. */
 
         model.devices.each(function(dev) {
-            if (dev.num_outputs)
-                leftBodyContent.push([dev.name, dev.num_outputs,
-                                      dev.host, dev.port]);
-            if (dev.num_inputs)
-                rightBodyContent.push([dev.name, dev.num_inputs,
-                                       dev.host, dev.port]);
+            if (!dev.num_outputs && !dev.num_inputs)
+                return;
+            if (dev.num_outputs >= dev.num_inputs)
+                leftBodyContent.push([dev.name,
+                                      dev.num_inputs, dev.num_outputs,
+                                      dev.host + ':' + dev.port]);
+            else
+                rightBodyContent.push([dev.name,
+                                       dev.num_inputs, dev.num_outputs,
+                                       dev.host + ':' + dev.port]);
         });
 
         leftTable.set_status();
         rightTable.set_status();
 
-        leftTable.update(leftBodyContent, srcDeviceHeaders);
-        rightTable.update(rightBodyContent, dstDeviceHeaders);
+        leftTable.update(leftBodyContent, deviceHeaders);
+        rightTable.update(rightBodyContent, deviceHeaders);
     }
 
     function update_signals() {
@@ -338,8 +342,11 @@ function listView(model)
 
         // add views for new links
         model.links.each(function(link) {
-            if (edges.find(link))
+            let edge = edges.find(link);
+            if (edge) {
+                link.view.arrowheads = [link.num_maps[0] > 0, link.num_maps[1] > 0];
                 return;
+            }
             else if (add_edge_view(link, String(link.num_maps[0] + link.num_maps[1]),
                                    [link.num_maps[0] > 0, link.num_maps[1] > 0])) {
                 edges.add(link);
@@ -470,7 +477,6 @@ function listView(model)
 
         let v_center = (y1 + y2) * 0.5;
         let h_quarter = (h_center + x1) * 0.5;
-        let dasharray = edge.muted ? "--" : "";
 
         let y3 = y1 * 0.9 + v_center * 0.1;
         let y4 = y2 * 0.9 + v_center * 0.1;
@@ -483,23 +489,40 @@ function listView(model)
         var path = [["M", x1, y1],
                     ["C", h_center, y3, h_center, y4, x2, y2]];
 
+        if (view.arrowheads[0])
+            view.attr({"arrow-end": "block-wide-long"});
+        if (view.arrowheads[1])
+            view.attr({"arrow-start": "block-wide-long"});
+
         if (view.new) {
-            view.attr({"path": [["M", x1, y1],
-                                ["C", x1, y1, x1, y1, x1, y1]],
-                      "stroke-dasharray": dasharray,
-                      "text": "foo"});
-            if (view.arrowheads[0])
-                view.attr({"arrow-end": "block-wide-long"});
-            if (view.arrowheads[1])
-                view.attr({"arrow-start": "block-wide-long"});
-            view.new = false;
-            view.animate({"path": [["M", x1, y1],
-                                   ["C", h_quarter, y1, h_center, v_center, h_center, v_center]]}, 250, "linear",
+            let path_start, path_mid;
+            if (view.arrowheads[1]) {
+                path_start = [["M", x2, y2],
+                              ["C", x2, y2, x2, y2, x2, y2]];
+                path_mid = [["M", h_center, v_center],
+                            ["C", h_center, v_center, h_quarter, y2, x2, y2]];
+            }
+            else {
+                path_start = [["M", x1, y1],
+                              ["C", x1, y1, x1, y1, x1, y1]];
+                path_mid = [["M", x1, y1],
+                            ["C", h_quarter, y1, h_center, v_center, h_center,
+                             v_center]];
+            }
+
+            view.attr({ "path": path_start,
+                        "stroke-dasharray": edge.muted ? "--" : "" });
+
+            if (edge.status == "staged")
+                view.attr({"opacity": 0.5});
+
+            view.animate({"path": path_mid}, 250, "linear",
                          function() { view.animate({"path": path}, 250, "linear")});
+            view.new = false;
         }
         else
-            view.animate({"path": path}, 250, "linear");
-        view.attr({"stroke-dasharray": dasharray});
+            view.animate({"path": path, "opacity": status == "staged" ? 0.5 : 1.0},
+                         250, "linear");
 
 //        if (view.label != null) {
 //            width = view.label.length * 12;
@@ -666,8 +689,8 @@ function listView(model)
 
         if (tab == tabDevices) {
             $('#svgTitle').text("Links");
-            leftTable.set_headers(srcDeviceHeaders);
-            rightTable.set_headers(dstDeviceHeaders);
+            leftTable.set_headers(deviceHeaders);
+            rightTable.set_headers(deviceHeaders);
             $('#saveLoadDiv').addClass('disabled');
         }
         else {
@@ -686,7 +709,7 @@ function listView(model)
             edges.keygen = model.links.keygen;
         else
             edges.keygen = model.maps.keygen;
-        view.update_display();
+        this.update_display();
     }
 
     function select_tr(tr) {
@@ -804,6 +827,11 @@ function listView(model)
         }
         $('#container').trigger("map", [start.cells[0].textContent,
                                         end.cells[0].textContent, args]);
+        let key = model.maps.add({'src': start.cells[0].textContent,
+                                  'dst': end.cells[0].textContent,
+                                  'status': 'staged'});
+        update_maps();
+        update_edges();
         e.stopPropagation();
     }
 
