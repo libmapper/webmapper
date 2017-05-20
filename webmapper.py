@@ -114,35 +114,40 @@ def map_props(map):
     return props
 
 def on_device(dev, action):
-#    print 'ON_DEVICE', dev_props(dev)
     if action == mapper.ADDED or action == mapper.MODIFIED:
+#        print 'ON_DEVICE (added or modified)', dev_props(dev)
         server.send_command("add_devices", [dev_props(dev)])
     elif action == mapper.REMOVED:
+#        print 'ON_DEVICE (removed)', dev_props(dev)
         server.send_command("del_device", dev_props(dev))
     elif action == mapper.UNRESPONSIVE:
+#        print 'ON_DEVICE (unresponsive)', dev_props(dev)
 #        print 'removing unresponsive device', dev.name
         server.send_command("del_device", dev_props(dev))
         db.flush(30)
 
 def on_link(link, action):
-#    print 'ON_LINK', link_props(link)
     if action == mapper.ADDED or action == mapper.MODIFIED:
+#        print 'ON_LINK (added or modified)', link_props(link)
         server.send_command("add_links", [link_props(link)])
     elif action == mapper.REMOVED:
+#        print 'ON_LINK (removed)', link_props(link)
         server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
-#    print 'ON_SIGNAL', sig, sig_props(sig)
     if action == mapper.ADDED or action == mapper.MODIFIED:
+#        print 'ON_SIGNAL (added or modified)', sig_props(sig)
         server.send_command("add_signals", [sig_props(sig)])
     elif action == mapper.REMOVED:
+#        print 'ON_SIGNAL (removed)', sig_props(sig)
         server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
-#    print 'ON_MAP', map_props(map)
     if action == mapper.ADDED or action == mapper.MODIFIED:
+#        print 'ON_MAP (added or modified)', map_props(map)
         server.send_command("add_maps", [map_props(map)])
     elif action == mapper.REMOVED:
+#        print 'ON_MAP (removed)', map_props(map)
         server.send_command("del_map", map_props(map))
 
 def set_map_properties(props):
@@ -259,7 +264,6 @@ def get_networks(arg):
 
 def init_database(arg):
     global db
-    db.unsubscribe()
     db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     db.add_device_callback(on_device)
     db.add_link_callback(on_link)
@@ -270,9 +274,6 @@ server.add_command_handler("add_devices",
                            lambda x: ("add_devices", map(dev_props, db.devices())))
 
 def subscribe(device):
-    # cancel current subscriptions
-    db.unsubscribe()
-
     if device == "all_devices":
         db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     else:

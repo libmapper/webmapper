@@ -157,9 +157,9 @@ function listView(model)
             this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
             // Create the header elements
-            // This assumes that we will never need more than 20 columns
+            // This assumes that we do not need more than 5 columns
             // Creating and destroying th elements themselves screws up tablesorter
-            for (var i = 0; i < 20; i++) {
+            for (var i = 0; i < 6; i++) {
                 $(this.headerRow).append("<th class='invisible'></th>");
             }
         };
@@ -255,15 +255,40 @@ function listView(model)
         leftBodyContent = [];
         rightBodyContent = [];
 
+        // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
+        function toFixed_alt(value, precision) {
+            var power = Math.pow(10, precision || 0);
+            return String(Math.round(value * power) / power);
+        }
+
         model.signals.each(function(sig) {
             if (devs.includes(sig.device)) {
+                let name = sig.device + '<wbr>/' + sig.name.replace(/\//g, '<wbr>/');
+                let min = sig.min;
+                if (typeof(min) == 'object') {
+                    for (i in min)
+                        min[i] = toFixed_alt(min[i], 4);
+                }
+                else if (typeof(min) == 'number')
+                    min = toFixed_alt(min, 4);
+                min = String(min).replace(/\,/g, '<wbr>,');
+
+                let max = sig.max;
+                if (typeof(max) == 'object') {
+                    for (i in max)
+                        max[i] = toFixed_alt(max[i], 4);
+                }
+                else if (typeof(max) == 'number')
+                    max = toFixed_alt(max, 4);
+                max = String(max).replace(/\,/g, '<wbr>,');
+
                 if (sig.direction == 'output') {
-                    leftBodyContent.push([sig.device + '/' + sig.name, sig.type,
-                                          sig.length, sig.unit, sig.min, sig.max]);
+                    leftBodyContent.push([name, sig.type, sig.length, sig.unit,
+                                          min, max]);
                 }
                 else {
-                    rightBodyContent.push([sig.device + '/' + sig.name, sig.type,
-                                           sig.length, sig.unit, sig.min, sig.max]);
+                    rightBodyContent.push([name, sig.type, sig.length, sig.unit,
+                                           min, max]);
                 }
             }
         });
@@ -309,14 +334,10 @@ function listView(model)
 
     function cleanup_edge(edge) {
         if (edge.view) {
-            if (edge.view.label_text)
-                edge.view.label_text.remove();
-            if (edge.view.label_background)
-                edge.view.label_background.remove();
-            if (edge.view.arrowhead_start)
-                edge.view.arrowhead_start.remove();
-            if (edge.view.arrowhead_end)
-                edge.view.arrowhead_end.remove();
+//            if (edge.view.label_text)
+//                edge.view.label_text.remove();
+//            if (edge.view.label_background)
+//                edge.view.label_background.remove();
             edge.view.remove();
         }
         delete edge.view;
@@ -325,7 +346,6 @@ function listView(model)
 
     function cleanup_edges() {
         edges.each(cleanup_edge);
-
     }
 
     function update_links() {
@@ -344,7 +364,11 @@ function listView(model)
         model.links.each(function(link) {
             let edge = edges.find(link);
             if (edge) {
-                link.view.arrowheads = [link.num_maps[0] > 0, link.num_maps[1] > 0];
+                if (   link.view.arrowheads[0] != (link.num_maps[0] > 0)
+                    || link.view.arrowheads[1] != (link.num_maps[1] > 0)) {
+                    link.view.arrowheads = [link.num_maps[0] > 0, link.num_maps[1] > 0];
+                    link.view.changed = true;
+                }
                 return;
             }
             else if (add_edge_view(link, String(link.num_maps[0] + link.num_maps[1]),
@@ -455,6 +479,8 @@ function listView(model)
 
     function adjust_edge(edge) {
         let view = edge.view;
+        let invisible = (   $(edge.view.src_tr).hasClass('invisible')
+                         || $(edge.view.dst_tr).hasClass('invisible'))
 
         let arrowhead_offset = 7;
 
@@ -463,13 +489,13 @@ function listView(model)
         let frame = fullOffset($('#svgDiv')[0]);
         let h_center = frame.width / 2;
 
-        if (S.left < frame.left)
+        if ($(view.src_tr).parents('.tableDiv').attr('id') == 'leftTable')
             var x1 = view.arrowheads[1] ? arrowhead_offset : 0;
         else
             var x1 = frame.width - (view.arrowheads[1] ? arrowhead_offset : 0);
         var y1 = S.top + S.height * view.src_offset - frame.top;
 
-        if (D.left < frame.left)
+        if ($(view.dst_tr).parents('.tableDiv').attr('id') == 'leftTable')
             var x2 = view.arrowheads[0] ? arrowhead_offset : 0;
         else
             var x2 = frame.width - (view.arrowheads[0] ? arrowhead_offset : 0);
@@ -486,13 +512,14 @@ function listView(model)
             h_center = S.left < h_center ? mult : frame.width - mult;
         }
 
-        var path = [["M", x1, y1],
-                    ["C", h_center, y3, h_center, y4, x2, y2]];
-
         if (view.arrowheads[0])
             view.attr({"arrow-end": "block-wide-long"});
         if (view.arrowheads[1])
             view.attr({"arrow-start": "block-wide-long"});
+
+        let path = [["M", x1, y1],
+                    ["C", h_center, y3, h_center, y4, x2, y2]];
+        let opacity = invisible ? 0 : status == "staged" ? 0.5 : 1.0;
 
         if (view.new) {
             let path_start, path_mid;
@@ -515,14 +542,30 @@ function listView(model)
 
             if (edge.status == "staged")
                 view.attr({"opacity": 0.5});
+            if (invisible)
+                view.attr({"opacity": 0});
 
-            view.animate({"path": path_mid}, 250, "linear",
-                         function() { view.animate({"path": path}, 250, "linear")});
+            view.animate({"path": path_mid,
+                          "opacity": opacity}, 250, "linear", function() {
+                view.animate({"path": path}, 250, "elastic");
+            });
             view.new = false;
         }
-        else
-            view.animate({"path": path, "opacity": status == "staged" ? 0.5 : 1.0},
-                         250, "linear");
+        else {
+            // update endpoints first
+            let p = view.points;
+            temp = [["M", x1, y1],
+                    ["C", p[0], p[1], p[2], p[3], x2, y2]];
+            view.attr({"path": temp});
+            view.animate({"path": path,
+                         "opacity": opacity}, 500, "elastic", function() {
+                if (view.changed) {
+                    view.changed = false;
+                    adjust_edge(edge);
+                }
+            });
+        }
+        view.points = [h_center, y3, h_center, y4];
 
 //        if (view.label != null) {
 //            width = view.label.length * 12;
@@ -918,8 +961,7 @@ function listView(model)
         this.clamptorow = function(row, is_dst) {
             var svgPos = fullOffset($('#svgDiv')[0]);
             var rowPos = fullOffset(row);
-            var divisor = is_dst ? 1.8 : 2.2;
-            var y = rowPos.top + rowPos.height/divisor - svgPos.top;
+            var y = rowPos.top + rowPos.height/2 - svgPos.top;
             return y;
         };
 
@@ -957,10 +999,6 @@ function listView(model)
 
         // The actual line
         this.line = svgArea.path();
-        this.line.attr({"stroke-width": "2px"});
-        this.edge = svgArea.path();
-        this.edge.attr({"stroke-width": "2px", "fill": "black"});
-        this.edge.attr({"path": "M0 0l10 -6l0 12z"});
 
         this.update = function(moveEvent) {
             moveEvent.offsetX = moveEvent.pageX - $('#svgDiv').offset().left;
@@ -1040,11 +1078,8 @@ function listView(model)
                 }
             }
             this.path = get_bezier_path(start, end, c1, this.canvasWidth);
-            this.line.attr({"path": this.path});
-            this.edge.transform("");
-            var angle = (end[0] > this.canvasWidth/2) ? 180 : 0
-            this.edge.transform([["r", angle, end[0], end[1]],
-                                  ["t", end[0], end[1]]]);
+            this.line.attr({"path": this.path,
+                            "arrow-end": "block-wide-long"});
         };
 
         this.mouseup = function(mouseUpEvent) {
@@ -1057,7 +1092,6 @@ function listView(model)
             $("*").off('.drawing').removeClass('incompatible');
             $(document).off('.drawing');
             self.line.remove();
-            self.edge.remove();
         };
 
         // Check if we have a new target row, select it if necessary

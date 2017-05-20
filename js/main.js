@@ -61,6 +61,10 @@ function initMonitorCommands() {
     command.register("del_device", function(cmd, dev) {
 //        console.log('remove device');
         model.devices.remove(dev.name);
+        model.links.each(function(link) {
+        if (link.src == dev.name || link.dst == dev.name)
+            model.links.remove(link);
+        });
         update_display();
     });
     command.register("add_signals", function(cmd, sigs) {
@@ -200,7 +204,8 @@ function update_display() {
     updateTimeout = setTimeout(function() {
         view.update_display();
         topMenu.updateMapProperties();
-    });
+        updateCallable = true;
+    }, 0);
 }
 
 /**

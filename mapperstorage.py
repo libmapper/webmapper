@@ -6,6 +6,13 @@ import mapper
 #for debugging
 import pdb
 
+boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
+                    'none': mapper.BOUND_NONE,
+                    'mute': mapper.BOUND_MUTE,
+                    'clamp': mapper.BOUND_CLAMP,
+                    'fold': mapper.BOUND_FOLD,
+                    'wrap': mapper.BOUND_WRAP }
+
 def deunicode(o):
     d = dir(o)
     if 'items' in d:
@@ -91,6 +98,11 @@ def serialise(db, device):
 
     return json.dumps(contents, indent=4)
 
+
+# TODO: read file and tally devices, calculate match ratio for each device
+# if have 100% match, go ahead and create maps
+# otherwise prompt for user interaction
+
 def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
     f = json.loads(mapping_json)
     f = deunicode(f)
@@ -127,14 +139,15 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
         return
 
     if version == '2.1':
+        print "converting version 2.1 mapping file..."
         # we need to modify a few things for compatibility
         f['maps'] = []
         for connection in f['connections']:
             if not connection.has_key('mode'):
                 continue;
             map = {}
-            src = { 'name': connection['source'][0] }
-            dst = { 'name': connection['destination'][0] }
+            src = { 'name': connection['source'][0].split('/', 1)[1] }
+            dst = { 'name': connection['destination'][0].split('/', 1)[1] }
             if connection.has_key('mute'):
                 map['muted'] = connection['mute']
             if connection.has_key('expression'):
@@ -175,6 +188,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
 
     # This is a version 2.2 save file
     if version == '2.2':
+        print "loading version 2.2 mapping file..."
         # todo: we need to enable users to explictly define device matching
         # for now we will just choose the first device...
 
@@ -183,7 +197,9 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             # The name of the source signals without device name
             src_sigs = []
             for slot_props in map_props['sources']:
-                sig = src_dev.signal(slot_props['name'].split('/')[1])
+                name = slot_props['name']
+                name = name.split('/', 1)[1]
+                sig = src_dev.signal(name)
                 if not sig:
                     sigs_found = False
                     continue
@@ -194,7 +210,9 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             # And the destination signals
             dst_sigs = []
             for slot_props in map_props['destinations']:
-                sig = dst_dev.signal(slot_props['name'].split('/')[1])
+                name = slot_props['name']
+                name = name.split('/', 1)[1]
+                sig = dst_dev.signal(name)
                 if not sig:
                     sigs_found = False
                     continue
@@ -216,11 +234,37 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                         # do nothing
                         pass
                     elif prop == 'bound_min':
-                        slot.bound_min = boundIdx[slot_props['bound_min']]
+                        slot.bound_min = boundaryStrings[slot_props[prop]]
                     elif prop == 'bound_min':
-                        slot.bound_max = boundIdx[slot_props['bound_max']]
+                        slot.bound_max = boundaryStrings[slot_props[prop]]
+                    elif prop == 'minimum':
+                        t = type(slot_props['minimum'])
+                        if t is int or t is float:
+                            slot.minimum = float(slot_props['minimum'])
+                        else:
+                            if t is str:
+                                slot_props['minimum'] = slot_props['minimum'].replace(',',' ').split()
+                            numargs = len(slot_props['minimum'])
+                            for i in range(numargs):
+                                slot_props['minimum'][i] = float(slot_props['minimum'][i])
+                            if numargs == 1:
+                                slot_props['minimum'] = slot_props['minimum'][0]
+                            slot.minimum = slot_props['minimum']
+                    elif prop == 'maximum':
+                        t = type(slot_props['maximum'])
+                        if t is int or t is float:
+                            slot.maximum = float(slot_props['maximum'])
+                        else:
+                            if t is str:
+                                slot_props['maximum'] = slot_props['maximum'].replace(',',' ').split()
+                            numargs = len(slot_props['maximum'])
+                            for i in range(numargs):
+                                slot_props['maximum'][i] = float(slot_props['maximum'][i])
+                            if numargs == 1:
+                                slot_props['maximum'] = slot_props['maximum'][0]
+                            slot.maximum = slot_props['maximum']
                     else:
-                        slot.properties[prop] = slot_props[prop]
+                        slot.set_property(prop, slot_props[prop])
                 index += 1
             index = 0
             for slot_props in map_props['destinations']:
@@ -230,11 +274,37 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                         # do nothing
                         pass
                     elif prop == 'bound_min':
-                        slot.bound_min = boundIdx[slot_props['bound_min']]
+                        slot.bound_min = boundaryStrings[slot_props[prop]]
                     elif prop == 'bound_min':
-                        slot.bound_max = boundIdx[slot_props['bound_max']]
+                        slot.bound_max = boundaryStrings[slot_props[prop]]
+                    elif prop == 'minimum':
+                        t = type(slot_props['minimum'])
+                        if t is int or t is float:
+                            slot.minimum = float(slot_props['minimum'])
+                        else:
+                            if t is str:
+                                slot_props['minimum'] = slot_props['minimum'].replace(',',' ').split()
+                            numargs = len(slot_props['minimum'])
+                            for i in range(numargs):
+                                slot_props['minimum'][i] = float(slot_props['minimum'][i])
+                            if numargs == 1:
+                                slot_props['minimum'] = slot_props['minimum'][0]
+                            slot.minimum = slot_props['minimum']
+                    elif prop == 'maximum':
+                        t = type(slot_props['maximum'])
+                        if t is int or t is float:
+                            slot.maximum = float(slot_props['maximum'])
+                        else:
+                            if t is str:
+                                slot_props['maximum'] = slot_props['maximum'].replace(',',' ').split()
+                            numargs = len(slot_props['maximum'])
+                            for i in range(numargs):
+                                slot_props['maximum'][i] = float(slot_props['maximum'][i])
+                            if numargs == 1:
+                                slot_props['maximum'] = slot_props['maximum'][0]
+                            slot.maximum = slot_props['maximum']
                     else:
-                        slot.properties[prop] = slot_props[prop]
+                        slot.set_property(prop, slot_props[prop])
                 index += 1
 
             # set map properties
