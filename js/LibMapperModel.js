@@ -1,5 +1,25 @@
-function MapperNodeArray() {
+function is_equal(one, two) {
+    if (typeof(one) != typeof(two))
+        return false;
+    if (typeof(one) == 'object') {
+        if (one.length != two.length)
+            return false;
+        let index;
+        for (index in one) {
+            if (typeof(one[index]) == 'object' || typeof(two[index]) == 'object')
+                return is_equal(one[index], two[index]);
+            if (one[index] != two[index])
+                return false
+        }
+        return true;
+    }
+    return one == two
+}
+
+function MapperNodeArray(obj_type, cb_func) {
     this.contents = {};
+    this.obj_type = obj_type;
+    this.cb_func = cb_func;
 };
 
 MapperNodeArray.prototype = {
@@ -53,22 +73,34 @@ MapperNodeArray.prototype = {
             return null;
         if (key in this.contents) {
             let prop, existing = this.contents[key];
+            let updated = false;
             // copy properties from update
             for (prop in obj) {
-                if (obj.hasOwnProperty(prop))
+                if (obj.hasOwnProperty(prop)
+                    && !is_equal(existing[prop], obj[prop])) {
                     existing[prop] = obj[prop];
+                    updated = true
+                }
             }
+            if (updated && this.cb_func)
+                this.cb_func(this.obj_type, 'modified', key);
         }
         else {
             obj['key'] = key;
             this.contents[key] = obj;
+            if (this.cb_func)
+                this.cb_func(this.obj_type, 'added', key);
         }
         return key;
     },
 
     remove : function(arg) {
         let key = this.getkey(arg);
-        delete this.contents[key];
+        if (key && this.contents[key]) {
+            if (this.cb_func)
+                this.cb_func(this.obj_type, 'removed', key);
+            delete this.contents[key];
+        }
         return key;
     },
 
@@ -77,8 +109,10 @@ MapperNodeArray.prototype = {
     }
 };
 
-function MapperEdgeArray() {
+function MapperEdgeArray(obj_type, cb_func) {
     this.contents = {};
+    this.obj_type = obj_type;
+    this.cb_func = cb_func;
 };
 
 MapperEdgeArray.prototype = {
@@ -159,24 +193,34 @@ MapperEdgeArray.prototype = {
 
         if (key in this.contents) {
             let prop, existing = this.contents[key];
+            let updated = false;
             // copy properties from update
             for (prop in obj) {
-                if (obj.hasOwnProperty(prop)) {
+                if (obj.hasOwnProperty(prop)
+                    && !is_equal(existing[prop], obj[prop])) {
                     existing[prop] = obj[prop];
+                    updated = true;
                 }
             }
+            if (updated && this.cb_func)
+                this.cb_func(this.obj_type, 'modified', key);
         }
         else {
             obj['key'] = key;
             this.contents[key] = obj;
+            if (this.cb_func)
+                this.cb_func(this.obj_type, 'added', key);
         }
         return key;
     },
 
     remove : function(arg) {
         let key = this.getkey(arg);
-        if (key)
+        if (key && this.contents[key]) {
+            if (this.cb_func)
+                this.cb_func(this.obj_type, 'removed', key);
             delete this.contents[key];
+        }
         return key;
     },
 
@@ -191,10 +235,24 @@ MapperEdgeArray.prototype = {
 };
 
 function MapperModel() {
-    this.devices = new MapperNodeArray();
-    this.signals = new MapperNodeArray();
-    this.links = new MapperEdgeArray();
-    this.maps = new MapperEdgeArray();
+    callbacks = [];
+    this.add_callback = function(f) {
+        callbacks.push(f);
+    };
+    this.cb_handler = function(obj_type, event, key) {
+//        console.log("model.cb_handler", obj_type, event, key);
+        for (var i in callbacks) {
+            callbacks[i](obj_type, event, key);
+        }
+    };
+    this.clear_callbacks = function() {
+        callbacks = [];
+    };
+
+    this.devices = new MapperNodeArray('device', this.cb_handler);
+    this.signals = new MapperNodeArray('signal', this.cb_handler);
+    this.links = new MapperEdgeArray('link', this.cb_handler);
+    this.maps = new MapperEdgeArray('map', this.cb_handler);
     this.maps.keygen = function(first, second) { return first + '->' + second };
 
     this.networkInterfaces = {'selected': null, 'available': []};

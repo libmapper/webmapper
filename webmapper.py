@@ -120,11 +120,10 @@ def on_device(dev, action):
     elif action == mapper.REMOVED:
 #        print 'ON_DEVICE (removed)', dev_props(dev)
         server.send_command("del_device", dev_props(dev))
-    elif action == mapper.UNRESPONSIVE:
-#        print 'ON_DEVICE (unresponsive)', dev_props(dev)
-#        print 'removing unresponsive device', dev.name
+    elif action == mapper.EXPIRED:
+#        print 'ON_DEVICE (expired)', dev_props(dev)
         server.send_command("del_device", dev_props(dev))
-        db.flush(30)
+        db.flush()
 
 def on_link(link, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:

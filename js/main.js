@@ -56,7 +56,6 @@ function initMonitorCommands() {
 //        console.log('add devices');
         for (var i in devs)
             model.devices.add(devs[i]);
-        update_display();
     });
     command.register("del_device", function(cmd, dev) {
 //        console.log('remove device');
@@ -65,30 +64,25 @@ function initMonitorCommands() {
         if (link.src == dev.name || link.dst == dev.name)
             model.links.remove(link);
         });
-        update_display();
     });
     command.register("add_signals", function(cmd, sigs) {
 //        console.log('add signals', sigs);
         for (var i in sigs)
             model.signals.add(sigs[i]);
-        update_display();
     });
     command.register("del_signal", function(cmd, sig) {
 //        console.log('remove signal');
         model.signals.remove(sig.name);
-        update_display();
     });
     command.register("add_links", function(cmd, links) {
 //        console.log('add links');
         for (var i in links)
             model.links.add(links[i]);
-        update_display();
     });
     command.register("del_link", function(cmd, link) {
 //        console.log('remove link');
         if (link && !link.local)
             model.links.remove(link);
-        update_display();
     });
     command.register("add_maps", function(cmd, maps) {
 //        console.log('add maps', maps);
@@ -97,13 +91,11 @@ function initMonitorCommands() {
             var key = model.maps.add(maps[i]);
             topMenu.updateMapPropertiesFor(key);
         }
-        update_display();
     });
     command.register("del_map", function(cmd, map) {
 //        console.log('remove map');
         var key = model.maps.remove(map);
         topMenu.updateMapPropertiesFor(key);
-        update_display();
     });
     command.register("set_network", function(cmd, args) {
         model.networkInterfaces.selected = args;
@@ -138,7 +130,6 @@ function initViewCommands()
     // dst = "devicename"
     $("#container").on("link", function(e, src, dst){
         model.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
-        update_display();
     });
 
     // unlink command
@@ -146,7 +137,6 @@ function initViewCommands()
     // dst = "devicename"
     $("#container").on("unlink", function(e, src, dst){
         model.links.remove(src, dst);
-        update_display();
     });
 
     // map command
@@ -190,22 +180,7 @@ function initTopMenuCommands()
 
 function refresh_all() {
     model.clearAll();
-    view.update_display();
     command.send('refresh');
-}
-
-var updateCallable = true;
-var updateTimeout;
-function update_display() {
-    if (updateCallable == false) {
-        clearTimeout(updateTimeout);
-    }
-    updateCallable = false;
-    updateTimeout = setTimeout(function() {
-        view.update_display();
-        topMenu.updateMapProperties();
-        updateCallable = true;
-    }, 0);
 }
 
 /**
@@ -233,7 +208,6 @@ function switch_mode(newMode)
             view = new GridView(document.getElementById('container'), model);
             viewIndex = 1;
             $('#saveLoadDiv').removeClass('disabled');
-            view.update_display();
             break;
         case 'hive':
             view = new HivePlotView(document.getElementById('container'), model);
@@ -246,7 +220,6 @@ function switch_mode(newMode)
             view.init();
             if(viewData[viewIndex])
                   view.load_view_settings(viewData[viewIndex]);
-            view.update_display();
             break;
         default:
             //console.log(newMode);

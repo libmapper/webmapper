@@ -12,6 +12,7 @@ function listView(model)
     var svgArea = null;
     var selectLists = {};
     var edges = new MapperEdgeArray();
+    var tableHeight = 0;
 
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
@@ -22,7 +23,7 @@ function listView(model)
     // "use strict";
     this.type = 'list';
     this.unmappedVisible = true; // Are unmapped devices/signals visible?
-    this.focusedDevices = []; // An array containing devices seen in the display
+    focusedDevices = []; // An array containing devices seen in the display
 
     var leftBodyContent = [];
     var rightBodyContent = [];
@@ -40,7 +41,7 @@ function listView(model)
             'min-height': '150px',
             'height': 'calc(100% - 86px)'
         });
-        this.update_display();
+        add_model_callbacks();
     };
 
     this.cleanup = function() {
@@ -49,30 +50,24 @@ function listView(model)
         $(document).off('.list');
     };
 
-    this.update_display = function() {
-        // Removes 'invisible' classes which can muddle with display updating
-        $('tr.invisible').removeClass('invisible');
-        update_tabs();
-
-        if (selectedTab == all_devices) {
-            update_devices();
-            update_links();
-        }
-        else {
-            var dev = model.devices.find(selectedTab);
-            if (!dev) {
-                select_tab(tabDevices);
-                return;
+    add_model_callbacks = function() {
+        model.clear_callbacks();
+        model.add_callback(function(obj_type, event, key) {
+            switch (obj_type) {
+                case 'device':
+                    update_devices(key, event);
+                    break;
+                case 'link':
+                    update_links(key, event);
+                    break;
+                case 'signal':
+                    update_signals(key, event);
+                    break;
+                case 'map':
+                    update_maps(key, event);
+                    break;
             }
-            else {
-                update_signals(selectedTab);
-                update_maps();
-            }
-        }
-
-        filter_view();
-
-        $('#container').trigger("updateSaveLocation");    // trigger update save location event
+        });
     };
 
     this.get_save_location = function () {
@@ -90,40 +85,15 @@ function listView(model)
     }
 
     this.get_focused_devices = function() {
-        if (selectedTab == all_devices) {
-            return null;
-        }
-
-        var focusedDevices = {};
-        var src = model.devices.find(selectedTab);
-
-        focusedDevices[src.name] = src;
-
-        model.links.each(function(link) {
-            if (src.name == link.src)
-                focusedDevices[link.dst] = model.devices.find(link.dst);
-            else if (src.name == link.dst)
-                focusedDevices[link.src] = model.devices.find(link.src);
-        });
-
         return focusedDevices;
     };
 
     this.on_resize = function() {
-        update_edges();
-        update_row_heights();
+        tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+        rightTable.update_row_heights();
+        leftTable.update_row_heights();
+        edges.each(adjust_edge);
     };
-
-    /* A function to make sure that rows fill up the available space, in
-     * testing for now. */
-    function update_row_heights() {
-        var tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
-        var leftHeight = Math.floor(tableHeight/leftTable.nVisibleRows);
-        var rightHeight = Math.floor(tableHeight/rightTable.nVisibleRows);
-
-        $('#leftTable tbody tr').css('height', leftHeight+'px');
-        $('#rightTable tbody tr').css('height', rightHeight+'px');
-    }
 
     // An object for the left and right tables, listing devices and signals
     function listTable(id) {
@@ -192,6 +162,8 @@ function listView(model)
             this.nRows = tableData.length;
             if (tableData[0])
                 this.nCols = tableData[0].length;
+            this.set_status();
+            this.update_row_heights();
             $(this.table).trigger('update');
         };
 
@@ -209,9 +181,18 @@ function listView(model)
                 $(this.tbody).children('tr').addClass('even');
         };
 
+        /* A function to make sure that rows fill up the available space, in
+         * testing for now. */
+        this.update_row_heights = function() {
+            let height = Math.floor(tableHeight/this.nVisibleRows);
+            $("#"+this.id+' tbody tr').css('height', height+'px');
+        };
     }
 
-    function update_devices() {
+    function update_devices(key, event) {
+        if (selectedTab != all_devices)
+            return;
+
         leftBodyContent = [];
         rightBodyContent = [];
 
@@ -234,23 +215,20 @@ function listView(model)
                                        dev.host + ':' + dev.port]);
         });
 
-        leftTable.set_status();
-        rightTable.set_status();
-
         leftTable.update(leftBodyContent, deviceHeaders);
         rightTable.update(rightBodyContent, deviceHeaders);
     }
 
-    function update_signals() {
-        // display all signals of selected device and linked devices
+    function update_signals(key, event) {
+        if (selectedTab == all_devices)
+            return;
+        if (key) {
+            let devname = key.split(':')[0];
+            if (!focusedDevices.includes(devname))
+                return;
+        }
 
-        var devs = [selectedTab];
-        model.links.each(function(link) {
-            if (selectedTab == link.src)
-                devs.push(link.dst);
-            else if (selectedTab == link.dst)
-                devs.push(link.src)
-        });
+        // display all signals of selected device and linked devices
 
         leftBodyContent = [];
         rightBodyContent = [];
@@ -262,42 +240,46 @@ function listView(model)
         }
 
         model.signals.each(function(sig) {
-            if (devs.includes(sig.device)) {
-                let name = sig.device + '<wbr>/' + sig.name.replace(/\//g, '<wbr>/');
-                let min = sig.min;
-                if (typeof(min) == 'object') {
-                    for (i in min)
-                        min[i] = toFixed_alt(min[i], 4);
-                }
-                else if (typeof(min) == 'number')
-                    min = toFixed_alt(min, 4);
-                min = String(min).replace(/\,/g, '<wbr>,');
+            if (!focusedDevices.includes(sig.device))
+                return;
 
-                let max = sig.max;
-                if (typeof(max) == 'object') {
-                    for (i in max)
-                        max[i] = toFixed_alt(max[i], 4);
-                }
-                else if (typeof(max) == 'number')
-                    max = toFixed_alt(max, 4);
-                max = String(max).replace(/\,/g, '<wbr>,');
+            let name = sig.device + '<wbr>/' + sig.name.replace(/\//g, '<wbr>/');
+            let min = sig.min;
+            if (typeof(min) == 'object') {
+                for (i in min)
+                    min[i] = toFixed_alt(min[i], 4);
+            }
+            else if (typeof(min) == 'number')
+                min = toFixed_alt(min, 4);
+            min = String(min).replace(/\,/g, '<wbr>, ');
+            if (min.indexOf(',') >= 0)
+                min = '[ ' + min + ' ]';
 
-                if (sig.direction == 'output') {
-                    leftBodyContent.push([name, sig.type, sig.length, sig.unit,
-                                          min, max]);
-                }
-                else {
-                    rightBodyContent.push([name, sig.type, sig.length, sig.unit,
-                                           min, max]);
-                }
+            let max = sig.max;
+            if (typeof(max) == 'object') {
+                for (i in max)
+                    max[i] = toFixed_alt(max[i], 4);
+            }
+            else if (typeof(max) == 'number')
+                max = toFixed_alt(max, 4);
+            max = String(max).replace(/\,/g, '<wbr>, ');
+            if (max.indexOf(',') >= 0)
+                max = '[ ' + max + ' ]';
+
+            if (sig.direction == 'output') {
+                leftBodyContent.push([name, sig.type, sig.length, sig.unit, min,
+                                      max]);
+            }
+            else {
+                rightBodyContent.push([name, sig.type, sig.length, sig.unit, min,
+                                       max]);
             }
         });
 
-        leftTable.set_status();
-        rightTable.set_status();
-
         leftTable.update(leftBodyContent, signalHeaders);
         rightTable.update(rightBodyContent, signalHeaders);
+
+        update_maps();
     }
 
     function update_tabs() {
@@ -334,10 +316,6 @@ function listView(model)
 
     function cleanup_edge(edge) {
         if (edge.view) {
-//            if (edge.view.label_text)
-//                edge.view.label_text.remove();
-//            if (edge.view.label_background)
-//                edge.view.label_background.remove();
             edge.view.remove();
         }
         delete edge.view;
@@ -348,7 +326,28 @@ function listView(model)
         edges.each(cleanup_edge);
     }
 
-    function update_links() {
+    function update_links(key, event) {
+        if (event != 'modified')
+            update_tabs();
+
+        if (selectedTab != all_devices) {
+            if (key) {
+                key = key.split("<->");
+                let link = model.links.find(key);
+                if (link.src == selectedTab && !focusedDevices.includes(link.dst)) {
+                    focusedDevices.push(link.dst);
+                    update_signals;
+                    update_maps();
+                }
+                if (link.dst == selectedTab && !focusedDevices.includes(link.src)) {
+                    focusedDevices.push(link.src);
+                    update_signals;
+                    update_maps();
+                }
+            }
+            return;
+        }
+
         // remove stale links
         old_keys = [];
         edges.each(function(edge) {
@@ -378,11 +377,30 @@ function listView(model)
             }
         });
 
+        update_edges();
+
         $('.status.middle').text(
             n_visible + " of " + model.links.size() + " links");
     }
 
-    function update_maps() {
+    function update_maps(key, event) {
+        if (key) {
+            let map = model.maps.find(key);
+            devs = key.split("->");
+            devs = [devs[0].split("/")[0], devs[1].split("/")[0]];
+            if (   !focusedDevices.includes(devs[0])
+                || !focusedDevices.includes(devs[1]))
+                return;
+            if (event == 'modified') {
+                $('#container').trigger("updateMapPropertiesFor", key);
+                let edge = edges.find(key), map = model.maps.find(key);
+                if (edge && map) {
+                    edge.status = map.status;
+                    edge.muted = map.muted;
+                }
+            }
+        }
+
         // remove stale maps
         old_keys = [];
         edges.each(function(edge) {
@@ -404,6 +422,8 @@ function listView(model)
             }
         });
 
+        update_edges();
+
         var n_maps = model.maps.size();
         $('.status.middle').text(
             n_visible + " of " + n_maps + " maps");
@@ -421,16 +441,17 @@ function listView(model)
         });
 
         if (selectedTab == all_devices)
-            update_links;
+            update_links();
         else
-            update_maps;
+            update_maps();
         $(leftTable.table).trigger('update');
         $(rightTable.table).trigger('update');
 
         rightTable.set_status();
         leftTable.set_status();
 
-        update_row_heights();
+        rightTable.update_row_heights();
+        leftTable.update_row_heights();
         update_edges();
     }
 
@@ -519,7 +540,7 @@ function listView(model)
 
         let path = [["M", x1, y1],
                     ["C", h_center, y3, h_center, y4, x2, y2]];
-        let opacity = invisible ? 0 : status == "staged" ? 0.5 : 1.0;
+        let opacity = invisible ? 0 : edge.status == "staged" ? 0.5 : 1.0;
 
         if (view.new) {
             let path_start, path_mid;
@@ -540,11 +561,6 @@ function listView(model)
             view.attr({ "path": path_start,
                         "stroke-dasharray": edge.muted ? "--" : "" });
 
-            if (edge.status == "staged")
-                view.attr({"opacity": 0.5});
-            if (invisible)
-                view.attr({"opacity": 0});
-
             view.animate({"path": path_mid,
                           "opacity": opacity}, 250, "linear", function() {
                 view.animate({"path": path}, 250, "elastic");
@@ -556,9 +572,12 @@ function listView(model)
             let p = view.points;
             temp = [["M", x1, y1],
                     ["C", p[0], p[1], p[2], p[3], x2, y2]];
-            view.attr({"path": temp});
-            view.animate({"path": path,
-                         "opacity": opacity}, 500, "elastic", function() {
+//            view.attr({"path": temp,
+            view.attr({"stroke-dasharray": edge.muted ? "--" : ""});
+            view.animate({"path": temp,
+                          "opacity": opacity,
+                         }, 50, "linear", function() {
+                view.animate({"path": path}, 450, "elastic");
                 if (view.changed) {
                     view.changed = false;
                     adjust_edge(edge);
@@ -566,30 +585,6 @@ function listView(model)
             });
         }
         view.points = [h_center, y3, h_center, y4];
-
-//        if (view.label != null) {
-//            width = view.label.length * 12;
-//            if (width < 20)
-//                width = 20;
-//            if (Math.abs(x1 - x2) <= arrowhead_offset)
-//                center_x = frame.width / 2 + (x1 <= arrowhead_offset ? -35 : 35);
-//            else
-//                center_x = frame.width / 2;
-//            center_y = (y1 + y2) / 2;
-//            if (!view.label_background)
-//            view.label_background = svgArea.rect(center_x - width/2,
-//                                                 center_y-10, width, 20, 10);
-//            // todo: move to css
-//            if (view.selected)
-//                view.label_background.attr({"fill": "red", "stroke": "none"});
-//            else
-//                view.label_background.attr({"fill": "black", "stroke": "none"});
-//            if (!view.label_text) {
-//                view.label_text = svgArea.text(center_x, center_y, edge.label);
-//                view.label_text.attr({"font-size": 14, "fill": "white",
-//                                     "text-align": "center"});
-//            }
-//        }
     }
 
     function update_edge_endpoints(edge) {
@@ -748,11 +743,28 @@ function listView(model)
 
         $('#container').trigger("tab", selectedTab);
         cleanup_edges();
-        if (selectedTab == all_devices)
+        if (selectedTab == all_devices) {
             edges.keygen = model.links.keygen;
-        else
+            update_devices();
+            update_links();
+        }
+        else {
             edges.keygen = model.maps.keygen;
-        this.update_display();
+
+            // update focusedDevices
+            focusedDevices = [selectedTab];
+            model.links.each(function(link) {
+                if (link.src == selectedTab && !focusedDevices.includes(link.dst))
+                    focusedDevices.push(link.dst);
+                if (link.dst == selectedTab && !focusedDevices.includes(link.src))
+                    focusedDevices.push(link.src);
+            });
+            update_signals();
+            update_maps();
+
+            // trigger update save location event
+            $('#container').trigger("updateSaveLocation");
+        }
     }
 
     function select_tr(tr) {
@@ -874,7 +886,6 @@ function listView(model)
                                   'dst': end.cells[0].textContent,
                                   'status': 'staged'});
         update_maps();
-        update_edges();
         e.stopPropagation();
     }
 
@@ -893,8 +904,6 @@ function listView(model)
             "</ul>");
         tabList = $('.topTabs')[0];
         tabDevices = $('#allDevices')[0];
-
-//        selectedTab = all_devices;
     }
 
     function add_title_bar() {
@@ -922,8 +931,9 @@ function listView(model)
 
         $(leftTable.table).tablesorter({widgets: ['zebra']});
         $(rightTable.table).tablesorter({widgets: ['zebra']});
-    }
 
+        tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+    }
 
     function add_svg_area() {
         $('#container').append(
@@ -932,7 +942,6 @@ function listView(model)
             "</div>");
 
         svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
-
     }
 
     function add_status_bar() {
@@ -1300,9 +1309,6 @@ function listView(model)
     }
 
     this.add_handlers = function() {
-//        $('#container').on('click.list', function() {
-//            deselect_all();
-//        });
 
         $('.displayTable tbody').on({
             mousedown: function(e) {
