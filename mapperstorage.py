@@ -133,9 +133,13 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                'destination': mapper.LOC_DESTINATION }
 
     src_dev = db.device(src_dev_names[0])
+    if not src_dev:
+        print "error loading file: couldn't find device ", src_dev_names[0], " in database"
+        return
+
     dst_dev = db.device(dst_dev_names[0])
-    if not src_dev or not dst_dev:
-        print "error loading file: couldn't find devices in database"
+    if not dst_dev:
+        print "error loading file: couldn't find device ", dst_dev_names[0], " in database"
         return
 
     if version == '2.1':
@@ -151,7 +155,9 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             if connection.has_key('mute'):
                 map['muted'] = connection['mute']
             if connection.has_key('expression'):
-                map['expression'] = connection['expression']
+                map['expression'] = str(connection['expression']
+                                        .replace('s[', 'src[')
+                                        .replace('d[', 'dst['))
             if connection.has_key('srcMin'):
                 src['minimum'] = connection['srcMin']
             if connection.has_key('srcMax'):
@@ -313,9 +319,11 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                     # do nothing
                     pass
                 elif prop == 'expression':
-                    map.expression = str(map_props['expression']
-                                         .replace('src', 'x')
-                                         .replace('dst', 'y'))
+                    expression = map_props['expression']
+                    expression = re.sub(r'src\[(\d*)\]', 'x\g<1>', expression)
+                    expression = re.sub(r'dst\[(\d*)\]', 'y\g<1>', expression)
+                    expression = re.sub(r'(x|y)0', '\g<1>', expression)
+                    map.expression = expression
                 elif prop == 'muted':
                     map.muted = map_props['muted']
                 elif prop == 'mode':
