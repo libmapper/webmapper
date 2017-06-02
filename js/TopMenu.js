@@ -18,34 +18,32 @@ TopMenu.prototype = {
         $(this._container).append(
             "<div class='topMenu'>"+
                 "<div class='utils'>"+
-                    "<div id='refreshButton'></div>"+
                     "<div id='saveLoadDiv'>"+
                         "<div><a id='loadButton'>Load</a></div>"+
                         "<div><a id='saveButton'>Save</a></div>"+
                     "</div>"+
-                    "<div>Display: <select id='modeSelection'>"+
-                        "<option value='list' selected>List</option>"+
-                        "<option value='grid'>Grid</option>"+
-                        "<option value='hive'>Hive</option>"+
-                        "<option value='balloon'>Balloon</option></select>"+
+                    "<div id='networkSelectionDiv'>Network:  "+
+                        "<select id='networkSelection'></select>"+
                     "</div>"+
                 "</div>"+
             "</div>");
 
         //Add the mode controls
-        $('.topMenu').append("<div class='signalProps'>"+
-                     "<div class='modesDiv signalControl disabled' style='width:50%'>Mode: </div>"+
-                     "<div class='ranges' style='width:50%'></div>"+
-                 "</div>");
+        $('.topMenu').append(
+            "<div class='signalProps'>"+
+                "<div class='modesDiv signalControl disabled' style='width:50%'>Mode: </div>"+
+                "<div class='ranges' style='width:50%'></div>"+
+            "</div>");
 
         for (var m in this.mapModes) {
             $('.modesDiv').append(
                 "<div class='mode mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
         }
 
-        $('.modesDiv').append("<div style='width:100%'>Expression: "+
-                     "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
-                 "</div>");
+        $('.modesDiv').append(
+            "<div style='width:100%'>Expression: "+
+                "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
+            "</div>");
 
         //Add the range controls
         $('.ranges').append(
@@ -82,6 +80,10 @@ TopMenu.prototype = {
     addHandlers : function() {
         var _self = this;
 
+        $('#networkSelection').on('change', function(e) {
+            $(this._container).trigger("selectNetwork", e.currentTarget.value);
+        });
+
         //The expression and range input handlers
         $('.topMenu').on({
             keydown: function(e) {
@@ -103,7 +105,7 @@ TopMenu.prototype = {
         //For the visualization mode selection menu
         $('#modeSelection').change(function(e) {
             var newMode = $('#modeSelection').val();
-            $(_self._container).trigger("switchView", [newMode]);    // trigger switch event
+            $(_self._container).trigger("switchView", [newMode]);
         });
 
         $('#saveButton').on('click', function(e) {
@@ -141,6 +143,17 @@ TopMenu.prototype = {
                 $('#refresh').css({'-webkit-animation': ''});
             }, 1000);
         });
+    },
+
+    updateNetworkInterfaces : function() {
+        $('#networkSelection').children('*').remove();
+        for (var i in model.networkInterfaces.available) {
+            let iface = model.networkInterfaces.available[i];
+            if (iface == model.networkInterfaces.selected)
+                $('#networkSelection').append("<option value='"+iface+"' selected>"+iface+"</option>");
+            else
+                $('#networkSelection').append("<option value='"+iface+"'>"+iface+"</option>");
+        }
     },
 
     // clears and disables the map properties bar
@@ -402,15 +415,18 @@ TopMenu.prototype = {
 
             // The devices currently in focused
             var devs = view.get_focused_devices();
+
             // Split them into sources and destinations
             var srcdevs = [];
             var dstdevs = [];
-            for (var i in devs) {
-                if (devs[i].num_outputs)
-                    srcdevs.push(devs[i].name);
-                if (devs[i].num_inputs)
-                    dstdevs.push(devs[i].name);
-            }
+            model.devices.each(function(dev) {
+                if (devs.includes(dev.name)) {
+                    if (dev.num_outputs)
+                        srcdevs.push(dev.name);
+                    if (dev.num_inputs)
+                        dstdevs.push(dev.name);
+                }
+            });
 
             // So that the monitor can see which devices are being looked at
             var srcs = document.createElement('input');

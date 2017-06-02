@@ -300,6 +300,14 @@ def handler_page(out, args):
 <script type="text/javascript" src="includes/raphael.min.js"></script>
 <script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
+<!-- Graph View includes -->
+<script type="text/javascript" src="js/viz/graph.js"></script>
+<script type="text/javascript" src="includes/raphael.min.js"></script>
+
+<!-- Canvas View includes -->
+<script type="text/javascript" src="js/viz/canvas.js"></script>
+<script type="text/javascript" src="includes/raphael.min.js"></script>
+<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
 <!-- Grid View includes -->
 <script type="text/javascript" src="js/viz/grid.js"></script>

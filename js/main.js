@@ -11,8 +11,22 @@ window.onload = init;           // Kick things off
 
 /* The main program. */
 function init() {
-    $('body').append("<div id='topMenuWrapper'></div>"); // add the top menu wrapper
-    $('body').append("<div id='container'></div>");      // add the view wrapper
+    // add the top menu wrapper
+    $('body').append("<div id='topMenuWrapper'></div>");
+
+    // add the view wrapper
+    $('body').append("<ul class='topTabs'>"+
+                         "<li id='allDevices'>All Devices</li>"+
+                     "</ul>"+
+                     "<ul id='sidebar'>"+
+                         "<li><span id='listButton' class='viewButton viewButtonsel'></span></li>"+
+                         "<li><span id='graphButton' class='viewButton'></span></li>"+
+                         "<li><span id='canvasButton' class='viewButton'></span></li>"+
+                         "<li><span id='gridButton' class='viewButton'></span></li>"+
+                         "<li><span id='hiveButton' class='viewButton'></span></li>"+
+                         "<li><span id='balloonButton' class='viewButton'></span></li>"+
+                     "</ul>"+
+                     "<div id='container'></div>");
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
@@ -33,83 +47,71 @@ function init() {
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
-    setTimeout(
-        function(){
-            switch_mode('list');
-            command.start();
-            command.send('refresh');
-            command.send('get_networks');
-            command.send('subscribe', 'all_devices');
-            command.send('add_devices');
-            command.send('add_signals');
-            command.send('add_links');
-            command.send('add_maps');
-            network_selection();
-        }, 100);
+    let index = 0;
+    setInterval(
+        function() {
+            switch (index) {
+            case 0:
+                switch_mode('list');
+                command.start();
+                command.send('refresh');
+                command.send('get_networks');
+                command.send('subscribe', 'all_devices');
+                command.send('add_devices');
+                break;
+            case 1:
+                command.send('add_signals');
+                command.send('add_links');
+                break;
+            case 2:
+                command.send('add_maps');
+                window.clearInterval(this);
+            }
+            index += 1;
+        }, 250);
 }
 
 /**
  * initialize the event listeners for events triggered by the monitor
  */
 function initMonitorCommands() {
-    command.register("add_devices", function(cmd, devs) {
-//        console.log('add devices');
-        for (var i in devs)
-            model.devices.add(devs[i]);
-    });
-    command.register("del_device", function(cmd, dev) {
-//        console.log('remove device');
-        model.devices.remove(dev.name);
-        model.links.each(function(link) {
-        if (link.src == dev.name || link.dst == dev.name)
-            model.links.remove(link);
-        });
-    });
-    command.register("add_signals", function(cmd, sigs) {
-//        console.log('add signals', sigs);
-        for (var i in sigs)
-            model.signals.add(sigs[i]);
-    });
-    command.register("del_signal", function(cmd, sig) {
-//        console.log('remove signal');
-        model.signals.remove(sig.name);
-    });
-    command.register("add_links", function(cmd, links) {
-//        console.log('add links');
-        for (var i in links)
-            model.links.add(links[i]);
-    });
-    command.register("del_link", function(cmd, link) {
-//        console.log('remove link');
-        if (link && !link.local)
-            model.links.remove(link);
-    });
-    command.register("add_maps", function(cmd, maps) {
-//        console.log('add maps', maps);
-        for (var i in maps) {
-            maps[i].status = 'active';
-            var key = model.maps.add(maps[i]);
-            topMenu.updateMapPropertiesFor(key);
-        }
-    });
-    command.register("del_map", function(cmd, map) {
-//        console.log('remove map');
-        var key = model.maps.remove(map);
-        topMenu.updateMapPropertiesFor(key);
-    });
-    command.register("set_network", function(cmd, args) {
-        model.networkInterfaces.selected = args;
-        refresh_all();
+    command.register("available_networks", function(cmd, args) {
+        model.networkInterfaces.available = args;
+        topMenu.updateNetworkInterfaces(args);
     });
     command.register("active_network", function(cmd, args) {
-        model.networkInterfaces.selected = args;
+        model.networkInterfaces.selected = args
+        topMenu.updateNetworkInterfaces(args);
     });
 }
+
 /**
  * initialize the event listeners for events triggered by the views
  */
 function initViewCommands()
 {
+    $('.viewButton').on("mousedown", function(e) {
+        switch ($(this)[0].id) {
+            case "listButton":
+                switch_mode("list");
+                break;
+            case "graphButton":
+                switch_mode("graph");
+                break;
+            case "gridButton":
+                switch_mode("grid");
+                break;
+            case "hiveButton":
+                switch_mode("hive");
+                break;
+            case "balloonButton":
+                switch_mode("balloon");
+                break;
+        }
+        $('.viewButton').removeClass("viewButtonsel");
+        $(this).addClass("viewButtonsel");
+    });
+
     // from list view
     // requests links and maps from the selected device (tab)
     $("#container").on("tab", function(e, tab){
@@ -176,6 +178,9 @@ function initTopMenuCommands()
     $("#topMenuWrapper").on("refreshAll", function(e) {
         refresh_all();
     });
+    $("#topMenuWrapper").on("selectNetwork", function(e, network) {
+        command.send('select_network', network);
+    });
 }
 
 function refresh_all() {
@@ -198,88 +203,42 @@ function switch_mode(newMode)
     }
     
     $('#container').empty();
-    switch(newMode) {
+    switch (newMode) {
         case 'list':
             view = new listView(model);
             viewIndex = 0;
             view.init();
             break;
+        case 'graph':
+            view = new GraphView(document.getElementById('container'), model);
+            viewIndex = 1;
+            view.init();
+            break;
         case 'grid':
             view = new GridView(document.getElementById('container'), model);
-            viewIndex = 1;
+            viewIndex = 2;
             $('#saveLoadDiv').removeClass('disabled');
             break;
         case 'hive':
             view = new HivePlotView(document.getElementById('container'), model);
-            viewIndex = 2;
+            viewIndex = 3;
+            view.init();
             view.on_resize();
             break;
         case 'balloon':
-            view = new BalloonView(document.getElementById('container'), model);
-            viewIndex = 3;
+            view = new BalloonView(model);
+            viewIndex = 4;
             view.init();
-            if(viewData[viewIndex])
-                  view.load_view_settings(viewData[viewIndex]);
             break;
         default:
             //console.log(newMode);
     }
 
-    // load view settings (if any)
-    if (viewData[viewIndex]) {
-        if (typeof view.load_view_settings == 'function')
-                view.load_view_settings(viewData[viewIndex]);
-    }
+//    // load view settings (if any)
+//    if (viewData[viewIndex]) {
+//        if (typeof view.load_view_settings == 'function')
+//            view.load_view_settings(viewData[viewIndex]);
+//    }
 
     topMenu.clearMapProperties();
 }
-
-function network_selection()
-{
-    var menuOpen = false; // A variable storing the state of network selection
-
-    $('body').on('mousedown', function(e) {
-        if(e.which == 3) {              // A right click
-            if(menuOpen) cleanup();     // Removes the menu and handlers if already open (multiple right clicks)
-            select_network(e);
-        }
-    });
-
-    function select_network(clickEvent) {
-        command.send('get_networks');
-        command.register('available_networks', function(cmd, args){
-            model.networkInterfaces.available = args;
-            $(  "<div id='networkMenu'>"+
-                    "<table>"+
-                        "Current Network: "+model.networkInterfaces.selected+
-                        "<thead><th>Available Networks</th></thead>"+
-                        "<tbody></tbody>"+
-                    "</table></div>"
-                ).insertAfter('#container');
-            $('#networkMenu').css({'top': clickEvent.pageY, 'left': clickEvent.pageX});
-            menuOpen = true;
-
-            for (var i in model.networkInterfaces.available ) {
-                $('#networkMenu tbody').append('<tr><td>'+model.networkInterfaces.available[i]+'</td></tr>');
-            }
-
-            $('#networkMenu td').on('click.networkSelect', function(e) {
-                e.stopPropagation();
-                command.send('select_network', $(this).text() );
-                cleanup();
-            });
-
-            $('body').on('click.networkSelect', function(e) {cleanup();} );
-        });
-    }
-
-    function cleanup() {
-        $('#networkMenu').fadeOut(100).remove();
-        $('*').off('.networkSelect');
-        menuOpen = false;
-        command.unregister('available_networks');
-    }
-}
-
-
-

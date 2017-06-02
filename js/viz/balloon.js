@@ -1,1255 +1,1044 @@
-//+++++++++++++++++++++++++++++++++++++++++++ //
-//                   Grid View Class          //
-//+++++++++++++++++++++++++++++++++++++++++++ //
-
-function BalloonView(container, model)
+// An object for the overall display
+function BalloonView(model)
 {
-    var _self = this;
+    var svgArea = null;
+    var selectLists = {};
+    var edges = new MapperEdgeArray();
+    var tableHeight = 0;
 
-    this.svgNS = "http://www.w3.org/2000/svg";
-    this.svgNSxlink = "http://www.w3.org/1999/xlink";
+    // "use strict";
+    this.type = 'balloon';
+    this.unmappedVisible = true; // Are unmapped devices/signals visible?
 
-    this._container = container;
-    this.model = model;
+    var leftBodyContent = [];
+    var rightBodyContent = [];
 
-    this.svg;                   // holding <SVG> elements for easy reference
-    this.svgDim = [800, 600];   // x-y dimensions of the svg canvas
-    this.nodeRadius = 40;
-    this.tableWidth = 200;
-
-    //this.devs;                  // to hold libmapper devices
-    //this.devTrees = [[],[]];    // to hold balloon trees for each device
-
-    this.trees = [null, null];
-    this.viewNodes = [null, null];
-    this.tables = [null, null];
-    this.rootLabel = ["Sources", "Destinations"];
-    this.maxViewDepth = 15;
-
-    // drag variables
-    this.dragSource = null;
-    this.dragTarget = null;
-    this.dragLine = null;
-    this.dragSourceX = 0;
-    this.dragSourceY = 0;
-    this.dragMouseX = 0;
-    this.dragMouseY = 0;
-    //this.ctX1 =  this.svgDim[0]/2;
-    //this.ctY1 =  this.svgDim[1]/2;
-    this.ctX1 =  300;
-    this.ctY1 =  300;
-
-    //Keyboard handlers
-    $('body').on('keydown.balloon', function(e) {
-        _self.keyboardHandler(e);
-    });
-    this.selectedMaps = [];
-}
-
-BalloonView.prototype = {
-    /**
-     * Initialize the view
-     * Creates container DIVs for the accordions
-     * Creates the SVG canvas
-     */
-    init : function () {
-        var _self = this;                // to pass to the instance of balloon.js to event handlers
-        var wrapperDiv, div, btn;        // to instantiate items
-
-        // clear the container DIV
-        $(this._container).empty();
-
-        // create the wrapper DIV
-        wrapperDiv = document.createElement("div");
-        wrapperDiv.setAttribute("id", "balloonWrapper");
-        this._container.appendChild(wrapperDiv);
-
-        // add source table DIV
-        this.tables[0] = document.createElement("div");
-        this.tables[0].setAttribute("id", "balloonTable_src");
-        this.tables[0].setAttribute("class", "balloonTable");
-        this.tables[0].setAttribute("style", "width: " + this.tableWidth
-                                    + "px; height: " + this.svgDim[1] + "px;");
-        wrapperDiv.appendChild(this.tables[0]);
-
-        // add SVG canvas
-        this.svg = document.createElementNS(this.svgNS, "svg");
-        this.svg.setAttribute("id", "BalloonSVG");
-        this.svg.setAttribute("xmlns", this.svgNS);
-        this.svg.setAttribute("xmlns:xlink", this.svgNSxlink);
-        this.svg.setAttribute("width", this.svgDim[0]);
-        this.svg.setAttribute("height", this.svgDim[1]);
-        this.svg.setAttribute("style", "float:left;margin: 0 auto;");
-        this.svg.addEventListener("click", function(evt) {
-            _self.clearSelectedMaps();
+    this.init = function() {
+        add_title_bar();
+        add_svg_area();
+        add_status_bar();
+        this.add_handlers();
+        $('#container').css({
+            'min-width': '700px',
+            'min-height': '150px',
+            'height': 'calc(100% - 86px)'
         });
-        wrapperDiv.appendChild(this.svg);
-
-        // add destination table DIV
-        this.tables[1] = document.createElement("div");
-        this.tables[1].setAttribute("id", "balloonTable_dst");
-        this.tables[1].setAttribute("class", "balloonTable");
-        this.tables[1].setAttribute("style", "width: " + this.tableWidth
-                                    + "px; height: " + this.svgDim[1] + "px;");
-        wrapperDiv.appendChild(this.tables[1]);
-
-        //create the SVG texture
-        this.initTextures();
-
-        this.refreshData();
-        this.on_resize();
-        this.createTables();
-    },
-
-    keyboardHandler : function (e) {
-
-        // 'delete' to remove a map
-        if (e.which == 46 || e.which == 8) {
-            e.preventDefault();
-            var n = this.model.selectedMaps.length;
-            if (n > 0) {
-                var keys = this.model.selectedMaps.keys();
-                for (i = 0; i < keys.length; i++) {
-                    var map = this.model.maps.get(keys[i]);
-                    var src = map.src;
-                    var dst = map.dst;
-                    if (this.model.isMapped(src, dst) == true) {
-                        // trigger unmap event
-                        $(this._container).trigger("unmap", [src, dst]);
-                        this.model.selectedMaps.remove(keys[i]);
-                    }
-                }
-            }
-            // tell main to update edit bar
-            $(this._container).trigger("updateMapProperties");
-            this.refreshSVG();
-        }
-    },
-
-    /* returns an assoc containing the devices included in the signals grid */
-    get_focused_devices : function() {
-        var list = new Assoc();
-        return list;
-    },
-
-    save_view_settings : function () {
-        var data = [];
-        data.push(this.viewNodes);                  // 0
-        model.selectedMaps_clearAll();
-        //data.push(this.model.selectedMaps);       // 1
-        return data;
-    },
-
-    load_view_settings : function (data) {
-        this.viewNodes = data[0];
-        //this.model.selectedMaps = data[1];
-    },
-
-    /**
-     * Called when the window resizes to update the dimension of the tables and SVG
-     */
-    on_resize : function () {
-        // get the new window size
-        var w = $(this._container).width();
-        var h = $(this._container).height();
-
-        // set the new SVG dimensions
-        this.svgDim[0] = w - this.tableWidth * 2;
-        this.svgDim[1] = h;
-
-        // update the GUI elements
-        this.tables[0].setAttribute("style", "width: " + this.tableWidth
-                                    + "px; height: " + this.svgDim[1] + "px;");
-        this.tables[1].setAttribute("style", "width: " + this.tableWidth
-                                    + "px; height: " + this.svgDim[1] + "px;");
-
-        this.svg.setAttribute("width", this.svgDim[0]);
-        this.svg.setAttribute("height", this.svgDim[1]);
-        this.refreshSVG();
-    },
-
-    cleanup : function () {
-        $(this._container).off('.balloon');
-    },
-
-    /**
-     * Draws the SVG container elements
-     */
-    drawCanvas : function () {
-        var obj;
-        var _self = this;
-
-        // source exterior
-        if (this.viewNodes[0].level >= 0) {
-            obj = document.createElementNS(this.svgNS,"rect");
-            obj.setAttribute("x", 0);
-            obj.setAttribute("width", this.svgDim[0] / 2);
-            obj.setAttribute("height", this.svgDim[1]);
-            obj.setAttribute("class", "BalloonCorner");
-            obj.addEventListener("click", function(evt) {
-                // prevent click reaching canvas and deselecting
-                evt.stopPropagation();
-                _self.onBackClick(0);
-            });
-            this.svg.appendChild(obj);
-        }
-
-        // destination exterior
-        if (this.viewNodes[1].level >= 0) {
-            obj = document.createElementNS(this.svgNS, "rect");
-            obj.setAttribute("x", this.svgDim[0] / 2);
-            obj.setAttribute("width", this.svgDim[0] / 2);
-            obj.setAttribute("height", this.svgDim[1]);
-            obj.setAttribute("class", "BalloonCorner");
-            obj.addEventListener("click", function(evt) {
-                // prevent click reaching canvas and deselecting
-                evt.stopPropagation();
-                _self.onBackClick(1);
-            });
-            this.svg.appendChild(obj);
-        }
-
-        // cutout the middle with a white ellipse
-        obj = document.createElementNS(this.svgNS,"ellipse");
-        var w = this.svgDim[0] / 2 + 1 - 10;
-        var h = this.svgDim[1] / 2 + 1 + 10;
-        obj.setAttribute("cx", this.svgDim[0] / 2);
-        obj.setAttribute("cy", this.svgDim[1] / 2);
-        obj.setAttribute("rx", w);
-        obj.setAttribute("ry", h);
-        obj.setAttribute("fill", "#fff");
-        this.svg.appendChild(obj);
-    },
-
-    /* Aaron's magic formula for determining largest possible circle to fill
-     * the container circle's space.  Sometimes the circles overlap because the
-     * container is an ellipse and the formula is actually for circles
-     * @param n number of nodes to fit
-     * @param containerR radius of containing circle (if ellipse, choose the
-     * smaller dimension to minimize overlap) */
-    calculateR : function (n, containerR, padding) {
-        var r = 1 / (1 / Math.sin(Math.PI / (2 * n)) + 1);
-        return r * (containerR * padding);
-    },
-
-    /* Given a set of nodes, calculates the size and position to plot them in
-     * the SVG canvas.  Nodes are separated with sources on the left and
-     * destinations on the right.  Radius is determined by Aaron's magical
-     * formula to calculate the largest possible circles that will fit inside
-     * the container ellipse
-     *
-     * @param ind source or destination
-     * @param nodes the set of nodes to draw
-     * @param origin origin of the containing ellipse [x,y]
-     * @param dim radius of containing ellipse [rx, ry]
-     */
-    drawNodes : function (ind, nodes, origin, dim) {
-        // number of nodes
-        var n = nodes.length;
-        var r = this.calculateR(n, Math.min(this.svgDim[1], this.svgDim[0]) / 2,
-                                0.9);
-
-        // calculate angles
-        var angleFrom = 0 * Math.PI / 180;      // start angle
-        var angleTo = 180 * Math.PI / 180;      // end angle
-        var range = angleTo - angleFrom;        // total arc size
-        var angleInc = (n==1)? 0 : range/(n);   // angle to increment on each step
-        var angleFromOffset = (ind==0)? Math.PI/2 : - Math.PI/2;    // offset sources and destinations to their respective sides
-        if (n == 1)
-            angleFromOffset += Math.PI/2;    // special case, if only one node then place it in the center
-
-        //  plot helpers
-        var w = dim[0] - r - 75 ;        // container ellipse width minus radius of node with extra padding
-        var h = dim[1] - r ;        // container ellipse height minus radius of node with extra padding
-        if (ind == 0)
-            h = -h;
-        var positionOffset = (ind == 0) ? -this.nodeRadius-10 : this.nodeRadius + 10;
-
-        // draw the nodes
-        for (var i = 0; i < n; i++) {
-            var node = nodes[i];
-            var nAngle = angleFrom + angleInc / 2 + angleFromOffset + (i * angleInc);
-            var x = (w * Math.cos(nAngle)) + origin[0] + positionOffset;
-            var y = (h * Math.sin(nAngle)) + origin[1];
-            this.drawNode(node, ind, x, y, i, r);
-        }
-    },
-
-    /* Draws a single node given the parameters from the arc plotter in the
-     * drawNodes() function
-     *
-     * @param node the BalloonNode
-     * @param ind source or destination
-     * @param x horizontal center of the circle
-     * @param y vertical center of the circle
-     * @param childIndex index into array
-     * @param radius radius of circle
-     */
-    drawNode : function (node, ind, x, y, childIndex, radius) {
-        var _self = this;
-        var stylename;
-
-        // create the SVG element
-        node.svg = document.createElementNS(this.svgNS, "circle");
-        node.svg.setAttribute("cx", x);                         // x-position
-        node.svg.setAttribute("cy", y);                         // y-position
-        node.svg.setAttribute("data-ind", ind);                 // src or destination
-        node.svg.setAttribute("data-childIndex", childIndex);   // index into the container array
-        node.svg.setAttribute("r", radius);                     // radius of circle
-        $(node.svg).data("node", node);
-
-        // tooltip
-        $(node.svg).qtip({
-            content: {
-                text: node.label
-            },
-            position: {
-                target: 'mouse',
-                adjust: {
-                    mouse: true,
-                    x: 10,
-                    y: -15
-                }
-            },
-            style: { classes: 'qTipStyle' }
-        });
-
-        if (node.isLeaf()) {
-            // for terminal node
-            stylename = "BalloonLeafNode";
-
-            // drag and drop functionality for leaves only
-            node.svg.addEventListener("mousedown",
-                                      function(evt) {
-                                          _self.dragStart(evt);
-                                      });
-            node.svg.classList.add("draggable");
-        }
-        else {
-            // for non-terminal node
-            stylename = "BalloonNode";
-
-            // mouse handlers
-            node.svg.addEventListener("mouseover",
-                                      function(evt) {
-                                          _self.onNodeMouseOver(evt);
-                                      });
-            node.svg.addEventListener("mouseout",
-                                      function(evt) {
-                                          _self.onNodeMouseOut(evt);
-                                      });
-            node.svg.addEventListener("click",
-                                      function(evt) {
-                                          _self.onNodeClick(evt);
-                                      });
-        }
-        stylename += (ind == 0) ? "_src" : "_dst" ;
-        node.svg.classList.add(stylename);
-        this.svg.appendChild(node.svg);
-
-        // recurse for children
-        if (!node.isLeaf()) {
-            // for terminal node
-            this.drawChildNodes(ind, node, x, y, radius);
-        }
-    },
-
-    drawChildNodes : function(ind, node, x, y, r) {
-        // draw children nodes one level deep
-        var n = node.childNodes.length;
-
-        var angleInc = (n == 1) ? 0 : (180 * Math.PI / 180) / (n);
-        var offset = (ind == 0) ? Math.PI / 2 : - Math.PI / 2;
-
-        var childNodeRadius = this.calculateR(n, r, 1);
-        var childNodeRadiusPadded = childNodeRadius * 0.85;
-
-        for (var i = 0; i < n; i++) {
-            var childNode = node.childNodes[i];
-            var childStyle = (childNode.isLeaf()) ? "BalloonLeafNode": "BalloonNode";
-            childStyle += (ind == 0) ? "_src" : "_dst" ;
-
-            var nAngle = i * angleInc + offset + angleInc / 2;
-            if (n == 1)
-                nAngle += Math.PI / 2;
-            var x2 = (((r - childNodeRadius) * 0.9) * Math.cos(nAngle)) + x;
-            var y2 = (((r - childNodeRadius) * 0.9) * Math.sin(nAngle)) + y;
-            if (ind == 0)
-                y2 = (-((r-childNodeRadius) * 0.9) * Math.sin(nAngle)) + y;
-
-            childNode.svg = document.createElementNS(this.svgNS, "circle");
-            childNode.svg.setAttribute("cx", x2);               // x-position
-            childNode.svg.setAttribute("cy", y2);               // y-position
-            childNode.svg.setAttribute("data-ind", ind);        // src or destination
-            childNode.svg.setAttribute("data-childIndex", n);   // index into the container array
-            childNode.svg.setAttribute("r", childNodeRadiusPadded);
-            childNode.svg.setAttribute("class", childStyle);
-            $(childNode.svg).data("node", childNode);
-
-            // drag and drop functionality for leaves only
-            if (childNode.isLeaf()) {
-                childNode.svg.addEventListener("mousedown", function(evt) {
-                    _self.dragStart(evt);
-                });
-                childNode.svg.classList.add("draggable");
-            }
-
-            // click functionality for branches
-            else {
-                childNode.svg.addEventListener("click", function(evt) {
-                    _self.onNodeClick(evt);
-                });
-            }
-
-            // tooltip
-            $(childNode.svg).qtip({
-                content: {
-                    text: node.label + ' / ' + childNode.label
-                },
-                position: {
-                    target: 'mouse',
-                    adjust: {
-                        mouse: true,
-                        x: 10,
-                        y: -15
-                    }
-                },
-                style: { classes: 'qTipStyle' }
-            });
-
-            this.svg.appendChild(childNode.svg);
-
-            if (childNode.level - this.viewNodes[ind].level < this.maxViewDepth) {
-                if (!childNode.isLeaf()) {
-                    this.drawChildNodes(ind, childNode, x2, y2,
-                                        childNodeRadiusPadded);
-                }
-            }
-        }
-    },
-
-    /* Draws the maps between all terminal nodes
-     *
-     * Map = connection between leaf nodes
-     * Link = connection between nodes that have connected child nodes (not used currently)
-     */
-    drawMaps : function() {
-        // for each SOURCE node in the display
-        for (var i = 0; i < this.viewNodes[0].childNodes.length; i++) {
-            var srcNode = this.viewNodes[0].childNodes[i];
-            var descendantNodes = srcNode.getDescendantLeafNodes();
-
-            for (var j = 0; j < descendantNodes.length; j++) {
-                var curNode = descendantNodes[j];
-                var maps = curNode.getMapped(this.viewNodes[1].childNodes);
-
-                for (var k = 0; k < maps.length; k++) {
-                    this.drawMap(curNode, maps[k]);
-                }
-            }
-        }
-    },
-
-    /* creates the SVG element for a map
-     *
-     * @param src node
-     * @param dst node
-     */
-    drawMap : function(src, dst) {
-        var ctX1 =  this.svgDim[0] / 2;
-        var ctY1 =  this.svgDim[1] / 2;
-        var x1, y1, x2, y2;
-
-        x1 = src.svg.getAttribute("cx");
-        y1 = src.svg.getAttribute("cy");
-        x2 = dst.svg.getAttribute("cx");
-        y2 = dst.svg.getAttribute("cy");
-
-        // create the SVG line element to handle mouse interaction
-        var line = document.createElementNS(this.svgNS, "path");
-        var pathString = ("M " + x1 + " " + y1 + " Q " + ctX1 + " " + ctY1 + " "
-                          + x2 + " " + y2);
-        line.setAttribute("d", pathString);
-        line.setAttribute("class", "balloonMapHandler");
-        $(line).data("srcNode", src);
-        $(line).data("dstNode", dst);
-
-        // create the SVG line element as the display object
-        var line2 = document.createElementNS(this.svgNS, "path");
-        line2.setAttribute("d", pathString);
-
-        var c = model.maps.get(src.signalName + ">" + dst.signalName);
-        if (c.muted)
-            line2.setAttribute("class", "balloonMap_muted");
-        else
-            line2.setAttribute("class", "balloonMap");
-
-        if (this.model.selectedMaps_isSelected(src.signalName, dst.signalName)) {
-            line2.classList.add("balloonMap_selected");
-        }
-
-        line.addEventListener("mouseover", function(evt) {
-            var displayLine = $(this).data("displayObject");
-            displayLine.classList.add("balloonMap_over");
-        });
-        line.addEventListener("mouseout", function(evt) {
-            var displayLine = $(this).data("displayObject");
-            if (displayLine)
-                displayLine.classList.remove("balloonMap_over");
-        });
-        line.addEventListener("click", function(evt) {
-            evt.stopPropagation();
-            _self.onMapClick(this) ;
-        });
-
-        $(line).data("displayObject", line2);
-
-        this.svg.appendChild(line);
-        this.svg.appendChild(line2);
-    },
-
-    /**
-     * Handles mouseover on a node in the SVG plot
-     */
-    onNodeMouseOver : function(evt) {
-        evt.currentTarget.classList.add('BalloonNode_over');
-    },
-
-    /**
-     * Handles mouseout on a node in the SVG plot
-     */
-    onNodeMouseOut : function(evt) {
-        evt.currentTarget.classList.remove('BalloonNode_over');
-    },
-    /**
-     * Handles mouseover on a child node in the SVG plot
-     */
-    onChildNodeMouseOver : function(evt) {
-        var node = $(evt.currentTarget).data("node");
-        node.parentNode.svg.classList.add('BalloonNode_over');
-    },
-
-    /**
-     * Handles mouseout on a node in the SVG plot
-     */
-    onChildNodeMouseOut : function(evt) {
-        var node = $(evt.currentTarget).data("node");
-        if (node)
-            node.parentNode.svg.classList.remove('BalloonNode_over');
-    },
-
-    /**
-     * Handles clicking on a node in the SVG plot
-     */
-    onNodeClick : function(evt) {
-        evt.stopPropagation(); //prevents click reaching canvas and deselecting
-        var item = evt.currentTarget;
-        var node = $(item).data("node");
-//        var childIndex = node.childIndex;
-        var ind = item.getAttribute("data-ind");
-        this.viewNodes[ind] = node;
-        this.refreshSVG();
-        this.updateTable(ind);
-    },
-
-    /**
-     * Handles clicking on a node in the SVG plot
-     */
-    onChildNodeClick : function(evt) {
-        evt.stopPropagation(); //prevents click reaching canvas and deselecting
-        var item = evt.currentTarget;
-        var node = $(item).data("node").parentNode;
-        var childIndex = node.childIndex;
-        var ind = item.getAttribute("data-ind");
-        this.viewNodes[ind] = this.viewNodes[ind].childNodes[childIndex];
-        this.refreshSVG();
-        this.updateTable(ind);
-    },
-
-    /**
-     * Handles clicking on a header in the accordion
-     */
-    onListHeaderClick : function (evt, ui, ind) {
-        // clear styles of headers an LI items
-        $("#accordion" + ind).children('h3').each(function() {
-            this.classList.remove("selected");
-        });
-        $("#accordion" + ind).find('li').each(function() {
-            this.classList.remove("selected");
-        });
-
-        // get the clicked header
-        var headerNode = $(ui.newHeader).data("node");
-
-        // if clicked on a new tab header node will have a value
-        if (headerNode) {
-            // set the new view node
-            this.viewNodes[ind] = headerNode;
-
-            // update styles
-            var headerNodeIndex = headerNode.childIndex;
-            $("#accordion" + ind).find('h3').each(function() {
-                var h3 = this;
-                if ($(h3).data("node").childIndex == headerNodeIndex)
-                    h3.classList.add("selected");
-            });
-        }
-        // headerNode is null means clicked on the already open tab
-        else {
-            // if header's node is not in view, that means a child is in view
-            // set the view to the header's node and prevent closing the tab
-            if (this.viewNodes[ind].level > 0) {
-                // set the view to the header node
-                this.viewNodes[ind] = $(ui.oldHeader).data("node");
-
-                // set the style of the header to selected
-                $("#accordion" + ind).find('h3').each(function() {
-                    var h3 = this;
-                    if ($(h3).data("node").childIndex == $(ui.oldHeader).data("node").childIndex)
-                        h3.classList.add("selected");
-                });
-
-                // prevent the accordion from closing
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-            }
-
-            // if header's node is in view, then close the tab and show root
-            else {
-                // set the new view node to the root
-                this.viewNodes[ind] = this.trees[ind];
-            }
-        }
-
-        // refresh the SVG
-        this.refreshSVG();
-    },
-
-    /**
-     * Handles clicking on a namespace in the accordion's contents (<LI> items)
-     */
-    onListClick : function (evt) {
-        var item = evt.currentTarget;
-        var node = $(item).data("node");
-        var ind = node.direction;
-        if (node.isLeaf()) {
-            this.viewNodes[ind] = node.parentNode;
-        }
-        else {
-            this.viewNodes[ind] = node;
-        }
-        this.refreshSVG();
-        this.updateTable(ind);
-    },
-
-    /**
-     * Handles mouseover on a namespace in the accordion's contents (<LI> items)
-     */
-    onListOver : function (evt) {
-    },
-
-    /**
-     * Handles clicking to go up one level in the hierarchy
-     */
-    onBackClick : function (ind) {
-        if (this.viewNodes[ind].parentNode != null) {
-            this.viewNodes[ind] = this.viewNodes[ind].parentNode;
-            this.refreshSVG();
-            this.updateTable(ind);
-        }
-    },
-
-    onMapClick : function (line) {
-        var displayLine = $(line).data("displayObject");
-
-        var srcNode = $(line).data("srcNode");
-        var dstNode = $(line).data("dstNode");
-
-        // is already selected
-        if (displayLine.classList.contains("balloonMap_selected")) {
-            displayLine.classList.remove("balloonMap_selected");
-            this.model.selectedMaps_toggleMap(srcNode.signalName,
-                                              dstNode.signalName);
-        }
-        else {
-            displayLine.classList.add("balloonMap_selected");
-            this.model.selectedMaps_toggleMap(srcNode.signalName,
-                                              dstNode.signalName);
-        }
-
-        // tell main to update edit bar
-        $(this._container).trigger("updateMapProperties");
-    },
-
-    clearSelectedMaps : function() {
-        this.model.selectedMaps_clearAll();
-        // tell main to update edit bar
-        $(this._container).trigger("updateMapProperties");
-        this.refreshSVG();
-    },
-
-    /**
-     * starts the dragging process for creating maps (mousedown on leaf node)
-     */
-    dragStart : function (evt) {
-        var _self = this;
-        var ctX1 =  this.svgDim[0] / 2;
-        var ctY1 =  this.svgDim[1] / 2;
-
-        // store the element clicked on
-        this.dragSource = evt.target;
-
-        // init the mouse position variables
-        this.dragSourceX = this.dragSource.getAttribute("cx");
-        this.dragSourceY = this.dragSource.getAttribute("cy");
-
-        var bounds = this.svg.getBoundingClientRect();
-        this.dragMouseX = evt.clientX - bounds.left;
-        this.dragMouseY = evt.clientY - bounds.top;
-
-        // create the temporary drag line
-        this.dragLine = document.createElementNS(this.svgNS, "path");
-        this.dragLine.id = "balloonDragLine";
-        this.dragLine.setAttribute("class", "dragLine");
-        var pathString = ("M " + this.dragSourceX + " " + this.dragSourceY
-                          + " Q " + ctX1 + " " + ctY1 + " "
-                          + this.dragMouseX + " " + this.dragMouseY);
-        this.dragLine.setAttribute("d", pathString);
-        this.svg.appendChild(this.dragLine);
-
-        // init event listeners to track the mouse
-        $(window).bind("mousemove", {_self: _self}, this.drag);
-        $(window).bind("mouseup", {_self: _self}, this.dragStop);
-    },
-
-    /**
-     * handles dragging after drag has started (window mousemove)
-     * follows the mouse to draw a map line from the drag source
-     * checks if the target is a leaf node and snaps the line
-     */
-    drag : function (evt) {
-        var _this = evt.data._self;
-        _this.dragTarget = null;
-
-        var mouseTarget = document.elementFromPoint(evt.clientX, evt.clientY);
-        if (mouseTarget && mouseTarget.classList.contains("draggable")) {
-            var srcNode = $(_this.dragSource).data("node");
-            var tgtNode =  $(mouseTarget).data("node");
-            if (srcNode != tgtNode
-                && !_this.model.isMapped(srcNode.signalName, tgtNode.signalName))
-                _this.dragTarget = mouseTarget;
-        }
-
-        // if hovering over a terminal node, snap the line
-        if (_this.dragTarget) {
-            var x = mouseTarget.getAttribute("cx");
-            var y = mouseTarget.getAttribute("cy");
-            _this.dragMouseX = x - 1;
-            _this.dragMouseY = y - 1;
-        }
-        else {
-            var offset = _this.svg.getBoundingClientRect();
-            _this.dragMouseX = evt.clientX - offset.left - 1;
-            _this.dragMouseY = evt.clientY - offset.top - 1;
-        }
-
-        var ctX1 =  _this.svgDim[0] / 2;
-        var ctY1 =  _this.svgDim[1] / 2;
-
-        var pathString = ("M " + _this.dragSourceX + " " + _this.dragSourceY
-                          + " Q " + ctX1 + " " + ctY1 + " " + _this.dragMouseX
-                          + " " + _this.dragMouseY);
-        _this.dragLine.setAttribute("d", pathString);
-    },
-
-    /**
-     * handles mouseup from the window to stop the dragging process
-     * triggers the map event if a src and dst are valid
-     */
-    dragStop : function (evt) {
-        var _this = evt.data._self;
-        if (_this.dragSource && _this.dragTarget) {
-            var src = $(_this.dragSource).data("node");
-            var dst = $(_this.dragTarget).data("node");
-
-            // send map event
-            _this.map(src, dst);
-        }
-
-        // delete the temporary line
-        if (_this.svg.getElementById("balloonDragLine"))
-            _this.svg.removeChild(_this.dragLine);
-
-        // cleanup
-        $(window).unbind("mousemove", _this.drag);
-        $(window).unbind("mouseup", _this.dragStop);
-        _this.dragSource = null;
-        _this.dragTarget = null;
-        _this.dragLine = null;
-    },
-
-    /**
-     * Function to create/add nodes into the tree given a signal namespace
-     *
-     * @param namespaces an array with each namespace ('/' removed)
-     * @param currentNode the node to check (used in recursion)
-     * @param level used to set the level in the hierarchy
-     * @returns
-     */
-    addSignal : function (deviceName, signalName, namespaces, currentNode,
-                          level, ind) {
-        var label = namespaces[0];
-        var node, i;
-
-        // check if a node exists with the same label
-        for (i = 0; i < currentNode.childNodes.length; i++) {
-            var tempNode = currentNode.childNodes[i];
-            if (tempNode.label == label) {
-                // node exists, set pointer to it
-                node = tempNode;
-                break;
-            }
-        }
-        // node doesn't exist, create it
-        if (i == currentNode.childNodes.length) {
-            node = new BalloonNode();
-            node.label = namespaces[0];
-            node.level = level;
-            node.parentNode = currentNode;
-            node.childIndex = i;
-            node.direction = ind;
-            node.deviceName = deviceName;
-            node.signalName = signalName;
-            currentNode.childNodes.push(node);
-        }
-
-        // recurse for next level or return
-        if (namespaces.length > 1) {
-            namespaces.splice(0, 1);
-            this.addSignal(deviceName, signalName, namespaces, node, level + 1,
-                           ind);
-        }
-        else
-            return;
-    },
-
-    /**
-     * prints out the list of nodes and all child nodes recursively
-     * returns an unordered list with the hierarchy
-     */
-    print : function (node, level) {
-        var _self = this;
-        var ul;
-
-        if (level != 0) {
-            ul = document.createElement("ul");
-
-            // create a LI for the node
-            var li = document.createElement("li");
-            li.innerHTML = node.label;
-            $(li).data("node", node);
-            li.addEventListener("click", function(evt) {
-                _self.onListClick(evt);
-            });
-            ul.appendChild(li);
-        }
-        else
-            ul = document.createElement("div");
-
-        // recursively create an UL for its children
-        var n = node.childNodes.length;
-        if (n > 0) {
-            for (var i = 0; i < n; i++)
-                ul.appendChild(this.print(node.childNodes[i], level + 1));
-        }
-
-        return ul;
-    },
-
-    /**
-     * Prints the trail of parent node labels recursively
-     * used for breadcumbs of current position in the hierarchy
-     */
-    printBreadCrumbs : function (ind, node) {
-        var result = node.label;
-
-        if (node.parentNode != null) {
-            result = this.printBreadCrumbs(ind, node.parentNode) + "<br />" + result;
-        }
-
-        return result;
-    },
-
-    update_display : function () {
-        this.refreshData();
-        this.refreshSVG();
-        this.createTables();
-    },
-
-    /* Recreates the balloon tree data structure.  Used when view initializes
-     * or model is updated with new devices/signals */
-    refreshData : function () {
-        if (this.trees[0])
-            this.trees[0].deleteNode();
-        if (this.trees[1])
-            this.trees[1].deleteNode();
-
-        // create root node for the source/destination trees
-        for (var i = 0; i < 2; i++) {
-            var tree = new BalloonNode();
-            tree.parentNode = null;
-            tree.label = this.rootLabel[i];
-            this.signalName = this.rootLabel[i];
-            tree.level = -1;
-            tree.direction = i;
-            this.trees[i] = tree;
-        }
-
-        // ensure all signals are loaded into the model
-        var keys = this.model.devices.keys();
-        for (var d in keys) {
-            var k = keys[d];
-            var dev = this.model.devices.get(k);
-//            $(this._container).trigger("getSignalsByDevice", dev.name);
-//            $(this._container).trigger("get_links_or_maps_by_device_name",
-//                                       dev.name);
-        }
-
-        var keys = this.model.signals.keys();
-        for (var i = 0; i < keys.length; i++) {
-            var sig = this.model.signals.get(keys[i]);
-            var devName = sig.device;
-
-            // splits and removes empty strings
-            var namespaces = keys[i].split("/").filter(function(e) {
-                                                           return e;
-                                                       });
-            // FIX sig.direction will become an ENUM constant
-            var dir = (sig.direction == 2);
-            this.addSignal(devName, keys[i], namespaces,
-                           this.trees[1 - dir], 0, 1 - dir);
-        }
-
-        // if view level is not set by user, set it to the root
-        for (var i = 0; i < 2; i++) {
-            if (this.viewNodes[i] != null) {
-                var newNode = this.trees[i].getNode(this.viewNodes[i]);
-                if (newNode)
-                    this.viewNodes[i] = newNode;
-                else
-                    this.viewNodes[i] = this.trees[i];
-            }
-            else
-                this.viewNodes[i] = this.trees[i];
-        }
-    },
-
-    /**
-     * Wrapper to recreate both tables with the accordion lists
-     */
-    createTables : function () {
-        this.createTable(0);
-        this.createTable(1);
-    },
-
-    /* Creates a JQuery UI accordion with the namespaces.  The acordion headers
-     * correspond to devices (the first element of the namespace).  A
-     * hierarchichal list is created for each device. */
-    createTable : function (ind) {
-        var _self = this;
-        var accordion, btn;
-
-        // empty the DIV contents
-        $(this.tables[ind]).empty();
-
-        /*
-        // navigation button
-        btn = document.createElement("button");
-        btn.innerHTML = "Back";
-        btn.title = "Go Up a level";
-        btn.addEventListener("click", function(evt) {
-            _self.onBackClick(ind);
-        });
-        this.tables[ind].appendChild(btn);
-        */
-
-        /*
-        // print the heirarchy trail
-        var p = document.createElement("p");
-        p.innerHTML = this.printBreadCrumbs(ind, this.viewNodes[ind]);
-        this.tables[ind].appendChild(p);
-        */
-
-        // create the accordion object
-        accordion = document.createElement("div");
-        accordion.id = "accordion" + ind;
-        for (var i = 0; i < this.trees[ind].childNodes.length; i++) {
-            var node = this.trees[ind].childNodes[i];
-
-            // create the heading
-            var heading = document.createElement("h3");
-            heading.innerHTML = node.label;
-            $(heading).data("node", node);
-            accordion.appendChild(heading);
-
-            // create the list of namespaces
-            var content = document.createElement("div");
-            content.appendChild(this.print(node, 0)); // recursive function
-            accordion.appendChild(content);
-        }
-        this.tables[ind].appendChild(accordion);
-
-        // initialize the JQuery UI accordion
-        $( "#accordion" + ind ).accordion({
-            heightStyle: "content",
-            collapsible: true,
-            active: 'none',
-            beforeActivate: function(event, ui) {
-                _self.onListHeaderClick(event, ui, ind);
-            }
-        });
-
-        // expand the device in view
-        this.updateTable(ind);
-    },
-
-    /**
-     * Used to UPDATE the accordion's active container and selected styles
-     */
-    updateTable : function (ind) {
-        _self = this;
-        var index = null;     // index of node->accordion to expand
-
-        // the node currently in view in the SVG plot
-        var node = this.viewNodes[ind];
-
-        // clear all header selected styles
-        $("#accordion" + ind).children('h3').each(function() {
-            this.classList.remove("selected");
-        });
-
-        // if node is root, collapse all accordion items
-        if (node.level == -1) {
-            $("#accordion" + ind).accordion("option", "active", false);
-        }
-
-        // if not root, find the correct accordion header to expand
-        else {
-            // recursively find the node pertaining to the signal's device
-            /* this node will have a child index corresponding also to its
-             * position in the accordion list */
-            while (node.parentNode != null) {
-                // if node is the direct child of the root, then note its index
-                if (node.level == 0) {
-                    index = node.childIndex;
+        add_model_callbacks();
+    };
+
+    this.cleanup = function() {
+        // Remove view specific handlers
+        $('*').off('.balloon');
+        $(document).off('.balloon');
+    };
+
+    add_model_callbacks = function() {
+        model.clear_callbacks();
+        model.add_callback(function(obj_type, event, key) {
+            switch (obj_type) {
+                case 'device':
+                    update_devices(key, event);
                     break;
+                case 'signal':
+                    update_signals(key, event);
+                    break;
+                case 'map':
+                    update_maps(key, event);
+                    break;
+            }
+        });
+    };
+
+    function balloonNode() {
+        var name = null;
+        var children = [];
+    }
+
+    this.on_resize = function() {
+        edges.each(adjust_edge);
+    };
+
+    function update_devices(key, event) {
+        leftBodyContent = [];
+        rightBodyContent = [];
+
+        /* We will place the device in the left or right table depending on its
+         * ratio of inputs and outputs. */
+
+        model.devices.each(function(dev) {
+            if (!dev.num_outputs && !dev.num_inputs)
+                return;
+            if (dev.num_outputs >= dev.num_inputs)
+                leftBodyContent.push([dev.name,
+                                      dev.num_inputs, dev.num_outputs,
+                                      dev.host + ':' + dev.port]);
+            else
+                rightBodyContent.push([dev.name,
+                                       dev.num_inputs, dev.num_outputs,
+                                       dev.host + ':' + dev.port]);
+        });
+
+    }
+
+    function update_signals(key, event) {
+        leftBodyContent = [];
+        rightBodyContent = [];
+
+        model.signals.each(function(sig) {
+
+            let name = sig.device + '<wbr>/' + sig.name.replace(/\//g, '<wbr>/');
+
+            if (sig.direction == 'output') {
+                leftBodyContent.push([name]);
+            }
+            else {
+                rightBodyContent.push([name, sig.type, sig.length, sig.unit, min,
+                                       max]);
+            }
+        });
+
+        update_maps();
+    }
+
+    function cleanup_edge(edge) {
+        if (edge.view) {
+            edge.view.remove();
+        }
+        delete edge.view;
+        edges.remove(edge);
+    }
+
+    function cleanup_edges() {
+        edges.each(cleanup_edge);
+    }
+
+    function update_maps(key, event) {
+        if (key) {
+            let map = model.maps.find(key);
+            devs = key.split("->");
+            devs = [devs[0].split("/")[0], devs[1].split("/")[0]];
+            if (event == 'modified') {
+                $('#container').trigger("updateMapPropertiesFor", key);
+                let edge = edges.find(key), map = model.maps.find(key);
+                if (edge && map) {
+                    edge.status = map.status;
+                    edge.muted = map.muted;
                 }
-                // else recurse to the next upper level
-                else
-                    node = node.parentNode;
             }
+        }
 
-            // open the accordion to the corresponding index
-            $("#accordion" + ind).accordion("option", "active", index);
-
-            // find the item currently in view and set its style
-
-            // if header is in view
-            if (this.viewNodes[ind].level == 0) {
-                $("#accordion" + ind).children('h3').each(function() {
-                    var h3Node = this;
-                    if ($(h3Node).data("node").childIndex == index)
-                        h3Node.classList.add("selected");
-                    else
-                        h3Node.classList.remove("selected");
-                });
+        // remove stale maps
+        old_keys = [];
+        edges.each(function(edge) {
+            if (!model.maps.find(edge) || !update_edge_endpoints(edge)) {
+                old_keys.push(edge.key);
+                cleanup_edge(edge);
             }
+        });
 
-            $("#accordion" + ind).find('li').each(function() {
-                var li = this;
-                var liNode = $(li).data("node");
+        var n_visible = edges.size();
 
-                if (liNode.equals(_self.viewNodes[ind]))
-                    li.classList.add("selected");
-                else
-                    li.classList.remove("selected");
+        // add views for new maps
+        model.maps.each(function(map) {
+            if (edges.find(map))
+                return;
+            else if (add_edge_view(map, null, [1, 0])) {
+                edges.add(map);
+                ++n_visible;
+            }
+        });
+
+        update_edges();
+
+        var n_maps = model.maps.size();
+        $('.status.middle').text(
+            n_visible + " of " + n_maps + " maps");
+        if (!n_maps)
+            $('#saveButton').addClass('disabled');
+    }
+
+    /* Returns whether a row has a map. */
+    function is_mapped(row) {
+        // What is the name of the signal/link?
+        var name = $(row).children('.name').text();
+        if (selectedTab == all_devices) {
+            return model.links.reduce(function(result, edge) {
+                return result || name == edge.src || name == edge.dst;
             });
         }
-    },
-
-    /**
-     * Used to redraw all the SVG elements (source/destination nodes and map lines)
-     */
-    refreshSVG : function () {
-        // empty SVG canvas
-        $(this.svg).empty();
-
-        //create the SVG texture
-        this.initTextures();
-
-        // draw the svg background
-        this.drawCanvas();
-
-        // draw balloon plot
-        var origin = [this.svgDim[0] / 2, this.svgDim[1] / 2];
-        var dim = [this.svgDim[0] / 2, this.svgDim[1] / 2];
-        this.drawNodes(0, this.viewNodes[0].childNodes, origin, dim);
-        this.drawNodes(1, this.viewNodes[1].childNodes, origin, dim);
-
-        // draw maps
-        this.drawMaps();
-    },
-
-    map : function (src, dst) {
-        if (this.model.isMapped(src.signalName, dst.signalName) == false) {
-            var srcDev = src.deviceName;
-            var dstDev = dst.deviceName;
-            // trigger map event
-            $(this._container).trigger("map", [src.signalName,
-                                               dst.signalName]);
-
-            this.refreshSVG();
+        else {
+            return model.maps.reduce(function(result, edge) {
+                return result || name == edge.src || name == edge.dst;
+            });
         }
-    },
-
-    initTextures : function() {
-        var defs = document.createElementNS(this.svgNS, "defs");
-        var pattern, path;
-
-        pattern = document.createElementNS(this.svgNS, "pattern");
-        pattern.setAttribute('id', "Balloon_leafNodePattern");
-        pattern.setAttribute('patternUnits', 'userSpaceOnUse');
-        pattern.setAttribute('width', "3");
-        pattern.setAttribute('height', "3");
-
-        path = document.createElementNS(this.svgNS, 'rect');
-        path.setAttribute("width", "3");
-        path.setAttribute("height", "5");
-        path.setAttribute("style", "stroke: none; fill: #29B1D7");
-        pattern.appendChild(path);
-
-        path = document.createElementNS(this.svgNS, 'path');
-        path.setAttribute("d", "M 0 2 l 3 0");
-        path.setAttribute("style", "stroke: #fff; stroke-width: 2px;");
-        pattern.appendChild(path);
-
-        defs.appendChild(pattern);
-        this.svg.appendChild(defs);
     }
-};
 
-/**
- * Class for a node in the balloon tree
- */
-function BalloonNode() {
-    this.level;             // level in the hierarchy  (-1 for root)
-    this.label;             // namespace
-    this.signalName;        // the full signal namespace            **FIX
-    this.deviceName;
-    this.parentNode;        // stores the parent node (null for root)
-    this.childNodes = [];   // stores all child nodes
-    this.childIndex;        // notes index into parent nodes array of child nodes
-    this.direction;         // source or destination signal (0/1)
-    this.svg;               // holds the SVG DOM element for the node
-};
+    function adjust_edge(edge) {
+        let view = edge.view;
+        let invisible = (   $(edge.view.src_tr).hasClass('invisible')
+                         || $(edge.view.dst_tr).hasClass('invisible'))
 
-BalloonNode.prototype = {
-    /**
-     * Determines if the node is a terminal node (leaf) or not (branch)
-     */
-    isLeaf : function() {
-        return (this.childNodes.length==0);
-    },
+        let arrowhead_offset = 7;
 
-    /**
-     * comparison function for matching two nodes
-     * @param node the node to match to
-     */
-    equals : function (node) {
-        if (   this.signalName == node.signalName
-            && this.label == node.label
-            && this.level == node.level)
+        let S = fullOffset(view.src_tr);
+        let D = fullOffset(view.dst_tr);
+        let frame = fullOffset($('#svgDiv')[0]);
+        let h_center = frame.width / 2;
+
+        if ($(view.src_tr).parents('.tableDiv').attr('id') == 'leftTable')
+            var x1 = view.arrowheads[1] ? arrowhead_offset : 0;
+        else
+            var x1 = frame.width - (view.arrowheads[1] ? arrowhead_offset : 0);
+        var y1 = S.top + S.height * view.src_offset - frame.top;
+
+        if ($(view.dst_tr).parents('.tableDiv').attr('id') == 'leftTable')
+            var x2 = view.arrowheads[0] ? arrowhead_offset : 0;
+        else
+            var x2 = frame.width - (view.arrowheads[0] ? arrowhead_offset : 0);
+        var y2 = D.top + D.height * view.dst_offset - frame.top;
+
+        let v_center = (y1 + y2) * 0.5;
+        let h_quarter = (h_center + x1) * 0.5;
+
+        let y3 = y1 * 0.9 + v_center * 0.1;
+        let y4 = y2 * 0.9 + v_center * 0.1;
+
+        if (S.left == D.left) {
+            let mult = Math.abs(y1 - y2) * 0.25 + 35;
+            h_center = S.left < h_center ? mult : frame.width - mult;
+        }
+
+        if (view.arrowheads[0])
+            view.attr({"arrow-end": "block-wide-long"});
+        if (view.arrowheads[1])
+            view.attr({"arrow-start": "block-wide-long"});
+
+        let path = [["M", x1, y1],
+                    ["C", h_center, y3, h_center, y4, x2, y2]];
+        let opacity = invisible ? 0 : edge.status == "staged" ? 0.5 : 1.0;
+
+        if (view.new) {
+            let path_start, path_mid;
+            if (view.arrowheads[1]) {
+                path_start = [["M", x2, y2],
+                              ["C", x2, y2, x2, y2, x2, y2]];
+                path_mid = [["M", h_center, v_center],
+                            ["C", h_center, v_center, h_quarter, y2, x2, y2]];
+            }
+            else {
+                path_start = [["M", x1, y1],
+                              ["C", x1, y1, x1, y1, x1, y1]];
+                path_mid = [["M", x1, y1],
+                            ["C", h_quarter, y1, h_center, v_center, h_center,
+                             v_center]];
+            }
+
+            view.attr({ "path": path_start,
+                        "stroke-dasharray": edge.muted ? "--" : "" });
+
+            view.animate({"path": path_mid,
+                          "opacity": opacity}, 250, "linear", function() {
+                view.animate({"path": path}, 250, "elastic");
+            });
+            view.new = false;
+        }
+        else {
+            // update endpoints first
+            let p = view.points;
+            temp = [["M", x1, y1],
+                    ["C", p[0], p[1], p[2], p[3], x2, y2]];
+//            view.attr({"path": temp,
+            view.attr({"stroke-dasharray": edge.muted ? "--" : ""});
+            view.animate({"path": temp,
+                          "opacity": opacity,
+                         }, 50, "linear", function() {
+                view.animate({"path": path}, 450, "elastic");
+                if (view.changed) {
+                    view.changed = false;
+                    adjust_edge(edge);
+                }
+            });
+        }
+        view.points = [h_center, y3, h_center, y4];
+    }
+
+    function update_edge_endpoints(edge) {
+        let found = 0
+        for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                edge.view.src_tr = row;
+                ++found;
+            }
+            if (row.cells[0].textContent == edge.dst) {
+                edge.view.dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
                 return true;
-            else
-                return false;
-    },
-
-    deleteNode : function() {
-        // cleanup child elements recursively
-        var n = this.childNodes.length;
-        if (n > 0) {
-            for (var i=0; i<n; i++) {
-                this.childNodes[i].deleteNode();
+        }
+        for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                edge.view.src_tr = row;
+                ++found;
             }
+            if (row.cells[0].textContent == edge.dst) {
+                edge.view.dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
+                return true;
         }
+        return false;
+    }
 
-        // cleanup this element
-        delete this.svg;
-    },
+    function add_edge_view(edge, label, arrowheads) {
+        let src_tr = null;
+        let dst_tr = null;
+        let found = 0;
 
-    getNode : function (node) {
-        if (this.equals(node)) {
-            return this;
+        for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
+            if (row.cells[0].textContent == edge.src) {
+                src_tr = row;
+                ++found;
+            }
+            if (row.cells[0].textContent == edge.dst) {
+                dst_tr = row;
+                ++found;
+            }
+            if (found >= 2)
+                break;
         }
-        // check with children
-        else {
-            var foundNode = false;
-            for (var i = 0; i < this.childNodes.length; i++) {
-                foundNode = this.childNodes[i].getNode(node);
-                if (foundNode != false)
+        if (found < 2) {
+            for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
+                if (row.cells[0].textContent == edge.src) {
+                    src_tr = row;
+                    ++found;
+                }
+                if (row.cells[0].textContent == edge.dst) {
+                    dst_tr = row;
+                    ++found;
+                }
+                if (found >= 2)
                     break;
             }
-
-            if (foundNode != false)
-                return foundNode;
-            else
-                return false;
         }
-    },
+        // Are these rows being displayed?
+        if (found < 2 || $(src_tr).css('display') == 'none'
+            || $(dst_tr).css('display') == 'none') {
+            return 0;
+        }
 
-    /**
-     * recursive function to get all descendant connected nodes
-     * @param nodes array of nodes to check
-     * @returns    an array of the connected nodes
-     */
-    getMapped : function(nodes) {
-        var result = [];
+        var view = svgArea.path();
 
-        if (!nodes || nodes.length < 1)
-            return result;
+        view.src_tr = src_tr;
+        view.dst_tr = dst_tr;
+        view.label = label;
+        view.src_offset = 0.5;
+        view.dst_offset = 0.5;
+        view.arrowheads = arrowheads;
+        view.new = true;
 
-        // check all nodes
-        for (var i = 0; i < nodes.length; i++) {
-            var node = nodes[i];
+        edge['view'] = view;
 
-            // if leaf, simple check
-            if (node.isLeaf()) {
-                if (model.isMapped(this.signalName, node.signalName)) {
-                    result.push(node);
+        return 1;
+    }
+
+    function update_edges() {
+        this.touching = function(table) {
+            for (var i = 1, row; row = table.table.rows[i]; i++) {
+                // find edges touching this row
+                let t = [];
+                let row_fo = fullOffset(row);
+                edges.each(function(edge) {
+                    if (edge.view.src_tr == row) {
+                        let fo = fullOffset(edge.view.dst_tr);
+                        t.push([edge.view, 0, fo.top, fo.left, edge.key]);
+                    }
+                    if (edge.view.dst_tr == row) {
+                        let fo = fullOffset(edge.view.src_tr);
+                        t.push([edge.view, 1, fo.top, fo.left, edge.key]);
+                    }
+                });
+                let len = t.length;
+                if (len <= 0)
+                    continue;
+                // sort based on vertical row position of other endpoint
+                t.sort(function(a, b) {
+                    if (a[3] != b[3]) {
+                       // targets are in different tables
+                       if (a[3] == row_fo.left)
+                           return a[2] - row_fo.top;
+                       else
+                           return row_fo.top - b[2];
+                    }
+                    else if (a[3] == row_fo.left
+                             && (b[2] > row_fo.top == a[2] > row_fo.top)) {
+                       // both targets on same side as src and both same direction
+                       return b[2] - a[2];
+                    }
+                    return a[2] - b[2];
+                });
+                for (var j = 0; j < len; j++) {
+                    let offset = (j + 1) / (len + 1);
+                    if (t[j][1])
+                        t[j][0].dst_offset = offset;
+                    else
+                        t[j][0].src_offset = offset;
                 }
             }
-            // if branch, call recursive
-            else {
-                result = result.concat(this.getMapped(node.childNodes));
-            }
         }
-        return result;
-    },
+        this.touching(leftTable);
+        this.touching(rightTable);
+        edges.each(adjust_edge);
+    }
 
-    /*
-     * Recursive function for getting all descendant nodes
-     */
-    getDescendantLeafNodes : function() {
-        var result = [];
+    function select_tab(tab) {
+        if (selectedTab == tab.innerHTML)
+            return;
 
-        if (this.isLeaf()) {
-            result.push(this);
+        selectedTab = tab.innerHTML;
+        $(".tabsel").removeClass("tabsel");
+        $(tab).addClass("tabsel");
+
+        if (tab == tabDevices) {
+            $('#svgTitle').text("Links");
+            leftTable.set_headers(deviceHeaders);
+            rightTable.set_headers(deviceHeaders);
+            $('#saveLoadDiv').addClass('disabled');
+            $('#svgTop').text('hide unlinked devices');
         }
         else {
-            for (var i=0; i<this.childNodes.length; i++) {
-                result = result.concat(this.childNodes[i].getDescendantLeafNodes());
-            }
+            $('#svgTitle').text("Maps");
+            leftTable.set_headers(signalHeaders);
+            rightTable.set_headers(signalHeaders);
+            $('#saveLoadDiv').removeClass('disabled');
+            $('#svgTop').text('hide unmapped signals');
         }
-        return result;
+
+        $('#leftSearch, #rightSearch').val('');
+
+        $('#container').trigger("tab", selectedTab);
+        cleanup_edges();
+        if (selectedTab == all_devices) {
+            edges.keygen = model.links.keygen;
+            update_devices();
+            update_links();
+        }
+        else {
+            edges.keygen = model.maps.keygen;
+
+            // update focusedDevices
+            focusedDevices = [selectedTab];
+            model.links.each(function(link) {
+                if (link.src == selectedTab && !focusedDevices.includes(link.dst))
+                    focusedDevices.push(link.dst);
+                if (link.dst == selectedTab && !focusedDevices.includes(link.src))
+                    focusedDevices.push(link.src);
+            });
+            update_signals();
+            update_maps();
+
+            // trigger update save location event
+            $('#container').trigger("updateSaveLocation");
+        }
     }
-};
+
+    function select_tr(tr) {
+        if (!tr)
+            return;
+
+        var t = $(tr);
+        var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
+
+        // Is the row on the left or right?
+        var i = (t.parents('.displayTable')[0] == leftTable.table) ? 0 : (t.parents('.displayTable')[0] == rightTable.table) ? 1 : null;
+        if (i==null)
+            return;
+
+        var l = null;
+        if (selectLists[selectedTab])
+            l = selectLists[selectedTab][i];
+        else
+            selectLists[selectedTab] = [null, null];
+        if (!l)
+            l = new Assoc();
+
+        if (t.hasClass("trsel")) {
+            t.removeClass("trsel");
+            l.remove(name);
+        } else {
+            t.addClass("trsel");
+            l.add(name, tr.parentNode);
+        }
+
+        if (i == 0) // Left table
+            lastSelectedTr.left = tr;
+        else if (i == 1)
+            lastSelectedTr.right = tr;
+
+        selectLists[selectedTab][i] = l;
+        $('#container').trigger("updateMapProperties");
+    }
+
+    // For selecting multiple rows with the 'shift' key
+    function full_select_tr(tr) {
+        var targetTable = $(tr).parents('.tableDiv').attr('id') == 'leftTable' ? '#leftTable' : '#rightTable';
+        var trStart = targetTable == '#leftTable' ? lastSelectedTr.left : lastSelectedTr.right;
+        if (!trStart) {
+            return;
+        }
+
+        var index1 = $(tr).index();
+        var index2 = $(trStart).index();
+
+        var startIndex = Math.min(index1, index2);
+        var endIndex = Math.max(index1, index2);
+
+        $(''+targetTable+' tbody tr').each(function(i, e) {
+            if (i > startIndex && i < endIndex
+                && !$(e).hasClass('invisible') && !$(e).hasClass('trsel')){
+                select_tr(e);
+                $('#container').trigger("updateMapProperties");
+            }
+        });
+    }
+
+    function deselect_all() {
+        $('tr.trsel', leftTable.table).each(function(i,e) {
+            selectLists[selectedTab][0].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
+            $(this).removeClass('trsel');
+        });
+        $('tr.trsel', rightTable.table).each(function(i,e) {
+            selectLists[selectedTab][1].remove(e.firstChild.innerHTML.replace(/<wbr>/g, ''));
+            $(this).removeClass('trsel');
+        });
+        lastSelectedTr.left = null;
+        lastSelectedTr.right = null;
+
+        edges.each(function(edge) {
+            if (edge.view.selected) {
+                edge.view.animate({"stroke": "black"}, 50);
+                edge.view.selected = false;
+            }
+        });
+        $('#container').trigger("updateMapProperties");
+    }
+
+    function select_all() {
+        edges.each(function(edge) {
+            if (!edge.view.selected) {
+                edge.view.animate({"stroke": "red"}, 50);
+                edge.view.selected = true;
+            }
+        });
+    }
+
+    function on_table_scroll() {
+        update_edges();
+    }
+
+    function on_link(e, start, end) {
+        if (start && end)
+            $('#container').trigger("link", [start.cells[0].textContent,
+                                             end.cells[0].textContent]);
+        e.stopPropagation();
+    }
+
+    function on_unlink(e) {
+        edges.each(function(edge) {
+            if (edge.view.selected)
+                $('#container').trigger("unlink", [edge.src, edge.dst]);
+        });
+        e.stopPropagation();
+    }
+
+    function on_map(e, start, end, args) {
+        if (model.mKey) {
+            args['muted'] = true;
+        }
+        $('#container').trigger("map", [start.cells[0].textContent,
+                                        end.cells[0].textContent, args]);
+        let key = model.maps.add({'src': start.cells[0].textContent,
+                                  'dst': end.cells[0].textContent,
+                                  'status': 'staged'});
+        update_maps();
+        e.stopPropagation();
+    }
+
+    function on_unmap(e) {
+        edges.each(function(edge) {
+            if (edge.view.selected)
+                $('#container').trigger("unmap", [edge.src, edge.dst]);
+        });
+        e.stopPropagation();
+    }
+
+    function add_tabs() {
+        $('#container').append(
+            "<ul class='topTabs'>"+
+                "<li id='allDevices'>"+all_devices+"</li>"+
+            "</ul>");
+        tabList = $('.topTabs')[0];
+        tabDevices = $('#allDevices')[0];
+    }
+
+    function add_title_bar() {
+        $('#container').append(
+            "<div id='titleSearchDiv'>"+
+                "<h2 id='leftTitle' class='searchBar'>Sources</h2></li>"+
+                "<input type='text' id='leftSearch' class='searchBar'></input></li>"+
+                "<h2 id='svgTitle' class='searchBar'>Links</h2></li>"+
+                "<h2 id='rightTitle' class='searchBar'>Destinations</h2></li>"+
+                "<input type='text' id='rightSearch' class='searchBar'></input></li>"+
+            "</div>");
+        var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
+    }
+
+    function add_display_tables() {
+        leftTable = new listTable('leftTable');
+        rightTable = new listTable('rightTable');
+
+        // Put the tables in the DOM
+        leftTable.create_within($('#container')[0]);
+        rightTable.create_within($('#container')[0]);
+
+        leftTable.set_headers(['device', 'outputs', 'host', 'port']);
+        rightTable.set_headers(['device', 'input', 'host', 'port']);
+
+        $(leftTable.table).tablesorter({widgets: ['zebra']});
+        $(rightTable.table).tablesorter({widgets: ['zebra']});
+
+        tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+    }
+
+    function add_svg_area() {
+        $('#container').append(
+            "<div id='svgDiv' class='links'>"+
+                "<div id='svgTop'>hide unlinked devices</div>"+
+            "</div>");
+
+        svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
+    }
+
+    function add_status_bar() {
+        $('#container').append(
+            "<table id='statusBar'>"+
+                "<tr>"+
+                    "<td class='status left'>0 of 0 signals</td>"+
+                    "<td class='status middle'>0 of 0 maps</td>"+
+                    "<td class='status right'>0 of 0 signals</td>"+
+                "</tr>"+
+            "</table>");
+    }
+
+    function drawing_curve(sourceRow) {
+        var self = this;
+        this.sourceRow = sourceRow;
+        this.targetRow;
+        this.muted = false;
+        var allow_self_link = selectedTab == all_devices;
+
+        this.canvasWidth = $('#svgDiv').width();
+
+        this.clamptorow = function(row, is_dst) {
+            var svgPos = fullOffset($('#svgDiv')[0]);
+            var rowPos = fullOffset(row);
+            var y = rowPos.top + rowPos.height/2 - svgPos.top;
+            return y;
+        };
+
+        this.findrow = function (y) {
+            // The upper position of the canvas (to find the absolute position)
+            var svgTop = $('#svgDiv').offset().top;
+
+            // Left edge of the target table
+            var ttleft = $(this.targetTable.tbody).offset().left + 5;
+
+            // Closest table element (probably a <td> cell)
+            var td = document.elementFromPoint(ttleft, svgTop + y);
+            var row = $(td).parents('tr')[0];
+            var incompatible = $(row).hasClass('incompatible');
+            return incompatible ? null : row;
+        };
+
+        // Our bezier curve points
+        this.path = [["M"], ["C"]];
+
+        // Are we starting from for the left or right table?
+        this.sourceTable;
+        this.targetTable;
+        if ($(this.sourceRow).parents('.tableDiv').attr('id') == "leftTable") {
+            this.sourceTable = leftTable;
+            this.path[0][1] = 0; // Start the curve at left
+        }
+        else {
+            this.sourceTable = rightTable;
+            this.path[0][1] = this.canvasWidth; // Start the curve at right
+        }
+
+        // And in the middle of the starting row
+        this.path[0][2] = this.clamptorow(this.sourceRow, 0);
+
+        // The actual line
+        this.line = svgArea.path();
+
+        this.update = function(moveEvent) {
+            moveEvent.offsetX = moveEvent.pageX - $('#svgDiv').offset().left;
+            moveEvent.offsetY = moveEvent.pageY - $('#svgDiv').offset().top;
+
+            var target = moveEvent.currentTarget;
+            var start = [this.path[0][1], this.path[0][2]];
+            var end = [this.path[1][5], this.path[1][6]];
+            var c1 = null;
+            if (target.tagName == "svg") {
+                end = [moveEvent.offsetX, moveEvent.offsetY];
+                var absdiff = Math.abs(end[0] - start[0]);
+
+                // get targetTable
+                var newTargetTable;
+                if (absdiff < this.canvasWidth/2)
+                    newTargetTable = this.sourceTable;
+                else if (this.sourceTable == leftTable)
+                    newTargetTable = rightTable;
+                else
+                    newTargetTable = leftTable;
+                if (this.targetTable != newTargetTable) {
+                    this.targetTable = newTargetTable;
+                    // Fade out incompatible signals
+                    if (selectedTab != all_devices)
+                        fade_incompatible_signals(this.sourceRow);
+                }
+
+                // Within clamping range?
+                if (absdiff < 50) {
+                    // we can clamp to same side
+                    var startRow = this.findrow(start[1]);
+                    var clampRow = this.findrow(end[1]);
+                    if (clampRow && (allow_self_link || clampRow != startRow)) {
+                        if (this.sourceTable == this.targetTable)
+                            end[0] = start[0] + 7;
+                        else
+                            end[0] = this.canvasWidth - start[0] - 7;
+                        c1 = end[1];
+                        end[1] = this.clamptorow(clampRow, 1);
+                        this.checkTarget(clampRow);
+                    }
+                    else {
+                        if (this.sourceTable == this.targetTable)
+                            end[0] = start[0] + 20;
+                        else
+                            end[0] = this.canvasWidth - start[0] - 20;
+                        this.checkTarget(null);
+                    }
+                }
+                else if (this.canvasWidth - absdiff < 50) {
+                    var clampRow = this.findrow(end[1]);
+                    if (clampRow) {
+                        end[0] = this.canvasWidth - start[0] - 7;
+                        c1 = end[1];
+                        end[1] = this.clamptorow(clampRow, 1);
+                        this.checkTarget(clampRow);
+                    }
+                    else {
+                        end[0] = this.canvasWidth - start[0] - 20;
+                        this.checkTarget(null);
+                    }
+                }
+                else {
+                    end[0] = this.canvasWidth - start[0] - 20;
+                    this.checkTarget(null);
+                }
+            }
+            // We're over a table row of the target table
+            if ($(target).parents('tbody')[0] == this.targetTable.tbody) {
+                var rowHeight = $(target).height();
+                this.checkTarget(target);
+                if (this.sourceTable == this.targetTable) {
+                    if (!($(target).hasClass('incompatible'))) {
+                        end[0] = start[0] + 7;
+                        end[1] = this.clamptorow(target, 1);
+                    }
+                    else {
+                        end[0] = start[0] + 20;
+                        end[1] = moveEvent.offsetY;
+                    }
+                }
+                else {
+                    if (!($(target).hasClass('incompatible'))) {
+                        end[0] = this.canvasWidth - start[0] - 7;
+                        end[1] = this.clamptorow(target, 1);
+                    }
+                    else {
+                        end[0] = this.canvasWidth - start[0] - 20;
+                        end[1] = moveEvent.offsetY;
+                    }
+                }
+            }
+            this.path = get_bezier_path(start, end, c1, this.canvasWidth);
+            this.line.attr({"path": this.path,
+                            "arrow-end": "block-wide-long",
+                            "opacity": 0.5});
+        };
+
+        this.mouseup = function(mouseUpEvent) {
+            if (selectedTab == all_devices)
+                on_link(mouseUpEvent, this.sourceRow, this.targetRow);
+            else if (this.targetRow) {
+                on_map(mouseUpEvent, this.sourceRow,
+                       this.targetRow, {'muted': this.muted});
+            }
+            $("*").off('.drawing').removeClass('incompatible');
+            $(document).off('.drawing');
+            self.line.remove();
+        };
+
+        // Check if we have a new target row, select it if necessary
+        this.checkTarget = function(mousedOverRow) {
+            if (this.targetRow == mousedOverRow
+                || (this.sourceRow == this.targetRow && !allow_self_link))
+                return;
+            if ($(mousedOverRow).hasClass('incompatible')) {
+                this.targetRow = null;
+                return;
+            }
+            if (this.targetRow != null) {
+                // deselect previous
+                select_tr(this.targetRow);
+            }
+            this.targetRow = mousedOverRow;
+            select_tr(this.targetRow);
+        };
+    }
+
+    // Finds a bezier curve between two points
+    function get_bezier_path(start, end, controlEnd, width) {
+        // 'Move to': (x0, y0), 'Control': (C1, C2, end)
+        var path = [["M", start[0], start[1]], ["C"]];
+
+        // x-coordinate of both control points
+        path[1][1] = path[1][3] = width / 2;
+        // y-coordinate of first control point
+        if (start[0] == end[0] && start[1] == end[1]) {
+            path[1][2] = start[1] + 40;
+            if (controlEnd)
+                path[1][4] = controlEnd - 40;
+            else
+                path[1][4] = end[1] - 40;
+        }
+        else {
+            path[1][2] = start[1];
+            // y-coordinate of second control point
+            if (controlEnd)
+                path[1][4] = controlEnd;
+            else
+                path[1][4] = end[1];
+        }
+
+        // Finally, the end points
+        path[1][5] = end[0];
+        path[1][6] = end[1];
+
+        return path;
+    }
+
+    function fade_incompatible_signals(node) {
+        $(node).addClass('incompatible');
+        edges.each(function(edge) {
+            if (edge.view.src_tr == row)
+                $(edge.view.dst_tr).addClass('incompatible');
+            else if (edge.view.dst_tr == row)
+                $(edge.view.src_tr).addClass('incompatible');
+        });
+    }
+
+    function drawing_handlers() {
+        // Wait for a mousedown on either table
+        // Handler is attached to table, but 'this' is the table row
+        $('.displayTable').on('mousedown', 'tr', function(tableClick) {
+
+            var sourceRow = this;
+
+            // Cursor enters the canvas
+            $('#svgDiv').one('mouseenter.drawing', function() {
+
+                var curve = new drawing_curve(sourceRow);
+
+                // Make sure only the proper row is selected
+                deselect_all();
+                select_tr(curve.sourceRow);
+                $('#container').trigger("updateMapProperties");
+
+                // Moving about the canvas
+                $('svg, .displayTable tbody tr').on('mousemove.drawing',
+                                                    function(moveEvent) {
+                    curve.update(moveEvent);
+                });
+
+                $(document).one('mouseup.drawing', function(mouseUpEvent) {
+                    curve.mouseup(mouseUpEvent);
+                });
+
+                $(document).on('keydown.drawing', function(keyPressEvent) {
+                    if (selectedTab != all_devices && keyPressEvent.which == 77) {
+                        // Change if the user is drawing a muted map
+                        if (curve.muted == true) {
+                            curve.muted = false;
+                            curve.line.node.classList.remove('muted');
+                        }
+                        else {
+                            curve.muted = true;
+                            curve.line.node.classList.add('muted');
+                        }
+                    }
+                });
+
+            });
+
+            $(document).one('mouseup.drawing', function(mouseUpEvent) {
+                $("*").off('.drawing').removeClass('incompatible');
+                $(document).off('.drawing');
+            });
+        });
+    }
+
+    // calculate intersections
+    // adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
+    function is_between(a, b1, b2, fudge) {
+        if ((a + fudge >= b1) && (a - fudge <= b2)) {
+            return true;
+        }
+        if ((a + fudge >= b2) && (a - fudge <= b1)) {
+            return true;
+        }
+        return false;
+    }
+
+    function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+        let m1 = (x1 == x2) ? 1000000 : (y1 - y2) / (x1 - x2);
+        let m2 = (x3 == x4) ? 1000000 : (y3 - y4) / (x3 - x4);
+        if (m1 == m2) {
+            // lines are parallel - todo check if same b, overlap
+            return false;
+        }
+        let b1 = y1 - x1 * m1;
+        let b2 = y3 - x3 * m2;
+        let isect_x = (b2 - b1) / (m1 - m2);
+        let isect_y = isect_x * m1 + b1;
+        return (   is_between(isect_x, x1, x2, 0.1)
+                && is_between(isect_x, x3, x4, 0.1)
+                && is_between(isect_y, y1, y2, 0.1)
+                && is_between(isect_y, y3, y4, 0.1));
+    }
+
+    function edge_intersection_select(x1, y1, x2, y2) {
+        let updated = false;
+        edges.each(function(edge) {
+            let len = edge.view.getTotalLength();
+            let isect = false;
+            for (var j = 0; j < 10; j++) {
+                let p1 = edge.view.getPointAtLength(len * j * 0.1);
+                let p2 = edge.view.getPointAtLength(len * (j + 1) * 0.1);
+
+                if (line_line_intersect(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)) {
+                   isect = true;
+                   break;
+                }
+            }
+            if (!isect)
+                return;
+            if (!edge.view.selected) {
+                edge.view.selected = true;
+                ++updated;
+            }
+            if (updated) {
+                edge.view.animate({"stroke": "red"}, 50);
+                $('#container').trigger("updateMapProperties");
+            }
+        });
+    }
+
+    function selection_handlers() {
+        $('.links').on('mousedown', function(e) {
+            if (e.shiftKey == false) {
+                deselect_all();
+            }
+
+            // cache current mouse position
+            let svgPos = fullOffset($('#svgDiv')[0]);
+            let x1 = e.pageX - svgPos.left;
+            let y1 = e.pageY - svgPos.top;
+
+            // try intersection with 'X'around cursor for select on 'click'
+            edge_intersection_select(x1-3, y1-3, x1+3, y1+3);
+            edge_intersection_select(x1-3, y1+3, x1+3, y1-3);
+
+            let stop = false;
+            // Moving about the canvas
+            $('.links').on('mousemove.drawing', function(moveEvent) {
+                if (stop == true)
+                    return;
+
+                let x2 = moveEvent.pageX - svgPos.left;
+                let y2 = moveEvent.pageY - svgPos.top;
+
+                if ((Math.abs(x1 - x2) + Math.abs(y1 - y2)) < 5)
+                    return;
+
+                edge_intersection_select(x1, y1, x2, y2);
+
+                e.stopPropagation();
+
+                x1 = x2;
+                y1 = y2;
+            });
+            $('.links').one('mouseup.drawing', function(mouseUpEvent) {
+                stop = true;
+            });
+        });
+    }
+
+    this.add_handlers = function() {
+
+        // Various keyhandlers
+        $('body').on('keydown.list', function(e) {
+            if (e.which == 8 || e.which == 46) { // unmap on 'delete'
+                // Prevent the browser from going back a page
+                // but NOT if you're focus is an input and deleting text
+                if (!$(':focus').is('input')) {
+                    e.preventDefault();
+                }
+                if (selectedTab == all_devices)
+                    on_unlink(e);
+                else
+                    on_unmap(e);
+                deselect_all();
+            }
+            else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
+                e.preventDefault();
+                select_all();
+            }
+        });
+
+        // Search function boxes
+        $('#leftSearch, #rightSearch').on('keyup', function(e) {
+            e.stopPropagation();
+            filter_view();
+        });
+
+        $('#svgTop').on('click', function(e) {
+            e.stopPropagation();
+            if (view.unmappedVisible == true) {
+                view.unmappedVisible = false;
+                $('#svgTop').text('show unmapped signals');
+            }
+            else {
+                view.unmappedVisible = true;
+                $('#svgTop').text('hide unmapped signals');
+            }
+            filter_view();
+        });
+
+        drawing_handlers();
+        selection_handlers();
+    }
+}

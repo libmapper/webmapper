@@ -105,3 +105,47 @@ function arrIsUnique(item, arr){
 	}	
 	return true;
 }
+
+// calculate intersections
+// adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
+function is_between(a, b1, b2, fudge) {
+    if ((a + fudge >= b1) && (a - fudge <= b2)) {
+        return true;
+    }
+    if ((a + fudge >= b2) && (a - fudge <= b1)) {
+        return true;
+    }
+    return false;
+}
+
+function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+    let m1 = (x1 == x2) ? 1000000 : (y1 - y2) / (x1 - x2);
+    let m2 = (x3 == x4) ? 1000000 : (y3 - y4) / (x3 - x4);
+    if (m1 == m2) {
+            // lines are parallel - todo check if same b, overlap
+        return false;
+    }
+    let b1 = y1 - x1 * m1;
+    let b2 = y3 - x3 * m2;
+    let isect_x = (b2 - b1) / (m1 - m2);
+    let isect_y = isect_x * m1 + b1;
+    return (   is_between(isect_x, x1, x2, 0.1)
+            && is_between(isect_x, x3, x4, 0.1)
+            && is_between(isect_y, y1, y2, 0.1)
+            && is_between(isect_y, y3, y4, 0.1));
+}
+
+function edge_intersection(edge, x1, y1, x2, y2) {
+    let len = edge.getTotalLength();
+    let isect = false;
+    for (var j = 0; j < 10; j++) {
+        let p1 = edge.getPointAtLength(len * j * 0.1);
+        let p2 = edge.getPointAtLength(len * (j + 1) * 0.1);
+
+        if (line_line_intersect(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)) {
+            isect = true;
+            break;
+        }
+    }
+    return isect ? true : false;
+}

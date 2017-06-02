@@ -54,20 +54,26 @@ def dev_props(dev):
     props = dev.properties.copy()
     if 'synced' in props:
         props['synced'] = props['synced'].get_double()
+    props['key'] = dev.name
     del props['is_local']
+    del props['id']
     return props
 
 def link_props(link):
     props = link.properties.copy()
     props['src'] = link.device(0).name
     props['dst'] = link.device(1).name
+    props['key'] = link.device(0).name + '<->' + link.device(1).name
     del props['is_local']
+    del props['id']
     return props
 
 def sig_props(sig):
     props = sig.properties.copy()
     props['device'] = sig.device().name
+    props['key'] = props['device'] + '/' + props['name']
     del props['is_local']
+    del props['id']
     if props['direction'] == mapper.DIR_INCOMING:
         props['direction'] = 'input'
     else:
@@ -81,7 +87,10 @@ def map_props(map):
     props = map.properties.copy()
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
+    props['key'] = props['src'] + '->' + props['dst']
     del props['is_local']
+    del props['id']
+
     # translate some other properties
     if props['mode'] == mapper.MODE_LINEAR:
         props['mode'] = 'linear'

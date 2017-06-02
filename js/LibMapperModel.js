@@ -2,6 +2,8 @@ function is_equal(one, two) {
     if (typeof(one) != typeof(two))
         return false;
     if (typeof(one) == 'object') {
+        if (one.key)
+            return one.key == two.key;
         if (one.length != two.length)
             return false;
         let index;
@@ -56,19 +58,8 @@ MapperNodeArray.prototype = {
         return size;
     },
 
-    getkey : function(arg) {
-        if (typeof(arg) == 'object') {
-            if ('device' in arg)
-                return arg.device + ':' + arg.name
-            return arg.name;
-        }
-        else if (typeof(arg) == 'string')
-            return arg;
-        return null;
-    },
-
     add : function(obj) {
-        let key = this.getkey(obj);
+        let key = obj.key;
         if (!key)
             return null;
         if (key in this.contents) {
@@ -83,23 +74,28 @@ MapperNodeArray.prototype = {
                 }
             }
             if (updated && this.cb_func)
-                this.cb_func(this.obj_type, 'modified', key);
+                this.cb_func('modified', this.obj_type, existing);
         }
         else {
-            obj['key'] = key;
+            if (this.obj_type == 'device')
+                obj.signals = new MapperNodeArray('signal', this.cb_handler);
             this.contents[key] = obj;
             if (this.cb_func)
-                this.cb_func(this.obj_type, 'added', key);
+                this.cb_func('added', this.obj_type, this.contents[key]);
         }
-        return key;
+        return this.contents[key];
     },
 
-    remove : function(arg) {
-        let key = this.getkey(arg);
+    remove : function(obj) {
+        let key = obj.key;
         if (key && this.contents[key]) {
+            if (this.signals)
+                this.signals.each(function(sig) { this.signals.remove(sig); });
             if (this.cb_func)
-                this.cb_func(this.obj_type, 'removed', key);
+                this.cb_func('removing', this.obj_type, this.contents[key]);
             delete this.contents[key];
+            if (this.cb_func)
+                this.cb_func('removed', this.obj_type, this.contents[key]);
         }
         return key;
     },
@@ -118,7 +114,6 @@ function MapperEdgeArray(obj_type, cb_func) {
 MapperEdgeArray.prototype = {
     filter : function(func) {
         let key, obj = new MapperEdgeArray();
-        obj.keygen = this.keygen;
         for (key in this.contents) {
             if (func(this.contents[key])) {
                 obj.add(this.contents[key]);
@@ -151,43 +146,8 @@ MapperEdgeArray.prototype = {
         return size;
     },
 
-    keygen : function(first, second) {
-        if (first > second)
-            return second + '<->' + first;
-        return first + '<->' + second;
-    },
-
-    getprop : function(maybeobj, propname) {
-        if (typeof(maybeobj) == 'object')
-            return maybeobj[propname];
-        else if (typeof(maybeobj) == 'string')
-            return maybeobj;
-        return null;
-    },
-
-    getkey : function() {
-        let src = null;
-        let dst = null;
-        if (arguments.length == 1) {
-            if (typeof(arguments[0]) == 'object') {
-                src = arguments[0].src;
-                dst = arguments[0].dst;
-            }
-            else if (typeof(arguments[0]) == 'string')
-                return arguments[0];
-        }
-        else if (arguments.length == 2) {
-            src = this.getprop(arguments[0], 'name');
-            dst = this.getprop(arguments[1], 'name');
-        }
-        if (src && dst) {
-            return this.keygen(src, dst);
-        }
-        return null;
-    },
-
     add : function(obj) {
-        let key = this.getkey(obj);
+        let key = obj.key;
         if (!key)
             return null;
 
@@ -203,33 +163,29 @@ MapperEdgeArray.prototype = {
                 }
             }
             if (updated && this.cb_func)
-                this.cb_func(this.obj_type, 'modified', key);
+                this.cb_func('modified', this.obj_type, existing);
         }
         else {
-            obj['key'] = key;
             this.contents[key] = obj;
             if (this.cb_func)
-                this.cb_func(this.obj_type, 'added', key);
+                this.cb_func('added', this.obj_type, this.contents[key]);
         }
-        return key;
+        return this.contents[key];
     },
 
-    remove : function(arg) {
-        let key = this.getkey(arg);
+    remove : function(obj) {
+        let key = obj.key;
         if (key && this.contents[key]) {
             if (this.cb_func)
-                this.cb_func(this.obj_type, 'removed', key);
+                this.cb_func('removing', this.obj_type, this.contents[key]);
             delete this.contents[key];
+            if (this.cb_func)
+                this.cb_func('removed', this.obj_type, this.contents[key]);
         }
         return key;
     },
 
-    find : function() {
-        let key = null;
-        if (arguments.length == 1)
-            key = this.getkey(arguments[0]);
-        else if (arguments.length == 2)
-            key = this.getkey(arguments[0], arguments[1])
+    find : function(key) {
         return key ? this.contents[key] : null;
     },
 };
@@ -239,10 +195,9 @@ function MapperModel() {
     this.add_callback = function(f) {
         callbacks.push(f);
     };
-    this.cb_handler = function(obj_type, event, key) {
-//        console.log("model.cb_handler", obj_type, event, key);
+    this.cb_handler = function(event, type, obj) {
         for (var i in callbacks) {
-            callbacks[i](obj_type, event, key);
+            callbacks[i](event, type, obj);
         }
     };
     this.clear_callbacks = function() {
@@ -250,10 +205,8 @@ function MapperModel() {
     };
 
     this.devices = new MapperNodeArray('device', this.cb_handler);
-    this.signals = new MapperNodeArray('signal', this.cb_handler);
     this.links = new MapperEdgeArray('link', this.cb_handler);
     this.maps = new MapperEdgeArray('map', this.cb_handler);
-    this.maps.keygen = function(first, second) { return first + '->' + second };
 
     this.networkInterfaces = {'selected': null, 'available': []};
 
@@ -261,11 +214,123 @@ function MapperModel() {
     this.pathToImages = "images/";
 
     this.clearAll = function() {
-        this.maps.each(function(map) {this.maps.remove(map); });
-        this.links.each(function(link) {this.links.remove(link); });
-        this.signals.each(function(sig) {this.signals.remove(sig); });
-        this.devices.each(function(dev) {this.devices.remove(dev); });
+        this.maps.each(function(map) { this.maps.remove(map); });
+        this.links.each(function(link) { this.links.remove(link); });
+        this.devices.each(function(dev) { this.devices.remove(dev); });
     };
+
+    this.add_devices = function(cmd, devs) {
+//        console.log('add devices', devs);
+        for (var i in devs) {
+            this.devices.add(devs[i]);
+            command.send('subscribe', devs[i].name);
+        }
+    }
+    this.del_device = function(cmd, dev) {
+//        console.log('remove device');
+        dev = model.devices.find(dev.name);
+        if (!dev)
+            return;
+        dev.signals.each(function(sig) {
+            if (sig.device != dev)
+                return;
+            this.maps.each(function(map) {
+                if (sig == map.src || sig == map.dst)
+                    this.maps.remove(map.key);
+            });
+        });
+        this.links.each(function(link) {
+            if (link.src == dev.name || link.dst == dev.name)
+                this.links.remove(link);
+        });
+        this.devices.remove(dev.name);
+    }
+    this.add_signals = function(cmd, sigs) {
+//        console.log('add signals', sigs);
+        for (var i in sigs) {
+            let dev = this.devices.find(sigs[i].device);
+            if (!dev) {
+                console.log("error adding signal: couldn't find device",
+                            sigs[i].device);
+                return;
+            }
+            sigs[i].device = dev;
+            dev.signals.add(sigs[i]);
+        }
+    }
+    this.del_signal = function(cmd, sig) {
+//        console.log('remove signal');
+        let dev = this.devices.find(sig.device);
+        if (dev)
+            dev.signals.remove(sig.name);
+    }
+    this.add_links = function(cmd, links) {
+//        console.log('add links', links);
+        for (var i in links) {
+            let src = this.devices.find(links[i].src);
+            let dst = this.devices.find(links[i].dst);
+            if (!src || !dst) {
+                console.log("error adding link: couldn't find devices",
+                            links[i].src, links[i].dst);
+                return;
+            }
+            links[i].src = src
+            links[i].dst = dst;
+            this.links.add(links[i]);
+        }
+    }
+    this.del_link = function(cmd, link) {
+//        console.log('remove link');
+        if (link && !link.local)
+            this.links.remove(link);
+    }
+    this.add_maps = function(cmd, maps) {
+//        console.log('add maps', cmd, maps);
+        let self = this;
+        findSig = function(name) {
+            name = name.split('/');
+            if (name.length < 2) {
+                console.log("error parsing signal name", name);
+                return null;
+            }
+            let dev = self.devices.find(name[0]);
+            if (!dev) {
+                console.log("error finding signal: couldn't find device",
+                            name[0]);
+                return null;
+            }
+//            name.shift();
+            name = String(name.join('/'));
+            return dev.signals.find(name);
+        }
+        for (var i in maps) {
+            let src = findSig(maps[i].src);
+            let dst = findSig(maps[i].dst);
+            if (!src || !dst) {
+                console.log("error adding map: couldn't find signals",
+                            maps[i].src, maps[i].dst);
+                return;
+            }
+            maps[i].src = src;
+            maps[i].dst = dst;
+            maps[i].status = 'active';
+            this.maps.add(maps[i]);
+        }
+    }
+    this.del_map = function(cmd, map) {
+        console.log('remove map', map);
+        var key = this.maps.remove(map);
+        topMenu.updateMapPropertiesFor(key);
+    }
+
+    command.register("add_devices", this.add_devices.bind(this));
+    command.register("del_devices", this.del_device.bind(this));
+    command.register("add_signals", this.add_signals.bind(this));
+    command.register("del_signal", this.del_signal.bind(this));
+    command.register("add_links", this.add_links.bind(this));
+    command.register("del_link", this.del_link.bind(this));
+    command.register("add_maps", this.add_maps.bind(this));
+    command.register("del_map", this.del_map.bind(this));
 };
 
 //MapperModel.prototype = {

@@ -29,18 +29,20 @@ function listView(model)
     var rightBodyContent = [];
 
     this.init = function() {
+        $('#container').css({
+                            'min-width': '700px',
+                            'min-height': '150px',
+                            'height': 'calc(100% - 115px)'
+                            });
         add_tabs();
         add_title_bar();
         add_display_tables();
         add_svg_area();
         add_status_bar();
+        rightTable.update_row_heights();
+        leftTable.update_row_heights();
         this.add_handlers();
         select_tab(tabDevices);
-        $('#container').css({
-            'min-width': '700px',
-            'min-height': '150px',
-            'height': 'calc(100% - 86px)'
-        });
         add_model_callbacks();
     };
 
@@ -52,19 +54,19 @@ function listView(model)
 
     add_model_callbacks = function() {
         model.clear_callbacks();
-        model.add_callback(function(obj_type, event, key) {
-            switch (obj_type) {
+        model.add_callback(function(event, type, obj) {
+            switch (type) {
                 case 'device':
-                    update_devices(key, event);
+                    update_devices(obj, event);
                     break;
                 case 'link':
-                    update_links(key, event);
+                    update_links(obj, event);
                     break;
                 case 'signal':
-                    update_signals(key, event);
+                    update_signals(obj, event);
                     break;
                 case 'map':
-                    update_maps(key, event);
+                    update_maps(obj, event);
                     break;
             }
         });
@@ -89,7 +91,8 @@ function listView(model)
     };
 
     this.on_resize = function() {
-        tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+        tableHeight = ($('.tableDiv').height() - $('.tableDiv thead').height()
+                       - $('#statusBar').height());
         rightTable.update_row_heights();
         leftTable.update_row_heights();
         edges.each(adjust_edge);
@@ -189,7 +192,7 @@ function listView(model)
         };
     }
 
-    function update_devices(key, event) {
+    function update_devices(dev, event) {
         if (selectedTab != all_devices)
             return;
 
@@ -219,12 +222,11 @@ function listView(model)
         rightTable.update(rightBodyContent, deviceHeaders);
     }
 
-    function update_signals(key, event) {
+    function update_signals(sig, event) {
         if (selectedTab == all_devices)
             return;
-        if (key) {
-            let devname = key.split(':')[0];
-            if (!focusedDevices.includes(devname))
+        if (sig) {
+            if (!focusedDevices.includes(sig.device.name))
                 return;
         }
 
@@ -239,42 +241,44 @@ function listView(model)
             return String(Math.round(value * power) / power);
         }
 
-        model.signals.each(function(sig) {
-            if (!focusedDevices.includes(sig.device))
+        model.devices.each(function(dev) {
+            if (!focusedDevices.includes(dev.name))
                 return;
+            dev.signals.each(function(sig) {
+                let name = sig.key.replace(/\,/g, '<wbr>/');
+                let min = sig.min;
+                if (typeof(min) == 'object') {
+                    for (i in min)
+                        min[i] = toFixed_alt(min[i], 4);
+                }
+                else if (typeof(min) == 'number')
+                    min = toFixed_alt(min, 4);
+                min = String(min).replace(/\,/g, '<wbr>, ');
+                if (min.indexOf(',') >= 0)
+                    min = '[ ' + min + ' ]';
 
-            let name = sig.device + '<wbr>/' + sig.name.replace(/\//g, '<wbr>/');
-            let min = sig.min;
-            if (typeof(min) == 'object') {
-                for (i in min)
-                    min[i] = toFixed_alt(min[i], 4);
-            }
-            else if (typeof(min) == 'number')
-                min = toFixed_alt(min, 4);
-            min = String(min).replace(/\,/g, '<wbr>, ');
-            if (min.indexOf(',') >= 0)
-                min = '[ ' + min + ' ]';
+                let max = sig.max;
+                if (typeof(max) == 'object') {
+                    for (i in max)
+                        max[i] = toFixed_alt(max[i], 4);
+                }
+                else if (typeof(max) == 'number')
+                    max = toFixed_alt(max, 4);
+                max = String(max).replace(/\,/g, '<wbr>, ');
+                if (max.indexOf(',') >= 0)
+                    max = '[ ' + max + ' ]';
 
-            let max = sig.max;
-            if (typeof(max) == 'object') {
-                for (i in max)
-                    max[i] = toFixed_alt(max[i], 4);
-            }
-            else if (typeof(max) == 'number')
-                max = toFixed_alt(max, 4);
-            max = String(max).replace(/\,/g, '<wbr>, ');
-            if (max.indexOf(',') >= 0)
-                max = '[ ' + max + ' ]';
-
-            if (sig.direction == 'output') {
-                leftBodyContent.push([name, sig.type, sig.length, sig.unit, min,
-                                      max]);
-            }
-            else {
-                rightBodyContent.push([name, sig.type, sig.length, sig.unit, min,
-                                       max]);
-            }
+                if (sig.direction == 'output') {
+                    leftBodyContent.push([name, sig.type, sig.length, sig.unit, min,
+                                          max]);
+                }
+                else {
+                    rightBodyContent.push([name, sig.type, sig.length, sig.unit, min,
+                                           max]);
+                }
+            });
         });
+
 
         leftTable.update(leftBodyContent, signalHeaders);
         rightTable.update(rightBodyContent, signalHeaders);
@@ -286,16 +290,16 @@ function listView(model)
         var t = tabDevices;
         var devs = [];
         model.links.each(function(link) {
-            if (!(devs.includes(link.src)))
-                devs.push(link.src);
-            if (!(devs.includes(link.dst)))
-                devs.push(link.dst);
+            if (!(devs.includes(link.src.name)))
+                devs.push(link.src.name);
+            if (!(devs.includes(link.dst.name)))
+                devs.push(link.dst.name);
         });
         for (var i in devs) {
             if (t.nextSibling)
                 t = t.nextSibling;
             else {
-                var x = document.createElement('li');
+                let x = document.createElement('li');
                 x.onclick = function(y) {
                     return function(e) { select_tab(y);
                                          e.stopPropagation(); };
@@ -312,6 +316,7 @@ function listView(model)
             t.parentNode.removeChild(t);
             t = u;
         }
+
     }
 
     function cleanup_edge(edge) {
@@ -326,21 +331,21 @@ function listView(model)
         edges.each(cleanup_edge);
     }
 
-    function update_links(key, event) {
+    function update_links(link, event) {
         if (event != 'modified')
             update_tabs();
 
         if (selectedTab != all_devices) {
-            if (key) {
-                key = key.split("<->");
-                let link = model.links.find(key);
-                if (link.src == selectedTab && !focusedDevices.includes(link.dst)) {
-                    focusedDevices.push(link.dst);
+            if (link) {
+                if (   link.src.name == selectedTab
+                    && !focusedDevices.includes(link.dst.name)) {
+                    focusedDevices.push(link.dst.name);
                     update_signals;
                     update_maps();
                 }
-                if (link.dst == selectedTab && !focusedDevices.includes(link.src)) {
-                    focusedDevices.push(link.src);
+                if (   link.dst.name == selectedTab
+                    && !focusedDevices.includes(link.src.name)) {
+                    focusedDevices.push(link.src.name);
                     update_signals;
                     update_maps();
                 }
@@ -351,7 +356,7 @@ function listView(model)
         // remove stale links
         old_keys = [];
         edges.each(function(edge) {
-            if (!model.links.find(edge) || !update_edge_endpoints(edge)) {
+            if (!model.links.find(edge.key) || !update_edge_endpoints(edge)) {
                 old_keys.push(edge.key);
                 cleanup_edge(edge);
             }
@@ -361,7 +366,7 @@ function listView(model)
 
         // add views for new links
         model.links.each(function(link) {
-            let edge = edges.find(link);
+            let edge = edges.find(link.key);
             if (edge) {
                 if (   link.view.arrowheads[0] != (link.num_maps[0] > 0)
                     || link.view.arrowheads[1] != (link.num_maps[1] > 0)) {
@@ -383,28 +388,28 @@ function listView(model)
             n_visible + " of " + model.links.size() + " links");
     }
 
-    function update_maps(key, event) {
-        if (key) {
-            let map = model.maps.find(key);
-            devs = key.split("->");
-            devs = [devs[0].split("/")[0], devs[1].split("/")[0]];
-            if (   !focusedDevices.includes(devs[0])
-                || !focusedDevices.includes(devs[1]))
+    function update_maps(map, event) {
+        if (map) {
+            if (   !focusedDevices.includes(map.src.device.name)
+                || !focusedDevices.includes(map.dst.device.name))
                 return;
             if (event == 'modified') {
-                $('#container').trigger("updateMapPropertiesFor", key);
-                let edge = edges.find(key), map = model.maps.find(key);
-                if (edge && map) {
+                $('#container').trigger("updateMapPropertiesFor", map.key);
+                let edge = edges.find(map.key);
+                if (edge) {
                     edge.status = map.status;
                     edge.muted = map.muted;
                 }
+            }
+            else if (event == 'removing') {
+                return;
             }
         }
 
         // remove stale maps
         old_keys = [];
         edges.each(function(edge) {
-            if (!model.maps.find(edge) || !update_edge_endpoints(edge)) {
+            if (!model.maps.find(edge.key) || !update_edge_endpoints(edge)) {
                 old_keys.push(edge.key);
                 cleanup_edge(edge);
             }
@@ -414,7 +419,7 @@ function listView(model)
 
         // add views for new maps
         model.maps.each(function(map) {
-            if (edges.find(map))
+            if (edges.find(map.key))
                 return;
             else if (add_edge_view(map, null, [1, 0])) {
                 edges.add(map);
@@ -488,12 +493,12 @@ function listView(model)
         var name = $(row).children('.name').text();
         if (selectedTab == all_devices) {
             return model.links.reduce(function(result, edge) {
-                return result || name == edge.src || name == edge.dst;
+                return result || name == edge.src.name || name == edge.dst.name;
             });
         }
         else {
             return model.maps.reduce(function(result, edge) {
-                return result || name == edge.src || name == edge.dst;
+                return result || name == edge.src.name || name == edge.dst.name;
             });
         }
     }
@@ -507,7 +512,7 @@ function listView(model)
 
         let S = fullOffset(view.src_tr);
         let D = fullOffset(view.dst_tr);
-        let frame = fullOffset($('#svgDiv')[0]);
+        let frame = fullOffset($('#svgDivCenter')[0]);
         let h_center = frame.width / 2;
 
         if ($(view.src_tr).parents('.tableDiv').attr('id') == 'leftTable')
@@ -568,33 +573,20 @@ function listView(model)
             view.new = false;
         }
         else {
-            // update endpoints first
-            let p = view.points;
-            temp = [["M", x1, y1],
-                    ["C", p[0], p[1], p[2], p[3], x2, y2]];
-//            view.attr({"path": temp,
-            view.attr({"stroke-dasharray": edge.muted ? "--" : ""});
-            view.animate({"path": temp,
-                          "opacity": opacity,
-                         }, 50, "linear", function() {
-                view.animate({"path": path}, 450, "elastic");
-                if (view.changed) {
-                    view.changed = false;
-                    adjust_edge(edge);
-                }
-            });
+            view.stop();
+            view.attr({"path": path,
+                       "stroke-dasharray": edge.muted ? "--" : ""});
         }
-        view.points = [h_center, y3, h_center, y4];
     }
 
     function update_edge_endpoints(edge) {
         let found = 0
         for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
-            if (row.cells[0].textContent == edge.src) {
+            if (row.cells[0].textContent == edge.src.key) {
                 edge.view.src_tr = row;
                 ++found;
             }
-            if (row.cells[0].textContent == edge.dst) {
+            if (row.cells[0].textContent == edge.dst.key) {
                 edge.view.dst_tr = row;
                 ++found;
             }
@@ -602,11 +594,11 @@ function listView(model)
                 return true;
         }
         for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
-            if (row.cells[0].textContent == edge.src) {
+            if (row.cells[0].textContent == edge.src.key) {
                 edge.view.src_tr = row;
                 ++found;
             }
-            if (row.cells[0].textContent == edge.dst) {
+            if (row.cells[0].textContent == edge.dst.key) {
                 edge.view.dst_tr = row;
                 ++found;
             }
@@ -622,11 +614,11 @@ function listView(model)
         let found = 0;
 
         for (var i = 1, row; row = leftTable.table.rows[i]; i++) {
-            if (row.cells[0].textContent == edge.src) {
+            if (row.cells[0].textContent == edge.src.key) {
                 src_tr = row;
                 ++found;
             }
-            if (row.cells[0].textContent == edge.dst) {
+            if (row.cells[0].textContent == edge.dst.key) {
                 dst_tr = row;
                 ++found;
             }
@@ -635,11 +627,11 @@ function listView(model)
         }
         if (found < 2) {
             for (var i = 1, row; row = rightTable.table.rows[i]; i++) {
-                if (row.cells[0].textContent == edge.src) {
+                if (row.cells[0].textContent == edge.src.key) {
                     src_tr = row;
                     ++found;
                 }
-                if (row.cells[0].textContent == edge.dst) {
+                if (row.cells[0].textContent == edge.dst.key) {
                     dst_tr = row;
                     ++found;
                 }
@@ -730,34 +722,34 @@ function listView(model)
             leftTable.set_headers(deviceHeaders);
             rightTable.set_headers(deviceHeaders);
             $('#saveLoadDiv').addClass('disabled');
+            $('#svgTop').text('hide unlinked devices');
         }
         else {
             $('#svgTitle').text("Maps");
             leftTable.set_headers(signalHeaders);
             rightTable.set_headers(signalHeaders);
             $('#saveLoadDiv').removeClass('disabled');
+            $('#svgTop').text('hide unmapped signals');
         }
 
-        $('#svgTop').text('hide unmapped');
         $('#leftSearch, #rightSearch').val('');
 
         $('#container').trigger("tab", selectedTab);
         cleanup_edges();
         if (selectedTab == all_devices) {
-            edges.keygen = model.links.keygen;
             update_devices();
             update_links();
         }
         else {
-            edges.keygen = model.maps.keygen;
-
             // update focusedDevices
             focusedDevices = [selectedTab];
             model.links.each(function(link) {
-                if (link.src == selectedTab && !focusedDevices.includes(link.dst))
-                    focusedDevices.push(link.dst);
-                if (link.dst == selectedTab && !focusedDevices.includes(link.src))
-                    focusedDevices.push(link.src);
+                if (   link.src.name == selectedTab
+                    && !focusedDevices.includes(link.dst.name))
+                    focusedDevices.push(link.dst.name);
+                if (   link.dst.name == selectedTab
+                    && !focusedDevices.includes(link.src.name))
+                    focusedDevices.push(link.src.name);
             });
             update_signals();
             update_maps();
@@ -871,7 +863,7 @@ function listView(model)
     function on_unlink(e) {
         edges.each(function(edge) {
             if (edge.view.selected)
-                $('#container').trigger("unlink", [edge.src, edge.dst]);
+                $('#container').trigger("unlink", [edge.src.name, edge.dst.name]);
         });
         e.stopPropagation();
     }
@@ -882,9 +874,9 @@ function listView(model)
         }
         $('#container').trigger("map", [start.cells[0].textContent,
                                         end.cells[0].textContent, args]);
-        let key = model.maps.add({'src': start.cells[0].textContent,
-                                  'dst': end.cells[0].textContent,
-                                  'status': 'staged'});
+        let key = model.add_maps('add_maps', [{'src': start.cells[0].textContent,
+                                               'dst': end.cells[0].textContent,
+                                               'status': 'staged'}]);
         update_maps();
         e.stopPropagation();
     }
@@ -892,16 +884,12 @@ function listView(model)
     function on_unmap(e) {
         edges.each(function(edge) {
             if (edge.view.selected)
-                $('#container').trigger("unmap", [edge.src, edge.dst]);
+                $('#container').trigger("unmap", [edge.src.key, edge.dst.key]);
         });
         e.stopPropagation();
     }
 
     function add_tabs() {
-        $('#container').append(
-            "<ul class='topTabs'>"+
-                "<li id='allDevices'>"+all_devices+"</li>"+
-            "</ul>");
         tabList = $('.topTabs')[0];
         tabDevices = $('#allDevices')[0];
     }
@@ -932,16 +920,17 @@ function listView(model)
         $(leftTable.table).tablesorter({widgets: ['zebra']});
         $(rightTable.table).tablesorter({widgets: ['zebra']});
 
-        tableHeight = $('.tableDiv').height() - $('.tableDiv thead').height();
+        tableHeight = ($('.tableDiv').height() - $('.tableDiv thead').height()
+                       - $('#statusBar').height());
     }
 
     function add_svg_area() {
         $('#container').append(
-            "<div id='svgDiv' class='links'>"+
-                "<div id='svgTop'>hide unmapped</div>"+
+            "<div id='svgDivCenter' class='links'>"+
+                "<div id='svgTop'>hide unlinked devices</div>"+
             "</div>");
 
-        svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
+        svgArea = Raphael($('#svgDivCenter')[0], '100%', '100%');
     }
 
     function add_status_bar() {
@@ -965,10 +954,10 @@ function listView(model)
         this.muted = false;
         var allow_self_link = selectedTab == all_devices;
 
-        this.canvasWidth = $('#svgDiv').width();
+        this.canvasWidth = $('#svgDivCenter').width();
 
         this.clamptorow = function(row, is_dst) {
-            var svgPos = fullOffset($('#svgDiv')[0]);
+            var svgPos = fullOffset($('#svgDivCenter')[0]);
             var rowPos = fullOffset(row);
             var y = rowPos.top + rowPos.height/2 - svgPos.top;
             return y;
@@ -976,7 +965,7 @@ function listView(model)
 
         this.findrow = function (y) {
             // The upper position of the canvas (to find the absolute position)
-            var svgTop = $('#svgDiv').offset().top;
+            var svgTop = $('#svgDivCenter').offset().top;
 
             // Left edge of the target table
             var ttleft = $(this.targetTable.tbody).offset().left + 5;
@@ -1010,11 +999,12 @@ function listView(model)
         this.line = svgArea.path();
 
         this.update = function(moveEvent) {
-            moveEvent.offsetX = moveEvent.pageX - $('#svgDiv').offset().left;
-            moveEvent.offsetY = moveEvent.pageY - $('#svgDiv').offset().top;
+            moveEvent.offsetX = moveEvent.pageX - $('#svgDivCenter').offset().left;
+            moveEvent.offsetY = moveEvent.pageY - $('#svgDivCenter').offset().top;
 
             var target = moveEvent.currentTarget;
             var start = [this.path[0][1], this.path[0][2]];
+            let arrowhead_offset = 7;
             var end = [this.path[1][5], this.path[1][6]];
             var c1 = null;
             if (target.tagName == "svg") {
@@ -1035,6 +1025,7 @@ function listView(model)
                     if (selectedTab != all_devices)
                         fade_incompatible_signals(this.sourceRow);
                 }
+                arrowhead_offset = newTargetTable == leftTable ? 7 : -7;
 
                 // Within clamping range?
                 if (absdiff < 50) {
@@ -1043,52 +1034,68 @@ function listView(model)
                     var clampRow = this.findrow(end[1]);
                     if (clampRow && (allow_self_link || clampRow != startRow)) {
                         if (this.sourceTable == this.targetTable)
-                            end[0] = start[0];
+                            end[0] = start[0] + arrowhead_offset;
                         else
-                            end[0] = this.canvasWidth - start[0] - 2;
+                            end[0] = this.canvasWidth - start[0] + arrowhead_offset;
                         c1 = end[1];
                         end[1] = this.clamptorow(clampRow, 1);
                         this.checkTarget(clampRow);
                     }
-                    else
+                    else {
+                        if (this.sourceTable == this.targetTable)
+                            end[0] = start[0] + 20;
+                        else
+                            end[0] = this.canvasWidth - start[0] - 20;
                         this.checkTarget(null);
+                    }
                 }
                 else if (this.canvasWidth - absdiff < 50) {
                     var clampRow = this.findrow(end[1]);
                     if (clampRow) {
-                        end[0] = this.canvasWidth - start[0] - 2;
+                        end[0] = this.canvasWidth - start[0] + arrowhead_offset;
                         c1 = end[1];
                         end[1] = this.clamptorow(clampRow, 1);
                         this.checkTarget(clampRow);
                     }
-                    else
+                    else {
+                        end[0] = this.canvasWidth - start[0] + arrowhead_offset;
                         this.checkTarget(null);
+                    }
                 }
-                else
+                else {
+                    end[0] = this.canvasWidth - start[0] - 20;
                     this.checkTarget(null);
+                }
             }
             // We're over a table row of the target table
             if ($(target).parents('tbody')[0] == this.targetTable.tbody) {
                 var rowHeight = $(target).height();
                 this.checkTarget(target);
                 if (this.sourceTable == this.targetTable) {
-                    end[0] = start[0];
-                    if (!($(target).hasClass('incompatible')))
+                    if (!($(target).hasClass('incompatible'))) {
+                        end[0] = start[0] + arrowhead_offset;
                         end[1] = this.clamptorow(target, 1);
-                    else
+                    }
+                    else {
+                        end[0] = start[0] + 20;
                         end[1] = moveEvent.offsetY;
+                    }
                 }
                 else {
-                    end[0] = this.canvasWidth - start[0] - 2;
-                    if (!($(target).hasClass('incompatible')))
+                    if (!($(target).hasClass('incompatible'))) {
+                        end[0] = this.canvasWidth - start[0] + arrowhead_offset;
                         end[1] = this.clamptorow(target, 1);
-                    else
+                    }
+                    else {
+                        end[0] = this.canvasWidth - start[0] - 20;
                         end[1] = moveEvent.offsetY;
+                    }
                 }
             }
             this.path = get_bezier_path(start, end, c1, this.canvasWidth);
             this.line.attr({"path": this.path,
-                            "arrow-end": "block-wide-long"});
+                            "arrow-end": "block-wide-long",
+                            "opacity": 0.5});
         };
 
         this.mouseup = function(mouseUpEvent) {
@@ -1170,7 +1177,7 @@ function listView(model)
             var sourceRow = this;
 
             // Cursor enters the canvas
-            $('#svgDiv').one('mouseenter.drawing', function() {
+            $('#svgDivCenter').one('mouseenter.drawing', function() {
 
                 var curve = new drawing_curve(sourceRow);
 
@@ -1212,62 +1219,6 @@ function listView(model)
         });
     }
 
-    // calculate intersections
-    // adapted from https://bl.ocks.org/bricof/f1f5b4d4bc02cad4dea454a3c5ff8ad7
-    function is_between(a, b1, b2, fudge) {
-        if ((a + fudge >= b1) && (a - fudge <= b2)) {
-            return true;
-        }
-        if ((a + fudge >= b2) && (a - fudge <= b1)) {
-            return true;
-        }
-        return false;
-    }
-
-    function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
-        let m1 = (x1 == x2) ? 1000000 : (y1 - y2) / (x1 - x2);
-        let m2 = (x3 == x4) ? 1000000 : (y3 - y4) / (x3 - x4);
-        if (m1 == m2) {
-            // lines are parallel - todo check if same b, overlap
-            return false;
-        }
-        let b1 = y1 - x1 * m1;
-        let b2 = y3 - x3 * m2;
-        let isect_x = (b2 - b1) / (m1 - m2);
-        let isect_y = isect_x * m1 + b1;
-        return (   is_between(isect_x, x1, x2, 0.1)
-                && is_between(isect_x, x3, x4, 0.1)
-                && is_between(isect_y, y1, y2, 0.1)
-                && is_between(isect_y, y3, y4, 0.1));
-    }
-
-    function edge_intersection_select(x1, y1, x2, y2) {
-        let updated = false;
-        edges.each(function(edge) {
-            let len = edge.view.getTotalLength();
-            let isect = false;
-            for (var j = 0; j < 10; j++) {
-                let p1 = edge.view.getPointAtLength(len * j * 0.1);
-                let p2 = edge.view.getPointAtLength(len * (j + 1) * 0.1);
-
-                if (line_line_intersect(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)) {
-                   isect = true;
-                   break;
-                }
-            }
-            if (!isect)
-                return;
-            if (!edge.view.selected) {
-                edge.view.selected = true;
-                ++updated;
-            }
-            if (updated) {
-                edge.view.animate({"stroke": "red"}, 50);
-                $('#container').trigger("updateMapProperties");
-            }
-        });
-    }
-
     function selection_handlers() {
         $('.links').on('mousedown', function(e) {
             if (e.shiftKey == false) {
@@ -1275,13 +1226,24 @@ function listView(model)
             }
 
             // cache current mouse position
-            let svgPos = fullOffset($('#svgDiv')[0]);
+            let svgPos = fullOffset($('#svgDivCenter')[0]);
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
 
             // try intersection with 'X'around cursor for select on 'click'
-            edge_intersection_select(x1-3, y1-3, x1+3, y1+3);
-            edge_intersection_select(x1-3, y1+3, x1+3, y1-3);
+            let updated = false;
+            edges.each(function(edge) {
+                if (edge.view.selected)
+                    return;
+                if (   edge_intersection(edge.view, x1-3, y1-3, x1+3, y1+3)
+                    || edge_intersection(edge.view, x1-3, y1+3, x1+3, y1-3)) {
+                    edge.view.selected = true;
+                    edge.view.animate({"stroke": "red"}, 50);
+                    updated = true;
+                }
+            });
+            if (updated)
+                $('#container').trigger("updateMapProperties");
 
             let stop = false;
             // Moving about the canvas
@@ -1295,7 +1257,16 @@ function listView(model)
                 if ((Math.abs(x1 - x2) + Math.abs(y1 - y2)) < 5)
                     return;
 
-                edge_intersection_select(x1, y1, x2, y2);
+                edges.each(function(edge) {
+                    if (edge.view.selected)
+                        return;
+                    if (   edge_intersection(edge.view, x1-3, y1-3, x1+3, y1+3)
+                        || edge_intersection(edge.view, x1-3, y1+3, x1+3, y1-3)) {
+                        edge.view.selected = true;
+                        edge.view.animate({"stroke": "red"}, 50);
+                        updated = true;
+                    }
+                });
 
                 e.stopPropagation();
 
@@ -1410,11 +1381,17 @@ function listView(model)
             e.stopPropagation();
             if (view.unmappedVisible == true) {
                 view.unmappedVisible = false;
-                $('#svgTop').text('show unmapped');
+                if (selectedTab == all_devices)
+                    $('#svgTop').text('show unlinked devices');
+                else
+                    $('#svgTop').text('show unmapped signals');
             }
             else {
                 view.unmappedVisible = true;
-                $('#svgTop').text('hide unmapped');
+                if (selectedTab == all_devices)
+                    $('#svgTop').text('hide unlinked devices');
+                else
+                    $('#svgTop').text('hide unmapped signals');
             }
             filter_view();
         });
