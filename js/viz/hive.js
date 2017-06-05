@@ -1,15 +1,6 @@
-//+++++++++++++++++++++++++++++++++++++++++++ //
-//              Hive View Class               //
-//+++++++++++++++++++++++++++++++++++++++++++ //
-
-/*
- TODO:
- – display hive axes & device names
- – display signals & signal names (mouseover?)
- – draw maps
- – select-by-crossing for maps
- – selecting signals
- */
+//++++++++++++++++++++++++++++++++++++++ //
+//              View Class               //
+//++++++++++++++++++++++++++++++++++++++ //
 
 function HivePlotView(container, model)
 {
@@ -19,16 +10,65 @@ function HivePlotView(container, model)
     var width = null;
     var height = null;
     var origin = null;
-    var alternate = false;
+    var view_counter = 0;
     var device_shape = null;
+    var leftTableWidth = 40;
+    var rightTableWidth = 40;
 
     function circle_path(x, y, radius) {
-        return [['M', x + radius - 3, y - radius + 2],
+        radius = 10;
+        return [['M', x + radius * 0.65, y - radius * 0.65],
                 ['a', radius, radius, 0, 1, 0, 0.001, 0.001],
                 ['z']];
     }
 
+    function rect_path(x, y, w, h) {
+        return [['M', x, y],
+                ['l', w, 0],
+                ['l', 0, h],
+                ['l', -w, 0],
+                ['z']];
+    }
+
     function switch_view(view) {
+        // stop current animations
+        $('#leftTable').stop(true, false);
+        $('#rightTable').stop(true, false);
+        $('#svgDiv').stop(true, false);
+
+        // cache current values for table widths
+        let leftWas = leftTableWidth;
+        let rightWas = rightTableWidth;
+        let leftTarget, rightTarget;
+
+        switch (view) {
+            case 'list':
+                leftTarget = 40;
+                rightTarget = 40;
+                break;
+            case 'canvas':
+                leftTarget = 25;
+                rightTarget = 0;
+                break;
+            default:
+                leftTarget = 0;
+                rightTarget = 0;
+                break;
+        }
+
+        $('#leftTable').animate({'width': leftTarget + '%'},
+                                {duration: 1500, step: function(now, fx) {
+                                    leftTableWidth = now;
+                                    let progress = (now - leftWas) / (leftTarget - leftWas);
+                                    rightTableWidth = (rightTarget - rightWas) * progress + rightWas;
+                                    $('#rightTable').css({
+                                        'width': rightTableWidth + '%',
+                                        'left': 100 - rightTableWidth + '%'});
+                                    $('#svgDiv').css({
+                                        'width': 100 - leftTableWidth - rightTableWidth + '%',
+                                        'left': leftTableWidth + '%'});
+                                }});
+
         switch (view) {
             case 'hive':
                 redraw = function() {
@@ -45,7 +85,8 @@ function HivePlotView(container, model)
                         angle = dev_index * -angleInc;
                         let path = [['M', origin.x, origin.y],
                                     ['l', width * Math.cos(angle), height * Math.sin(angle)]];
-                        dev.view.animate({'path': path}, 500, 'linear');
+                        dev.view.animate({'path': path,
+                                          'stroke-opacity': 1}, 500, 'linear');
                         dev.view.angle = angle;
                         dev_index += 1;
                         let sig_index = 1;
@@ -76,7 +117,6 @@ function HivePlotView(container, model)
                 break;
             case 'grid':
                 redraw = function() {
-                    let num_devs = model.devices.size();
                     let num_sigs = 0;
                     model.devices.each(function(dev) {
                         num_sigs += dev.signals.size();
@@ -98,7 +138,7 @@ function HivePlotView(container, model)
                             path.push([['M', origin.x, origin.y - height * mult],
                                        ['l', width, 0]]);
                             sig.view.animate({'path': path,
-                                              'stroke-opacity': 0.5});
+                                              'stroke-opacity': 1});
                             // todo: only store mult to make resize draws more efficient?
                             sig.view.position = new_pos(origin.x + width * mult, origin.y - height * mult);
                             sig_index += 1;
@@ -114,6 +154,15 @@ function HivePlotView(container, model)
                         map.view.animate({'path': path, 'fill': 'black', 'fill-opacity': '1'}, 500, 'linear');
                     });
                 }
+                break;
+            case 'list':
+                /* to do
+                 * basic list view (outputs on left, inputs on right)
+                 * bezier edges between them
+                 * scrolling
+                 * sorting (move to top bar)
+                 * searching (move to top bar)
+                 */
                 break;
         }
         redraw();
@@ -138,14 +187,126 @@ function HivePlotView(container, model)
         });
     };
 
+        // An object for the left and right tables, listing devices and signals
+    function listTable(id) {
+        this.id = id; // Something like "leftTable"
+        this.parent; // The node containing the table
+        this.div; // The div node (and status)
+        this.table; // The table node itself
+        this.headerRow; // The top row node of the table within <thead>
+        this.tbody; // The <tbody> node
+        this.footer; // The status bar at the bottom
+
+        this.nRows; // Number of rows (e.g. devices or signals) present
+        this.nVisibleRows; // Number of rows actually visible to the user
+        this.nCols; // Number of columns in table
+
+            // Should be passed a the node for the parent
+        this.create_within = function(parent) {
+            this.parent = parent;
+                // Create the div containing the table
+            $(this.parent).append("<div class='tableDiv' id='"+id+"'></div>");
+            this.div = $(this.parent).children("#"+this.id);
+
+                // Create the skeleton for the table within the div
+            $(this.div).append(
+                               "<table class='displayTable'>"+
+                               "<thead><tr></tr></thead>"+
+                               "<tbody></tbody>"+
+                               "</table>");
+            this.table = $(this.div).children('.displayTable')[0];
+            this.headerRow = $("#"+this.id+" .displayTable thead tr")[0];
+            this.tbody = $("#"+this.id+" .displayTable tbody")[0];
+
+                // Create the header elements
+                // This assumes that we do not need more than 5 columns
+                // Creating and destroying th elements themselves screws up tablesorter
+            for (var i = 0; i < 6; i++) {
+                $(this.headerRow).append("<th class='invisible'></th>");
+            }
+        };
+
+            // e.g. headerStrings = ["Name", "Units", "Min", "Max"]
+        this.set_headers = function(headerStrings) {
+            this.nCols = headerStrings.length;
+
+            $(this.headerRow).children('th').each(function(index) {
+                                                  if (index < headerStrings.length)
+                                                  $(this).text(headerStrings[index]).removeClass("invisible");
+                                                  else
+                                                  $(this).text("").addClass("invisible");
+                                                  });
+        };
+
+            // For when something changes on the network
+        this.update = function(tableData, headerStrings) {
+            $(this.tbody).empty();
+            for (var row in tableData) {
+                    // If there is only one row, make it of even class for styling
+                var newRow = "<tr>";
+                for (var col in tableData[row]) {
+                    if (tableData[row][col]==undefined)
+                        tableData[row][col] = '';
+                    newRow += "<td class="+headerStrings[col]+">"+tableData[row][col]+"</td>";
+                }
+                $(this.tbody).append(newRow+"</tr>");
+            }
+            this.nRows = tableData.length;
+            if (tableData[0])
+                this.nCols = tableData[0].length;
+            this.set_status();
+            this.update_row_heights();
+            $(this.table).trigger('update');
+        };
+
+        this.set_status = function() {
+            var name; // Devices or signals
+            if (selectedTab == all_devices) {
+                name = "devices";
+            }
+            else name = "signals";
+            this.nVisibleRows = $(this.tbody).children('tr').length - $(this.tbody).children('tr.invisible').length;
+            $(this.footer).text(this.nVisibleRows+" of "+this.nRows+" "+name);
+
+                // For styling purposes when there is only a single row
+            if (this.nVisibleRows == 1)
+                $(this.tbody).children('tr').addClass('even');
+        };
+        
+        /* A function to make sure that rows fill up the available space, in
+         * testing for now. */
+        this.update_row_heights = function() {
+            let height = Math.floor(tableHeight/this.nVisibleRows);
+            $("#"+this.id+' tbody tr').css('height', height+'px');
+        };
+    }
+
+    function add_display_tables() {
+        leftTable = new listTable('leftTable');
+        rightTable = new listTable('rightTable');
+
+            // Put the tables in the DOM
+        leftTable.create_within($('#container')[0]);
+        rightTable.create_within($('#container')[0]);
+
+        leftTable.set_headers(['device', 'outputs', 'host', 'port']);
+        rightTable.set_headers(['device', 'input', 'host', 'port']);
+
+        $(leftTable.table).tablesorter({widgets: ['zebra']});
+        $(rightTable.table).tablesorter({widgets: ['zebra']});
+
+        tableHeight = ($('.tableDiv').height() - $('.tableDiv thead').height()
+                       - $('#statusBar').height());
+    }
+
     function add_svg_area() {
         $('#container').append(
-            "<div id='svgDivFull' class='links'>"+
+            "<div id='svgDiv' class='links'>"+
                 "<div id='svgTop'>hide unmapped</div>"+
             "</div>");
 
-        svgArea = Raphael($('#svgDivFull')[0], '100%', '100%');
-        frame = fullOffset($('#svgDivFull')[0]);
+        svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
+        frame = fullOffset($('#svgDiv')[0]);
         frame.cx = frame.width * 0.5;
         frame.cy = frame.height * 0.5;
         width = frame.width - 200;
@@ -156,6 +317,7 @@ function HivePlotView(container, model)
     this.init = function() {
         // remove all previous DOM elements
         $(container).empty();
+        add_display_tables();
         add_svg_area();
 //        this.add_handlers();
         $('#container').css({
@@ -195,7 +357,7 @@ function HivePlotView(container, model)
     }
 
     function new_pos(x, y) {
-        let frame = fullOffset($('#svgDivFull')[0]);
+        let frame = fullOffset($('#svgDiv')[0]);
         return {'x': x ? x : Math.random() * frame.width + frame.left,
             'y': y ? y : Math.random() * frame.height + frame.top};
     }
@@ -240,11 +402,14 @@ function HivePlotView(container, model)
 
     $('body').on('keydown.list', function(e) {
         if (e.which == 32) {
-            alternate = !alternate;
-            switch_view(alternate ? 'grid' : 'hive');
+            view_counter += 1;
+            if (view_counter > 3)
+                 view_counter = 0;
+            view_names = ['list', 'grid', 'canvas', 'hive'];
+            switch_view(view_names[view_counter]);
             redraw();
         }
-    })
+    });
 }
 
 HivePlotView.prototype = {

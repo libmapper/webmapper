@@ -17,7 +17,7 @@ function listView(model)
     // The most recently selected rows, for shift-selecting
     var lastSelectedTr = {left: null, right: null};
 
-    var deviceHeaders = ["name", "inputs", "outputs", "address"];
+    var deviceHeaders = ["name", "inputs", "outputs", "version"];
     var signalHeaders = ["name", "type", "length", "units", "min", "max"];
 
     // "use strict";
@@ -211,11 +211,11 @@ function listView(model)
             if (dev.num_outputs >= dev.num_inputs)
                 leftBodyContent.push([dev.name,
                                       dev.num_inputs, dev.num_outputs,
-                                      dev.host + ':' + dev.port]);
+                                      dev.lib_version]);
             else
                 rightBodyContent.push([dev.name,
                                        dev.num_inputs, dev.num_outputs,
-                                       dev.host + ':' + dev.port]);
+                                       dev.lib_version]);
         });
 
         leftTable.update(leftBodyContent, deviceHeaders);

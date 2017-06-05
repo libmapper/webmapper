@@ -566,7 +566,8 @@ tbody {
     height: calc(100% - 41px);
     width: 20%;
 }
-#svgDivFull {
+#svgDiv {
+    overflow: scroll;
     position: absolute;
     border-bottom: 0;
 /*    height: calc(100% - 112px);*/

@@ -44,12 +44,12 @@ function GraphView(container, model)
 
     function add_svg_area() {
         $('#container').append(
-            "<div id='svgDivFull' class='links'>"+
+            "<div id='svgDiv' class='links'>"+
                 "<div id='svgTop'>hide unmapped</div>"+
             "</div>");
 
-        svgArea = Raphael($('#svgDivFull')[0], '100%', '100%');
-        frame = fullOffset($('#svgDivFull')[0]);
+        svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
+        frame = fullOffset($('#svgDiv')[0]);
         width = frame.width - 200;
         height = frame.height - 200;
         origin = {"x": 100, "y": height + 150};
@@ -75,7 +75,7 @@ function GraphView(container, model)
     }
 
     function new_pos(x, y) {
-        let frame = fullOffset($('#svgDivFull')[0]);
+        let frame = fullOffset($('#svgDiv')[0]);
         return {'x': x ? x : Math.random() * frame.width + frame.left,
                 'y': y ? y : Math.random() * frame.height + frame.top};
     }
@@ -172,7 +172,7 @@ function GraphView(container, model)
 
     // update device and signal node forces/velocities/positions
     function update_positions() {
-        let frame = fullOffset($('#svgDivFull')[0]);
+        let frame = fullOffset($('#svgDiv')[0]);
         frame.cx = frame.width * 0.5;
         frame.cy = frame.height * 0.5;
         let border = 20;
