@@ -849,10 +849,6 @@ function listView(model)
         });
     }
 
-    function on_table_scroll() {
-        update_edges();
-    }
-
     function on_link(e, start, end) {
         if (start && end)
             $('#container').trigger("link", [start.cells[0].textContent,

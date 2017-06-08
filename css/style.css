@@ -78,7 +78,7 @@ thead, #svgTop, #networkMenu {
 }
 
 /* highlights */
-.modesel, .calibratesel .displayTable tr.trsel.even, #networkMenu td:hover {
+.modesel, .calibratesel .displayTable #networkMenu td:hover {
     background-color: #9CC2CF;
 }
 
@@ -87,13 +87,17 @@ thead, #svgTop, #networkMenu {
 }
 
 /* secondary highlight */
-.trsel.odd {
-    background: lightblue !important;
-}
+/*.trsel.odd {*/
+/*    background: lightblue !important;*/
+/*}*/
 
 /* tertiary highlight selection */
 .displayTable tr.even {
     background: #EDF5FF;
+}
+
+.trsel, tr.even.trsel {
+    background: rgb(104,202,255);
 }
 
 /* others */
@@ -468,10 +472,13 @@ input.expression {
     position: absolute;
     overflow: auto;
     width: 40%;
-    height: calc(100% - 61px);
-    /*border: solid 1px black;*/
+    height: 100%;
+/*    height: calc(100% - 61px);*/
+/*    border: solid 1px black;*/
     border-bottom: 0;
 }
+
+/* The table areas */
 
 /* The table itself */
 table.displayTable {
@@ -498,13 +505,16 @@ tbody {
 
 /* Rows and headers */
 .tableDiv th, #svgTop {
+    background-color: lightgray;
+/*    color: white;*/
     cursor: pointer;
     font-weight: inherit;
     text-align: left;
     border-top: 0px;
     border-left: 0px;
     padding: 4px 0;
-    font-size: 11pt;
+    font-size: 10pt;
+    padding-left: 10px;
 }
 
 .invisible {
@@ -513,12 +523,12 @@ tbody {
 
 .displayTable tr td {
     vertical-align: middle;
-    border: solid 0px black;
+/*    border: solid 0px black;*/
     cursor: default;
 }
 
-.displayTable td, .displayTable th, #svgTop {
-    padding-left: 10px;
+.displayTable td {
+    padding-left: 20px;
 }
 
 /*
@@ -529,6 +539,23 @@ tbody {
 .displayTable td:last-child {
     border-radius: 0 10px 10px 0;
 }*/
+#topTable {
+    height: 200px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+#topTable table {
+    height: 150px;
+/*    width: var(width);*/
+    /*    display: block;*/
+    transform-origin: 0% 0%;
+    transform: translate(0%, 200px) rotate(270deg);
+    overflow-x: scroll;
+    overflow-y: hidden;
+    /*    // rotate(-90deg);*/
+}
+
 /*****************/
 /****************/
 
@@ -571,7 +598,8 @@ tbody {
     position: absolute;
     border-bottom: 0;
 /*    height: calc(100% - 112px);*/
-    height: calc(100% - 41px);
+    height: 100%;
+/*    height: calc(100% - 41px);*/
     width: 100%;
 }
 #svgTop {

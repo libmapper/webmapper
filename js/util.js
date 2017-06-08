@@ -91,6 +91,13 @@ function fullOffset(e) {
              height: e.offsetHeight };
 }
 
+function offset(e) {
+    return { left: e.offsetLeft - e.scrollLeft,
+             top: e.offsetTop - e.scrollTop,
+             width: e.offsetWidth,
+             height: e.offsetHeight };
+}
+
 /* add an item to an array only if it is unique */
 function arrPushIfUnique(item, arr){
 	if (arrIsUnique(item, arr))

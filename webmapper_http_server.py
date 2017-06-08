@@ -300,30 +300,10 @@ def handler_page(out, args):
 <script type="text/javascript" src="includes/raphael.min.js"></script>
 <script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
-<!-- Graph View includes -->
-<script type="text/javascript" src="js/viz/graph.js"></script>
-<script type="text/javascript" src="includes/raphael.min.js"></script>
-
-<!-- Canvas View includes -->
-<script type="text/javascript" src="js/viz/canvas.js"></script>
-<script type="text/javascript" src="includes/raphael.min.js"></script>
-<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
-
-<!-- Grid View includes -->
-<script type="text/javascript" src="js/viz/grid.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridSVG.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridSignals.js"></script>
-<script type="text/javascript" src="js/viz/grid/GridDevices.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/grid/GridView_style.css"></link>
-<link rel="stylesheet" href="js/viz/grid/ui-lightness/jquery-ui-1.10.0.custom.css" />
-
 <!-- HivePlot View includes -->
 <script type="text/javascript" src="js/viz/hive.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/hive/HivePlot_style.css"></link>
-
-<!-- Balloon Plot View includes -->
-<script type="text/javascript" src="js/viz/balloon.js"></script>
-<link rel="stylesheet" type="text/css" href="js/viz/balloon/BalloonPlot_style.css"></link>
+<script type="text/javascript" src="js/viz/mapperTable.js"></script>
+<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
 
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>

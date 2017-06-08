@@ -318,7 +318,7 @@ function MapperModel() {
         }
     }
     this.del_map = function(cmd, map) {
-        console.log('remove map', map);
+//        console.log('remove map', map);
         var key = this.maps.remove(map);
         topMenu.updateMapPropertiesFor(key);
     }

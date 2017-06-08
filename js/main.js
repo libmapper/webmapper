@@ -112,6 +112,10 @@ function initViewCommands()
         $(this).addClass("viewButtonsel");
     });
 
+    $('#container').on('updateView', function(e) {
+        view.redraw();
+    });
+
     // from list view
     // requests links and maps from the selected device (tab)
     $("#container").on("tab", function(e, tab){
