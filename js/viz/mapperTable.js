@@ -92,7 +92,15 @@ function mapperTable(model, id, orientation, detail)
         let scrollTop = ($('#'+this.id)[0]).scrollTop;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == name) {
-                if (this.orientation == 'left' || this.orientation == 'right') {
+                if (this.orientation == 'left') {
+                    return { 'left': row.offsetLeft + row.offsetWidth,
+                             'top': row.offsetTop - scrollTop,
+                             'width': row.offsetWidth,
+                             'height': row.offsetHeight,
+                             'cx': row.offsetLeft + row.offsetWidth * 0.5,
+                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
+                }
+                else if (this.orientation == 'right') {
                     return { 'left': row.offsetLeft,
                              'top': row.offsetTop - scrollTop,
                              'width': row.offsetWidth,
