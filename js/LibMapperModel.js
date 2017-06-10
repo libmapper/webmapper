@@ -26,7 +26,7 @@ function MapperNodeArray(obj_type, cb_func) {
 
 MapperNodeArray.prototype = {
     filter : function(func) {
-        let key, obj = new MapperNodeArray();
+        let key, obj = new MapperNodeArray(this.obj_type, null);
         for (key in this.contents) {
             if (func(this.contents[key]))
                 obj.add(this.contents[key]);
@@ -78,7 +78,7 @@ MapperNodeArray.prototype = {
         }
         else {
             if (this.obj_type == 'device')
-                obj.signals = new MapperNodeArray('signal', this.cb_handler);
+                obj.signals = new MapperNodeArray('signal', this.cb_func);
             this.contents[key] = obj;
             if (this.cb_func)
                 this.cb_func('added', this.obj_type, this.contents[key]);
@@ -113,7 +113,7 @@ function MapperEdgeArray(obj_type, cb_func) {
 
 MapperEdgeArray.prototype = {
     filter : function(func) {
-        let key, obj = new MapperEdgeArray();
+        let key, obj = new MapperEdgeArray(this.obj_type, null);
         for (key in this.contents) {
             if (func(this.contents[key])) {
                 obj.add(this.contents[key]);
@@ -236,14 +236,14 @@ function MapperModel() {
                 return;
             this.maps.each(function(map) {
                 if (sig == map.src || sig == map.dst)
-                    this.maps.remove(map.key);
+                    this.maps.remove(map);
             });
         });
         this.links.each(function(link) {
             if (link.src == dev.name || link.dst == dev.name)
                 this.links.remove(link);
         });
-        this.devices.remove(dev.name);
+        this.devices.remove(dev);
     }
     this.add_signals = function(cmd, sigs) {
 //        console.log('add signals', sigs);
@@ -262,7 +262,7 @@ function MapperModel() {
 //        console.log('remove signal');
         let dev = this.devices.find(sig.device);
         if (dev)
-            dev.signals.remove(sig.name);
+            dev.signals.remove(sig);
     }
     this.add_links = function(cmd, links) {
 //        console.log('add links', links);

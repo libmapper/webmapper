@@ -64,7 +64,7 @@ body, .svgDiv, .tableDiv {
 }
 
 /* blues */
-#statusBar, #titleSearchDiv, .topTabs li.tabsel {
+#statusBar, #titleSearchDiv, #leftSearchDiv, #rightSearchDiv, .topTabs li.tabsel {
 /*    background: rgb(134,222,248) !important;*/
     background: rgb(104,202,255) !important;
 }
@@ -73,12 +73,12 @@ body, .svgDiv, .tableDiv {
 thead, #svgTop, #networkMenu {
     background: #EEE;
 }
-.displayTable th:hover, #svgTop:hover {
+.displayTable #svgTop:hover {
     background: #DDD;
 }
 
 /* highlights */
-.modesel, .calibratesel .displayTable #networkMenu td:hover {
+.modesel, .calibratesel .displayTable #networkMenu {
     background-color: #9CC2CF;
 }
 
@@ -97,6 +97,10 @@ thead, #svgTop, #networkMenu {
 }
 
 .trsel, tr.even.trsel {
+    background: rgb(104,202,255);
+}
+
+.displayTable tr:hover {
     background: rgb(104,202,255);
 }
 
@@ -123,6 +127,13 @@ path {
     width: 100%;
     height: 0px;
     visibility: hidden;
+}
+
+.hidden {
+    visibility: hidden;
+    display: none;
+    width: 0%;
+    height: 0%;
 }
 
 /*Upper Tab Area */
@@ -482,8 +493,10 @@ input.expression {
 
 /* The table itself */
 table.displayTable {
+/*    margin-top: 41px;*/
     border-collapse: collapse;
     width: 100.1%; /*Slightly more than 100%, cause 100% doesn't quite fill the frame for some reason*/
+    height: calc(100% - 41px);
     overflow: scroll;
     font-size: 10pt;
 }
@@ -615,15 +628,23 @@ tbody {
 
 /* Title and search bar */
 /* Make sure inputs are not obscured*/
-#titleSearchDiv input {
+#titleSearchDiv input, #leftSearchDiv input, #rightSearchDiv input {
     margin-top: 12px;
 }
-#titleSearchDiv {
+#titleSearchDiv, #leftSearchDiv, #rightSearchDiv {
     height: 41px;
 }
-#titleSearchDiv h2 {
+#titleSearchDiv h2, #leftSearchDiv h2, #rightSearchDiv h2 {
     margin-top: 9px;
+    margin-left: 9px;
     font-weight: inherit;
+}
+#leftSearchDiv, #rightSearchDiv {
+    width: 40%;
+    position: absolute;
+}
+#rightSearchDiv {
+    left: 60%;
 }
 #svgTitle {
     left: calc(40% + 10px);
@@ -633,21 +654,22 @@ tbody {
     margin: 0px;
 }
 input.searchBar {
-    width: 20%;
+    width: 40%;
     text-align: right;
-}
-#leftTitle {
-    left: 10px;
-}
-#leftSearch {
-    right: calc(60% + 10px);
-}
-#rightTitle {
-    left: calc(60% + 10px);
-}
-#rightSearch {
     right: 10px;
 }
+#leftTitle, #rightTitle {
+    left: 10px;
+}
+/*#leftSearch {*/
+/*    right: calc(60% + 10px);*/
+/*}*/
+/*#rightTitle {*/
+/*    left: calc(60% + 10px);*/
+/*}*/
+/*#rightSearch {*/
+/*    right: 10px;*/
+/*}*/
 /****************/
 
 /* The overall container of elements not in skeleton*/

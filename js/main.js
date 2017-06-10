@@ -52,7 +52,7 @@ function init() {
         function() {
             switch (index) {
             case 0:
-                switch_mode('list');
+                switch_mode('new');
                 command.start();
                 command.send('refresh');
                 command.send('get_networks');
@@ -93,27 +93,64 @@ function initViewCommands()
     $('.viewButton').on("mousedown", function(e) {
         switch ($(this)[0].id) {
             case "listButton":
-                switch_mode("list");
+                view.switch_view("list");
                 break;
             case "graphButton":
-                switch_mode("graph");
+                view.switch_view("graph");
                 break;
             case "gridButton":
-                switch_mode("grid");
+                view.switch_view("grid");
                 break;
             case "hiveButton":
-                switch_mode("hive");
+                view.switch_view("hive");
                 break;
             case "balloonButton":
-                switch_mode("balloon");
+                view.switch_view("balloon");
                 break;
         }
         $('.viewButton').removeClass("viewButtonsel");
         $(this).addClass("viewButtonsel");
     });
 
+    $('body').on('keydown.list', function(e) {
+        let new_view = null;
+        if (e.which == 49) {
+            /* 1 */
+            new_view = 'list';
+        }
+        else if (e.which == 50) {
+            /* 2 */
+            new_view = 'graph';
+        }
+        else if (e.which == 51) {
+            /* 3 */
+            new_view = 'canvas';
+        }
+        else if (e.which == 52) {
+            /* 4 */
+            new_view = 'grid';
+        }
+        else if (e.which == 53) {
+            /* 5 */
+            new_view = 'hive';
+        }
+        else if (e.which == 54) {
+            /* 6 */
+            new_view = 'balloon';
+        }
+        if (new_view) {
+            view.switch_view(new_view);
+            $('.viewButton').removeClass("viewButtonsel");
+            $('#'+new_view+'Button').addClass("viewButtonsel");
+        }
+    });
+
     $('#container').on('updateView', function(e) {
         view.redraw();
+    });
+
+    $('#container').on('scroll', function(e) {
+        view.redraw(0);
     });
 
     // from list view
@@ -173,9 +210,9 @@ function initViewCommands()
 
 function initTopMenuCommands()
 {
-    $("#topMenuWrapper").on("switchView", function(e, viewID) {
-        switch_mode(viewID);
-    });
+//    $("#topMenuWrapper").on("switchView", function(e, viewID) {
+//        switch_mode(viewID);
+//    });
     $("#topMenuWrapper").on("setMap", function(e, args) {
         command.send('set_map', args);
     });
@@ -208,31 +245,16 @@ function switch_mode(newMode)
     
     $('#container').empty();
     switch (newMode) {
-        case 'list':
+        case 'classic':
             view = new listView(model);
             viewIndex = 0;
             view.init();
             break;
-        case 'graph':
-            view = new GraphView(document.getElementById('container'), model);
-            viewIndex = 1;
-            view.init();
-            break;
-        case 'grid':
-            view = new GridView(document.getElementById('container'), model);
-            viewIndex = 2;
-            $('#saveLoadDiv').removeClass('disabled');
-            break;
-        case 'hive':
+        case 'new':
             view = new HivePlotView(document.getElementById('container'), model);
             viewIndex = 3;
             view.init();
             view.on_resize();
-            break;
-        case 'balloon':
-            view = new BalloonView(model);
-            viewIndex = 4;
-            view.init();
             break;
         default:
             //console.log(newMode);

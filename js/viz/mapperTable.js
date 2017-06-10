@@ -16,7 +16,7 @@ function mapperTable(model, id, orientation, detail)
         frame.cy = frame.top + frame.height * 0.5;
     };
 
-    direction = null;
+    this.direction = null;
     this.orientation = orientation;
     this.id = id;
     this.detail = null;
@@ -24,6 +24,7 @@ function mapperTable(model, id, orientation, detail)
     this.div;           // The div node (and status)
     this.table;         // The table node itself
     this.tbody;         // The <tbody> node
+    this.title = 'Signals';
 
     this.nRows;         // Number of rows (e.g. devices or signals) present
     this.nVisibleRows;  // Number of rows actually visible to the user
@@ -32,7 +33,15 @@ function mapperTable(model, id, orientation, detail)
     this.border = false;
 
     function makeTable(self) {
+        console.log('maketable');
         $(self.div).empty();
+
+//        if (id != 'topTable') {
+//            $(self.div).append("<div id='titleSearchDiv'>"+
+//                               "<h2 id='"+id+"Title' class='searchBar'>"+self.title+"</h2>"+
+//                               "<input type='text' id='"+id+"Search' class='searchBar'></input>"+
+//                               "</div>");
+//        }
 
         // Create the skeleton for the table within the div
         if (self.detail) {
@@ -69,13 +78,28 @@ function mapperTable(model, id, orientation, detail)
         tableHeight = $('.tableDiv').height();
 
         makeTable(this);
+        this.add_handlers();
     };
 
+//    this.set_title = function(title) {
+////        console.log('set_title', title, this.title);
+//        this.title = title;
+//        $('#'+this.id+' h2').text(title);
+//    }
+
     this.filter = function(dir, string) {
-        direction = dir;
+        this.direction = dir;
+//        if (dir == null)
+//            this.set_title('Signals');
+//        else if (dir == 'input')
+//            this.set_title('Destinations');
+//        else
+//            this.set_title('Sources');
     }
 
     this.show_detail = function(show) {
+        if (this.detail == show)
+            return;
         this.detail = (show == true);
         makeTable(this);
     }
@@ -93,12 +117,13 @@ function mapperTable(model, id, orientation, detail)
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == name) {
                 if (this.orientation == 'left') {
-                    return { 'left': row.offsetLeft + row.offsetWidth,
+                    return { 'left': row.offsetLeft,
                              'top': row.offsetTop - scrollTop,
                              'width': row.offsetWidth,
                              'height': row.offsetHeight,
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
+                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5,
+                             'even': $(row).hasClass('even') };
                 }
                 else if (this.orientation == 'right') {
                     return { 'left': row.offsetLeft,
@@ -106,7 +131,8 @@ function mapperTable(model, id, orientation, detail)
                              'width': row.offsetWidth,
                              'height': row.offsetHeight,
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
+                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5,
+                             'even': $(row).hasClass('even') };
                 }
                 else {
                     return { 'left': row.offsetTop - scrollLeft,
@@ -114,7 +140,8 @@ function mapperTable(model, id, orientation, detail)
                              'width': row.offsetHeight,
                              'height': row.offsetWidth,
                              'cx': row.offsetTop - scrollLeft + row.offsetHeight * 0.5,
-                             'cy': row.offsetLeft + row.offsetWidth * 0.5 };
+                             'cy': row.offsetLeft + row.offsetWidth * 0.5,
+                             'even': $(row).hasClass('even') };
                 }
             }
         }
@@ -128,12 +155,12 @@ function mapperTable(model, id, orientation, detail)
         if (this.orientation == 'top') {
 //            if (x < frame.left || x > frame.left + frame.width)
 //                return;
-            y = frame.cy;
+            y = frame.top + 50;
         }
         else {
 //            if (y < frame.top || y > frame.top + frame.height)
 //                return;
-            x = frame.cx;
+            x = frame.left + 50;
         }
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
@@ -162,11 +189,6 @@ function mapperTable(model, id, orientation, detail)
         }
     }
 
-    $('#'+this.id+' tbody tr').hover(function(e) {
-        console.log(this.id, 'mousemove');
-        this.highlight(e.clientX, e.clientY);
-    });
-
     this.update = function(targetHeight) {
 
         // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
@@ -179,7 +201,7 @@ function mapperTable(model, id, orientation, detail)
         let tbody = this.tbody;
         let num_devs = 0;
         let num_sigs = 0;
-        let dir = direction;
+        let dir = this.direction;
         let id = this.id;
         let detail = this.detail;
 
@@ -254,7 +276,7 @@ function mapperTable(model, id, orientation, detail)
             num_sigs += num_dev_sigs;
         });
         // adjust row heights to fill table
-        let height = Math.floor(targetHeight/(num_devs+num_sigs));
+        let height = Math.floor((targetHeight-41)/(num_devs+num_sigs));
         $("#"+this.id+' tbody tr').css('height', height+'px');
     }
 
@@ -276,26 +298,28 @@ function mapperTable(model, id, orientation, detail)
     }
 
     this.add_handlers = function() {
-        $('.displayTable tbody').on({
-            mousedown: function(e) {
-                if (e.shiftKey == false)
-                    deselect_all();
-                select_tr(this);
-            },
-            click: function(e) { e.stopPropagation(); }
-        }, 'tr');
+        $('#'+this.id+' tr').hover(function() {
+            $(this).toggleClass('hover');
+        });
+//        $('.displayTable tbody').on({
+//            mousedown: function(e) {
+//                if (e.shiftKey == false)
+//                    deselect_all();
+//                select_tr(this);
+//            },
+//            click: function(e) { e.stopPropagation(); }
+//        }, 'tr');
 
-        $('.tableDiv').on('scroll', function(e) {
-            // inform container
-            $('#container').trigger("scroll");
+        $('#'+this.id).on('scroll', function(e) {
+            $('#container').trigger('scroll');
         });
 
-        $('#'+this.id).on('mousedown', 'tr', function(tableClick) {
-            var sourceRow = this;
-            $(document).one('mouseup.drawing', function(mouseUpEvent) {
-                $("*").off('.drawing').removeClass('incompatible');
-                $(document).off('.drawing');
-            });
-        });
+//        $('#'+this.id).on('mousedown', 'tr', function(tableClick) {
+//            var sourceRow = this;
+//            $(document).one('mouseup.drawing', function(mouseUpEvent) {
+//                $("*").off('.drawing').removeClass('incompatible');
+//                $(document).off('.drawing');
+//            });
+//        });
     }
 }

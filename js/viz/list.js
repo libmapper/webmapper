@@ -893,11 +893,11 @@ function listView(model)
     function add_title_bar() {
         $('#container').append(
             "<div id='titleSearchDiv'>"+
-                "<h2 id='leftTitle' class='searchBar'>Sources</h2></li>"+
-                "<input type='text' id='leftSearch' class='searchBar'></input></li>"+
-                "<h2 id='svgTitle' class='searchBar'>Links</h2></li>"+
-                "<h2 id='rightTitle' class='searchBar'>Destinations</h2></li>"+
-                "<input type='text' id='rightSearch' class='searchBar'></input></li>"+
+                "<h2 id='leftTitle' class='searchBar'>Sources</h2>"+
+                "<input type='text' id='leftSearch' class='searchBar'></input>"+
+                "<h2 id='svgTitle' class='searchBar'>Links</h2>"+
+                "<h2 id='rightTitle' class='searchBar'>Destinations</h2>"+
+                "<input type='text' id='rightSearch' class='searchBar'></input>"+
             "</div>");
         var $titleSearchDiv = $('<div id="titleSearchDiv"></div>');
     }
