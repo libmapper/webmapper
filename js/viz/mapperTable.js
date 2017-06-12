@@ -31,9 +31,9 @@ function mapperTable(model, id, orientation, detail)
     this.nCols;         // Number of columns in table
 
     this.border = false;
+    var row_height = 0;
 
     function makeTable(self) {
-        console.log('maketable');
         $(self.div).empty();
 
 //        if (id != 'topTable') {
@@ -118,28 +118,28 @@ function mapperTable(model, id, orientation, detail)
             if (row.id == name) {
                 if (this.orientation == 'left') {
                     return { 'left': row.offsetLeft,
-                             'top': row.offsetTop - scrollTop,
+                             'top': i * row_height - scrollTop,
                              'width': row.offsetWidth,
-                             'height': row.offsetHeight,
+                             'height': row_height,
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5,
+                             'cy': i * row_height - scrollTop + row_height * 0.5,
                              'even': $(row).hasClass('even') };
                 }
                 else if (this.orientation == 'right') {
                     return { 'left': row.offsetLeft,
-                             'top': row.offsetTop - scrollTop,
+                             'top': i * row_height - scrollTop,
                              'width': row.offsetWidth,
-                             'height': row.offsetHeight,
+                             'height': row_height,
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5,
+                             'cy': i * row_height - scrollTop + row_height * 0.5,
                              'even': $(row).hasClass('even') };
                 }
                 else {
-                    return { 'left': row.offsetTop - scrollLeft,
+                    return { 'left': i * row_height - scrollLeft,
                              'top': row.offsetLeft,
-                             'width': row.offsetHeight,
+                             'width': row_height,
                              'height': row.offsetWidth,
-                             'cx': row.offsetTop - scrollLeft + row.offsetHeight * 0.5,
+                             'cx': i * row_height - scrollLeft + row_height * 0.5,
                              'cy': row.offsetLeft + row.offsetWidth * 0.5,
                              'even': $(row).hasClass('even') };
                 }
@@ -173,7 +173,7 @@ function mapperTable(model, id, orientation, detail)
             return { 'left': row.offsetLeft,
                      'top': row.offsetTop - scrollTop,
                      'width': row.offsetWidth,
-                     'height': row.offsetHeight,
+                     'height': row_height,
                      'id': row.id,
                      'cx': row.offsetLeft + row.offsetWidth * 0.5,
                      'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
@@ -181,7 +181,7 @@ function mapperTable(model, id, orientation, detail)
         else {
             return { 'left': row.offsetTop - scrollLeft,
                      'top': row.offsetLeft,
-                     'width': row.offsetHeight,
+                     'width': row_height,
                      'height': row.offsetWidth,
                      'id': row.id,
                      'cx': row.offsetTop - scrollLeft + row.offsetHeight * 0.5,
@@ -276,8 +276,10 @@ function mapperTable(model, id, orientation, detail)
             num_sigs += num_dev_sigs;
         });
         // adjust row heights to fill table
-        let height = Math.floor((targetHeight-41)/(num_devs+num_sigs));
-        $("#"+this.id+' tbody tr').css('height', height+'px');
+        row_height = Math.floor(targetHeight/(num_devs+num_sigs));
+        if (row_height < 18)
+            row_height = 18;
+        $("#"+this.id+' tbody tr').css('height', row_height+'px');
     }
 
     function select_tr(tr) {

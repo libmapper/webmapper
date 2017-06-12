@@ -39,9 +39,9 @@ function init() {
     initTopMenuCommands();
 
     // update container height based on height of top menu
-    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+//    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-        $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
+//        $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
         view.on_resize();
     };
 

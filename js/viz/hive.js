@@ -5,11 +5,11 @@
 function HivePlotView(container, model)
 {
     var _self = this;
+    var container_frame = null;
     this.svgArea = null;
-    var frame = null;
+    var svg_frame = null;
     var width = null;
     var height = null;
-    var origin = null;
     var view_counter = 0;
     var device_shape = null;
     var leftTable = null;
@@ -21,6 +21,8 @@ function HivePlotView(container, model)
     var currentView = null;
     var cleanup = null;
 
+    var searchHeight = 41;
+
     var default_speed = 1000;
 
     var cursor = null;
@@ -31,11 +33,11 @@ function HivePlotView(container, model)
         if (obj.left < (obj.width * 0.5 + border))
             obj.left = obj.width * 0.5 + border;
         else if (obj.left > (bounds.width - obj.width * 0.5 - border))
-            obj.left = frame.width - obj.width * 0.5 - border;
+            obj.left = bounds.width - obj.width * 0.5 - border;
         if (obj.top < (obj.height * 0.5 + border))
             obj.top = obj.height * 0.5 + border;
-        else if (obj.top > (frame.height - obj.height * 0.5 - border))
-            obj.top = frame.height - obj.height * 0.5 - border;
+        else if (obj.top > (bounds.height - obj.height * 0.5 - border))
+            obj.top = bounds.height - obj.height * 0.5 - border;
     }
 
     this.redraw = function(duration) {
@@ -44,12 +46,12 @@ function HivePlotView(container, model)
     };
 
     function labelwidth(label) {
-        return label.length * 5;
+        return label.length * 8;
     }
 
     function labeloffset(start, label) {
-        return {'x': start.x + label.length * 2.4 + 3,
-                'y': start.y - 7 };
+        return {'x': start.x + label.length * 4 + 3,
+                'y': start.y - 10 };
     }
 
     function circle_path(x, y, radius) {
@@ -170,52 +172,61 @@ function HivePlotView(container, model)
 
         let left_tw, left_th, right_tw, right_th, top_tw, top_th;
         let left_sh, right_sh, right_st, right_sl;
-        let searchHeight = 41;
 
         switch (view) {
             case 'list':
-                left_tw = frame.width * 0.4;
-                left_sw = frame.width * 0.4;
-                left_th = frame.height;
-                right_tw = frame.width * 0.4;
-                right_sw = frame.width * 0.4;
-                right_th = frame.height;
-                top_tw = frame.width - 200;
-                top_th = 0;
                 searchHeight = 41;
+                left_tw = container_frame.width * 0.4;
+                left_sw = container_frame.width * 0.4;
+                left_th = container_frame.height - searchHeight;
+                right_tw = container_frame.width * 0.4;
+                right_sw = container_frame.width * 0.4;
+                right_th = container_frame.height - searchHeight;
+                top_tw = container_frame.width - left_tw - right_tw;
+                top_th = 0;
+                svg_frame.height = container_frame.height - searchHeight;
+                svg_frame.width = container_frame.width - left_tw - right_tw;
                 break;
             case 'canvas':
-                left_tw = frame.width * 0.25;
-                left_sw = frame.width;
-                left_th = frame.height;
+                searchHeight = 41;
+                left_tw = container_frame.width * 0.25;
+                left_sw = container_frame.width;
+                left_th = container_frame.height - searchHeight;
                 right_tw = 0;
                 right_sw = 0;
-                right_th = frame.height;
-                top_tw = frame.width - 200;
+                right_th = container_frame.height - searchHeight;
+                top_tw = container_frame.width - left_tw - right_tw;
                 top_th = 0;
-                searchHeight = 41;
+                svg_frame.height = container_frame.height - searchHeight;
+                svg_frame.width = container_frame.width - left_tw;
                 break;
             case 'grid':
+                searchHeight = 0;
                 left_tw = 200;
                 left_sw = 200;
-                left_th = frame.height - 200;
+                left_th = container_frame.height - 200;
                 right_tw = 0;
                 right_sw = 0;
-                right_th = frame.height;
-                top_tw = frame.width - 200;
+                right_th = container_frame.height - 200;
+                top_tw = container_frame.width - 200;
                 top_th = 200;
-                searchHeight = 0;
+                svg_frame.height = container_frame.height - top_th;
+                svg_frame.width = container_frame.width - left_tw;
                 break;
             default:
-                left_tw = 0;
-                left_sw = frame.width * 0.5;
-                left_th = frame.height;
-                right_tw = 0;
-                right_sw = frame.width * 0.5;
-                right_th = frame.height;
-                top_tw = frame.width - 200;
-                top_th = 0;
                 searchHeight = 41;
+                left_tw = 0;
+                left_sw = container_frame.width * 0.5;
+                left_th = container_frame.height - searchHeight;
+                right_tw = 0;
+                right_sw = container_frame.width * 0.5;
+                right_th = container_frame.height - searchHeight;
+                top_tw = container_frame.width - left_tw - right_tw;
+                top_th = 0;
+                svg_frame.width = container_frame.width;
+                svg_frame.height = container_frame.height - searchHeight;
+                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
                 break;
         }
 
@@ -225,7 +236,7 @@ function HivePlotView(container, model)
                                         leftTableWidth = now;
                                         $('#leftSearchDiv').css({'width': now});
                                         $('#svgDiv, #topTable').css({
-                                            'width': (frame.width - leftTableWidth
+                                            'width': (container_frame.width - leftTableWidth
                                                       - rightTableWidth) + 'px',
                                             'left': leftTableWidth + 'px'});
                                     }});
@@ -235,9 +246,9 @@ function HivePlotView(container, model)
                                         rightTableWidth = now;
                                         $('#rightSearchDiv').css({'width': now});
                                         $('#rightTable, #rightSearchDiv').css({
-                                            'left': frame.width - now + 'px'});
+                                            'left': container_frame.width - now + 'px'});
                                         $('#svgDiv, #topTable').css({
-                                            'width': (frame.width - leftTableWidth
+                                            'width': (container_frame.width - leftTableWidth
                                                       - rightTableWidth) + 'px'});
                                      }});
         if (top_th != topTableHeight)
@@ -245,7 +256,9 @@ function HivePlotView(container, model)
                                      {duration: default_speed, step: function(now, fx) {
                                         topTableHeight = now;
                                         $('#svgDiv, #leftTable, #rightTable').css({
-                                            'height': (frame.height - topTableHeight) + 'px',
+                                            'height': (container_frame.height
+                                                       - topTableHeight
+                                                       - searchHeight) + 'px',
                                             'top': topTableHeight + searchHeight + 'px'});
                                         let h = topTableHeight;
                                         if (h < 41) h = 41;
@@ -256,13 +269,17 @@ function HivePlotView(container, model)
                                    {duration: default_speed});
         $('#rightSearchDiv').animate({'width': right_sw + 'px'},
                                      {duration: default_speed, step: function(now, fx) {
-                                        $('#rightSearchDiv').css({'left': frame.width - now});
+                                        $('#rightSearchDiv').css({'left': container_frame.width - now});
                                      }});
 
         switch (view) {
             case 'hive':
                 allow_hover = true;
                 redraw = function(speed) {
+                    let origin = {'x': 50,
+                                  'y': svg_frame.height - 50};
+                    let width = svg_frame.width - 100;
+                    let height = svg_frame.height - 100;
                     if (speed == null)
                         speed = default_speed;
                     let dev_index = 0;
@@ -278,9 +295,9 @@ function HivePlotView(container, model)
                         angle = dev_index * -angleInc;
                         let path = [['M', origin.x, origin.y],
                                     ['l', width * Math.cos(angle), height * Math.sin(angle)]];
-                        dev.view.animate({'path': path,
-                                          'stroke-opacity': 1,
-                                          'fill-opacity': 0}, speed, 'linear');
+                        dev.view.stop().animate({'path': path,
+                                                 'stroke-opacity': 1,
+                                                 'fill-opacity': 0}, speed, 'linear');
 
                         dev_index += 1;
                         let sig_index = 1;
@@ -292,11 +309,12 @@ function HivePlotView(container, model)
                             let x = origin.x + width * inc * sig_index * Math.cos(angle);
                             let y = origin.y + height * inc * sig_index * Math.sin(angle);
                             let path = circle_path(x, y, 10);
-                            sig.view.animate({'path': path,
-                                              'fill': dev.view.color,
-                                              'fill-opacity': 1,
-                                              'stroke-opacity': 0}, speed, 'linear');
+                            sig.view.stop().animate({'path': path,
+                                                     'fill': dev.view.color,
+                                                     'fill-opacity': 1,
+                                                     'stroke-opacity': 0}, speed);
                             sig.view.position = new_pos(x, y);
+                            sig.view.label.animate({'x': x, 'y': y, 'opacity': 0}, speed);
                             sig_index += 1;
                         });
                     });
@@ -322,11 +340,8 @@ function HivePlotView(container, model)
                 allow_hover = false;
                 leftTable.filter('input', null);
                 leftTable.show_detail(false);
-                leftTable.border_mode(true);
-
                 topTable.filter('output', null);
                 topTable.show_detail(false);
-                topTable.border_mode(true);
 
                 cursor.attr({'stroke-opacity': 0,
                              'fill': 'rgb(104,202,255)',
@@ -344,16 +359,17 @@ function HivePlotView(container, model)
                         dev.signals.each(function(sig) {
                             sig.view.animate({'fill-opacity': 0,
                                               'stroke-opacity': 0}, speed, 'linear');
+                            sig.view.label.animate({'opacity': 0}, speed);
                         });
                         let pos = leftTable.rowPos(dev.name);
                         if (pos) {
-                            pos.width = frame.width;
+                            pos.width = top_tw;
                         }
                         else {
                             pos = topTable.rowPos(dev.name);
                             if (!pos)
                                 return;
-                            pos.height = frame.height;
+                            pos.height = left_th;
                         }
                         let path = rect_path(pos);
                         dev.view.toBack();
@@ -525,8 +541,7 @@ function HivePlotView(container, model)
                     leftTable.update(left_th);
                     rightTable.update(right_th);
 
-                    let svg_tw = frame.width - left_tw - right_tw;
-                    let svg_tc = svg_tw * 0.5;
+                    let svg_tc = top_tw * 0.5;
                     if (first_transition) {
                         model.devices.each(function(dev) {
                             if (!dev.view)
@@ -545,7 +560,7 @@ function HivePlotView(container, model)
                                     s = rightTable.rowPos(sig.key);
                                     if (!s)
                                         return;
-                                    s.left = frame.width - left_tw - right_tw;
+                                    s.left = top_tw;
                                 }
                                 sig.view.animate({'path': rect_path(s),
                                                   'fill-opacity': 1,
@@ -554,6 +569,8 @@ function HivePlotView(container, model)
                                     function() {
                                         sig.view.attr({'fill-opacity': 0});
                                 });
+                                sig.view.label.animate({'x': s.left + s.width * 0.5,
+                                                        'y': s.cy, 'opacity': 0}, speed);
                             });
                         });
                     }
@@ -574,8 +591,8 @@ function HivePlotView(container, model)
                         if (!src || !dst)
                             return;
 
-                        src.left = map.src.direction == 'output' ? 0 : svg_tw;
-                        dst.left = map.dst.direction == 'output' ? 0 : svg_tw;
+                        src.left = map.src.direction == 'output' ? 0 : top_tw;
+                        dst.left = map.dst.direction == 'output' ? 0 : top_tw;
                         src.center = src.top + src.height * 0.5;
                         dst.center = dst.top + dst.height * 0.5;
                         let v_center = (src.center + dst.center) * 0.5;
@@ -587,7 +604,7 @@ function HivePlotView(container, model)
 
                         if (src.left == dst.left) {
                             let mult = Math.abs(src.center - dst.center) * 0.25 + 35;
-                            h_center = src.left < h_center ? mult : svg_tw - mult;
+                            h_center = src.left < h_center ? mult : top_tw - mult;
                         }
 
                         let path = [['M', src.left, src.center],
@@ -627,8 +644,8 @@ function HivePlotView(container, model)
                     var sourceRow = this;
                     var table = null;
                     var ppos = fullOffset(sourceRow);
-                    ppos.left -= frame.left;
-                    ppos.top = ppos.top - frame.top + ppos.height * 0.5;
+                    ppos.left -= svg_frame.left;
+                    ppos.top = ppos.top - svg_frame.top + ppos.height * 0.5;
                     if ($(sourceRow).parents('.tableDiv').attr('id') == "leftTable") {
                         table = leftTable;
                     }
@@ -639,19 +656,18 @@ function HivePlotView(container, model)
 
                     $('svg').one('mouseenter.drawing', function() {
                         deselect_all();
-                        let svg_tw = frame.width - left_tw - right_tw;
-                        let mpx = svg_tw * 0.5;
+                        let mpx = top_tw * 0.5;
                         let path = [['M', ppos.left, ppos.top],
                                     ['C', mpx, ppos.top, mpx, 0, 0, 0]];
 
-                        let leftAttract = svg_tw * 0.3;
-                        let rightAttract = svg_tw * 0.7;
+                        let leftAttract = top_tw * 0.3;
+                        let rightAttract = top_tw * 0.7;
                         let dst = null;
                         $('svg, .displayTable tbody tr').on('mousemove.drawing',
                                                             function(e) {
                             dst = null;
-                            let x = e.pageX - frame.left - left_tw;
-                            let y = e.pageY - frame.top - top_th;
+                            let x = e.pageX - svg_frame.left - left_tw;
+                            let y = e.pageY - svg_frame.top - top_th;
                             let pos;
                             if (x < leftAttract) {
                                 rightTable.highlight(null, null);
@@ -667,7 +683,7 @@ function HivePlotView(container, model)
                                 leftTable.highlight(null, null);
                                 pos = rightTable.highlight(e.pageX, e.pageY);
                                 if (pos) {
-                                    x = svg_tw;
+                                    x = top_tw;
                                     y = pos.cy;
                                     dst = pos.id;
                                 }
@@ -723,7 +739,7 @@ function HivePlotView(container, model)
                                 s = rightTable.rowPos(sig.key);
                                 if (!s)
                                     return;
-                                s.left = frame.width - left_tw - right_tw;
+                                s.left = svg_frame.width - left_tw - right_tw;
                             }
                             let color = s.even ? '#EDF5FF' : 'white';
                             sig.view.attr({'path': rect_path(s),
@@ -776,26 +792,26 @@ function HivePlotView(container, model)
                                 sig.view.label.animate({'x': sig.view.canvas_object.left,
                                                         'y': sig.view.canvas_object.top,
                                                         'opacity': 1},
-                                                       speed, 'linear');
+                                                       speed, 'linear').toFront();
                             }
                             else {
                                 sig.view.attr(attrs);
                                 sig.view.label.attr({'x': sig.view.canvas_object.left,
                                                      'y': sig.view.canvas_object.top,
                                                      'opacity': 1},
-                                                    speed, 'linear');
+                                                    speed, 'linear').toFront();
                             }
                             if (first_transition) {
                                 sig.view.drag(function(dx, dy, x, y, event) {
-                                    x -= (frame.left + left_tw);
-                                    y -= frame.top;
+                                    x -= (svg_frame.left + left_tw);
+                                    y -= (svg_frame.top + searchHeight);
                                     let obj = sig.view.canvas_object
                                     obj.left = x;
                                     obj.top = y;
-                                    constrain(obj, frame, 5);
+                                    constrain(obj, svg_frame, 5);
                                     sig.view.attr({'path': canvas_rect_path(obj,
                                                                             sig.direction)});
-                                    sig.view.label.attr({'x': obj.left, 'y': obj.top});
+                                    sig.view.label.attr({'x': obj.left, 'y': obj.top}).toFront();
                                     redraw(0);
                                 });
                             }
@@ -807,7 +823,7 @@ function HivePlotView(container, model)
                         if (   !map.src.view.canvas_object
                             || !map.dst.view.canvas_object) {
                             map.view.attr({'arrow-end': 'none'});
-                            map.view.animate({'path': [['M', frame.cx, frame.cy],
+                            map.view.animate({'path': [['M', svg_frame.cx, svg_frame.cy],
                                                        ['l', 0, 0]],
                                               'stroke-opacity': 0,
                                               'fill-opacity': 0}, speed, 'linear');
@@ -840,14 +856,14 @@ function HivePlotView(container, model)
 
                     $('svg').one('mouseenter.drawing', function() {
                         // TODO: deselect all objects
-                        var cursorLabel = svgArea.text(0, 0, id);
+                        var cursorLabel = svgArea.text(0, 0, id).attr({'font-size': 16});
 
                         $('svg').on('mousemove.drawing', function(e) {
-                            x = e.pageX - frame.left - left_tw;
-                            y = e.pageY - frame.top - top_th;
+                            x = e.pageX - svg_frame.left - left_tw;
+                            y = e.pageY - svg_frame.top - top_th - searchHeight;
                             let temp = {'left': x, 'top': y,
                                         'width': width, 'height': 20 };
-                            constrain(temp, frame, 5);
+                            constrain(temp, svg_frame, 5);
 
                             let path = canvas_rect_path(temp, sig.direction);
                             cursor.attr({'path': path, 'stroke-opacity': 1});
@@ -868,15 +884,15 @@ function HivePlotView(container, model)
                             sig.view.attr({'path': canvas_rect_path(sig.view.canvas_object,
                                                                     sig.direction)});
                             sig.view.drag(function(dx, dy, x, y, event) {
-                                x -= (frame.left + left_tw);
-                                y -= frame.top;
+                                x -= (svg_frame.left + left_tw);
+                                y -= svg_frame.top;
                                 let obj = sig.view.canvas_object
                                 obj.left = x;
                                 obj.top = y;
-                                constrain(obj, frame, 5);
+                                constrain(obj, svg_frame, 5);
                                 sig.view.attr({'path': canvas_rect_path(obj,
                                                                         sig.direction)});
-                                sig.view.label.attr({'x': obj.left, 'y': obj.top});
+                                sig.view.label.attr({'x': obj.left, 'y': obj.top}).toFront();
                                 redraw(0);
                             });
                             redraw();
@@ -917,16 +933,16 @@ function HivePlotView(container, model)
                                               'fill-opacity': 1,
                                               'stroke-opacity': 0}, speed, 'linear');
                             sig.view.position = pos;
+                            sig.view.label.animate({'x': pos.x, 'y': pos.y,
+                                                   'opacity': 0}, speed);
                         });
                     });
-                    frame.cx = frame.width * 0.5;
-                    frame.cy = frame.height * 0.5;
                     model.maps.each(function(map) {
                         let src = map.src.view.position;
                         let dst = map.dst.view.position;
                         let mp = new_pos((src.x + dst.x) * 0.5, (src.y + dst.y) * 0.5);
-                        mp.x += (mp.x - frame.cx) * 0.2;
-                        mp.y += (mp.y - frame.cy) * 0.2;
+                        mp.x += (mp.x - svg_frame.cx) * 0.2;
+                        mp.y += (mp.y - svg_frame.cy) * 0.2;
                         let path = [['M', src.x, src.y],
                                     ['S', mp.x, mp.y, dst.x, dst.y]];
                         map.view.animate({'path': path,
@@ -941,19 +957,17 @@ function HivePlotView(container, model)
                 break;
             case 'balloon':
                 allow_hover = false;
-                let outline;
-                if (first_transition)
-                    outline = outline = svgArea.path().toBack()
-                        .attr({'path': circle_path(frame.cx, frame.cy, 1),
-                               'stroke-opacity': 0,
-                               'fill': 'lightgray',
-                               'fill-opacity': 0});
+                let outline = svgArea.path().attr({'path': circle_path(svg_frame.cx, svg_frame.cy, 1),
+                                                   'stroke-opacity': 0,
+                                                   'fill': 'lightgray',
+                                                   'fill-opacity': 0}).toBack();
+
                 redraw = function(speed) {
                     if (speed == null)
                         speed = default_speed;
-                    let path = circle_path(frame.left + frame.width * 0.33,
-                                           frame.top + frame.height * 0.5,
-                                           frame.height * 0.4);
+                    let path = circle_path(svg_frame.left + svg_frame.width * 0.33,
+                                           svg_frame.top + svg_frame.height * 0.5,
+                                           svg_frame.height * 0.4);
                     outline.animate({'path': path,
                                      'fill-opacity': 1}, speed, 'linear');
                 }
@@ -1015,25 +1029,19 @@ function HivePlotView(container, model)
             "</div>");
 
         svgArea = Raphael($('#svgDiv')[0], '100%', '100%');
-        frame = fullOffset($('#svgDiv')[0]);
-        frame.cx = frame.width * 0.5;
-        frame.cy = frame.height * 0.5;
-        width = frame.width - 100;
-        height = frame.height - 100;
-        origin = {"x": 50, "y": frame.height - 25};
+        svg_frame = fullOffset($('#svgDiv')[0]);
+        svg_frame.height -= searchHeight;
+        svg_frame.cx = svg_frame.width * 0.5;
+        svg_frame.cy = svg_frame.height * 0.5;
     };
 
     this.init = function() {
         // remove all previous DOM elements
         $(container).empty();
+        container_frame = fullOffset($(container)[0]);
         add_title_bars();
         add_display_tables();
         add_svg_area();
-        $('#container').css({
-            'min-width': '700px',
-            'min-height': '150px',
-            'height': 'calc(100% - 86px)'
-        });
 
         cursor = svgArea.path();
         this.switch_view('list');
@@ -1054,7 +1062,7 @@ function HivePlotView(container, model)
         else if (event == 'added' && !dev.view) {
             let color = Raphael.getColor();
             dev.view = svgArea.path()
-                            .attr({'path': [['M', origin.x, origin.y], ['L',10, 0]],
+                            .attr({'path': [['M', 0, 0], ['L',10, 0]],
                                    'stroke': color,
                                    'fill': 'lightgray',
                                    'stroke-opacity': 0,
@@ -1070,9 +1078,8 @@ function HivePlotView(container, model)
     }
 
     function new_pos(x, y) {
-        let frame = fullOffset($('#svgDiv')[0]);
-        return {'x': x ? x : Math.random() * frame.width + frame.left,
-            'y': y ? y : Math.random() * frame.height + frame.top};
+        return {'x': x ? x : Math.random() * svg_frame.width,
+            'y': y ? y : Math.random() * svg_frame.height};
     }
 
     function update_signals(sig, event, repaint) {
@@ -1083,24 +1090,24 @@ function HivePlotView(container, model)
         else if (event == 'added' && !sig.view) {
             let dev = sig.device;
             // add circle for signal
-            let path = circle_path(origin.x, origin.y, 3);
+            let path = circle_path(0, 0, 3);
             sig.view = svgArea.path()
                             .attr({ 'path': path,
                                     'stroke': 'black',
                                     'fill': dev.view.color,
                                     'stroke-opacity': 0,
                                     'fill-opacity': 0 });
-            sig.view.position = new_pos(origin.x, origin.y);
-            sig.view.label = svgArea.text(origin.x, origin.y, sig.key)
-                            .attr({'opacity': 0});;
+            sig.view.position = new_pos(0, 0);
+            sig.view.label = svgArea.text(0, 0, sig.key)
+                            .attr({'opacity': 0,
+                                   'font-size': 16 });;
             sig.view.hover(function() {
                     if (!allow_hover)
                         return;
                     let pos = labeloffset(sig.view.position, sig.key);
                     sig.view.label.attr({'x': pos.x,
                                          'y': pos.y,
-                                         'opacity': 1,
-                                         'font-size': 18}).toFront();
+                                         'opacity': 1}).toFront();
                 },
                 function() {
                     if (!allow_hover)
@@ -1215,7 +1222,10 @@ HivePlotView.prototype = {
 
     // when browser window gets resized
     on_resize : function () {
-
+        container_frame = fullOffset($(container)[0]);
+        svg_frame = fullOffset($('#svgDiv')[0]);
+        svg_frame.cx = svg_frame.width * 0.5;
+        svg_frame.cy = svg_frame.height * 0.5;
     },
 
     cleanup : function () {
