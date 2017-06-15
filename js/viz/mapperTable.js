@@ -111,16 +111,18 @@ function mapperTable(model, id, orientation, detail)
 //        $(this.table 'td').css({'width': this.border ? '50px' : '75px'});
     }
 
-    this.rowPos = function(name) {
+    this.row_from_name = function(name) {
+        let id = name.replace('/', '\\/');
         let scrollLeft = ($('#'+this.id)[0]).scrollLeft;
         let scrollTop = ($('#'+this.id)[0]).scrollTop;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
-            if (row.id == name) {
+            if (row.id == id) {
                 if (this.orientation == 'left') {
                     return { 'left': row.offsetLeft,
                              'top': i * row_height - scrollTop,
                              'width': row.offsetWidth,
                              'height': row_height,
+                             'id': row.id.replace('\\/', '\/'),
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
                              'cy': i * row_height - scrollTop + row_height * 0.5,
                              'even': $(row).hasClass('even') };
@@ -130,6 +132,7 @@ function mapperTable(model, id, orientation, detail)
                              'top': i * row_height - scrollTop,
                              'width': row.offsetWidth,
                              'height': row_height,
+                             'id': row.id.replace('\\/', '\/'),
                              'cx': row.offsetLeft + row.offsetWidth * 0.5,
                              'cy': i * row_height - scrollTop + row_height * 0.5,
                              'even': $(row).hasClass('even') };
@@ -139,6 +142,7 @@ function mapperTable(model, id, orientation, detail)
                              'top': row.offsetLeft,
                              'width': row_height,
                              'height': row.offsetWidth,
+                             'id': row.id.replace('\\/', '\/'),
                              'cx': i * row_height - scrollLeft + row_height * 0.5,
                              'cy': row.offsetLeft + row.offsetWidth * 0.5,
                              'even': $(row).hasClass('even') };
@@ -148,8 +152,7 @@ function mapperTable(model, id, orientation, detail)
         return null;
     }
 
-    this.highlight = function(x, y) {
-        $('#'+this.id+' tr').removeClass('trsel');
+    this.row_from_position = function(x, y) {
         if (x == null || y == null)
             return;
         if (this.orientation == 'top') {
@@ -164,7 +167,6 @@ function mapperTable(model, id, orientation, detail)
         }
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
-        $(row).addClass('trsel');
 
         let scrollLeft = ($('#'+this.id)[0]).scrollLeft;
         let scrollTop = ($('#'+this.id)[0]).scrollTop;
@@ -174,7 +176,7 @@ function mapperTable(model, id, orientation, detail)
                      'top': row.offsetTop - scrollTop,
                      'width': row.offsetWidth,
                      'height': row_height,
-                     'id': row.id,
+                     'id': row.id.replace('\\/', '\/'),
                      'cx': row.offsetLeft + row.offsetWidth * 0.5,
                      'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
         }
@@ -183,9 +185,19 @@ function mapperTable(model, id, orientation, detail)
                      'top': row.offsetLeft,
                      'width': row_height,
                      'height': row.offsetWidth,
-                     'id': row.id,
+                     'id': row.id.replace('\\/', '\/'),
                      'cx': row.offsetTop - scrollLeft + row.offsetHeight * 0.5,
                      'cy': row.offsetLeft + row.offsetWidth * 0.5 };
+        }
+    }
+
+    this.highlight_row = function(row, clear) {
+        if (clear)
+            $('#'+this.id+' tr').removeClass('trsel');
+        if (row && row.id) {
+            let dom_row = document.getElementById(row.id.replace('\/', '\\/'));
+            if (dom_row)
+                $(dom_row).addClass('trsel');
         }
     }
 
@@ -254,7 +266,7 @@ function mapperTable(model, id, orientation, detail)
                 let unit = sig.unit == 'unknown' ? '' : sig.unit;
                 let ioname = (sig.direction == 'input') ? '→'+name : name+'→';
 
-                sigs.push([sig.key, ioname, typelen+unit]);
+                sigs.push([sig.key.replace('/', '\\/'), ioname, typelen+unit]);
                 num_dev_sigs += 1;
             });
             if (num_dev_sigs <= 0)

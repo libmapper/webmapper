@@ -16,7 +16,8 @@ function init() {
 
     // add the view wrapper
     $('body').append("<ul class='topTabs'>"+
-                         "<li id='allDevices'>All Devices</li>"+
+                         "<li id='allDevices' class='tabsel'>Home</li>"+
+                         "<li id='allDevices'>+</li>"+
                      "</ul>"+
                      "<ul id='sidebar'>"+
                          "<li><span id='listButton' class='viewButton viewButtonsel'></span></li>"+
@@ -38,10 +39,7 @@ function init() {
     initViewCommands();
     initTopMenuCommands();
 
-    // update container height based on height of top menu
-//    $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
     window.onresize = function (e) {
-//        $('#container').css('height', 'calc(100% - ' + ($('.topMenu').height() + 5) + 'px)' );
         view.on_resize();
     };
 
