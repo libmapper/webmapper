@@ -11,15 +11,17 @@ window.onload = init;           // Kick things off
 
 /* The main program. */
 function init() {
+    // add the top tabs
+    $('body').append("<ul class='topTabs'>"+
+                        "<li id='allDevices' class='tabsel'>Home</li>"+
+                        "<li id='allDevices'>+</li>"+
+                     "</ul>");
+
     // add the top menu wrapper
-    $('body').append("<div id='topMenuWrapper'></div>");
+    $('body').append("<div class=propertiesDiv id='topMenuWrapper'></div>");
 
     // add the view wrapper
-    $('body').append("<ul class='topTabs'>"+
-                         "<li id='allDevices' class='tabsel'>Home</li>"+
-                         "<li id='allDevices'>+</li>"+
-                     "</ul>"+
-                     "<ul id='sidebar'>"+
+    $('body').append("<ul id='sidebar'>"+
                          "<li><span id='listButton' class='viewButton viewButtonsel'></span></li>"+
                          "<li><span id='graphButton' class='viewButton'></span></li>"+
                          "<li><span id='canvasButton' class='viewButton'></span></li>"+
@@ -136,6 +138,8 @@ function initViewCommands()
             /* 6 */
             new_view = 'balloon';
         }
+        else
+            console.log('key:', e.which);
         if (new_view) {
             view.switch_view(new_view);
             $('.viewButton').removeClass("viewButtonsel");

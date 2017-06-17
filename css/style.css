@@ -59,8 +59,16 @@ body {
 /* Color scheme! */
 
 /* Main color */
-body, .svgDiv, .tableDiv {
-    background: #FEFEFE;
+body {
+/*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%);*/
+/*    background-image: linear-gradient(225deg, rgb(200, 200, 200) 10%, rgb(1, 1, 1) 100%);*/
+    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
+}
+.svgDiv, .tableDiv {
+/*    background: #FEFEFE;*/
+    background: rgba(200, 200, 200, 0.15);
+/*    background: rgba(1, 1, 1, 0.15);*/
+    color: white;
 }
 
 /* blues */
@@ -79,7 +87,7 @@ thead, #svgTop, #networkMenu {
 
 /* highlights */
 .modesel, .calibratesel .displayTable #networkMenu {
-    background-color: #9CC2CF;
+/*    background-color: #9CC2CF;*/
 }
 
 .calibratesel {
@@ -93,15 +101,16 @@ thead, #svgTop, #networkMenu {
 
 /* tertiary highlight selection */
 .displayTable tr.even {
-    background: #EDF5FF;
+/*    background: #EDF5FF;*/
+    background: rgba(200, 200, 200, 0.15);
 }
 
 .trsel, tr.even.trsel {
-    background: rgb(104,202,255);
+/*    background: rgb(104,202,255);*/
 }
 
 .displayTable tr:hover {
-    background: rgb(104,202,255);
+/*    background: rgb(104,202,255);*/
 }
 
 /* others */
@@ -139,9 +148,14 @@ path {
 /*Upper Tab Area */
 .topTabs {
     margin: 0px;
-    margin-left: 40px;
+/*    margin-left: 40px;*/
     border-radius: 0px;
-    background: inherit;
+/*    background: inherit;*/
+    background: lightgray;
+    position: absolute;
+    left: -4px;
+    width: calc(100% + 4px);
+    padding-left: 6px;
 }
 
 .topTabs li {
@@ -151,7 +165,8 @@ path {
     display: inline-block;
     list-style: none;
     cursor: pointer;
-    border-right: 1px solid white;
+/*    border-right: 1px solid white;*/
+margin-right: 1px;
 }
 
 .topTabs li:hover {
@@ -161,10 +176,12 @@ path {
 /****************/
 
 /*The top menu*/
-.topMenu {
+.propertiesDiv {
     min-width: 560px;
     padding-top: 5px;
     padding-bottom: 5px;
+    position: absolute;
+    top: 27px;
 }
 
 .topMenu div {
@@ -182,7 +199,7 @@ path {
     width: 160px;
     display:inline-block;
     padding: 10px;
-    background-color: #EEE;
+/*    background-color: #EEE;*/
     border-radius:12px;
     height: 76px;
 }
@@ -193,7 +210,7 @@ path {
 }
 
 .signalProps {
-    background-color: #EEE;
+/*    background-color: #EEE;*/
     border-radius:12px;
     width: calc(100% - 165px);
     padding: 10px;
@@ -331,8 +348,8 @@ form {
     float: left;
 /*    padding: 2px;*/
     margin: 0px;
-    background: #111;
-    color: #fff;
+/*    background: #111;*/
+/*    color: #fff;*/
 }
 
 #sidebar {
@@ -342,16 +359,20 @@ form {
     box-sizing: border-box;
     height: calc(100% - 126px);
 /*    height: 100%;*/
-    width: 40px;
+    width: 45px;
     float: left;
+    top: 113px;
+    position: absolute;
     margin-top: 0px;
     margin-bottom: 0px;
-    padding-right: 5px;
+    padding-right: 10px;
     padding-left: 5px;
     padding-top: 66px;
 /*    background: rgb(134,222,248);*/
 /*    background: #111;*/
-    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%)
+/*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%)*/
+/*    background: white;*/
+/*    opacity: 0.3;*/
 }
 
 #sidebar li {
@@ -369,7 +390,7 @@ form {
     background-position-y: center;
 /*    position: relative;*/
 /*    margin-top: 60px;*/
-    opacity: 0.7;
+    opacity: 0.5;
 }
 
 .viewButtonMini {
@@ -500,7 +521,7 @@ input.expression {
 
 .notification {
     font-style: italic;
-    background-color: #DDDDDD;
+/*    background-color: #DDDDDD;*/
     border: solid 1px black;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -541,15 +562,16 @@ tbody {
 
 #rightTable {
     left: 60%;
-    border-left: 2px solid #EEE;
+/*    border-left: 2px solid #EEE;*/
 }
 #leftTable {
-    border-right: 2px solid #EEE;
+/*    border-right: 2px solid #EEE;*/
 }
 
 /* Rows and headers */
 .tableDiv th, #svgTop {
-    background-color: lightgray;
+/*    background-color: lightgray;*/
+    background: rgba(200, 200, 200, 0.5);
 /*    color: white;*/
     cursor: pointer;
     font-weight: inherit;
@@ -705,11 +727,13 @@ input.searchBar {
 
 /* The overall container of elements not in skeleton*/
 #container {
-    width: calc(100% - 40px);
+    width: calc(100% - 52px);
     height: calc(100% - 126px);
-    background-color: inherit;
+/*    background-color: inherit;*/
     float: right;
-    position: relative;
+    position: absolute;
+    top: 113px;
+    left: 48px;
 }
 
 /* For disabled elements */

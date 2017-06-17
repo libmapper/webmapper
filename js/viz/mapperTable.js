@@ -117,35 +117,31 @@ function mapperTable(model, id, orientation, detail)
         let scrollTop = ($('#'+this.id)[0]).scrollTop;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
-                if (this.orientation == 'left') {
-                    return { 'left': row.offsetLeft,
-                             'top': i * row_height - scrollTop,
-                             'width': row.offsetWidth,
-                             'height': row_height,
-                             'id': row.id.replace('\\/', '\/'),
-                             'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': i * row_height - scrollTop + row_height * 0.5,
-                             'even': $(row).hasClass('even') };
-                }
-                else if (this.orientation == 'right') {
-                    return { 'left': row.offsetLeft,
-                             'top': i * row_height - scrollTop,
-                             'width': row.offsetWidth,
-                             'height': row_height,
-                             'id': row.id.replace('\\/', '\/'),
-                             'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                             'cy': i * row_height - scrollTop + row_height * 0.5,
-                             'even': $(row).hasClass('even') };
-                }
-                else {
-                    return { 'left': i * row_height - scrollLeft,
-                             'top': row.offsetLeft,
+                if (this.orientation == 'top') {
+                    let left = i * row_height - scrollLeft;
+                    let top = row.offsetLeft;
+                    return { 'left': left,
+                             'top': top,
                              'width': row_height,
                              'height': row.offsetWidth,
+                             'cx': left + row_height * 0.5,
+                             'cy': top + row.offsetWidth * 0.5,
                              'id': row.id.replace('\\/', '\/'),
-                             'cx': i * row_height - scrollLeft + row_height * 0.5,
-                             'cy': row.offsetLeft + row.offsetWidth * 0.5,
-                             'even': $(row).hasClass('even') };
+                             'even': $(row).hasClass('even'),
+                             'isOutput': $(row).hasClass('output')};
+                }
+                else {
+                    let left = row.offsetLeft;
+                    let top = i * row_height - scrollTop;
+                    return { 'left': left,
+                             'top': top,
+                             'width': row.offsetWidth,
+                             'height': row_height,
+                             'cx': left + row.offsetWidth * 0.5,
+                             'cy': top + row_height * 0.5,
+                             'id': row.id.replace('\\/', '\/'),
+                             'even': $(row).hasClass('even'),
+                             'isOutput': $(row).hasClass('output') };
                 }
             }
         }
@@ -171,23 +167,27 @@ function mapperTable(model, id, orientation, detail)
         let scrollLeft = ($('#'+this.id)[0]).scrollLeft;
         let scrollTop = ($('#'+this.id)[0]).scrollTop;
         row = row[0];
-        if (this.orientation == 'left' || this.orientation == 'right') {
-            return { 'left': row.offsetLeft,
-                     'top': row.offsetTop - scrollTop,
-                     'width': row.offsetWidth,
-                     'height': row_height,
-                     'id': row.id.replace('\\/', '\/'),
-                     'cx': row.offsetLeft + row.offsetWidth * 0.5,
-                     'cy': row.offsetTop - scrollTop + row.offsetHeight * 0.5 };
-        }
-        else {
-            return { 'left': row.offsetTop - scrollLeft,
-                     'top': row.offsetLeft,
+        if (this.orientation == 'top') {
+            let left = row.offsetTop - scrollLeft;
+            let top = row.offsetLeft;
+            return { 'left': left,
+                     'top': top,
                      'width': row_height,
                      'height': row.offsetWidth,
-                     'id': row.id.replace('\\/', '\/'),
-                     'cx': row.offsetTop - scrollLeft + row.offsetHeight * 0.5,
-                     'cy': row.offsetLeft + row.offsetWidth * 0.5 };
+                     'cx': left + row.offsetHeight * 0.5,
+                     'cy': top + row.offsetWidth * 0.5,
+                     'id': row.id.replace('\\/', '\/') };
+        }
+        else {
+            let left = row.offsetLeft;
+            let top = row.offsetTop - scrollTop;
+            return { 'left': left,
+                     'top': top,
+                     'width': row.offsetWidth,
+                     'height': row_height,
+                     'cx': left + row.offsetWidth * 0.5,
+                     'cy': top + row.offsetHeight * 0.5,
+                     'id': row.id.replace('\\/', '\/') };
         }
     }
 
@@ -263,10 +263,10 @@ function mapperTable(model, id, orientation, detail)
                         break;
                 }
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
-                let unit = sig.unit == 'unknown' ? '' : sig.unit;
+                let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
                 let ioname = (sig.direction == 'input') ? '→'+name : name+'→';
 
-                sigs.push([sig.key.replace('/', '\\/'), ioname, typelen+unit]);
+                sigs.push([sig.key.replace('/', '\\/'), ioname, typelen+unit, sig.direction]);
                 num_dev_sigs += 1;
             });
             if (num_dev_sigs <= 0)
@@ -275,12 +275,13 @@ function mapperTable(model, id, orientation, detail)
             $(tbody).append("<tr id="+dev.name+"><th colspan='2'>"+dev.name+"</th></tr>");
             let even = false;
             for (var i in sigs) {
-                let new_row = '<tr' + (even ? ' class=even' : '');
-                new_row += ' id='+sigs[i][0]+'>';
-                new_row += '<td>'+sigs[i][1]+'</td>';
+                let new_row = "<tr class='"+sigs[i][3];
+                if (even)
+                    new_row += " even";
+                new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
                 if (detail)
-                    new_row += '<td>'+sigs[i][2]+'</td>';
-                new_row += '</tr>';
+                    new_row += "<td>"+sigs[i][2]+"</td>";
+                new_row += "</tr>";
                 $(tbody).append(new_row);
                 even = !even;
             }
@@ -324,8 +325,16 @@ function mapperTable(model, id, orientation, detail)
 //            click: function(e) { e.stopPropagation(); }
 //        }, 'tr');
 
+        ticking = false;
         $('#'+this.id).on('scroll', function(e) {
-            $('#container').trigger('scroll');
+//            console.log('scroll', ($('#'+this.id)[0]).scrollTop);
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    $('#container').trigger('scroll');
+                    ticking = false;
+                });
+            }
+            ticking = true;
         });
 
 //        $('#'+this.id).on('mousedown', 'tr', function(tableClick) {
