@@ -27,14 +27,14 @@ function HivePlotView(container, model)
     var first_transition;
 
     function constrain(obj, bounds, border) {
-        if (obj.left < (obj.width * 0.5 + border))
-            obj.left = obj.width * 0.5 + border;
-        else if (obj.left > (bounds.width - obj.width * 0.5 - border))
-            obj.left = bounds.width - obj.width * 0.5 - border;
-        if (obj.top < (obj.height * 0.5 + border))
+        if (obj.left < (bounds.left + obj.width * 0.5 + border))
+            obj.left = bounds.left + obj.width * 0.5 + border;
+        else if (obj.left > (bounds.left + bounds.width - obj.width * 0.5 - border))
+            obj.left = bounds.left + bounds.width - obj.width * 0.5 - border;
+        if (obj.top < (bounds.top + obj.height * 0.5 + border))
             obj.top = obj.height * 0.5 + border;
-        else if (obj.top > (bounds.height - obj.height * 0.5 - border))
-            obj.top = bounds.height - obj.height * 0.5 - border;
+        else if (obj.top > (bounds.top + bounds.height - obj.height * 0.5 - border))
+            obj.top = bounds.top + bounds.height - obj.height * 0.5 - border;
     }
 
     this.redraw = function(duration) {
@@ -1061,6 +1061,37 @@ function HivePlotView(container, model)
         return true;
     }
 
+    this.zoom = function(x, y, delta) {
+        console.log('zoom', x, y, delta);
+    }
+
+    this.pan = function(x, y, delta_x, delta_y) {
+        if (y < container_frame.top + svg_frame.top) {
+            if (x > container_frame.left + svg_frame.left) {
+                topTable.pan(delta_x);
+            }
+        }
+        else if (x < container_frame.left + svg_frame.left) {
+            leftTable.pan(delta_y);
+        }
+        else if (x > (container_frame.left + svg_frame.left + svg_frame.width)) {
+            rightTable.pan(delta_y);
+        }
+        else if (currentView == 'list') {
+            // send to both left and right tables
+            leftTable.pan(delta_y);
+            rightTable.pan(delta_y);
+        }
+        else if (currentView == 'grid') {
+            // send to both left and top tables
+            leftTable.pan(delta_y);
+            topTable.pan(delta_x);
+        }
+        else
+            return;
+        redraw(0);
+    }
+
     function selection_handlers() {
         $('svg').on('mousedown', function(e) {
             if (e.shiftKey == false) {
@@ -1301,6 +1332,7 @@ function HivePlotView(container, model)
                                    'top': e.pageY - container_frame.top,
                                    'width': labelwidth(sig.key),
                                    'height': 20};
+                        constrain(obj, svg_frame, 5);
                         sig.view.canvas_object = obj;
                         sig.view.attr({'path': canvas_rect_path(sig.view.canvas_object,
                                                                 sig.direction)});

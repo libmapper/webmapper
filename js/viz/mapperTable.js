@@ -229,6 +229,19 @@ function mapperTable(model, id, orientation, detail)
         }
     }
 
+    this.pan = function(delta) {
+        if (this.id == 'topTable') {
+            this.scroll_x = $("#"+this.id+"Scroller")
+                                .scrollLeft(this.scroll_x + delta)
+                                .scrollLeft();
+        }
+        else {
+            this.scroll_y = $("#"+this.id+"Scroller")
+                                .scrollTop(this.scroll_y + delta)
+                                .scrollTop();
+        }
+    }
+
     this.update = function(targetHeight) {
 
         // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
@@ -353,18 +366,6 @@ function mapperTable(model, id, orientation, detail)
 //            click: function(e) { e.stopPropagation(); }
 //        }, 'tr');
 
-        ticking = false;
-        $("#"+this.id+"Scroller").on('scroll', function(e) {
-            self.scroll_x = this.scrollLeft;
-            self.scroll_y = this.scrollTop;
-            if (!ticking) {
-                window.requestAnimationFrame(function() {
-                    $('#container').trigger('scrolll');
-                    ticking = false;
-                });
-            }
-            ticking = true;
-        });
 
 //        $('#'+this.id).on('mousedown', 'tr', function(tableClick) {
 //            var sourceRow = this;

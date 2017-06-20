@@ -158,6 +158,20 @@ function initViewCommands()
         view.redraw(0);
     });
 
+    document.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        if (e.pageX < 45 || e.pageY < 86) {
+            // not over container
+            return;
+        }
+        if (e.ctrlKey) {
+            view.zoom(e.pageX, e.pageY, e.deltaY);
+        }
+        else {
+            view.pan(e.pageX, e.pageY, e.deltaX, e.deltaY);
+        }
+    });
+
     // from list view
     // requests links and maps from the selected device (tab)
     $("#container").on("tab", function(e, tab){
