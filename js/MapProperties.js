@@ -1,4 +1,4 @@
-function TopMenu(container, model) {
+function MapProperties(container, model) {
     this._container = container;
     this.model = model;
     this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
@@ -6,7 +6,7 @@ function TopMenu(container, model) {
     this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
 }
 
-TopMenu.prototype = {
+MapProperties.prototype = {
     // Initialize the Top Menu Bar Component
     init : function() {
         var _self = this;   // to pass to context of THIS to event handlers

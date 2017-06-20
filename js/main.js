@@ -5,7 +5,7 @@ var view;                       // holds the current view object
 var viewIndex;                  // index of current view
 var viewData = new Array(3);    // data specific to the view, change 3 the number of views
 
-var topMenu;
+var mapProperties;
 
 window.onload = init;           // Kick things off
 
@@ -18,7 +18,7 @@ function init() {
                      "</ul>");
 
     // add the top menu wrapper
-    $('body').append("<div class=propertiesDiv id='topMenuWrapper'></div>");
+    $('body').append("<div class=propertiesDiv id='MapPropertiesWrapper'></div>");
 
     // add the view wrapper
     $('body').append("<ul id='sidebar'>"+
@@ -33,13 +33,13 @@ function init() {
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
-    topMenu = new TopMenu(document.getElementById("topMenuWrapper"), model);
-    topMenu.init();
+    mapProperties = new MapProperties(document.getElementById("MapPropertiesWrapper"), model);
+    mapProperties.init();
 
     // init controller
     initMonitorCommands();
     initViewCommands();
-    initTopMenuCommands();
+    initMapPropertiesCommands();
 
     window.onresize = function (e) {
         view.on_resize();
@@ -77,11 +77,11 @@ function init() {
 function initMonitorCommands() {
     command.register("available_networks", function(cmd, args) {
         model.networkInterfaces.available = args;
-        topMenu.updateNetworkInterfaces(args);
+        mapProperties.updateNetworkInterfaces(args);
     });
     command.register("active_network", function(cmd, args) {
         model.networkInterfaces.selected = args
-        topMenu.updateNetworkInterfaces(args);
+        mapProperties.updateNetworkInterfaces(args);
     });
 }
 
@@ -217,28 +217,28 @@ function initViewCommands()
 
     // asks the view for the selected maps and updates the edit bar
     $("#container").on("updateMapProperties", function(e){
-        topMenu.updateMapProperties();
+        mapProperties.updateMapProperties();
     });
 
     // asks the view for the save button link (based on the active device)
     // currently implemented in List view only
     $("#container").on("updateSaveLocation", function(e){
-        topMenu.updateSaveLocation(view.get_save_location());
+        mapProperties.updateSaveLocation(view.get_save_location());
     });
 }
 
-function initTopMenuCommands()
+function initMapPropertiesCommands()
 {
-//    $("#topMenuWrapper").on("switchView", function(e, viewID) {
+//    $("#MapPropertiesWrapper").on("switchView", function(e, viewID) {
 //        switch_mode(viewID);
 //    });
-    $("#topMenuWrapper").on("setMap", function(e, args) {
+    $("#MapPropertiesWrapper").on("setMap", function(e, args) {
         command.send('set_map', args);
     });
-    $("#topMenuWrapper").on("refreshAll", function(e) {
+    $("#MapPropertiesWrapper").on("refreshAll", function(e) {
         refresh_all();
     });
-    $("#topMenuWrapper").on("selectNetwork", function(e, network) {
+    $("#MapPropertiesWrapper").on("selectNetwork", function(e, network) {
         command.send('select_network', network);
     });
 }
@@ -285,5 +285,5 @@ function switch_mode(newMode)
 //            view.load_view_settings(viewData[viewIndex]);
 //    }
 
-    topMenu.clearMapProperties();
+    mapProperties.clearMapProperties();
 }

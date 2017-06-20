@@ -307,7 +307,7 @@ def handler_page(out, args):
 
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
-<script type="text/javascript" src="js/TopMenu.js"></script>
+<script type="text/javascript" src="js/MapProperties.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 <link type="text/css" rel="stylesheet" href="includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
 <script type="text/javascript" src="includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
