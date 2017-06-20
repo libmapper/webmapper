@@ -303,8 +303,8 @@ function HivePlotView(container, model)
                                         leftTableWidth = now;
                                         $('#topTable').css({
                                             'width': (container_frame.width - leftTableWidth
-                                                      - rightTableWidth) + 'px',
-                                            'left': leftTableWidth + 'px'});
+                                                      - rightTableWidth + 20) + 'px',
+                                            'left': leftTableWidth - 20 + 'px'});
                                      },
                                      complete: animate_rightTable
                                     });
@@ -329,8 +329,8 @@ function HivePlotView(container, model)
                                         topTableHeight = now;
                                         $('#leftTable, #rightTable').css({
                                             'height': (container_frame.height
-                                                       - topTableHeight) + 'px',
-                                            'top': topTableHeight + 'px'});
+                                                       - topTableHeight / 200 * 180) + 'px',
+                                            'top': topTableHeight / 200 * 180 + 'px'});
                                     },
                                     complete: animate_leftTable
                                    });
@@ -422,7 +422,7 @@ function HivePlotView(container, model)
                         let pos = leftTable.row_from_name(dev.name);
                         if (pos) {
                             pos.left = left_tw;
-                            pos.top += top_th;
+                            pos.top += top_th - 20;
                             pos.width = top_tw;
                             path.push(rect_path(pos));
                         }
@@ -990,7 +990,8 @@ function HivePlotView(container, model)
             sig.view.label = svgArea.text(0, 0, sig.key)
                             .attr({'opacity': 0,
                                    'font-size': 16 });;
-            sig.view.hover(function() {
+            sig.view.hover(
+                function() {
                     if (currentView != 'hive' && currentView != 'graph')
                         return;
                     let pos = labeloffset(sig.view.position, sig.key);
@@ -999,6 +1000,8 @@ function HivePlotView(container, model)
                                          'opacity': 1}).toFront();
                 },
                 function() {
+                    if (currentView != 'hive' && currentView != 'graph')
+                        return;
                     sig.view.label.attr({'opacity': 0});
             });
             if (repaint)
@@ -1266,8 +1269,9 @@ function HivePlotView(container, model)
                     }
                     else {
                         // draw bezier connecting src to cursor
+                        let mp = (src.left + x) * 0.5;
                         path = [['M', src.left, src.cy],
-                                ['C', src.cx, src.cy, src.cx, y, x, y]];
+                                ['C', mp, src.cy, mp, y, x, y]];
                     }
                     if (dst)
                         dst_table.highlight_row(null, true);
@@ -1293,8 +1297,8 @@ function HivePlotView(container, model)
                         let sig = findSig(src.id);
                         if (!sig || sig.view.canvas_object)
                             return;
-                        let obj = {'left': e.pageX - svg_frame.left,
-                                   'top': e.pageY - svg_frame.top,
+                        let obj = {'left': e.pageX - container_frame.left,
+                                   'top': e.pageY - container_frame.top,
                                    'width': labelwidth(sig.key),
                                    'height': 20};
                         sig.view.canvas_object = obj;
@@ -1303,8 +1307,8 @@ function HivePlotView(container, model)
                         sig.view.label.attr({'x': obj.left, 'y': obj.top,
                                             'opacity': 1}).toFront();
                         sig.view.drag(function(dx, dy, x, y, event) {
-                            x -= svg_frame.left;
-                            y -= svg_frame.top;
+                            x -= container_frame.left;
+                            y -= container_frame.top;
                             let obj = sig.view.canvas_object
                             obj.left = x;
                             obj.top = y;

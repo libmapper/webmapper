@@ -95,6 +95,9 @@ function initViewCommands()
             case "listButton":
                 view.switch_view("list");
                 break;
+            case "canvasButton":
+                view.switch_view("canvas");
+                break;
             case "graphButton":
                 view.switch_view("graph");
                 break;
@@ -151,7 +154,7 @@ function initViewCommands()
         view.redraw();
     });
 
-    $('#container').on('scroll', function(e) {
+    $('#container').on('scrolll', function(e) {
         view.redraw(0);
     });
 

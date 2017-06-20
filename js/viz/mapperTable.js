@@ -29,6 +29,8 @@ function mapperTable(model, id, orientation, detail)
     this.nRows;         // Number of rows (e.g. devices or signals) present
     this.nVisibleRows;  // Number of rows actually visible to the user
     this.nCols;         // Number of columns in table
+    this.scroll_x = 0;
+    this.scroll_y = 0;
 
     this.border = false;
     var row_height = 0;
@@ -44,23 +46,46 @@ function mapperTable(model, id, orientation, detail)
 //        }
 
         // Create the skeleton for the table within the div
+        // TODO: move div properties to css
         if (self.detail) {
             $(self.div).append(
-                "<table class='displayTable'>"+
-                    "<colgroup>"+
-                        "<col style='width:75%'>"+
-                        "<col style='width:25%'>"+
-                    "</colgroup>"+
-                    "<tbody></tbody>"+
-                "</table>");
+                "<div style='height: 20px; position:relative; width:100%'>"+
+                    "<div style='float: left; position:relative; width:75%; padding-left:10px'>device/signal name</div>"+
+                    "<div style='float: left; position:relative; width:25%; padding-left:20px'>datatype</div>"+
+                "</div>"+
+                "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                    "<table class='displayTable'>"+
+                        "<colgroup>"+
+                            "<col style='width:75%'>"+
+                            "<col style='width:25%'>"+
+                        "</colgroup>"+
+                        "<tbody></tbody>"+
+                    "</table>"+
+                "</div>");
+        }
+        else if (self.id == 'topTable') {
+            $(self.div).append(
+                "<div style='height: 200px; position:relative; width:20px'>"+
+                    "<div style='float: left; position:relative; width:200px; padding-left:45px; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>device/signal name</div>"+
+                "</div>"+
+                "<div id="+self.id+"Scroller style='left:20px; top:0px; height:100%; width:calc(100% - 20px); position:absolute; overflow:auto'>"+
+                    "<table class='displayTable'>"+
+                        "<tbody></tbody>"+
+                    "</table>"+
+                "</div>");
         }
         else {
             $(self.div).append(
-                "<table class='displayTable'>"+
-                    "<tbody></tbody>"+
-                "</table>");
+                "<div style='height: 20px; position:relative; width:100%'>"+
+                    "<div style='float: left; position:relative; width:100%; padding-left:35px'>device/signal name</div>"+
+                "</div>"+
+                "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                    "<table class='displayTable'>"+
+                        "<tbody></tbody>"+
+                    "</table>"+
+                "</div>");
         }
-        self.table = $(self.div).children('.displayTable')[0];
+        self.table = $("#"+self.id+" .displayTable")[0];
         self.tbody = $("#"+self.id+" .displayTable tbody")[0];
 
         frame = fullOffset(self.table);
@@ -78,7 +103,7 @@ function mapperTable(model, id, orientation, detail)
         tableHeight = $('.tableDiv').height();
 
         makeTable(this);
-        this.add_handlers();
+        this.add_handlers(this);
     };
 
 //    this.set_title = function(title) {
@@ -102,6 +127,7 @@ function mapperTable(model, id, orientation, detail)
             return;
         this.detail = (show == true);
         makeTable(this);
+        this.add_handlers(this);
     }
 
     this.border_mode = function(enabled) {
@@ -111,14 +137,18 @@ function mapperTable(model, id, orientation, detail)
 //        $(this.table 'td').css({'width': this.border ? '50px' : '75px'});
     }
 
+    this.height = function() {
+        console.log(this.id, 'height()', row_height, this.table.rows.length,
+                    row_height * this.table.rows.length);
+        return row_height * this.table.rows.length;
+    }
+
     this.row_from_name = function(name) {
         let id = name.replace('/', '\\/');
-        let scrollLeft = ($('#'+this.id)[0]).scrollLeft;
-        let scrollTop = ($('#'+this.id)[0]).scrollTop;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
                 if (this.orientation == 'top') {
-                    let left = i * row_height - scrollLeft;
+                    let left = i * row_height - this.scroll_x;
                     let top = row.offsetLeft;
                     return { 'left': left,
                              'top': top,
@@ -132,7 +162,7 @@ function mapperTable(model, id, orientation, detail)
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = i * row_height - scrollTop;
+                    let top = i * row_height - this.scroll_y + 20;
                     return { 'left': left,
                              'top': top,
                              'width': row.offsetWidth,
@@ -164,11 +194,9 @@ function mapperTable(model, id, orientation, detail)
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
 
-        let scrollLeft = ($('#'+this.id)[0]).scrollLeft;
-        let scrollTop = ($('#'+this.id)[0]).scrollTop;
         row = row[0];
         if (this.orientation == 'top') {
-            let left = row.offsetTop - scrollLeft;
+            let left = row.offsetTop - this.scroll_x;
             let top = row.offsetLeft;
             return { 'left': left,
                      'top': top,
@@ -180,7 +208,7 @@ function mapperTable(model, id, orientation, detail)
         }
         else {
             let left = row.offsetLeft;
-            let top = row.offsetTop - scrollTop;
+            let top = row.offsetTop - this.scroll_y + 20;
             return { 'left': left,
                      'top': top,
                      'width': row.offsetWidth,
@@ -312,7 +340,7 @@ function mapperTable(model, id, orientation, detail)
         $('#container').trigger("updateMapProperties");
     }
 
-    this.add_handlers = function() {
+    this.add_handlers = function(self) {
         $('#'+this.id+' tr').hover(function() {
             $(this).toggleClass('hover');
         });
@@ -326,11 +354,12 @@ function mapperTable(model, id, orientation, detail)
 //        }, 'tr');
 
         ticking = false;
-        $('#'+this.id).on('scroll', function(e) {
-//            console.log('scroll', ($('#'+this.id)[0]).scrollTop);
+        $("#"+this.id+"Scroller").on('scroll', function(e) {
+            self.scroll_x = this.scrollLeft;
+            self.scroll_y = this.scrollTop;
             if (!ticking) {
                 window.requestAnimationFrame(function() {
-                    $('#container').trigger('scroll');
+                    $('#container').trigger('scrolll');
                     ticking = false;
                 });
             }
