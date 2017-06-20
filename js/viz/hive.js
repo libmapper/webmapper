@@ -26,6 +26,10 @@ function HivePlotView(container, model)
     var cursor = null;
     var first_transition;
 
+    var svgzoom = 1;
+    var svgposx = 0;
+    var svgposy = 0;
+
     function constrain(obj, bounds, border) {
         if (obj.left < (bounds.left + obj.width * 0.5 + border))
             obj.left = bounds.left + obj.width * 0.5 + border;
@@ -222,6 +226,11 @@ function HivePlotView(container, model)
         }
 
         first_transition = true;
+
+        svgzoom = 1;
+        svgArea.setViewBox(0, 0,
+                           svg_frame.width * svgzoom,
+                           svg_frame.height * svgzoom, false);
 
         // stop current animations
         $('#leftTable').stop(true, false);
@@ -818,15 +827,14 @@ function HivePlotView(container, model)
                         dev.view.animate({'stroke-opacity': 0,
                                           'fill-opacity': 0}, speed, 'linear');
                         dev.signals.each(function(sig) {
-                            let pos = new_pos();
-                            let path = circle_path(pos.x, pos.y, 10);
+                            let path = circle_path(sig.view.position.x, sig.view.position.y, 10);
                             sig.view.animate({'path': path,
                                               'fill': dev.view.color,
                                               'fill-opacity': 1,
                                               'stroke-opacity': 0}, speed, 'linear');
-                            sig.view.position = pos;
-                            sig.view.label.animate({'x': pos.x, 'y': pos.y,
-                                                   'opacity': 0}, speed);
+                            sig.view.label.animate({'x': sig.view.position.x,
+                                                    'y': sig.view.position.y,
+                                                    'opacity': 0}, speed);
                         });
                     });
                     model.maps.each(function(map) {
@@ -1051,6 +1059,15 @@ function HivePlotView(container, model)
             e.preventDefault();
             console.log('should add tab');
         }
+        else if (e.which == 32 && currentView == 'graph') {
+            model.devices.each(function(dev) {
+                dev.signals.each(function(sig) {
+                    if (!sig.view)
+                        return;
+                    sig.view.position = new_pos();
+                });
+            });
+        }
     });
 
     function select_obj(obj) {
@@ -1062,34 +1079,78 @@ function HivePlotView(container, model)
     }
 
     this.zoom = function(x, y, delta) {
-        console.log('zoom', x, y, delta);
+        if (y < container_frame.top + svg_frame.top) {
+            if (x > container_frame.left + svg_frame.left) {
+                topTable.zoom(x - container_frame.left - svg_frame.left, delta);
+                redraw(0);
+            }
+        }
+        else if (x < container_frame.left + svg_frame.left) {
+            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            redraw(0);
+        }
+        else if (x > (container_frame.left + svg_frame.left + svg_frame.width)) {
+            rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            redraw(0);
+        }
+        else if (currentView == 'list') {
+            // send to both left and right tables
+            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            redraw(0);
+        }
+        else if (currentView == 'grid') {
+            // send to both left and top tables
+            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            topTable.zoom(x - container_frame.left - svg_frame.left, delta);
+            redraw(0);
+        }
+        else {
+            svgzoom += delta * 0.05;
+            if (svgzoom < 0.1)
+                svgzoom = 0.1;
+            else if (svgzoom > 20)
+                svgzoom = 20;
+            svgArea.setViewBox(0, 0,
+                               svg_frame.width * svgzoom,
+                               svg_frame.height * svgzoom, false);
+        }
     }
 
     this.pan = function(x, y, delta_x, delta_y) {
         if (y < container_frame.top + svg_frame.top) {
             if (x > container_frame.left + svg_frame.left) {
                 topTable.pan(delta_x);
+                redraw(0);
             }
         }
         else if (x < container_frame.left + svg_frame.left) {
             leftTable.pan(delta_y);
+            redraw(0);
         }
         else if (x > (container_frame.left + svg_frame.left + svg_frame.width)) {
             rightTable.pan(delta_y);
+            redraw(0);
         }
         else if (currentView == 'list') {
             // send to both left and right tables
             leftTable.pan(delta_y);
             rightTable.pan(delta_y);
+            redraw(0);
         }
         else if (currentView == 'grid') {
             // send to both left and top tables
             leftTable.pan(delta_y);
             topTable.pan(delta_x);
+            redraw(0);
         }
-        else
-            return;
-        redraw(0);
+        else {
+            svgposx += delta_x / svgzoom;
+            svgposy += delta_y;
+            svgArea.setViewBox(svgposx, svgposy,
+                               svg_frame.width * svgzoom,
+                               svg_frame.height * svgzoom, false);
+        }
     }
 
     function selection_handlers() {

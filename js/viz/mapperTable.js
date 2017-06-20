@@ -29,8 +29,8 @@ function mapperTable(model, id, orientation, detail)
     this.nRows;         // Number of rows (e.g. devices or signals) present
     this.nVisibleRows;  // Number of rows actually visible to the user
     this.nCols;         // Number of columns in table
-    this.scroll_x = 0;
-    this.scroll_y = 0;
+    this.scrolled = 0;
+    this.zoomed = 1;
 
     this.border = false;
     var row_height = 0;
@@ -138,8 +138,6 @@ function mapperTable(model, id, orientation, detail)
     }
 
     this.height = function() {
-        console.log(this.id, 'height()', row_height, this.table.rows.length,
-                    row_height * this.table.rows.length);
         return row_height * this.table.rows.length;
     }
 
@@ -148,7 +146,7 @@ function mapperTable(model, id, orientation, detail)
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
                 if (this.orientation == 'top') {
-                    let left = i * row_height - this.scroll_x;
+                    let left = i * row_height - this.scrolled;
                     let top = row.offsetLeft;
                     return { 'left': left,
                              'top': top,
@@ -162,7 +160,7 @@ function mapperTable(model, id, orientation, detail)
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = i * row_height - this.scroll_y + 20;
+                    let top = i * row_height - this.scrolled + 20;
                     return { 'left': left,
                              'top': top,
                              'width': row.offsetWidth,
@@ -196,7 +194,7 @@ function mapperTable(model, id, orientation, detail)
 
         row = row[0];
         if (this.orientation == 'top') {
-            let left = row.offsetTop - this.scroll_x;
+            let left = row.offsetTop - this.scrolled;
             let top = row.offsetLeft;
             return { 'left': left,
                      'top': top,
@@ -208,7 +206,7 @@ function mapperTable(model, id, orientation, detail)
         }
         else {
             let left = row.offsetLeft;
-            let top = row.offsetTop - this.scroll_y + 20;
+            let top = row.offsetTop - this.scrolled + 20;
             return { 'left': left,
                      'top': top,
                      'width': row.offsetWidth,
@@ -231,15 +229,30 @@ function mapperTable(model, id, orientation, detail)
 
     this.pan = function(delta) {
         if (this.id == 'topTable') {
-            this.scroll_x = $("#"+this.id+"Scroller")
-                                .scrollLeft(this.scroll_x + delta)
+            this.scrolled = $("#"+this.id+"Scroller")
+                                .scrollLeft(this.scrolled + delta)
                                 .scrollLeft();
         }
         else {
-            this.scroll_y = $("#"+this.id+"Scroller")
-                                .scrollTop(this.scroll_y + delta)
+            this.scrolled = $("#"+this.id+"Scroller")
+                                .scrollTop(this.scrolled + delta)
                                 .scrollTop();
         }
+//        this.scrolled += delta % 1;
+    }
+
+    this.zoom = function(offset, delta) {
+        let last_zoom = this.zoomed;
+        this.zoomed -= delta * 0.01;
+        if (this.zoomed < 0.1)
+            this.zoomed = 0.1;
+        else if (this.zoomed > 20)
+            this.zoomed = 20;
+        let ratio = (this.scrolled + offset) / last_zoom;
+        let new_table_pos = ratio * this.zoomed;
+        let new_scroll = new_table_pos - offset;
+        let scroll_diff = new_scroll - this.scrolled;
+        this.pan(scroll_diff);
     }
 
     this.update = function(targetHeight) {
@@ -330,9 +343,11 @@ function mapperTable(model, id, orientation, detail)
             num_sigs += num_dev_sigs;
         });
         // adjust row heights to fill table
-        row_height = Math.floor(targetHeight/(num_devs+num_sigs));
-        if (row_height < 18)
+        row_height = Math.floor(targetHeight/(num_devs+num_sigs)) * this.zoomed;
+        if (row_height < 18) {
+            this.zoomed *= 18 / row_height;
             row_height = 18;
+        }
         $("#"+this.id+' tbody tr').css('height', row_height+'px');
     }
 

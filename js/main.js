@@ -158,18 +158,32 @@ function initViewCommands()
         view.redraw(0);
     });
 
+    let ticking = false;
+    let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
         e.preventDefault();
         if (e.pageX < 45 || e.pageY < 86) {
             // not over container
             return;
         }
-        if (e.ctrlKey) {
-            view.zoom(e.pageX, e.pageY, e.deltaY);
+        pageX = e.pageX;
+        pageY = e.pageY;
+        deltaX = e.deltaX;
+        deltaY = e.deltaY;
+        zooming = e.ctrlKey;
+
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                if (zooming) {
+                    view.zoom(pageX, pageY, deltaY);
+                }
+                else {
+                    view.pan(pageX, pageY, deltaX, deltaY);
+                }
+                ticking = false;
+            });
         }
-        else {
-            view.pan(e.pageX, e.pageY, e.deltaX, e.deltaY);
-        }
+        ticking = true;
     });
 
     // from list view
