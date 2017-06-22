@@ -11,42 +11,31 @@ MapProperties.prototype = {
     init : function() {
         var _self = this;   // to pass to context of THIS to event handlers
 
-        $(this._container).empty();        // clear the container DIV
-
         window.saveLocation = '';        // Where the network will be saved
 
         $(this._container).append(
-            "<div class='topMenu'>"+
-                "<div class='utils'>"+
-                    "<div id='saveLoadDiv'>"+
-                        "<div><a id='loadButton'>Load</a></div>"+
-                        "<div><a id='saveButton'>Save</a></div>"+
-                    "</div>"+
-                    "<div id='networkSelectionDiv'>Network:  "+
-                        "<select id='networkSelection'></select>"+
-                    "</div>"+
-                "</div>"+
+            "<div' class='topMenu' style='width:66%;'>"+
+                "<div class='topMenuTitle'><strong>MAP</strong></div>"+
+                "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
             "</div>");
 
         //Add the mode controls
-        $('.topMenu').append(
-            "<div class='signalProps'>"+
-                "<div class='modesDiv signalControl disabled' style='width:50%'>Mode: </div>"+
-                "<div class='ranges' style='width:50%'></div>"+
-            "</div>");
+        $('#mapPropsDiv').append(
+            "<div style='width:50%'>"+
+                "<div id='modes' class='signalControl disabled' style='width:100%; padding-bottom:5px;'>Mode: </div>"+
+                "<div id='expression' class='disabled' style='width:100%; padding-top:5px;'>Expression: "+
+                    "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
+                "</div>"+
+            "</div>"+
+            "<div id='ranges' style='width:50%'></div>");
 
         for (var m in this.mapModes) {
-            $('.modesDiv').append(
+            $('#modes').append(
                 "<div class='mode mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
         }
 
-        $('.modesDiv').append(
-            "<div style='width:100%'>Expression: "+
-                "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
-            "</div>");
-
         //Add the range controls
-        $('.ranges').append(
+        $('#ranges').append(
             "<div id='srcRange' class='range signalControl disabled'>"+
                 "<div style='width:85px'>Src Range:</div>"+
                 "<div style='width:calc(100% - 120px)'>"+

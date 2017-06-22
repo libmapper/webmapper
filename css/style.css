@@ -74,7 +74,14 @@ body {
 /* blues */
 #statusBar, #titleSearchDiv, #leftSearchDiv, #rightSearchDiv, .topTabs li.tabsel {
 /*    background: rgb(134,222,248) !important;*/
-    background: rgb(104,202,255) !important;
+/*    background: rgb(104,202,255) !important;*/
+/*position: absolute;*/
+    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+    text-decoration: bold;
 }
 
 /* Header Bars */
@@ -125,7 +132,7 @@ input.range {
 
 /* paths */
 path {
-    stroke-width: 2px;
+/*    stroke-width: 2px;*/
     cursor: pointer;
 }
 /******************/
@@ -148,9 +155,7 @@ path {
 /*Upper Tab Area */
 .topTabs {
     margin: 0px;
-/*    margin-left: 40px;*/
     border-radius: 0px;
-/*    background: inherit;*/
     background: lightgray;
     position: absolute;
     left: -4px;
@@ -165,8 +170,7 @@ path {
     display: inline-block;
     list-style: none;
     cursor: pointer;
-/*    border-right: 1px solid white;*/
-margin-right: 1px;
+    margin-right: 1px;
 }
 
 .topTabs li:hover {
@@ -184,9 +188,50 @@ margin-right: 1px;
     top: 27px;
 }
 
+.topMenu {
+    background: rgba(200,200,200,0.5);
+    height: 70px;
+    border-radius: 12px;
+    position: relative;
+    float: left;
+    margin-left: 5px;
+    overflow: hidden;
+    left: 40px;
+    width: calc(100% - 40px);
+}
+
 .topMenu div {
     display: inline-block;
     vertical-align: top;
+/*    color: white;*/
+}
+
+.topMenuTitle {
+    position: relative;
+    float: left;
+    height: 20px;
+    width: 70px;
+    transform-origin: 0% 0%;
+    transform: translate(0px, 70px) rotate(270deg);
+    color: white;
+    background: rgba(200, 200, 200, 0.5);
+    text-align: center;
+    text-decoration: bold;
+}
+
+.topMenuContainer {
+    position: relative;
+    float: left;
+    width: calc(100% - 20px);
+    height: 100%;
+    top: -20px;
+    left: 20px;
+    padding: 5px;
+}
+
+.topMenuContainer>div {
+    padding: 5px;
+    width: 100%;
 }
 
 .topMenu li {
@@ -242,8 +287,9 @@ form {
     color: gray;
 }*/
 
-.ranges {
+#ranges {
     padding-right: 10px;
+    height: 100%;
 }
 
 .rangeSwitch {
@@ -466,9 +512,9 @@ form {
     width: 50%;
     float: left;
 }
-.modesDiv div {
+.mode {
     padding-right: 3pt;
-    margin-bottom: 10px;
+/*    margin-bottom: 10px;*/
     cursor: pointer;
     display: inline-block;
 }
@@ -484,6 +530,7 @@ div.range {
     margin-left: 10px;
     padding: 3px 3px;
     width: 100%;
+/*    height: 100%;*/
 }
 input.range {
     text-align: center;
@@ -560,25 +607,14 @@ tbody {
     overflow: auto;
 }
 
-#rightTable {
-    left: 60%;
-/*    border-left: 2px solid #EEE;*/
-}
-#leftTable {
-/*    border-right: 2px solid #EEE;*/
-}
-
 /* Rows and headers */
 .tableDiv th, #svgTop {
-/*    background-color: lightgray;*/
     background: rgba(200, 200, 200, 0.5);
-/*    color: white;*/
     cursor: pointer;
     font-weight: inherit;
     text-align: left;
     border-top: 0px;
     border-left: 0px;
-/*    padding: 4px 0;*/
     font-size: 10pt;
     padding-left: 10px;
 }
@@ -589,7 +625,6 @@ tbody {
 
 .displayTable tr td {
     vertical-align: middle;
-/*    border: solid 0px black;*/
     cursor: default;
 }
 
@@ -597,14 +632,6 @@ tbody {
     padding-left: 20px;
 }
 
-/*
-.displayTable td:first-child {
-    border-radius: 10px 0 0 10px;
-}
-
-.displayTable td:last-child {
-    border-radius: 0 10px 10px 0;
-}*/
 #topTable {
     height: 200px;
     overflow-x: scroll;
@@ -619,7 +646,6 @@ tbody {
     transform: translate(0%, 200px) rotate(270deg);
     overflow-x: scroll;
     overflow-y: hidden;
-    /*    // rotate(-90deg);*/
 }
 
 /*****************/
@@ -714,22 +740,13 @@ input.searchBar {
 #leftTitle, #rightTitle {
     left: 10px;
 }
-/*#leftSearch {*/
-/*    right: calc(60% + 10px);*/
-/*}*/
-/*#rightTitle {*/
-/*    left: calc(60% + 10px);*/
-/*}*/
-/*#rightSearch {*/
-/*    right: 10px;*/
-/*}*/
+
 /****************/
 
 /* The overall container of elements not in skeleton*/
 #container {
     width: calc(100% - 52px);
     height: calc(100% - 126px);
-/*    background-color: inherit;*/
     float: right;
     position: absolute;
     top: 113px;

@@ -6,6 +6,7 @@ var viewIndex;                  // index of current view
 var viewData = new Array(3);    // data specific to the view, change 3 the number of views
 
 var mapProperties;
+var devFilter;
 
 window.onload = init;           // Kick things off
 
@@ -14,11 +15,17 @@ function init() {
     // add the top tabs
     $('body').append("<ul class='topTabs'>"+
                         "<li id='allDevices' class='tabsel'>Home</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy1</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy2</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy3</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy4</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy5</li>"+
+                        "<li id='allDevices' class='tabsel'>dummy6</li>"+
                         "<li id='allDevices'>+</li>"+
                      "</ul>");
 
     // add the top menu wrapper
-    $('body').append("<div class=propertiesDiv id='MapPropertiesWrapper'></div>");
+    $('body').append("<div class=propertiesDiv id='TopMenuWrapper'></div>");
 
     // add the view wrapper
     $('body').append("<ul id='sidebar'>"+
@@ -33,8 +40,12 @@ function init() {
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
-    mapProperties = new MapProperties(document.getElementById("MapPropertiesWrapper"), model);
+    $('#TopMenuWrapper').empty()
+    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), model);
+    devFilter.init();
+    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), model);
     mapProperties.init();
+
 
     // init controller
     initMonitorCommands();
@@ -186,6 +197,13 @@ function initViewCommands()
         ticking = true;
     });
 
+    // Search function boxes
+    $('#srcSearch, #dstSearch').on('keyup', function(e) {
+        e.stopPropagation();
+        let id = e.currentTarget.id;
+        view.filter_signals(id, $('#'+id).val());
+    });
+
     // from list view
     // requests links and maps from the selected device (tab)
     $("#container").on("tab", function(e, tab){
@@ -243,16 +261,13 @@ function initViewCommands()
 
 function initMapPropertiesCommands()
 {
-//    $("#MapPropertiesWrapper").on("switchView", function(e, viewID) {
-//        switch_mode(viewID);
-//    });
-    $("#MapPropertiesWrapper").on("setMap", function(e, args) {
+    $("#TopMenuWrapper").on("setMap", function(e, args) {
         command.send('set_map', args);
     });
-    $("#MapPropertiesWrapper").on("refreshAll", function(e) {
+    $("#TopMenuWrapper").on("refreshAll", function(e) {
         refresh_all();
     });
-    $("#MapPropertiesWrapper").on("selectNetwork", function(e, network) {
+    $("#TopMenuWrapper").on("selectNetwork", function(e, network) {
         command.send('select_network', network);
     });
 }

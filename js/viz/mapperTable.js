@@ -34,16 +34,10 @@ function mapperTable(model, id, orientation, detail)
 
     this.border = false;
     var row_height = 0;
+    this.regexp = null;
 
     function makeTable(self) {
         $(self.div).empty();
-
-//        if (id != 'topTable') {
-//            $(self.div).append("<div id='titleSearchDiv'>"+
-//                               "<h2 id='"+id+"Title' class='searchBar'>"+self.title+"</h2>"+
-//                               "<input type='text' id='"+id+"Search' class='searchBar'></input>"+
-//                               "</div>");
-//        }
 
         // Create the skeleton for the table within the div
         // TODO: move div properties to css
@@ -113,7 +107,12 @@ function mapperTable(model, id, orientation, detail)
 //    }
 
     this.filter = function(dir, string) {
-        this.direction = dir;
+        if (dir)
+            this.direction = dir;
+        if (string) {
+            this.filterstring = string;
+            this.regexp = new RegExp(this.filterstring, 'i');
+        }
 //        if (dir == null)
 //            this.set_title('Signals');
 //        else if (dir == 'input')
@@ -256,6 +255,7 @@ function mapperTable(model, id, orientation, detail)
     }
 
     this.update = function(targetHeight) {
+        targetHeight -= 20;
 
         // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
         function toFixed_alt(value, precision) {
@@ -270,6 +270,7 @@ function mapperTable(model, id, orientation, detail)
         let dir = this.direction;
         let id = this.id;
         let detail = this.detail;
+        let regexp = this.regexp;
 
         model.devices.each(function(dev) {
             let num_dev_sigs = 0;
@@ -277,6 +278,8 @@ function mapperTable(model, id, orientation, detail)
             dev.signals.each(function(sig) {
                 // todo: check for filters
                 if (dir && sig.direction != dir)
+                    return;
+                if (regexp && !regexp.test(sig.key))
                     return;
 
                 let name = sig.name.replace(/\,/g, '<wbr>/');
@@ -343,7 +346,13 @@ function mapperTable(model, id, orientation, detail)
             num_sigs += num_dev_sigs;
         });
         // adjust row heights to fill table
-        row_height = Math.floor(targetHeight/(num_devs+num_sigs)) * this.zoomed;
+        row_height = Math.floor(targetHeight/(num_devs+num_sigs));
+        if (row_height > 18) {
+            // don't allow zoom < 1
+            if (this.zoomed < 1)
+                this.zoomed = 1;
+        }
+        row_height *= this.zoomed;
         if (row_height < 18) {
             this.zoomed *= 18 / row_height;
             row_height = 18;
