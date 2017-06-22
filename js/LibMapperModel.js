@@ -320,7 +320,7 @@ function MapperModel() {
     this.del_map = function(cmd, map) {
 //        console.log('remove map', map);
         var key = this.maps.remove(map);
-        topMenu.updateMapPropertiesFor(key);
+        $('#mapPropsDiv').updateMapPropertiesFor(key);
     }
 
     command.register("add_devices", this.add_devices.bind(this));

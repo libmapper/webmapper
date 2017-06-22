@@ -33,8 +33,11 @@ function mapperTable(model, id, orientation, detail)
     this.zoomed = 1;
 
     this.border = false;
-    var row_height = 0;
+    this.row_height = 0;
     this.regexp = null;
+    this.targetHeight = 600;
+    this.num_devs = 0;
+    this.num_sigs = 0;
 
     function makeTable(self) {
         $(self.div).empty();
@@ -137,21 +140,22 @@ function mapperTable(model, id, orientation, detail)
     }
 
     this.height = function() {
-        return row_height * this.table.rows.length;
+        return this.row_height * this.table.rows.length;
     }
 
     this.row_from_name = function(name) {
         let id = name.replace('/', '\\/');
+        let foo = null;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
                 if (this.orientation == 'top') {
-                    let left = i * row_height - this.scrolled;
+                    let left = i * this.row_height - this.scrolled;
                     let top = row.offsetLeft;
-                    return { 'left': left,
+                    foo = { 'left': left,
                              'top': top,
-                             'width': row_height,
+                             'width': this.row_height,
                              'height': row.offsetWidth,
-                             'cx': left + row_height * 0.5,
+                             'cx': left + this.row_height * 0.5,
                              'cy': top + row.offsetWidth * 0.5,
                              'id': row.id.replace('\\/', '\/'),
                              'even': $(row).hasClass('even'),
@@ -159,20 +163,20 @@ function mapperTable(model, id, orientation, detail)
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = i * row_height - this.scrolled + 20;
-                    return { 'left': left,
+                    let top = i * this.row_height - this.scrolled + 20;
+                    foo = { 'left': left,
                              'top': top,
                              'width': row.offsetWidth,
-                             'height': row_height,
+                             'height': this.row_height,
                              'cx': left + row.offsetWidth * 0.5,
-                             'cy': top + row_height * 0.5,
+                             'cy': top + this.row_height * 0.5,
                              'id': row.id.replace('\\/', '\/'),
                              'even': $(row).hasClass('even'),
                              'isOutput': $(row).hasClass('output') };
                 }
             }
         }
-        return null;
+        return foo;
     }
 
     this.row_from_position = function(x, y) {
@@ -188,12 +192,13 @@ function mapperTable(model, id, orientation, detail)
         let row = $(td).parents('tr');
 
         row = row[0];
+        let foo;
         if (this.orientation == 'top') {
             let left = row.offsetTop - this.scrolled;
             let top = row.offsetLeft;
-            return { 'left': left,
+            foo = { 'left': left,
                      'top': top,
-                     'width': row_height,
+                     'width': this.row_height,
                      'height': row.offsetWidth,
                      'cx': left + row.offsetHeight * 0.5,
                      'cy': top + row.offsetWidth * 0.5,
@@ -202,14 +207,15 @@ function mapperTable(model, id, orientation, detail)
         else {
             let left = row.offsetLeft;
             let top = row.offsetTop - this.scrolled + 20;
-            return { 'left': left,
+            foo = { 'left': left,
                      'top': top,
                      'width': row.offsetWidth,
-                     'height': row_height,
+                     'height': this.row_height,
                      'cx': left + row.offsetWidth * 0.5,
                      'cy': top + row.offsetHeight * 0.5,
                      'id': row.id.replace('\\/', '\/') };
         }
+        return foo;
     }
 
     this.highlight_row = function(row, clear) {
@@ -240,6 +246,22 @@ function mapperTable(model, id, orientation, detail)
         }
     }
 
+    this.set_row_height = function() {
+            // adjust row heights to fill table
+        this.row_height = this.targetHeight / (this.num_devs + this.num_sigs);
+        if (this.row_height > 18) {
+            // don't allow zoom < 1
+            if (this.zoomed < 1)
+                this.zoomed = 1;
+        }
+        this.row_height *= this.zoomed;
+        if (this.row_height < 18) {
+            this.zoomed *= 18 / this.row_height;
+            this.row_height = 18;
+        }
+        $("#"+this.id+' tbody tr').css('height', this.row_height+'px');
+    }
+
     this.zoom = function(offset, delta) {
         offset -= 20;   // column headers
 
@@ -249,7 +271,7 @@ function mapperTable(model, id, orientation, detail)
             return false;
         }
 
-        let row_diff = Math.round(row_height * (1 + delta/this.zoomed)) - Math.round(row_height);
+        let row_diff = Math.round(this.row_height * (1 + delta/this.zoomed)) - Math.round(this.row_height);
         if (row_diff == 0) {
             // no difference in row height from this zoom event
             this.zoomed = new_zoom;
@@ -257,14 +279,17 @@ function mapperTable(model, id, orientation, detail)
         }
 
         // offset in rows
-        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(row_height);
+        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(this.row_height);
 
         this.pan(row_diff * norm_offset);
         this.zoomed = new_zoom;
+        this.set_row_height();
+        return true;
     }
 
     this.update = function(targetHeight) {
-        targetHeight -= 20;
+        if (targetHeight)
+            this.targetHeight = targetHeight - 20; // headers
 
         // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
         function toFixed_alt(value, precision) {
@@ -354,19 +379,9 @@ function mapperTable(model, id, orientation, detail)
             num_devs += 1;
             num_sigs += num_dev_sigs;
         });
-        // adjust row heights to fill table
-        row_height = targetHeight / (num_devs + num_sigs);
-        if (row_height > 18) {
-            // don't allow zoom < 1
-            if (this.zoomed < 1)
-                this.zoomed = 1;
-        }
-        row_height *= this.zoomed;
-        if (row_height < 18) {
-            this.zoomed *= 18 / row_height;
-            row_height = 18;
-        }
-        $("#"+this.id+' tbody tr').css('height', row_height+'px');
+        this.num_devs = num_devs;
+        this.num_sigs = num_sigs;
+        this.set_row_height();
     }
 
     function select_tr(tr) {

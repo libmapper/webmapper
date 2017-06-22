@@ -226,7 +226,10 @@ function HivePlotView(container, model)
     this.switch_view = function(view) {
 //        if (view == currentView)
 //            return;
-        currentView = view;
+        if (view)
+            currentView = view;
+        else
+            view = currentView;
 
         // call view cleanup
         if (cleanup) {
@@ -392,7 +395,6 @@ function HivePlotView(container, model)
                                 found = 1;
                             return count ? count + found : found;
                         });
-                        console.log('sig count:', vis_sigs, 'of', dev.signals.size());
                         let inc = vis_sigs ? 1 / vis_sigs : 1;
                         dev.signals.each(function(sig) {
                             if (!sig.view)
@@ -1127,29 +1129,31 @@ function HivePlotView(container, model)
     this.zoom = function(x, y, delta) {
         if (y < container_frame.top + svg_frame.top) {
             if (x > container_frame.left + svg_frame.left) {
-                topTable.zoom(x - container_frame.left - svg_frame.left, delta);
-                redraw(0, true);
+                if (topTable.zoom(x - container_frame.left - svg_frame.left, delta))
+                    redraw(0, false);
             }
         }
         else if (x < container_frame.left + svg_frame.left) {
-            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
-            redraw(0, true);
+            if (leftTable.zoom(y - container_frame.top - svg_frame.top, delta))
+                redraw(0, false);
         }
         else if (x > (container_frame.left + svg_frame.left + svg_frame.width)) {
-            rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
-            redraw(0, true);
+            if (rightTable.zoom(y - container_frame.top - svg_frame.top, delta))
+                redraw(0, false);
         }
         else if (currentView == 'list') {
             // send to both left and right tables
-            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
-            rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
-            redraw(0, true);
+            let update = leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            update |= rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            if (update)
+                redraw(0, false);
         }
         else if (currentView == 'grid') {
             // send to both left and top tables
-            leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
-            topTable.zoom(x - container_frame.left - svg_frame.left, delta);
-            redraw(0, true);
+            let update = leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
+            update |= topTable.zoom(x - container_frame.left - svg_frame.left, delta);
+            if (update)
+                redraw(0, false);
         }
         else {
             svgzoom += delta * 0.05;
@@ -1201,7 +1205,6 @@ function HivePlotView(container, model)
     }
 
     this.filter_signals = function(searchbar, text) {
-        console.log('got filter', searchbar, text);
         if (searchbar == 'srcSearch') {
             srcregexp = new RegExp(text, 'i');
             if (currentView == 'list')
