@@ -10,7 +10,7 @@ function mapperTable(model, id, orientation, detail)
     this.unmappedVisible = true; // Are unmapped signals visible?
 
     this.on_resize = function() {
-        tableHeight = $('.tableDiv').height();
+        tableHeight = $('#'+this.id).height();
         frame = fullOffset(this.table);
         frame.cx = frame.left + frame.width * 0.5;
         frame.cy = frame.top + frame.height * 0.5;
@@ -179,14 +179,10 @@ function mapperTable(model, id, orientation, detail)
         if (x == null || y == null)
             return;
         if (this.orientation == 'top') {
-//            if (x < frame.left || x > frame.left + frame.width)
-//                return;
             y = frame.top + 50;
         }
         else {
-//            if (y < frame.top || y > frame.top + frame.height)
-//                return;
-            x = frame.left + 50;
+            x = this.div[0].offsetLeft + 50;
         }
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
@@ -227,31 +223,44 @@ function mapperTable(model, id, orientation, detail)
     }
 
     this.pan = function(delta) {
+        let new_scroll = this.scrolled + delta;
         if (this.id == 'topTable') {
             this.scrolled = $("#"+this.id+"Scroller")
-                                .scrollLeft(this.scrolled + delta)
+                                .scrollLeft(new_scroll)
                                 .scrollLeft();
         }
         else {
             this.scrolled = $("#"+this.id+"Scroller")
-                                .scrollTop(this.scrolled + delta)
+                                .scrollTop(new_scroll)
                                 .scrollTop();
         }
-//        this.scrolled += delta % 1;
+        if (this.scrolled == Math.floor(new_scroll)) {
+            // keep fractional part
+            this.scrolled = new_scroll;
+        }
     }
 
     this.zoom = function(offset, delta) {
-        let last_zoom = this.zoomed;
-        this.zoomed -= delta * 0.01;
-        if (this.zoomed < 0.1)
-            this.zoomed = 0.1;
-        else if (this.zoomed > 20)
-            this.zoomed = 20;
-        let ratio = (this.scrolled + offset) / last_zoom;
-        let new_table_pos = ratio * this.zoomed;
-        let new_scroll = new_table_pos - offset;
-        let scroll_diff = new_scroll - this.scrolled;
-        this.pan(scroll_diff);
+        offset -= 20;   // column headers
+
+        delta *= -0.01;
+        let new_zoom = this.zoomed + delta;
+        if (new_zoom < 0.1 || new_zoom > 20) {
+            return false;
+        }
+
+        let row_diff = Math.round(row_height * (1 + delta/this.zoomed)) - Math.round(row_height);
+        if (row_diff == 0) {
+            // no difference in row height from this zoom event
+            this.zoomed = new_zoom;
+            return false;
+        }
+
+        // offset in rows
+        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(row_height);
+
+        this.pan(row_diff * norm_offset);
+        this.zoomed = new_zoom;
     }
 
     this.update = function(targetHeight) {
@@ -346,7 +355,7 @@ function mapperTable(model, id, orientation, detail)
             num_sigs += num_dev_sigs;
         });
         // adjust row heights to fill table
-        row_height = Math.floor(targetHeight/(num_devs+num_sigs));
+        row_height = targetHeight / (num_devs + num_sigs);
         if (row_height > 18) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
