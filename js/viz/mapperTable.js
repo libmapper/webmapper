@@ -146,16 +146,17 @@ function mapperTable(model, id, orientation, detail)
     this.row_from_name = function(name) {
         let id = name.replace('/', '\\/');
         let foo = null;
+        let row_height = Math.round(this.row_height);
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
                 if (this.orientation == 'top') {
-                    let left = i * this.row_height - this.scrolled;
+                    let left = i * row_height - this.scrolled;
                     let top = row.offsetLeft;
                     foo = { 'left': left,
                              'top': top,
-                             'width': this.row_height,
+                             'width': row_height,
                              'height': row.offsetWidth,
-                             'cx': left + this.row_height * 0.5,
+                             'cx': left + row_height * 0.5,
                              'cy': top + row.offsetWidth * 0.5,
                              'id': row.id.replace('\\/', '\/'),
                              'even': $(row).hasClass('even'),
@@ -163,11 +164,11 @@ function mapperTable(model, id, orientation, detail)
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = i * this.row_height - this.scrolled + 20;
+                    let top = i * row_height - this.scrolled + 20;
                     foo = { 'left': left,
                              'top': top,
                              'width': row.offsetWidth,
-                             'height': this.row_height,
+                             'height': row_height,
                              'cx': left + row.offsetWidth * 0.5,
                              'cy': top + this.row_height * 0.5,
                              'id': row.id.replace('\\/', '\/'),
@@ -190,7 +191,7 @@ function mapperTable(model, id, orientation, detail)
         }
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
-
+        let row_height = Math.round(this.row_height);
         row = row[0];
         let foo;
         if (this.orientation == 'top') {
@@ -198,7 +199,7 @@ function mapperTable(model, id, orientation, detail)
             let top = row.offsetLeft;
             foo = { 'left': left,
                      'top': top,
-                     'width': this.row_height,
+                     'width': row_height,
                      'height': row.offsetWidth,
                      'cx': left + row.offsetHeight * 0.5,
                      'cy': top + row.offsetWidth * 0.5,
@@ -210,7 +211,7 @@ function mapperTable(model, id, orientation, detail)
             foo = { 'left': left,
                      'top': top,
                      'width': row.offsetWidth,
-                     'height': this.row_height,
+                     'height': row_height,
                      'cx': left + row.offsetWidth * 0.5,
                      'cy': top + row.offsetHeight * 0.5,
                      'id': row.id.replace('\\/', '\/') };
@@ -244,46 +245,48 @@ function mapperTable(model, id, orientation, detail)
             // keep fractional part
             this.scrolled = new_scroll;
         }
+        return Math.floor(this.scrolled) + 20;
     }
 
     this.set_row_height = function() {
-            // adjust row heights to fill table
-        this.row_height = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (this.row_height > 18) {
+        // adjust row heights to fill table
+        let nat_row_height = this.targetHeight / (this.num_devs + this.num_sigs);
+        if (nat_row_height > 18) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
-        this.row_height *= this.zoomed;
-        if (this.row_height < 18) {
-            this.zoomed *= 18 / this.row_height;
-            this.row_height = 18;
+        let row_height = nat_row_height * this.zoomed;
+        if (row_height < 18) {
+            row_height = 18;
+            this.zoomed = row_height / nat_row_height;
         }
-        $("#"+this.id+' tbody tr').css('height', this.row_height+'px');
+        let changed = (Math.round(row_height) != Math.round(this.row_height));
+        this.row_height = row_height;
+        if (changed)
+            $("#"+this.id+' tbody tr').css('height', this.row_height+'px');
+        return changed;
     }
 
     this.zoom = function(offset, delta) {
+        this.zoomed -= delta * 0.01;
+        if (this.zoomed < 0.1)
+            this.zoomed = 0.1;
+        else if (this.zoomed > 20)
+            this.zoomed = 20;
+
+        let old_row_height = this.row_height;
+        let changed = this.set_row_height();
+        if (!changed)
+            return false;
+
         offset -= 20;   // column headers
 
-        delta *= -0.01;
-        let new_zoom = this.zoomed + delta;
-        if (new_zoom < 0.1 || new_zoom > 20) {
-            return false;
-        }
-
-        let row_diff = Math.round(this.row_height * (1 + delta/this.zoomed)) - Math.round(this.row_height);
-        if (row_diff == 0) {
-            // no difference in row height from this zoom event
-            this.zoomed = new_zoom;
-            return false;
-        }
-
-        // offset in rows
-        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(this.row_height);
-
+        // old offset in rows
+        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(old_row_height);
+        let row_diff = Math.round(this.row_height) - Math.round(old_row_height);
         this.pan(row_diff * norm_offset);
-        this.zoomed = new_zoom;
-        this.set_row_height();
+
         return true;
     }
 

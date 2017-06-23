@@ -285,7 +285,7 @@ function HivePlotView(container, model)
                 left_th = container_frame.height - 200;
                 right_tw = 0;
                 right_th = container_frame.height - 200;
-                top_tw = container_frame.width - 200;
+                top_tw = container_frame.width - 180;
                 top_th = 200;
                 svg_frame.left = left_tw;
                 svg_frame.top = top_th;
@@ -339,7 +339,7 @@ function HivePlotView(container, model)
                                         $('#rightTable').css({'left': container_frame.width - now});
                                         $('#topTable').css({
                                             'width': (container_frame.width - leftTableWidth
-                                                      - rightTableWidth) + 'px'});
+                                                      - rightTableWidth) + 20 + 'px'});
                                      }});
         }
 
@@ -418,7 +418,8 @@ function HivePlotView(container, model)
                             sig.view.stop().animate({'path': path,
                                                      'fill': dev.view.color,
                                                      'fill-opacity': 1,
-                                                     'stroke-opacity': 1}, speed);
+                                                     'stroke-width': 1,
+                                                     'stroke-opacity': sig.direction == 'output' ? 1 : 0}, speed);
                             sig.view.position = new_pos(x, y);
                             sig.view.label.animate({'x': x, 'y': y, 'opacity': 0}, speed);
                         });
@@ -598,6 +599,24 @@ function HivePlotView(container, model)
                 rightTable.filter('input', null);
                 rightTable.show_detail(true);
 
+                get_sig_pos = function(sig) {
+                    let s;
+                    if (sig.direction == 'output') {
+                        s = leftTable.row_from_name(sig.key);
+                        if (!s)
+                            return null;
+                        s.left = left_tw;
+                    }
+                    else {
+                        s = rightTable.row_from_name(sig.key);
+                        if (!s)
+                            return null;
+                        s.left = left_tw + svg_frame.width;
+                    }
+                    s.width = left_tw;
+                    return s;
+                }
+
                 redraw = function(speed, update_tables) {
                     if (speed == null)
                         speed = default_speed;
@@ -622,62 +641,26 @@ function HivePlotView(container, model)
                         model.maps.each(function(map) {
                             if (!map.view)
                                 return;
-                            get_sig_pos = function(sig) {
-                                let s;
-                                if (sig.direction == 'output') {
-                                    s = leftTable.row_from_name(sig.key);
-                                    if (!s)
-                                        return null;
-                                }
-                                else {
-                                    s = rightTable.row_from_name(sig.key);
-                                    if (!s)
-                                        return null;
-                                    s.left = container_frame.width - right_tw;
-                                }
-                                s.width = left_tw;
-                                return s;
-                            }
                             let src = get_sig_pos(map.src);
                             let dst = get_sig_pos(map.dst);
-                            if (src && dst) {
-                                map.src.view.stop().animate({'path': rect_path(src),
-                                                             'fill-opacity': 0,
-                                                             'stroke-opacity': 0},
-                                                             speed, 'linear');
-                                map.src.view.stop().animate({'path': rect_path(src),
-                                                             'fill-opacity': 0,
-                                                             'stroke-opacity': 0},
-                                                             speed, 'linear');
-                            }
+                            if (!src || !dst)
+                                return;
+                            map.src.view.stop().animate({'path': rect_path(src),
+                                                         'fill-opacity': 0,
+                                                         'stroke-opacity': 0},
+                                                         speed, 'linear');
+                            map.dst.view.stop().animate({'path': rect_path(dst),
+                                                         'fill-opacity': 0,
+                                                         'stroke-opacity': 0},
+                                                         speed, 'linear');
                         });
                     }
                     let invisible = false;
                     model.maps.each(function(map) {
                         if (!map.view)
                             return;
-
-                        let src, dst;
-                        if (map.src.direction == 'output') {
-                            src = leftTable.row_from_name(map.src.key);
-                            if (src)
-                                src.left = left_tw;
-                        }
-                        else {
-                            src = rightTable.row_from_name(map.src.key);
-                            if (src)
-                                src.left = left_tw + svg_frame.width;
-                        }
-                        if (map.dst.direction == 'output') {
-                            dst = leftTable.row_from_name(map.dst.key);
-                            if (dst)
-                                dst.left = left_tw;
-                        }
-                        else {
-                            dst = rightTable.row_from_name(map.dst.key);
-                            if (dst)
-                                dst.left = left_tw + svg_frame.width;
-                        }
+                        let src = get_sig_pos(map.src);
+                        let dst = get_sig_pos(map.dst);
                         if (!src || !dst)
                             return;
 
@@ -1171,12 +1154,12 @@ function HivePlotView(container, model)
         if (y < container_frame.top + svg_frame.top) {
             if (x > container_frame.left + svg_frame.left) {
                 topTable.pan(delta_x);
-                redraw(0, true);
+                redraw(0, false);
             }
         }
         else if (x < container_frame.left + svg_frame.left) {
             leftTable.pan(delta_y);
-            redraw(0, currentView == 'grid');
+            redraw(0, false);
         }
         else if (x > (container_frame.left + svg_frame.left + svg_frame.width)) {
             rightTable.pan(delta_y);
@@ -1193,7 +1176,7 @@ function HivePlotView(container, model)
             leftTable.pan(delta_y);
             topTable.pan(delta_x);
             // TODO: should pan svg canvas instead
-            redraw(0, true);
+            redraw(0, false);
         }
         else {
             svgposx += delta_x / svgzoom;
@@ -1235,7 +1218,7 @@ function HivePlotView(container, model)
 
             let updated = false;
             model.maps.each(function(map) {
-                if (map.view.selected)
+                if (!map.view || map.view.selected)
                     return;
                 if (   edge_intersection(map.view, x1-3, y1-3, x1+3, y1+3)
                     || edge_intersection(map.view, x1-3, y1+3, x1+3, y1-3)) {
@@ -1259,7 +1242,7 @@ function HivePlotView(container, model)
 
                 update = false;
                 model.maps.each(function(map) {
-                    if (map.view.selected)
+                    if (!map.view || map.view.selected)
                         return;
                     if (   edge_intersection(map.view, x1-3, y1-3, x1+3, y1+3)
                         || edge_intersection(map.view, x1-3, y1+3, x1+3, y1-3)) {
@@ -1504,6 +1487,7 @@ HivePlotView.prototype = {
         svg_frame = fullOffset($('#svgDiv')[0]);
         svg_frame.cx = svg_frame.width * 0.5;
         svg_frame.cy = svg_frame.height * 0.5;
+        this.switch_view();
     },
 
     cleanup : function () {
