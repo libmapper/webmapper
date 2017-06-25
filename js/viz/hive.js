@@ -239,11 +239,6 @@ function HivePlotView(container, model)
 
         first_transition = true;
 
-        svgzoom = 1;
-        svgArea.setViewBox(0, 0,
-                           svg_frame.width * svgzoom,
-                           svg_frame.height * svgzoom, false);
-
         // stop current animations
         $('#leftTable').stop(true, false);
         $('#rightTable').stop(true, false);
@@ -309,6 +304,11 @@ function HivePlotView(container, model)
                 svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
                 break;
         }
+
+        svgzoom = 1;
+        svgArea.setViewBox(0, 0,
+                           container_frame.width * svgzoom,
+                           container_frame.height * svgzoom, false);
 
         svg_offset = function(rect) {
             rect.left += left_tw;
