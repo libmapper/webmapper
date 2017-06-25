@@ -111,7 +111,7 @@ function mapperTable(model, id, orientation, detail)
 
     this.filter = function(dir, string) {
         if (dir)
-            this.direction = dir;
+            this.direction = (dir == 'both') ? null : dir;
         if (string) {
             this.filterstring = string;
             this.regexp = new RegExp(this.filterstring, 'i');
