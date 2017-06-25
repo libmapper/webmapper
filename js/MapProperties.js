@@ -14,7 +14,7 @@ MapProperties.prototype = {
         window.saveLocation = '';        // Where the network will be saved
 
         $(this._container).append(
-            "<div' class='topMenu' style='width:66%;'>"+
+            "<div' class='topMenu' style='width:calc(70% - 60px);'>"+
                 "<div class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
             "</div>");
@@ -91,12 +91,6 @@ MapProperties.prototype = {
             _self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
-        //For the visualization mode selection menu
-        $('#modeSelection').change(function(e) {
-            var newMode = $('#modeSelection').val();
-            $(_self._container).trigger("switchView", [newMode]);
-        });
-
         $('#saveButton').on('click', function(e) {
             e.stopPropagation();
         });
@@ -147,8 +141,8 @@ MapProperties.prototype = {
 
     // clears and disables the map properties bar
     clearMapProperties : function() {
-        $(".mode").removeClass("modesel");
-        $(".topMenu input").val('');
+        $('.mode').removeClass('modesel');
+        $('.topMenu input').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');

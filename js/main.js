@@ -7,6 +7,7 @@ var viewData = new Array(3);    // data specific to the view, change 3 the numbe
 
 var mapProperties;
 var devFilter;
+var saverLoader;
 
 window.onload = init;           // Kick things off
 
@@ -15,12 +16,6 @@ function init() {
     // add the top tabs
     $('body').append("<ul class='topTabs'>"+
                         "<li id='allDevices' class='tabsel'>Home</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy1</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy2</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy3</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy4</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy5</li>"+
-                        "<li id='allDevices' class='tabsel'>dummy6</li>"+
                         "<li id='allDevices'>+</li>"+
                      "</ul>");
 
@@ -41,6 +36,8 @@ function init() {
 
     // init the top menu
     $('#TopMenuWrapper').empty()
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"));
+    saverLoader.init();
     devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), model);
     devFilter.init();
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), model);
