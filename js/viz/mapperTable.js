@@ -46,9 +46,13 @@ function mapperTable(model, id, orientation, detail)
         // TODO: move div properties to css
         if (self.detail) {
             $(self.div).append(
-                "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div style='float: left; position:relative; width:75%; padding-left:10px'>device/signal name</div>"+
-                    "<div style='float: left; position:relative; width:25%; padding-left:20px'>datatype</div>"+
+                "<div style='height:20px; position:relative; width:100%; background:rgba(200,200,200,0.5); border-radius:12px 12px 0 0;'>"+
+                    "<div style='float:left; position:relative; width:75%; padding-left:10px'>"+
+                        "<strong>DEVICE/SIGNAL NAME</strong>"+
+                    "</div>"+
+                    "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
+                        "<strong>TYPE</strong>"+
+                    "</div>"+
                 "</div>"+
                 "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
                     "<table class='displayTable'>"+

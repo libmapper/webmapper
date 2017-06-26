@@ -33,6 +33,7 @@ function HivePlotView(container, model)
     var srcregexp = null;
     var dstregexp = null;
     var mapfill = 'rgb(104,202,255)';
+    var dragging = null;
 
     function constrain(obj, bounds, border) {
         if (obj.left < (bounds.left + obj.width * 0.5 + border))
@@ -215,6 +216,61 @@ function HivePlotView(container, model)
                              'stroke-width': 2 });
                 break;
         }
+    }
+
+    function set_sig_drag(sig) {
+        sig.view.drag(
+            function(dx, dy, x, y, event) {
+                let obj = sig.view.canvas_object;
+                if (dragging == 'obj') {
+                    obj.left = x + obj.drag_offset.x;
+                    obj.top = y + obj.drag_offset.y;
+                    constrain(obj, svg_frame, 5);
+                    sig.view.attr({'path': canvas_rect_path(obj, sig.direction)});
+                    sig.view.label.attr({'x': obj.left,
+                                         'y': obj.top}).toFront();
+                }
+                else {
+                    let offset = obj.width * 0.5 + 10;
+                    let arrow_start = 'none';
+                    let arrow_end = 'none';
+                    if (dragging == 'left') {
+                        offset *= -1;
+                        arrow_start = 'block-wide-long';
+                    }
+                    else
+                        arrow_end = 'block-wide-long';
+                    x -= container_frame.left;
+                    y -= container_frame.top;
+                    let path = [['M', obj.left + offset, obj.top],
+                                ['C', obj.left + offset * 3, obj.top,
+                                 x - offset * 3, y, x, y]];
+                    cursor.attr({'path': path,
+                                 'stroke': 'white',
+                                 'stroke-opacity': 1,
+                                 'arrow-start': arrow_start,
+                                 'arrow-end': arrow_end});
+
+                }
+            },
+            function(x, y, event) {
+                let obj = sig.view.canvas_object;
+                obj.drag_offset = new_pos(obj.left - x, obj.top - y);
+                    if (x < obj.left + 5)
+                        dragging = 'left';
+                    else if (x > obj.left + obj.width - 5)
+                        dragging = 'right';
+                    else
+                        dragging = 'obj';
+            },
+            function(x, y, event) {
+                delete sig.view.canvas_object.drag_offset;
+                dragging = null;
+                cursor.attr({'stroke-opacity': 0,
+                             'arrow-start': 'none',
+                             'arrow-end': 'none'});
+            }
+        );
     }
 
     this.switch_view = function(view) {
@@ -787,18 +843,10 @@ function HivePlotView(container, model)
                                                     speed, 'linear').toFront();
                             }
                             if (first_transition) {
-                                sig.view.drag(function(dx, dy, x, y, event) {
-                                    x -= container_frame.left;
-                                    y -= container_frame.top;
-                                    let obj = sig.view.canvas_object
-                                    obj.left = x;
-                                    obj.top = y;
-                                    constrain(obj, svg_frame, 5);
-                                    sig.view.attr({'path': canvas_rect_path(obj,
-                                                                            sig.direction)});
-                                    sig.view.label.attr({'x': obj.left, 'y': obj.top}).toFront();
-                                    redraw(0, false);
-                                });
+                                set_sig_drag(sig);
+//                                sig.view.onDragOver(function(el) {
+//                                    console.log('dragOver', el.id);
+//                                });
                             }
                         });
                     });
@@ -1214,6 +1262,8 @@ function HivePlotView(container, model)
             if (e.shiftKey == false) {
                 deselect_all();
             }
+            if (dragging)
+                return;
 
             // cache current mouse position
             let svgPos = fullOffset($('#svgDiv')[0]);
@@ -1457,19 +1507,7 @@ function HivePlotView(container, model)
                                       'stroke-opacity': 1 });
                         sig.view.label.attr({'x': obj.left, 'y': obj.top,
                                             'opacity': 1}).toFront();
-                        sig.view.drag(function(dx, dy, x, y, event) {
-                            x -= container_frame.left;
-                            y -= container_frame.top;
-                            let obj = sig.view.canvas_object
-                            obj.left = x;
-                            obj.top = y;
-                            constrain(obj, svg_frame, 5);
-                            sig.view.attr({'path': canvas_rect_path(obj, sig.direction),
-                                          'stroke-width': 20,
-                                          'stroke-opacity': 1 });
-                            sig.view.label.attr({'x': obj.left, 'y': obj.top}).toFront();
-                            redraw(0, false);
-                        });
+                        set_sig_drag(sig);
                         redraw(default_speed, false);
                     }
                 });

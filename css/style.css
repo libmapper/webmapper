@@ -166,7 +166,8 @@ path {
 .topTabs li {
     border-radius: 12px 12px 0 0;
     padding: 5px 15px;
-    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(224, 224, 224) 100%);
+/*    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(224, 224, 224) 100%);*/
+    background: rgb(104,202,255);
     display: inline-block;
     list-style: none;
     cursor: pointer;
@@ -174,7 +175,13 @@ path {
 }
 
 .topTabs li:hover {
-    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(224, 224, 224) 100%);
+/*    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(224, 224, 224) 100%);*/
+    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+    text-decoration: bold;
 }
 
 /****************/
@@ -586,6 +593,7 @@ input.expression {
 /*    height: calc(100% - 61px);*/
 /*    border: solid 1px black;*/
     border-bottom: 0;
+    border-radius: 12px;
 }
 
 /* The table areas */
