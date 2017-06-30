@@ -61,14 +61,14 @@ body {
 /* Main color */
 body {
 /*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%);*/
-/*    background-image: linear-gradient(225deg, rgb(200, 200, 200) 10%, rgb(1, 1, 1) 100%);*/
-    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
+    background-image: radial-gradient(farthest-corner at 50% 80%, rgb(255, 255, 255), rgb(235, 235, 235));
+/*    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));*/
 }
 .svgDiv, .tableDiv {
 /*    background: #FEFEFE;*/
-    background: rgba(200, 200, 200, 0.15);
-/*    background: rgba(1, 1, 1, 0.15);*/
-    color: white;
+    background: rgba(20, 20, 20, 0.1);
+/*    background: rgba(1, 1, 1, 0.1);*/
+    color: black;
 }
 
 /* blues */
@@ -76,11 +76,12 @@ body {
 /*    background: rgb(134,222,248) !important;*/
 /*    background: rgb(104,202,255) !important;*/
 /*position: absolute;*/
-    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
+/*    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));*/
+    background-image: radial-gradient(farthest-corner at 50% 80%, rgb(255, 255, 255), rgb(235, 235, 235));
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: white;
+    color: black;
     text-decoration: bold;
 }
 
@@ -109,11 +110,11 @@ thead, #svgTop, #networkMenu {
 /* tertiary highlight selection */
 .displayTable tr.even {
 /*    background: #EDF5FF;*/
-    background: rgba(200, 200, 200, 0.15);
+    background: rgba(20, 20, 20, 0.1);
 }
 
 .trsel, tr.even.trsel {
-/*    background: rgb(104,202,255);*/
+    background: rgb(104,202,255);
 }
 
 .displayTable tr:hover {
@@ -132,7 +133,6 @@ input.range {
 
 /* paths */
 path {
-/*    stroke-width: 2px;*/
     cursor: pointer;
 }
 /******************/
@@ -180,7 +180,7 @@ path {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: white;
+    color: black;
     text-decoration: bold;
 }
 
@@ -196,7 +196,7 @@ path {
 }
 
 .topMenu {
-    background: rgba(200,200,200,0.5);
+    background: rgba(20, 20, 20, 0.1);
     height: 70px;
     border-radius: 12px;
     position: relative;
@@ -220,8 +220,8 @@ path {
     width: 70px;
     transform-origin: 0% 0%;
     transform: translate(0px, 70px) rotate(270deg);
-    color: white;
-    background: rgba(200, 200, 200, 0.5);
+    color: black;
+    background: rgba(20, 20, 20, 0.1);
     text-align: center;
     text-decoration: bold;
 }
@@ -412,20 +412,22 @@ form {
     box-sizing: border-box;
     height: calc(100% - 126px);
 /*    height: 100%;*/
-    width: 45px;
+    width: 38px;
     float: left;
     top: 113px;
     position: absolute;
     margin-top: 0px;
     margin-bottom: 0px;
-    padding-right: 10px;
-    padding-left: 5px;
-    padding-top: 66px;
+/*    padding-right: 10px;*/
+    padding: 5px;
+/*    padding-top: 30px;*/
 /*    background: rgb(134,222,248);*/
 /*    background: #111;*/
 /*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%)*/
 /*    background: white;*/
 /*    opacity: 0.3;*/
+    background: rgba(20, 20, 20, 0.1);
+    border-radius: 12px;
 }
 
 #sidebar li {
@@ -469,27 +471,27 @@ form {
 }
 
 #listButton {
-    background-image: url(/images/list_icon_white.png);
+    background-image: url(/images/list_icon_black.png);
 }
 
 #graphButton {
-    background-image: url(/images/graph_icon_white.png);
+    background-image: url(/images/graph_icon_black.png);
 }
 
 #canvasButton {
-    background-image: url(/images/canvas_icon_white.png);
+    background-image: url(/images/canvas_icon_black.png);
 }
 
 #gridButton {
-    background-image: url(/images/grid_icon_white.png);
+    background-image: url(/images/grid_icon_black.png);
 }
 
 #hiveButton {
-    background-image: url(/images/hive_icon_white.png);
+    background-image: url(/images/hive_icon_black.png);
 }
 
 #balloonButton {
-    background-image: url(/images/balloon_icon_white.png);
+    background-image: url(/images/balloon_icon_black.png);
 }
 
 #wsstatus {
@@ -617,7 +619,7 @@ tbody {
 
 /* Rows and headers */
 .tableDiv th, #svgTop {
-    background: rgba(200, 200, 200, 0.5);
+    background: rgba(20, 20, 20, 0.1);
     cursor: pointer;
     font-weight: inherit;
     text-align: left;

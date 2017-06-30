@@ -46,9 +46,9 @@ function mapperTable(model, id, orientation, detail)
         // TODO: move div properties to css
         if (self.detail) {
             $(self.div).append(
-                "<div style='height:20px; position:relative; width:100%; background:rgba(200,200,200,0.5); border-radius:12px 12px 0 0;'>"+
+                "<div style='height:20px; position:relative; width:100%;'>"+
                     "<div style='float:left; position:relative; width:75%; padding-left:10px'>"+
-                        "<strong>DEVICE/SIGNAL NAME</strong>"+
+                        "<strong>SIGNALS</strong>"+
                     "</div>"+
                     "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
                         "<strong>TYPE</strong>"+
@@ -67,7 +67,9 @@ function mapperTable(model, id, orientation, detail)
         else if (self.id == 'topTable') {
             $(self.div).append(
                 "<div style='height: 200px; position:relative; width:20px'>"+
-                    "<div style='float: left; position:relative; width:200px; padding-left:45px; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>device/signal name</div>"+
+                    "<div style='float: left; position:relative; width:200px; padding-left:75px; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>"+
+                        "<strong>SIGNALS</strong>"+
+                    "</div>"+
                 "</div>"+
                 "<div id="+self.id+"Scroller style='left:20px; top:0px; height:100%; width:calc(100% - 20px); position:absolute; overflow:auto'>"+
                     "<table class='displayTable'>"+
@@ -78,7 +80,9 @@ function mapperTable(model, id, orientation, detail)
         else {
             $(self.div).append(
                 "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div style='float: left; position:relative; width:100%; padding-left:35px'>device/signal name</div>"+
+                    "<div style='float: left; position:relative; width:100%; padding-left:75px'>"+
+                        "<strong>SIGNALS</strong>"+
+                    "</div>"+
                 "</div>"+
                 "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
                     "<table class='displayTable'>"+
@@ -114,11 +118,12 @@ function mapperTable(model, id, orientation, detail)
 //    }
 
     this.filter = function(dir, string) {
+        console.log(this.id+'filter('+string+')');
         if (dir)
             this.direction = (dir == 'both') ? null : dir;
         if (string) {
             this.filterstring = string;
-            this.regexp = new RegExp(this.filterstring, 'i');
+            this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
         }
 //        if (dir == null)
 //            this.set_title('Signals');
