@@ -109,8 +109,8 @@ function HivePlotView(container, model)
     }
 
     function canvas_bezier(map) {
-        let obj1 = map.src.view.canvas_object;
-        let obj2 = map.dst.view.canvas_object;
+        let obj1 = map.src.canvas_object;
+        let obj2 = map.dst.canvas_object;
         let offset1 = (obj1.width * 0.5 + 6) * (map.src.direction == 'input' ? -1 : 1);
         let offset2 = (obj2.width * 0.5 + 6) * (map.dst.direction == 'input' ? -1 : 1);
         return [['M', obj1.left + offset1, obj1.top],
@@ -136,11 +136,17 @@ function HivePlotView(container, model)
                     ['z']];
         }
         else if (row)
-            return [['M', 0, row.cy],
-                    ['l', container_frame.width, 0]];
+            return [['M', 0, row.top],
+                    ['l', container_frame.width, 0],
+                    ['l', 0, row.height],
+                    ['l', -container_frame.width, 0],
+                    ['Z']];
         else if (col)
-            return [['M', 0, col.cx],
-                    ['l', 0, container_frame.height]];
+            return [['M', col.left, 0],
+                    ['l', col.width, 0],
+                    ['l', 0, container_frame.height],
+                    ['l', -col.width, 0],
+                    ['Z']];
         return null;
     }
 
@@ -262,10 +268,43 @@ function HivePlotView(container, model)
         }
     }
 
+    function set_sig_hover(sig) {
+        sig.view.hover(
+            function() {
+                if (currentView != 'hive' && currentView != 'graph')
+                    return;
+                console.log('sig.view.hover()');
+                let pos = labeloffset(sig.position, sig.key);
+                if (!sig.view.label) {
+                    sig.view.label = svgArea.text(pos.x, pos.y, sig.key);
+                    sig.view.label.node.setAttribute('pointer-events', 'none');
+                }
+                else
+                    sig.view.label.stop();
+                    sig.view.label.attr({'x': pos.x,
+                                         'y': pos.y,
+                                         'opacity': 1,
+                                         'font-size': 16,}).toFront();
+            },
+            function() {
+                if (currentView != 'hive' && currentView != 'graph')
+                    return;
+                if (sig.view.label) {
+                    sig.view.stop();
+                    sig.view.label.animate({'opacity': 0}, default_speed, easing,
+                                           function() {
+                        this.remove();
+                        sig.view.label = null;
+                    });
+                }
+            }
+        );
+    }
+
     function set_sig_drag(sig) {
         sig.view.drag(
             function(dx, dy, x, y, event) {
-                let obj = sig.view.canvas_object;
+                let obj = sig.canvas_object;
                 if (dragging == 'obj') {
                     obj.left = x + obj.drag_offset.x;
                     obj.top = y + obj.drag_offset.y;
@@ -290,7 +329,6 @@ function HivePlotView(container, model)
                     let path = [['M', obj.left + offset, obj.top],
                                 ['C', obj.left + offset * 3, obj.top,
                                  x - offset * 3, y, x, y]];
-                      console.log('sig view drag!', path);
                     cursor.attr({'path': path,
                                  'stroke': 'black',
                                  'stroke-opacity': 1,
@@ -299,7 +337,7 @@ function HivePlotView(container, model)
                 }
             },
             function(x, y, event) {
-                let obj = sig.view.canvas_object;
+                let obj = sig.canvas_object;
                 obj.drag_offset = new_pos(obj.left - x, obj.top - y);
                     if (x < obj.left + 5)
                         dragging = 'left';
@@ -309,7 +347,7 @@ function HivePlotView(container, model)
                         dragging = 'obj';
             },
             function(x, y, event) {
-                delete sig.view.canvas_object.drag_offset;
+                delete sig.canvas_object.drag_offset;
                 dragging = null;
                 cursor.attr({'stroke-opacity': 0,
                              'arrow-start': 'none',
@@ -518,10 +556,7 @@ function HivePlotView(container, model)
                                                                     sig.position.y,
                                                                     is_output ? 7 : 10));
                             }
-                            if (!sig.view.label)
-                                sig.view.label = svgArea.text(sig.position.x,
-                                                              sig.position.y,
-                                                              sig.key);
+                            set_sig_hover(sig);
 
                             let remove = false;
                             if (srcregexp && sig.direction == 'output') {
@@ -548,7 +583,13 @@ function HivePlotView(container, model)
                                               'stroke-width': 6,
                                               'stroke-opacity': sig.direction == 'output' ? 1 : 0}, speed, easing);
                             sig.position = new_pos(x, y);
-                            sig.view.label.animate({'x': x, 'y': y, 'opacity': 0}, speed);
+                            if (sig.view.label) {
+                                sig.view.label.animate({'x': x, 'y': y, 'opacity': 0},
+                                                       speed, easing, function() {
+                                    this.remove();
+                                    sig.view.label = null;
+                                });
+                            }
                         });
                         if (!dev.view) {
                             dev.view = svgArea.path(dev_start_path)
@@ -850,9 +891,6 @@ function HivePlotView(container, model)
                         let opacity = invisible ? 0 : map.status == "staged" ? 0.5 : 1.0;
 
                         if (map.view.new) {
-                            console.log('drawing new map', [['M', src.left, src.cy],
-                                                            ['C', src.left, src.cy, src.left,
-                                                             src.cy, src.left, src.cy]]);
                             map.view.attr({'path': [['M', src.left, src.cy],
                                                     ['C', src.left, src.cy, src.left,
                                                      src.cy, src.left, src.cy]],
@@ -869,7 +907,6 @@ function HivePlotView(container, model)
                             map.view.new = false;
                         }
                         else {
-                            console.log('drawing established path', path);
                             map.view.stop().animate({'path': path,
                                                      'stroke-opacity': opacity,
                                                      'fill-opacity': '0',
@@ -927,14 +964,12 @@ function HivePlotView(container, model)
                                               'fill-opacity': 0.5,
                                               'stroke-opacity': 0}, speed, easing);
                         dev.signals.each(function(sig) {
-                            if (!sig.view)
-                                return;
-                            if (!sig.view.canvas_object) {
+                            if (!sig.canvas_object) {
                                 // remove associated svg element
                                 remove_signal_svg(sig);
                                 return;
                             }
-                            let path = canvas_rect_path(sig.view.canvas_object,
+                            let path = canvas_rect_path(sig.canvas_object,
                                                         sig.direction);
 
                             let attrs = {'path': path,
@@ -943,13 +978,21 @@ function HivePlotView(container, model)
                                          'stroke-width': 20,
                                          'fill': 'white',
                                          'fill-opacity': 1};
-                            sig.view.stop();
+                            if (!sig.view)
+                                sig.view = svgArea.path(path);
+                            else
+                                sig.view.stop();
                             sig.view.attr({'stroke-linecap': 'round'});
                             sig.view.animate(attrs, speed, easing);
-                            sig.view.label.stop();
+                            if (!sig.view.label) {
+                                sig.view.label = svgArea.text(0, 0, sig.key);
+                                sig.view.label.node.setAttribute('pointer-events', 'none');
+                            }
+                            else
+                                sig.view.label.stop();
                             sig.view.label.attr({'font-size': 16});
-                            sig.view.label.animate({'x': sig.view.canvas_object.left,
-                                                    'y': sig.view.canvas_object.top,
+                            sig.view.label.animate({'x': sig.canvas_object.left,
+                                                    'y': sig.canvas_object.top,
                                                     'opacity': 1,
                                                     'fill': 'white'},
                                                     speed, easing).toFront();
@@ -963,9 +1006,9 @@ function HivePlotView(container, model)
                     });
                     model.maps.each(function(map) {
                         if (   !map.src.view
-                            || !map.src.view.canvas_object
+                            || !map.src.canvas_object
                             || !map.dst.view
-                            || !map.dst.view.canvas_object) {
+                            || !map.dst.canvas_object) {
                             if (map.view) {
                                 // remove associated svg element
                                 map.view.attr({'arrow-end': 'none'});
@@ -982,9 +1025,9 @@ function HivePlotView(container, model)
                             map.view = svgArea.path();
                         let path = canvas_bezier(map);
                         map.view.attr({'arrow-end': 'block-wide-long'});
-                        if (!map.view.canvas_object) {
-                            map.view.canvas_object = true;
-                            let pos = map.src.view.canvas_object;
+                        if (!map.canvas_object) {
+                            map.canvas_object = true;
+                            let pos = map.src.canvas_object;
                             let x = (pos.left + (pos.width * 0.5)
                                      * (map.src.direction == 'input' ? -1 : 1));
                             let y = pos.top;
@@ -1034,8 +1077,8 @@ function HivePlotView(container, model)
                             if (!sig.view) {
                                 sig.view = svgArea.path(circle_path(pos.x, pos.y,
                                                                     is_output ? 7 : 10));
-                                sig.view.label = svgArea.text(pos.x, pos.y, sig.key);
                             }
+                            set_sig_hover(sig);
                             let path = circle_path(pos.x, pos.y,
                                                    is_output ? 7 : 10);
                             sig.view.stop();
@@ -1046,9 +1089,16 @@ function HivePlotView(container, model)
                                               'stroke-width': 6,
                                               'stroke-opacity': sig.direction == 'output' ? 1 : 0},
                                              speed, easing);
-                            sig.view.label.stop();
-                            sig.view.label.animate({'x': pos.x, 'y': pos.y,
-                                                    'opacity': 0}, speed);
+                            if (sig.view.label) {
+                                sig.view.label.stop();
+                                sig.view.label.animate({'x': pos.x, 'y': pos.y,
+                                                        'opacity': 0}, speed, easing,
+                                                       function() {
+                                    this.remove();
+                                    sig.view.label = null;
+
+                                });
+                            }
                         });
                     });
                     model.maps.each(function(map) {
@@ -1211,34 +1261,6 @@ function HivePlotView(container, model)
             sig.position = new_pos(50, svg_frame.height - 50);
             if (currentView == 'list' || currentView == 'canvas' || currentView == 'grid')
                 return;
-            let dev = sig.device;
-            // add circle for signal
-            let path = circle_path(sig.position.x, sig.position.y, 3);
-            sig.view = svgArea.path()
-                            .attr({ 'path': path,
-                                    'stroke': 'black',
-                                    'fill': dev.color,
-                                    'stroke-opacity': 0,
-                                    'fill-opacity': 0,
-                                    'stroke-linecap': 'round' });
-            sig.view.label = svgArea.text(sig.position.x, sig.position.y, sig.key)
-                            .attr({'opacity': 0,
-                                   'font-size': 16,
-                                   'pointer-events': 'none' });
-            sig.view.hover(
-                function() {
-                    if (currentView != 'hive' && currentView != 'graph')
-                        return;
-                    let pos = labeloffset(sig.position, sig.key);
-                    sig.view.label.attr({'x': pos.x,
-                                         'y': pos.y,
-                                         'opacity': 1}).toFront();
-                },
-                function() {
-                    if (currentView != 'hive' && currentView != 'graph')
-                        return;
-                    sig.view.label.attr({'opacity': 0});
-            });
             if (repaint)
                 redraw(default_speed, true);
         }
@@ -1631,8 +1653,6 @@ function HivePlotView(container, model)
                     src_table.highlight_row(src, true);
                     if (dst)
                         dst_table.highlight_row(dst, false);
-
-                    console.log('setting cursor path', path);
                     cursor.attr({'path': path});
                 });
                 $(document).on('mouseup.drawing', function(e) {
@@ -1655,9 +1675,13 @@ function HivePlotView(container, model)
                             sig.view = svgArea.path(circle_path(sig.position.x,
                                                                 sig.position.y, 10));
                         }
-                        if (!sig.view.label)
-                            sig.view.label = svgArea.text(0, 0, sig.key);
-                        else if (sig.view.canvas_object) {
+                        if (!sig.view.label) {
+                            sig.view.label = svgArea.text(sig.position.x,
+                                                          sig.position.y,
+                                                          sig.key);
+                            sig.view.label.node.setAttribute('pointer-events', 'none');
+                        }
+                        else if (sig.canvas_object) {
                             // for now we only allow one instance of signal on canvas
                             return;
                         }
@@ -1666,14 +1690,15 @@ function HivePlotView(container, model)
                                    'width': labelwidth(sig.key),
                                    'height': 20};
                         constrain(obj, svg_frame, 5);
-                        sig.view.canvas_object = obj;
-                        sig.view.attr({'path': canvas_rect_path(sig.view.canvas_object,
+                        sig.canvas_object = obj;
+                        sig.view.attr({'path': canvas_rect_path(sig.canvas_object,
                                                                 sig.direction),
                                        'stroke-width': 20,
                                        'stroke-opacity': 1,
                                        'stroke': 'black'});
-                        sig.view.label.attr({'x': obj.left, 'y': obj.top,
-                                            'opacity': 1}).toFront();
+                        sig.view.label.attr({'x': obj.left,
+                                             'y': obj.top,
+                                             'opacity': 1}).toFront();
                         set_sig_drag(sig);
                         redraw(default_speed, false);
                     }
