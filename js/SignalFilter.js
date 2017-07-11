@@ -11,7 +11,7 @@ SignalFilter.prototype = {
 //        $(this._container).empty();        // clear the container DIV
 
         $(this._container).append(
-            "<div id='signalFilterDiv' class='topMenu' style='width:calc(30% - 30px);'>"+
+            "<div id='signalFilterDiv' class='topMenu' style='width:calc(25% - 60px);'>"+
                 "<div class='topMenuTitle'><strong>FILTER</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div>Sources: "+

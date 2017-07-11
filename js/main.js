@@ -8,6 +8,7 @@ var viewData = new Array(3);    // data specific to the view, change 3 the numbe
 var mapProperties;
 var devFilter;
 var saverLoader;
+var viewSelector;
 
 window.onload = init;           // Kick things off
 
@@ -23,21 +24,15 @@ function init() {
     $('body').append("<div class=propertiesDiv id='TopMenuWrapper'></div>");
 
     // add the view wrapper
-    $('body').append("<ul id='sidebar'>"+
-                         "<li><span id='listButton' class='viewButton viewButtonsel'></span></li>"+
-                         "<li><span id='graphButton' class='viewButton'></span></li>"+
-                         "<li><span id='canvasButton' class='viewButton'></span></li>"+
-                         "<li><span id='gridButton' class='viewButton'></span></li>"+
-                         "<li><span id='hiveButton' class='viewButton'></span></li>"+
-                         "<li><span id='balloonButton' class='viewButton'></span></li>"+
-                     "</ul>"+
-                     "<div id='container'></div>");
+    $('body').append("<div id='container'></div>");
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
     $('#TopMenuWrapper').empty()
     saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"));
     saverLoader.init();
+    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
+    viewSelector.init();
     devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), model);
     devFilter.init();
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), model);

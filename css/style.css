@@ -415,7 +415,7 @@ form {
 /*    height: 100%;*/
     width: 38px;
     float: left;
-    top: 113px;
+    top: 107px;
     position: absolute;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -440,12 +440,13 @@ form {
     vertical-align: bottom;
     cursor: pointer;
     width: 30px;
-    height: 30px;
+    height: 25px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position-y: center;
 /*    position: relative;*/
 /*    margin-top: 60px;*/
+    padding-right: 5px;
     opacity: 0.5;
 }
 
@@ -757,12 +758,13 @@ input.searchBar {
 
 /* The overall container of elements not in skeleton*/
 #container {
-    width: calc(100% - 52px);
+    width: calc(100% - 9px);
     height: calc(100% - 126px);
-    float: right;
+    float: left;
     position: absolute;
-    top: 113px;
-    left: 48px;
+    top: 107px;
+/*    padding: 5px;*/
+/*    left: 48px;*/
 }
 
 /* For disabled elements */

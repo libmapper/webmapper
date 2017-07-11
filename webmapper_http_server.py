@@ -310,6 +310,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/MapProperties.js"></script>
 <script type="text/javascript" src="js/SignalFilter.js"></script>
 <script type="text/javascript" src="js/SaverLoader.js"></script>
+<script type="text/javascript" src="js/ViewSelector.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 <link type="text/css" rel="stylesheet" href="includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
 <script type="text/javascript" src="includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
