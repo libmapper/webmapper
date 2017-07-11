@@ -231,17 +231,17 @@ function MapperModel() {
         dev = model.devices.find(dev.name);
         if (!dev)
             return;
+        let maps = this.maps;
         dev.signals.each(function(sig) {
-            if (sig.device != dev)
-                return;
-            this.maps.each(function(map) {
+            maps.each(function(map) {
                 if (sig == map.src || sig == map.dst)
-                    this.maps.remove(map);
+                    maps.remove(map);
             });
         });
-        this.links.each(function(link) {
+        let links = this.links;
+        links.each(function(link) {
             if (link.src == dev.name || link.dst == dev.name)
-                this.links.remove(link);
+                links.remove(link);
         });
         this.devices.remove(dev);
     }
