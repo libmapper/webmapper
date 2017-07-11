@@ -60,7 +60,7 @@ MapProperties.prototype = {
             "</div>");
 
         // extra tools
-        $('.topMenu').append(
+        $('.propertiesDiv').append(
             "<div id='wsstatus' class='extratools'>websocket uninitialized</div>");
 
         this.addHandlers();
