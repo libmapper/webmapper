@@ -375,21 +375,23 @@ function mapperTable(model, id, orientation, detail)
             if (num_dev_sigs <= 0)
                 return;
 
-            $(tbody).append("<tr id="+dev.name+"><th colspan='2'>"+dev.name+"</th></tr>");
-            let even = false;
-            for (var i in sigs) {
-                let new_row = "<tr class='"+sigs[i][3];
-                if (even)
-                    new_row += " even";
-                new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
-                if (detail)
-                    new_row += "<td>"+sigs[i][2]+"</td>";
-                new_row += "</tr>";
-                $(tbody).append(new_row);
-                even = !even;
+            $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+dev.name+"</th></tr>");
+            if (!dev.collapsed) {
+                let even = false;
+                for (var i in sigs) {
+                    let new_row = "<tr class='"+sigs[i][3];
+                    if (even)
+                        new_row += " even";
+                    new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
+                    if (detail)
+                        new_row += "<td>"+sigs[i][2]+"</td>";
+                    new_row += "</tr>";
+                    $(tbody).append(new_row);
+                    even = !even;
+                }
+                num_sigs += num_dev_sigs;
             }
             num_devs += 1;
-            num_sigs += num_dev_sigs;
         });
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
