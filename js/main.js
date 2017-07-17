@@ -118,6 +118,65 @@ function initViewCommands()
         $(this).addClass("viewButtonsel");
     });
 
+    // TODO: add "save as" option
+    $('#saveButton').on('click', function(e) {
+        e.stopPropagation();
+        let file = { "fileversion": "2.2",
+                     "mapping": { "maps": [] }
+                   };
+
+        model.maps.each(function(map) {
+            if (!map.view)
+                return;
+            let m = {'sources': [], 'destinations': []};
+            for (var attr in map) {
+                switch (attr) {
+                    // ignore a few properties
+                    case 'view':
+                    case 'status':
+                    case 'key':
+                        break;
+                    case 'src':
+                        let src = map.src.key;
+                        if (!m.sources.includes(src))
+                            m.sources.push(src);
+                        break;
+                    case 'dst':
+                        let dst = map.dst.key;
+                        if (!m.destinations.includes(dst))
+                            m.destinations.push(dst);
+                    case 'expression':
+                        // need to replace x and y variables with signal references
+                        // TODO: better regexp to avoid conflicts with user vars
+                        let expr = map.expression;
+                        expr = expr.replace(/y\[/g, "dst[");
+                        expr = expr.replace(/y\s*=/g, "dst=");
+                        expr = expr.replace(/x\[/g, "src[");
+                        expr = expr.replace(/\bx(?!\w)/g, "src[0]");
+                        m.expression = expr;
+                        break;
+                    default:
+                        if (map.hasOwnProperty(attr))
+                            m[attr] = map[attr];
+                }
+            }
+            file.mapping.maps.push(m);
+        });
+
+        let link = document.createElement('a');
+        let blob = new Blob([JSON.stringify(file, null, '\t')]);
+        let url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', 'foo2.json');
+        link.click();
+    });
+
+    $('#loadButton').click(function(e) {
+        e.stopPropagation();
+        view.switch_view("load");
+//                           _self.on_load();
+    });
+
     $('body').on('keydown.list', function(e) {
         let new_view = null;
         if (e.which == 49) {

@@ -38,6 +38,8 @@ function mapperTable(model, id, orientation, detail)
     this.targetHeight = 600;
     this.num_devs = 0;
     this.num_sigs = 0;
+    this.collapseAll = false;
+    this.title = 'SIGNALS';
 
     function makeTable(self) {
         $(self.div).empty();
@@ -47,8 +49,8 @@ function mapperTable(model, id, orientation, detail)
         if (self.detail) {
             $(self.div).append(
                 "<div style='height:20px; position:relative; width:100%;'>"+
-                    "<div style='float:left; position:relative; width:75%; padding-left:10px'>"+
-                        "<strong>SIGNALS</strong>"+
+                    "<div id="+self.id+"Title style='float:left; position:relative; width:75%; padding-left:10px'>"+
+                        "<strong>"+self.title+"</strong>"+
                     "</div>"+
                     "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
                         "<strong>TYPE</strong>"+
@@ -67,8 +69,8 @@ function mapperTable(model, id, orientation, detail)
         else if (self.id == 'topTable') {
             $(self.div).append(
                 "<div style='height: 200px; position:relative; width:20px'>"+
-                    "<div style='float: left; position:relative; width:200px; padding-left:75px; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>"+
-                        "<strong>SIGNALS</strong>"+
+                    "<div id="+self.id+"Title style='float: left; position:relative; width:200px; text-align:center; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>"+
+                        "<strong>"+self.title+"</strong>"+
                     "</div>"+
                 "</div>"+
                 "<div id="+self.id+"Scroller style='left:20px; top:0px; height:100%; width:calc(100% - 20px); position:absolute; overflow:auto'>"+
@@ -80,8 +82,8 @@ function mapperTable(model, id, orientation, detail)
         else {
             $(self.div).append(
                 "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div style='float: left; position:relative; width:100%; padding-left:75px'>"+
-                        "<strong>SIGNALS</strong>"+
+                    "<div id="+self.id+"Title style='float: left; position:relative; width:100%; text-align: center'>"+
+                        "<strong>"+self.title+"</strong>"+
                     "</div>"+
                 "</div>"+
                 "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
@@ -118,13 +120,25 @@ function mapperTable(model, id, orientation, detail)
 //    }
 
     this.filter = function(dir, string) {
-        console.log(this.id+'filter('+string+')');
         if (dir)
             this.direction = (dir == 'both') ? null : dir;
         if (string) {
             this.filterstring = string;
             this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
         }
+        switch (dir) {
+            case 'output':
+                dir = 'SOURCES';
+                break;
+            case 'input':
+                dir = 'DESTINATIONS';
+                break;
+            default:
+                dir = 'SIGNALS';
+                break;
+        }
+        $('#'+this.id+'Title>strong').text(dir);
+        this.title = dir;
 //        if (dir == null)
 //            this.set_title('Signals');
 //        else if (dir == 'input')
@@ -156,12 +170,19 @@ function mapperTable(model, id, orientation, detail)
         let id = name.replace('/', '\\/');
         let foo = null;
         let row_height = Math.round(this.row_height);
+        let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
+                if ($(row).hasClass('invisible')) {
+                    if (name.indexOf('/') != -1)
+                        return this.row_from_name(name.split('/')[0]);
+                    else
+                        return null;
+                }
                 if (this.orientation == 'top') {
-                    let left = i * row_height - this.scrolled;
+                    let left = j * row_height - this.scrolled;
                     let top = row.offsetLeft;
-                    foo = { 'left': left,
+                    return { 'left': left,
                              'top': top,
                              'width': row_height,
                              'height': row.offsetWidth,
@@ -173,8 +194,8 @@ function mapperTable(model, id, orientation, detail)
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = i * row_height - this.scrolled + 20;
-                    foo = { 'left': left,
+                    let top = j * row_height - this.scrolled + 20;
+                    return { 'left': left,
                              'top': top,
                              'width': row.offsetWidth,
                              'height': row_height,
@@ -184,9 +205,11 @@ function mapperTable(model, id, orientation, detail)
                              'even': $(row).hasClass('even'),
                              'isOutput': $(row).hasClass('output') };
                 }
+                break;
             }
+            else if (!$(row).hasClass('invisible'))
+                ++j;
         }
-        return foo;
     }
 
     this.row_from_position = function(x, y) {
@@ -317,6 +340,8 @@ function mapperTable(model, id, orientation, detail)
         let id = this.id;
         let detail = this.detail;
         let regexp = this.regexp;
+        let collapseAll = this.collapseAll;
+        let title = this.title;
 
         model.devices.each(function(dev) {
             let num_dev_sigs = 0;
@@ -375,22 +400,25 @@ function mapperTable(model, id, orientation, detail)
             if (num_dev_sigs <= 0)
                 return;
 
-            $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+dev.name+"</th></tr>");
-            if (!dev.collapsed) {
-                let even = false;
-                for (var i in sigs) {
-                    let new_row = "<tr class='"+sigs[i][3];
-                    if (even)
-                        new_row += " even";
-                    new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
-                    if (detail)
-                        new_row += "<td>"+sigs[i][2]+"</td>";
-                    new_row += "</tr>";
-                    $(tbody).append(new_row);
-                    even = !even;
-                }
-                num_sigs += num_dev_sigs;
+            $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+
+                            dev.name+" ("+num_dev_sigs+" "+title.toLowerCase()+")"+
+                            "</th></tr>");
+            let even = false;
+            for (var i in sigs) {
+                let new_row = "<tr class='"+sigs[i][3];
+                if (even)
+                    new_row += " even";
+                if (collapseAll || dev.collapsed)
+                    new_row += " invisible";
+                new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
+                if (detail)
+                    new_row += "<td>"+sigs[i][2]+"</td>";
+                new_row += "</tr>";
+                $(tbody).append(new_row);
+                even = !even;
             }
+            if (!collapseAll && !dev.collapsed)
+                num_sigs += num_dev_sigs;
             num_devs += 1;
         });
         this.num_devs = num_devs;

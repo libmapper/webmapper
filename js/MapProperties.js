@@ -91,15 +91,6 @@ MapProperties.prototype = {
             _self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
-        $('#saveButton').on('click', function(e) {
-            e.stopPropagation();
-        });
-
-        $('#loadButton').click(function(e) {
-            e.stopPropagation();
-            _self.on_load();
-        });
-
         $('.boundary').on('click', function(e) {
             _self.on_boundary(e, _self);
         });

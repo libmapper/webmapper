@@ -20,8 +20,9 @@ var command = {
         command.maintain_requests();
         if (msg['cmd']) {
             var hs = command.handlers[msg['cmd']];
-            if (hs) for (var h in hs)
-                        hs[h](msg['cmd'], msg['args']);
+            if (hs)
+                for (var h in hs)
+                    hs[h](msg['cmd'], msg['args']);
         }
     },
 
