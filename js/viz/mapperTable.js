@@ -119,13 +119,14 @@ function mapperTable(model, id, orientation, detail)
 //        $('#'+this.id+' h2').text(title);
 //    }
 
-    this.filter = function(dir, string) {
+    this.filter_text = function(string) {
+        this.filterstring = string;
+        this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
+    }
+
+    this.filter_dir = function(dir) {
         if (dir)
             this.direction = (dir == 'both') ? null : dir;
-        if (string) {
-            this.filterstring = string;
-            this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
-        }
         switch (dir) {
             case 'output':
                 dir = 'SOURCES';
@@ -139,12 +140,6 @@ function mapperTable(model, id, orientation, detail)
         }
         $('#'+this.id+'Title>strong').text(dir);
         this.title = dir;
-//        if (dir == null)
-//            this.set_title('Signals');
-//        else if (dir == 'input')
-//            this.set_title('Destinations');
-//        else
-//            this.set_title('Sources');
     }
 
     this.show_detail = function(show) {

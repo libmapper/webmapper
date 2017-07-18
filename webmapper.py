@@ -72,6 +72,7 @@ def sig_props(sig):
     props = sig.properties.copy()
     props['device'] = sig.device().name
     props['key'] = props['device'] + '/' + props['name']
+    props['num_maps'] = sig.num_maps;
     del props['is_local']
     del props['id']
     if props['direction'] == mapper.DIR_INCOMING:

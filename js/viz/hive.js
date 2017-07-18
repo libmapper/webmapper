@@ -58,6 +58,11 @@ function HivePlotView(container, model)
             redraw(duration, update_tables);
     };
 
+    this.parse_file = function(file) {
+        if (parse_file)
+            parse_file(file);
+    }
+
     function labelwidth(label) {
         return label.length * 8;
     }
@@ -448,15 +453,15 @@ function HivePlotView(container, model)
                                     'fill-opacity': 0}, default_speed, easing,
                                    function() {
                 this.remove();
-                obj.view.label = null;
             });
         }
+        obj.view.label = null;
         obj.view.stop();
         obj.view.animate({'stroke-opacity': 0,
                           'fill-opacity': 0}, default_speed, easing, function() {
             this.remove();
-            obj.view = null;
         });
+        obj.view = null;
     }
 
     this.switch_view = function(view) {
@@ -647,15 +652,6 @@ function HivePlotView(container, model)
                         });
                         let inc = vis_sigs ? 1 / vis_sigs : 1;
                         dev.signals.each(function(sig) {
-                            let is_output = sig.direction == 'output';
-                            if (!sig.view) {
-                                sig.view = svgArea.path(circle_path(sig.position.x,
-                                                                    sig.position.y,
-                                                                    is_output ? 7 : 10));
-                            }
-                            set_sig_drag(sig);
-                            set_sig_hover(sig);
-
                             let remove = false;
                             if (srcregexp && sig.direction == 'output') {
                                 if (!srcregexp.test(sig.key))
@@ -664,8 +660,19 @@ function HivePlotView(container, model)
                             else if (dstregexp && !dstregexp.test(sig.key)) {
                                 remove = true;
                             }
-                            if (remove)
+                            if (remove) {
                                 remove_object_svg(sig);
+                                return;
+                            }
+
+                            let is_output = sig.direction == 'output';
+                            if (!sig.view) {
+                                sig.view = svgArea.path(circle_path(sig.position.x,
+                                                                    sig.position.y,
+                                                                    is_output ? 7 : 10));
+                            }
+                            set_sig_drag(sig);
+                            set_sig_hover(sig);
 
                             sig_index += 1;
                             let x = origin.x + width * inc * sig_index * Math.cos(angle);
@@ -740,9 +747,9 @@ function HivePlotView(container, model)
                 }
                 break;
             case 'grid':
-                leftTable.filter('output', null);
+                leftTable.filter_dir('output');
                 leftTable.show_detail(false);
-                topTable.filter('input', null);
+                topTable.filter_dir('input');
                 topTable.show_detail(false);
 
                 redraw = function(speed, update_tables) {
@@ -907,10 +914,10 @@ function HivePlotView(container, model)
                 break;
             case 'list':
                 /* TODO: sorting */
-                leftTable.filter('output', null);
+                leftTable.filter_dir('output');
                 leftTable.show_detail(true);
 
-                rightTable.filter('input', null);
+                rightTable.filter_dir('input');
                 rightTable.show_detail(true);
 
                 get_sig_pos = function(sig, offset) {
@@ -1018,7 +1025,9 @@ function HivePlotView(container, model)
                                                      src.cy, src.left, src.cy]],
                                            'stroke-dasharray': map.muted ? '--' : '',
                                            'arrow-end': 'block-wide-long',
-                                           'stroke': map.view.selected ? mapsel : mappath});
+                                           'stroke': map.view.selected ? mapsel : mappath,
+                                           'fill-opacity': 0,
+                                           'stroke-width': 2});
                             let len = Raphael.getTotalLength(path);
                             let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
                             map.view.stop().animate({'path': path_mid,
@@ -1031,7 +1040,8 @@ function HivePlotView(container, model)
                         else {
                             map.view.stop().animate({'path': path,
                                                      'stroke-opacity': opacity,
-                                                     'fill-opacity': '0',
+                                                     'fill-opacity': 0,
+                                                     'stroke-width': 2,
                                                      'stroke': map.view.selected ? mapsel : mappath},
                                                     speed, easing, function() {
                                 map.view.attr({'arrow-end': 'block-wide-long',
@@ -1045,7 +1055,7 @@ function HivePlotView(container, model)
                 }
                 break;
             case 'canvas':
-                leftTable.filter('both', null);
+                leftTable.filter_dir('both');
                 leftTable.show_detail(true);
 
                 redraw = function(speed, update_tables) {
@@ -1194,12 +1204,25 @@ function HivePlotView(container, model)
                             });
                         }
                         dev.signals.each(function(sig) {
+                            let remove = false;
+                            if (srcregexp && sig.direction == 'output') {
+                                if (!srcregexp.test(sig.key))
+                                    remove = true;
+                            }
+                            else if (dstregexp && !dstregexp.test(sig.key)) {
+                                remove = true;
+                            }
+                            if (remove) {
+                                remove_object_svg(sig);
+                                return;
+                            }
                             let pos = sig.position;
                             let is_output = sig.direction == 'output';
                             if (!sig.view) {
                                 sig.view = svgArea.path(circle_path(pos.x, pos.y,
                                                                     is_output ? 7 : 10));
                             }
+                            set_sig_drag(sig);
                             set_sig_hover(sig);
                             let path = circle_path(pos.x, pos.y,
                                                    is_output ? 7 : 10);
@@ -1224,6 +1247,10 @@ function HivePlotView(container, model)
                         });
                     });
                     model.maps.each(function(map) {
+                        if (!map.src.view || !map.dst.view) {
+                            remove_object_svg(map);
+                            return;
+                        }
                         let src = map.src.position;
                         let dst = map.dst.position;
                         if (!map.view)
@@ -1278,11 +1305,11 @@ function HivePlotView(container, model)
                 break;
             case 'load':
                 leftTable.collapseAll = true;
-                leftTable.filter('output', null);
+                leftTable.filter_dir('output');
                 leftTable.show_detail(false);
 
                 rightTable.collapseAll = true;
-                rightTable.filter('input', null);
+                rightTable.filter_dir('input');
                 rightTable.show_detail(false);
 
                 var fileRep = {};
@@ -1295,7 +1322,7 @@ function HivePlotView(container, model)
                     fileRep.devices[dev_idx].target_name = name;
                 }
 
-                function parse_file(file) {
+                parse_file = function(file) {
                     file = JSON.parse(file);
                     console.log("parsing file:", file.fileversion, file.mapping);
                     if (!file.fileversion || !file.mapping) {
@@ -1448,6 +1475,7 @@ function HivePlotView(container, model)
                                           'fill-opacity': 0.5,
                                           'stroke-opacity': 0}, speed, easing);
                     });
+                    let mp = svg_frame.cx;
                     model.maps.each(function(map) {
                         // remove associated svg elements
                         remove_object_svg(map);
@@ -1479,15 +1507,16 @@ function HivePlotView(container, model)
                         }
                         if (!dst)
                             return;
-                        let mp = svg_frame.cx;
                         let path;
                         let angle = src.left < dst.left ? 0 : 180;
                         if (srctab == dsttab) {
                             if (src.top == dst.top) {
                                 // same row
+                                let offset = src.left > mp ? -src.height : src.height;
                                 path = [['M', src.left, src.top],
-                                        ['S', src.left + src.height, src.cy,
-                                         src.left, src.top + src.height],
+                                        ['C', src.left + offset, src.top,
+                                              src.left + offset, src.top + src.height,
+                                              src.left, src.top + src.height],
                                         'Z'];
                             }
                             else {
@@ -1521,9 +1550,9 @@ function HivePlotView(container, model)
                         }
                         let rgb = Raphael.getRGB(map.src.device.color);
                         let gradient = angle+'-';
-                        gradient += 'rgba('+rgb.r+','+rgb.g+','+rgb.b+',0.5)-';
+                        gradient += 'rgba('+rgb.r+','+rgb.g+','+rgb.b+',0.25)-';
                         rgb = Raphael.getRGB(map.dst.device.color);
-                        gradient += 'rgba('+rgb.r+','+rgb.g+','+rgb.b+',0.5)';
+                        gradient += 'rgba('+rgb.r+','+rgb.g+','+rgb.b+',0.25)';
 
                         let link;
                         if (key in links)
@@ -1531,7 +1560,8 @@ function HivePlotView(container, model)
                         else {
                             link = svgArea.path([['M', src.left, src.top],
                                                  ['l', 0, src.height],
-                                                 ['Z']]);
+                                                 ['Z']]).toBack();
+                            link.node.setAttribute('pointer-events', 'none');
                             links[key] = link;
                         }
                         link.attr({'fill': gradient, 'stroke-opacity': 0});
@@ -1604,25 +1634,12 @@ function HivePlotView(container, model)
                                                       'linear', function() {
                                         this.remove();
                                     });
+                                delete fileRep.devices[i];
                             }
                             if (maps) {
                                 maps = null;
                                 return;
                             }
-                            var input = $(document.createElement("input"));
-                            input.attr("type", "file");
-                            // add onchange handler if you wish to get the file :)
-                            input.on('change', function(e) {
-                                f = e.target.files[0];
-                                let reader = new FileReader();
-                                reader.onload = (function(file) {
-                                    return function(e) {
-                                        parse_file(e.target.result)
-                                    };
-                                })(f);
-                                reader.readAsText(f);
-                            });
-                            input.trigger("click"); // open dialog
                             return false; // avoiding navigation
                         });
 
@@ -1671,8 +1688,11 @@ function HivePlotView(container, model)
                         dev.view.attr({'path': path,
                                        'stroke-width': target.height,
                                        'stroke': color,
-                                       'stroke-opacity': 0.5});
+                                       'stroke-opacity': 0.5}).toFront();
+                        dev.label.toFront();
                     }
+                    fileRep.view.toFront();
+                    fileRep.label.toFront();
                 };
 
                 cleanup = function() {
@@ -1698,6 +1718,7 @@ function HivePlotView(container, model)
                         });
                     }
                     links = null;
+                    parse_file = null;
                 }
                 break;
         }
@@ -1952,21 +1973,21 @@ function HivePlotView(container, model)
     }
 
     this.filter_signals = function(searchbar, text) {
-        if (!text || !text.length)
-            text = 'empty';
+        if (!text.length)
+            text = null;
         if (searchbar == 'srcSearch') {
             srcregexp = text ? new RegExp(text, 'i') : null;
             if (currentView == 'list' || currentView == 'canvas')
-                leftTable.filter(null, text);
+                leftTable.filter_text(text);
             else if (currentView == 'grid')
-                topTable.filter(null, text);
+                topTable.filter_text(text);
         }
         else {
             dstregexp = text ? new RegExp(text, 'i') : null;
             if (currentView == 'list')
-                rightTable.filter(null, text);
+                rightTable.filter_text(text);
             else if (currentView == 'grid')
-                leftTable.filter(null, text);
+                leftTable.filter_text(text);
         }
         redraw(default_speed, true);
     }

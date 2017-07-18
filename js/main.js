@@ -173,8 +173,21 @@ function initViewCommands()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        view.switch_view("load");
-//                           _self.on_load();
+        var input = $(document.createElement("input"));
+        input.attr("type", "file");
+        // add onchange handler if you wish to get the file :)
+        input.on('change', function(e) {
+            var f = e.target.files[0];
+            let reader = new FileReader();
+            reader.onload = (function(file) {
+                return function(e) {
+                    view.switch_view("load");
+                    view.parse_file(e.target.result)
+                };
+            })(f);
+            reader.readAsText(f);
+        });
+        input.trigger("click"); // open dialog
     });
 
     $('body').on('keydown.list', function(e) {
