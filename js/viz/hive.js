@@ -32,7 +32,6 @@ function HivePlotView(container, model)
 
     var srcregexp = null;
     var dstregexp = null;
-//    var mapfill = 'rgb(104,202,255)';
     var mapfill = 'black';
     var mappath = 'black';
     var mapsel = 'red';
@@ -898,9 +897,9 @@ function HivePlotView(container, model)
                                 map.view.new = false;
                             }
                             map.view.animate({'path': path,
-                                              'fill-opacity': 1,
+                                              'fill-opacity': 0,
                                               'fill': map.view.selected ? mapsel : mapfill,
-                                              'stroke-opacity': 0}, speed, easing);
+                                              'stroke-opacity': 1}, speed, easing);
                         }
                     });
                     first_transition = false;
@@ -1323,8 +1322,6 @@ function HivePlotView(container, model)
                 }
 
                 parse_file = function(file) {
-                    file = JSON.parse(file);
-                    console.log("parsing file:", file.fileversion, file.mapping);
                     if (!file.fileversion || !file.mapping) {
                         console.log("unknown file type");
                         return;
@@ -1377,7 +1374,8 @@ function HivePlotView(container, model)
                         let pos_x = svg_frame.cx + 200 * Math.sin(count * angleInc);
                         let pos_y = svg_frame.cy + 200 * Math.cos(count * angleInc);
                         device.view.animate({'path': [['M', svg_frame.cx, svg_frame.cy],
-                                                      ['L', pos_x, pos_y]]});
+                                                      ['L', pos_x, pos_y]]},
+                                            default_speed, 'linear');
                         device.view.index = count;
 
                         // enable dragging to a different target device
@@ -1570,8 +1568,9 @@ function HivePlotView(container, model)
 
                     if (first_transition) {
                         // load file representation
-                        fileRep.view = svgArea.circle(svg_frame.cx, svg_frame.cy, 100);
-                        fileRep.view.attr({'fill': 'black', 'stroke': 'white'});
+                        fileRep.view = svgArea.circle(svg_frame.cx, svg_frame.cy, 0)
+                               .attr({'fill': 'black', 'stroke': 'white'})
+                               .animate({'r': 100}, default_speed, 'linear');
                         fileRep.view.hover(
                             function() {
                                 this.animate({'stroke': 'red',
@@ -1619,7 +1618,6 @@ function HivePlotView(container, model)
                                     dst = dst.join('/');
                                     $('#container').trigger('map', [src, dst, map]);
                                 }
-                                fileRep.label.attr({'text': 'select file'});
                             }
                             // remove any existing device reps
                             for (var i in fileRep.devices) {
@@ -1636,6 +1634,16 @@ function HivePlotView(container, model)
                                     });
                                 delete fileRep.devices[i];
                             }
+                            fileRep.label.animate({'fill-opacity': 0}, default_speed,
+                                                   'linear', function() {
+                                this.remove();
+                                fileRep.label = null;
+                            });
+                            fileRep.view.animate({'r': 0}, default_speed, 'linear',
+                                                 function() {
+                                this.remove();
+                                fileRep.view = null;
+                            });
                             if (maps) {
                                 maps = null;
                                 return;
@@ -1691,8 +1699,10 @@ function HivePlotView(container, model)
                                        'stroke-opacity': 0.5}).toFront();
                         dev.label.toFront();
                     }
-                    fileRep.view.toFront();
-                    fileRep.label.toFront();
+                    if (fileRep.view)
+                        fileRep.view.toFront();
+                    if (fileRep.label)
+                        fileRep.label.toFront();
                 };
 
                 cleanup = function() {
@@ -1851,38 +1861,47 @@ function HivePlotView(container, model)
     }
 
     $('body').on('keydown.list', function(e) {
-        if (e.which == 8 || e.which == 46) {
-            // Prevent the browser from going back a page
-            // but NOT if you're focus is an input and deleting text
-            if (!$(':focus').is('input')) {
-                e.preventDefault();
-            }
-            /* delete */
-            model.maps.each(function(map) {
-                if (map.view && map.view.selected)
-                    $('#container').trigger('unmap', [map.src.key, map.dst.key]);
-            });
-        }
-        else if (e.which == 65 && e.metaKey == true) { // Select all 'cmd+a'
-            e.preventDefault();
-            select_all();
-        }
-        else if (e.which == 65 && e.metaKey == true) {
-            e.preventDefault();
-            console.log('should add tab');
-        }
-        else if (e.which == 32 && currentView == 'graph') {
-            model.devices.each(function(dev) {
-                dev.signals.each(function(sig) {
-                    if (!sig.view)
-                        return;
-                    sig.position = new_pos();
+        switch (e.which) {
+            case 8:
+            case 46:
+                // Prevent the browser from going back a page
+                // but NOT if you're focus is an input and deleting text
+                if (!$(':focus').is('input')) {
+                    e.preventDefault();
+                }
+                /* delete */
+                model.maps.each(function(map) {
+                    if (map.view && map.view.selected)
+                        $('#container').trigger('unmap', [map.src.key, map.dst.key]);
                 });
-            });
-            redraw();
-        }
-        else if (e.which == 27) {
-            escaped = true;
+                break;
+            case 65:
+                if (e.metaKey == true) { // Select all 'cmd+a'
+                    e.preventDefault();
+                    select_all();
+                }
+                break;
+            case 65:
+                if (e.metaKey == true) {
+                    e.preventDefault();
+                    console.log('should add tab');
+                }
+                break;
+            case 32:
+                if (currentView == 'graph') {
+                    model.devices.each(function(dev) {
+                        dev.signals.each(function(sig) {
+                            if (!sig.view)
+                                return;
+                            sig.position = new_pos();
+                        });
+                    });
+                    redraw();
+                }
+                break;
+            case 27:
+                escaped = true;
+                break;
         }
     });
 

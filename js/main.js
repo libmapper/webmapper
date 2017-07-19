@@ -10,6 +10,8 @@ var devFilter;
 var saverLoader;
 var viewSelector;
 
+var input;
+
 window.onload = init;           // Kick things off
 
 /* The main program. */
@@ -173,51 +175,45 @@ function initViewCommands()
 
     $('#loadButton').click(function(e) {
         e.stopPropagation();
-        var input = $(document.createElement("input"));
-        input.attr("type", "file");
-        // add onchange handler if you wish to get the file :)
-        input.on('change', function(e) {
-            var f = e.target.files[0];
-            let reader = new FileReader();
-            reader.onload = (function(file) {
-                return function(e) {
-                    view.switch_view("load");
-                    view.parse_file(e.target.result)
-                };
-            })(f);
-            reader.readAsText(f);
-        });
         input.trigger("click"); // open dialog
     });
 
     $('body').on('keydown.list', function(e) {
         let new_view = null;
-        if (e.which == 49) {
-            /* 1 */
-            new_view = 'list';
+        switch (e.which) {
+            case 49:
+                /* 1 */
+                new_view = 'list';
+                break;
+            case 50:
+                /* 2 */
+                new_view = 'graph';
+                break;
+            case 51:
+                /* 3 */
+                new_view = 'canvas';
+                break;
+            case 52:
+                /* 4 */
+                new_view = 'grid';
+                break;
+            case 53:
+                /* 5 */
+                new_view = 'hive';
+                break;
+            case 54:
+                /* 6 */
+                new_view = 'balloon';
+                break;
+            case 79:
+                if (e.metaKey == true) {
+                    e.preventDefault();
+                    input.trigger("click");
+                }
+                break;
+            default:
+                console.log('key:', e.which);
         }
-        else if (e.which == 50) {
-            /* 2 */
-            new_view = 'graph';
-        }
-        else if (e.which == 51) {
-            /* 3 */
-            new_view = 'canvas';
-        }
-        else if (e.which == 52) {
-            /* 4 */
-            new_view = 'grid';
-        }
-        else if (e.which == 53) {
-            /* 5 */
-            new_view = 'hive';
-        }
-        else if (e.which == 54) {
-            /* 6 */
-            new_view = 'balloon';
-        }
-        else
-            console.log('key:', e.which);
         if (new_view) {
             view.switch_view(new_view);
             $('.viewButton').removeClass("viewButtonsel");
@@ -320,6 +316,37 @@ function initViewCommands()
     // currently implemented in List view only
     $("#container").on("updateSaveLocation", function(e){
         mapProperties.updateSaveLocation(view.get_save_location());
+    });
+
+    input = $(document.createElement("input"));
+    input.attr("type", "file");
+    input.on('change', function(e) {
+        var f = e.target.files[0];
+        let reader = new FileReader();
+        reader.onload = (function(file) {
+            return function(e) {
+                let parsed = tryParseJSON(e.target.result);
+                if (!parsed || !parsed.fileversion || !parsed.mapping) {
+                    console.log("error: invalid file");
+                    reader.abort();
+                    return;
+                }
+                if (parsed.fileversion != "2.2") {
+                    console.log("error: unsupported fileversion",
+                                parsed.fileversion);
+                    reader.abort();
+                    return;
+                }
+                if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
+                    console.log("error: no maps in file");
+                    reader.abort();
+                    return;
+                }
+                view.switch_view("load");
+                view.parse_file(parsed);
+            };
+        })(f);
+        reader.readAsText(f);
     });
 }
 

@@ -13,7 +13,7 @@ SaverLoader.prototype = {
                 "<div class='topMenuTitle'><strong>FILE</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div id='saveButton'>Save</div>"+
-                    "<div id='loadButton'>Load</div>"+
+                    "<div id='loadButton'>Open</div>"+
                 "</div>"+
             "</div>");
     },
