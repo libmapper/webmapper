@@ -172,4 +172,162 @@ function tryParseJSON (jsonString){
     }
     catch (e) { }
     return false;
-};
+}
+
+function constrain(obj, bounds, border) {
+    if (obj.left < (bounds.left + obj.width * 0.5 + border))
+        obj.left = bounds.left + obj.width * 0.5 + border;
+    else if (obj.left > (bounds.left + bounds.width - obj.width * 0.5 - border))
+        obj.left = bounds.left + bounds.width - obj.width * 0.5 - border;
+    if (obj.top < (bounds.top + obj.height * 0.5 + border))
+        obj.top = obj.height * 0.5 + border;
+    else if (obj.top > (bounds.top + bounds.height - obj.height * 0.5 - border))
+        obj.top = bounds.top + bounds.height - obj.height * 0.5 - border;
+}
+
+function labelwidth(label) {
+    return label.length * 8;
+}
+
+function labeloffset(start, label) {
+    return {'x': start.x + label.length * 4 + 3,
+        'y': start.y - 10 };
+}
+
+function circle_path(x, y, radius) {
+    return [['M', x + radius * 0.65, y - radius * 0.65],
+            ['a', radius, radius, 0, 1, 0, 0.001, 0.001],
+            ['z']];
+}
+
+function rect_path(dim) {
+    return [['M', dim.left, dim.top],
+            ['l', dim.width, 0],
+            ['l', 0, dim.height],
+            ['l', -dim.width, 0],
+            ['z']];
+}
+
+function self_path(x1, y1, x2, y2) {
+    let mp = [(x1 + x2) * 0.5, (y1 + y2) * 0.5]
+    if (x1 == x2) {
+        let d = Math.abs(y1 - y2);
+        let thresh = container_frame.width * 0.5;
+        if (d > thresh)
+            d = thresh;
+        mp[0] += (x1 > thresh) ? -d : d;
+        return [['M', x1, y1],
+                ['C', mp[0], y1, mp[0], y2, x2, y2]];
+    }
+    if (y1 == y2) {
+        let d = Math.abs(x1 - x2);
+        let thresh = container_frame.height * 0.5;
+        if (d > thresh)
+            d = thresh;
+        mp[1] += (y1 > thresh) ? -d : d;
+        return [['M', x1, y1],
+                ['C', x1, mp[1], x2, mp[1], x2, y2]];
+    }
+    return [['M', x1, y1],
+            ['S', mp[0], mp[1], x2, y2]];
+}
+
+function canvas_rect_path(dim) {
+    let path = [['M', dim.left - dim.width * 0.5, dim.top],
+                ['l', dim.width, 0]];
+    return path;
+}
+
+function canvas_bezier(map) {
+    let src = map.src.canvas_object;
+    let dst = map.dst.canvas_object;
+    let src_offset = (src.width * 0.5 + 10);
+    let dst_offset = (dst.width * -0.5 - 10);
+    return [['M', src.left + src_offset, src.top],
+            ['C', src.left + src_offset * 3, src.top,
+             dst.left + dst_offset * 3, dst.top,
+             dst.left + dst_offset, dst.top]];
+}
+
+function grid_path(row, col) {
+    if (row && col) {
+        return [['M', col.left, col.top],
+                ['l', col.width, 0],
+                ['L', col.left + col.width, row.top],
+                ['L', row.left + row.width, row.top],
+                ['l', 0, row.height],
+                ['L', col.left + col.width, row.top + row.height],
+                ['L', col.left + col.width, col.top + col.height],
+                ['l', -col.width, 0],
+                ['L', col.left, row.top + row.height],
+                ['L', row.left, row.top + row.height],
+                ['l', 0, -row.height],
+                ['L', col.left, row.top],
+                ['z']];
+    }
+    else if (row)
+        return [['M', 0, row.top],
+                ['l', container_frame.width, 0],
+                ['l', 0, row.height],
+                ['l', -container_frame.width, 0],
+                ['Z']];
+    else if (col)
+        return [['M', col.left, 0],
+                ['l', col.width, 0],
+                ['l', 0, container_frame.height],
+                ['l', -col.width, 0],
+                ['Z']];
+    return null;
+}
+
+function list_path(src, dst, connect) {
+    if (src && dst && connect) {
+        let mp = container_frame.width * 0.5;
+        return [['M', src.left, src.top],
+                ['l', src.width, 0],
+                ['C', mp, src.top, mp, dst.top, dst.left, dst.top],
+                ['l', dst.width, 0],
+                ['l', 0, dst.height],
+                ['l', -dst.width, 0],
+                ['C', mp, dst.top + dst.height, mp, src.top + src.height,
+                 src.left + src.width, src.top + src.height],
+                ['l', -src.width, 0],
+                ['Z']];
+    }
+    let path = [];
+    if (src) {
+        path.push(['M', src.left, src.top],
+                  ['l', src.width, 0],
+                  ['l', 0, src.height],
+                  ['l', -src.width, 0],
+                  ['Z']);
+    }
+    if (dst) {
+        path.push(['M', dst.left, dst.top],
+                  ['l', dst.width, 0],
+                  ['l', 0, dst.height],
+                  ['l', -dst.width, 0],
+                  ['Z']);
+    }
+    return path;
+}
+
+function remove_object_svg(obj, speed, easing) {
+    if (!obj.view)
+        return;
+    if (obj.view.label) {
+        obj.view.label.stop();
+        obj.view.label.animate({'stroke-opacity': 0,
+                               'fill-opacity': 0}, speed, easing,
+                               function() {
+                               this.remove();
+                               });
+    }
+    obj.view.label = null;
+    obj.view.stop();
+    obj.view.animate({'stroke-opacity': 0,
+                     'fill-opacity': 0}, speed, easing, function() {
+                     this.remove();
+                     });
+    obj.view = null;
+}

@@ -407,3 +407,11 @@ function switch_mode(newMode)
 
     mapProperties.clearMapProperties();
 }
+
+function select_obj(obj) {
+    if (obj.view.selected)
+        return false;
+    obj.view.selected = true;
+    obj.view.animate({'stroke': 'red', 'fill': 'red'}, 50);
+    return true;
+}
