@@ -290,20 +290,15 @@ def handler_page(out, args):
 <script type="text/javascript" src="includes/jquery-2.0.3.min.js"></script> <!-- JQuery -->
 <script type="text/javascript" src="includes/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI -->
 <script type="text/javascript" src="includes/json2.js"></script> <!-- JSON -->
+<script type="text/javascript" src="includes/raphael.min.js"></script>
 
 <script type="text/javascript" src="js/util.js"></script>
 <script type="text/javascript" src="js/command.js"></script>
-<script type="text/javascript" src="js/LibMapperModel.js"></script>
+<script type="text/javascript" src="js/Model.js"></script>
 
-<!-- List View includes -->
-<script type="text/javascript" src="js/viz/list.js"></script>
-<script type="text/javascript" src="includes/raphael.min.js"></script>
-<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
-
-<!-- HivePlot View includes -->
-<script type="text/javascript" src="js/viz/hive.js"></script>
-<script type="text/javascript" src="js/viz/mapperTable.js"></script>
-<script type="text/javascript" src="includes/jquery.tablesorter.min.js"></script>
+<!-- View includes -->
+<script type="text/javascript" src="js/View.js"></script>
+<script type="text/javascript" src="js/SignalTable.js"></script>
 
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>
@@ -311,6 +306,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/SignalFilter.js"></script>
 <script type="text/javascript" src="js/SaverLoader.js"></script>
 <script type="text/javascript" src="js/ViewSelector.js"></script>
+
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 <link type="text/css" rel="stylesheet" href="includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
 <script type="text/javascript" src="includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->

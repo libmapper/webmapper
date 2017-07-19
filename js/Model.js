@@ -227,7 +227,7 @@ function MapperModel() {
         }
     }
     this.del_device = function(cmd, dev) {
-//        console.log('remove device');
+        console.log('remove device');
         dev = model.devices.find(dev.name);
         if (!dev)
             return;
@@ -322,6 +322,16 @@ function MapperModel() {
         var key = this.maps.remove(map);
 //        $('#mapPropsDiv').updateMapPropertiesFor(key);
     }
+
+    // delete handlers in case of refresh
+    command.unregister("add_devices");
+    command.unregister("del_device");
+    command.unregister("add_signals");
+    command.unregister("del_signal");
+    command.unregister("add_links");
+    command.unregister("del_link");
+    command.unregister("add_maps");
+    command.unregister("del_map");
 
     command.register("add_devices", this.add_devices.bind(this));
     command.register("del_device", this.del_device.bind(this));

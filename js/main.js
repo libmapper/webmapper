@@ -390,7 +390,7 @@ function switch_mode(newMode)
             view.init();
             break;
         case 'new':
-            view = new HivePlotView(document.getElementById('container'), model);
+            view = new MapperView(document.getElementById('container'), model);
             viewIndex = 3;
             view.init();
             view.on_resize();

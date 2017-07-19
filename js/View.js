@@ -2,7 +2,7 @@
 //              View Class              //
 //++++++++++++++++++++++++++++++++++++++//
 
-function HivePlotView(container, model)
+function MapperView(container, model)
 {
     var _self = this;
     var container_frame = null;
@@ -2177,7 +2177,7 @@ function HivePlotView(container, model)
     }
 }
 
-HivePlotView.prototype = {
+MapperView.prototype = {
 
     // when browser window gets resized
     on_resize : function () {
