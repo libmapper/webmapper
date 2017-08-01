@@ -23,7 +23,7 @@ MapProperties.prototype = {
         $('#mapPropsDiv').append(
             "<div style='width:50%'>"+
                 "<div id='modes' class='signalControl disabled' style='width:100%; padding-bottom:5px;'>Mode: </div>"+
-                "<div id='expression' class='disabled' style='width:100%; padding-top:5px;'>Expression: "+
+                "<div id='expression' class='signalControl disabled' style='width:100%; padding-top:5px;'>Expression: "+
                     "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
                 "</div>"+
             "</div>"+
@@ -31,7 +31,7 @@ MapProperties.prototype = {
 
         for (var m in this.mapModes) {
             $('#modes').append(
-                "<div class='mode mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
+                "<div class='mode' id='mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
         }
 
         //Add the range controls
@@ -213,7 +213,7 @@ MapProperties.prototype = {
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
             mode = mode.charAt(0).toUpperCase() + mode.slice(1);
-            $(".mode"+mode).addClass("modesel");
+            $("#mode"+mode).addClass("modesel");
         }
 
         if (expression != null) {
@@ -262,7 +262,7 @@ MapProperties.prototype = {
     updateMapPropertiesFor : function(key) {
         // check if map is selected
         var map = this.model.maps.find(key);
-        if (map && map.selected == true)
+        if (this.selected(map))
             this.updateMapProperties();
     },
 
@@ -332,8 +332,8 @@ MapProperties.prototype = {
             }
 
             // copy src and dst names
-            msg['src'] = map['src'];
-            msg['dst'] = map['dst'];
+            msg['src'] = map['src'].key;
+            msg['dst'] = map['dst'].key;
 
             // send the command, should receive a /mapped message after.
             container.trigger("setMap", [msg]);

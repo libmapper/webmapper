@@ -494,8 +494,8 @@ function MapperView(container, model)
                         let inc = vis_sigs ? 1 / vis_sigs : 1;
                         dev.signals.each(function(sig) {
                             let remove = false;
-                            if (srcregexp && sig.direction == 'output') {
-                                if (!srcregexp.test(sig.key))
+                            if (sig.direction == 'output') {
+                                if (srcregexp && !srcregexp.test(sig.key))
                                     remove = true;
                             }
                             else if (dstregexp && !dstregexp.test(sig.key)) {
@@ -1046,8 +1046,8 @@ function MapperView(container, model)
                         }
                         dev.signals.each(function(sig) {
                             let remove = false;
-                            if (srcregexp && sig.direction == 'output') {
-                                if (!srcregexp.test(sig.key))
+                            if (sig.direction == 'output') {
+                                if (srcregexp && !srcregexp.test(sig.key))
                                     remove = true;
                             }
                             else if (dstregexp && !dstregexp.test(sig.key)) {
@@ -1116,13 +1116,54 @@ function MapperView(container, model)
                 break;
             case 'balloon':
                 let path = circle_path(svg_frame.left + svg_frame.width * 0.33,
-                                       svg_frame.cy, 1);
+                                       svg_frame.cy, 0);
                 path.push(circle_path(svg_frame.left + svg_frame.width * 0.67,
-                                      svg_frame.cy, 1));
+                                      svg_frame.cy, 0));
                 let outline = svgArea.path().attr({'path': path,
                                                    'stroke-opacity': 0,
                                                    'fill': 'lightgray',
                                                    'fill-opacity': 0.25}).toBack();
+                let src_nodes = {};
+                let dst_nodes = {};
+
+                function adjust_nodes(nodes, px, py, pr, depth, rev) {
+                    let count = Object.keys(nodes).length;
+                    if (count == 0)
+                        return;
+//                    if (depth > 1)
+//                        return;
+                    console.log('adjusting');
+                    let angleInc = Math.PI / count * (rev ? -1 : 1);
+                    let offset = angleInc * (count - 1) * 0.5;
+                    if (!rev)
+                        offset += Math.PI;
+                    let r = pr / count * 1.2;
+                    let key, idx = 0;
+                    for (key in nodes) {
+                        let node = nodes[key];
+                        console.log('node', key, node);
+                        let angle = offset - angleInc * idx;
+                        let x = px + Math.cos(angle) * (pr - r);
+                        let y = py + Math.sin(angle) * (pr - r);
+                        console.log('moving node', key, 'by', Math.cos(angle) * r,
+                                    Math.sin(angle) * r, ', radius:', r, ', angle:', angle, ', offset:', offset);
+                        node.view.animate({'cx': x, 'cy': y, 'r': r},
+                                           default_speed, 'linear');
+                        node.label.animate({'x': x + r + 5, 'y': y}, default_speed, 'linear');
+                        if (node.children)
+                            adjust_nodes(node.children, x, y, r, depth + 1, rev);
+                        idx += 1;
+                    }
+                }
+
+                function remove_node_svg(root) {
+                    if (root.view)
+                        root.view.remove();
+                    if (root.label)
+                        root.label.remove();
+                    for (var i in root.children)
+                        remove_node_svg(root.children[i]);  // recurse
+                }
 
                 redraw = function(speed) {
                     if (speed == null)
@@ -1135,6 +1176,68 @@ function MapperView(container, model)
                                           svg_frame.height * 0.46));
                     outline.animate({'path': path,
                                      'fill-opacity': 0.5}, speed, easing);
+
+                    model.devices.each(function(dev) {
+                        if (dev.view) {
+                            // remove associated svg element
+                            dev.view.stop();
+                            dev.view.animate({'stroke-opacity': 0,
+                                              'fill-opacity': 0}, speed, easing,
+                                             function() {
+                                this.remove();
+                                dev.view = null;
+                            });
+                        }
+                        let line_count = 0;
+                        dev.signals.each(function(sig) {
+                            remove_object_svg(sig, default_speed, 'linear');
+                            if (sig.direction == 'output') {
+                                if (srcregexp && !srcregexp.test(sig.key))
+                                    return;
+                            }
+                            else if (dstregexp && !dstregexp.test(sig.key)) {
+                                return;
+                            }
+                            let namespace = sig.key.split('/');
+                            let ptr = sig.direction == 'output' ? src_nodes : dst_nodes;
+                            let x, y, r, ns_idx = 1;
+                            for (var i in namespace) {
+                                let name = namespace[i];
+                                if (name in ptr) {
+                                    ptr = ptr[name].children;
+                                }
+                                else {
+                                    x = ns_idx * 50;
+                                    y = line_count * 20;
+                                    line_count += 1;
+                                    let r = 20 / ns_idx;
+                                    let new_node = {'view': svgArea.circle(x, y, r).attr({'fill': dev.color,
+                                                                                          'fill-opacity': 0.5,
+                                                                                          'stroke-opacity': 0}),
+                                                    'label': svgArea.text(x+r+5, y, name).attr({'font-size': 16,
+                                                                                                'text-anchor': 'start'}),
+                                                    'children': {}};
+                                    ptr[name] = new_node;
+                                    ptr = new_node.children;
+                                }
+                                ns_idx += 1;
+                            }
+                        });
+                    });
+
+                    console.log('srcs', src_nodes);
+                    console.log('dsts', dst_nodes);
+
+                    // arrange hierarchical view
+                    adjust_nodes(src_nodes,
+                                 svg_frame.left + svg_frame.width * 0.33,
+                                 svg_frame.cy,
+                                 svg_frame.height * 0.46, 0, false);
+                    adjust_nodes(dst_nodes,
+                                 svg_frame.left + svg_frame.width * 0.67,
+                                 svg_frame.cy,
+                                 svg_frame.height * 0.46, 0, true);
+
                     first_transition = false;
                 }
                 cleanup = function() {
@@ -1142,6 +1245,12 @@ function MapperView(container, model)
                         outline.remove();
                         outline = null;
                     }
+                    for (var i in src_nodes)
+                        remove_node_svg(src_nodes[i]);
+                    delete src_nodes;
+                    for (var i in dst_nodes)
+                        remove_node_svg(dst_nodes[i]);
+                    delete dst_nodes;
                 }
                 break;
             case 'load':
@@ -1247,7 +1356,7 @@ function MapperView(container, model)
                         fileRep.devices.push(device);
                         count += 1;
                     }
-                    fileRep.label.attr({'text': 'click to load'});
+                    fileRep.label.attr({'text': 'Drag handles\nto devices\n\nclick to load'});
                     var loaded = true;
                 }
 
@@ -1465,12 +1574,12 @@ function MapperView(container, model)
                             for (var i in fileRep.devices) {
                                 let dev = fileRep.devices[i];
                                 if (dev.label)
-                                    dev.label.animate({'stroke-opacity': 0}, default_speed,
+                                    dev.label.animate({'stroke-opacity': 0}, default_speed * 0.5,
                                                        'linear', function() {
                                         this.remove();
                                     });
                                 if (dev.view)
-                                    dev.view.animate({'stroke-opacity': 0}, default_speed,
+                                    dev.view.animate({'fill-opacity': 0}, default_speed * 0.5,
                                                       'linear', function() {
                                         this.remove();
                                     });
@@ -1494,8 +1603,8 @@ function MapperView(container, model)
                         });
 
                         fileRep.label = svgArea.text(svg_frame.cx, svg_frame.cy, 'select file');
-                        fileRep.label.attr({'font-size': 36,
-                                           'fill': 'white'});
+                        fileRep.label.attr({'font-size': 24,
+                                            'fill': 'white'});
                         fileRep.label.node.setAttribute('pointer-events', 'none');
                         first_transition = false;
                     }
@@ -1520,25 +1629,49 @@ function MapperView(container, model)
                         let path;
 
                         if (target_table == 'left') {
-                            path = [['M', svg_frame.cx, svg_frame.cy],
-                                    ['S', svg_frame.cx, target.cy,
-                                          left_tw, target.cy]];
+                            let qx = (left_tw + svg_frame.cx) * 0.5;
+                            let top_angle = Math.atan2(target.top - svg_frame.cy,
+                                                       qx - svg_frame.cx);
+                            let bot_angle = Math.atan2(target.top + target.height - svg_frame.cy,
+                                                       qx - svg_frame.cx);
+                            top_angle += Math.PI * 0.5;
+                            bot_angle -= Math.PI * 0.5;
+                            let top_isect = [svg_frame.cx + Math.cos(top_angle) * 100, svg_frame.cy + Math.sin(top_angle) * 100];
+                            let bot_isect = [svg_frame.cx + Math.cos(bot_angle) * 100, svg_frame.cy + Math.sin(bot_angle) * 100];
+                            path = [['M', left_tw, target.top],
+                                    ['S', qx, target.top, top_isect[0], top_isect[1]],
+                                    ['L', bot_isect[0], bot_isect[1]],
+                                    ['S', qx, target.top + target.height, left_tw, target.top + target.height],
+                                    ['Z']];
                             dev.label.attr({'x': left_tw + 10,
                                             'y': target.cy,
                                             'text-anchor': 'start'});
                         }
                         else {
-                            path = [['M', svg_frame.cx, svg_frame.cy],
-                                    ['S', svg_frame.cx, target.cy,
-                                          container_frame.width - right_tw, target.cy]];
-                            dev.label.attr({'x': container_frame.width - right_tw - 10,
+                            let x = container_frame.width - right_tw;
+                            let qx = (x + svg_frame.cx) * 0.5;
+                            let top_angle = Math.atan2(target.top - svg_frame.cy,
+                                                       qx - svg_frame.cx);
+                            let bot_angle = Math.atan2(target.top + target.height - svg_frame.cy,
+                                                       qx - svg_frame.cx);
+                            top_angle -= Math.PI * 0.5;
+                            bot_angle += Math.PI * 0.5;
+                            let top_isect = [svg_frame.cx + Math.cos(top_angle) * 100, svg_frame.cy + Math.sin(top_angle) * 100];
+                            let bot_isect = [svg_frame.cx + Math.cos(bot_angle) * 100, svg_frame.cy + Math.sin(bot_angle) * 100];
+                            path = [['M', x, target.top],
+                                    ['S', qx, target.top, top_isect[0], top_isect[1]],
+                                    ['L', bot_isect[0], bot_isect[1]],
+                                    ['S', qx, target.top + target.height, x, target.top + target.height],
+                                    ['Z']];
+                            dev.label.attr({'x': x - 10,
                                             'y': target.cy,
                                             'text-anchor': 'end'});
                         }
                         dev.view.attr({'path': path,
-                                       'stroke-width': target.height,
-                                       'stroke': color,
-                                       'stroke-opacity': 0.5}).toFront();
+                                       'stroke-width': 0,
+                                       'stroke-opacity': 0,
+                                       'fill': color,
+                                       'fill-opacity': 0.5}).toFront();
                         dev.label.toFront();
                     }
                     if (fileRep.view)
@@ -1690,16 +1823,26 @@ function MapperView(container, model)
     }
 
     function update_maps(map, event) {
-        if (event == 'removing' && map.view) {
-            map.view.remove();
-            map.view = null;
-            return;
+        console.log('update_maps()', event);
+        switch (event) {
+            case 'added':
+                if (!map.view)
+                    redraw();
+                break;
+            case 'modified':
+                console.log('  ', map);
+                if (map.view && map.view.selected)
+                    $('#container').trigger("updateMapPropertiesFor", map.key);
+                break;
+            case 'removing':
+                if (map.view) {
+                    map.view.remove();
+                    map.view = null;
+                }
+                break;
+            case 'removed':
+                redraw();
         }
-        else if (event == 'added' && !map.view) {
-            redraw();
-        }
-        else if (event == 'removed')
-            redraw();
     }
 
     $('body').on('keydown.list', function(e) {

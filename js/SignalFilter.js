@@ -15,10 +15,10 @@ SignalFilter.prototype = {
                 "<div class='topMenuTitle'><strong>FILTER</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div>Sources: "+
-                        "<input type='text' id='srcSearch' style='float:right; width:calc(100% - 95px);'></input>"+
+                        "<input type='search' id='srcSearch' style='float:right; width:calc(100% - 95px);'></input>"+
                     "</div>"+
                     "<div>Destinations: "+
-                        "<input type='text' id='dstSearch' style='float:right; width:calc(100% - 95px);'></input>"+
+                        "<input type='search' id='dstSearch' style='float:right; width:calc(100% - 95px);'></input>"+
                     "</div>"+
                 "</div>"+
             "</div>");

@@ -95,9 +95,9 @@ thead, #svgTop, #networkMenu {
 }
 
 /* highlights */
-.modesel, .calibratesel .displayTable #networkMenu {
-/*    background-color: #9CC2CF;*/
-}
+/*.modesel, .calibratesel .displayTable #networkMenu {*/
+/*/*    background-color: #9CC2CF;*/*/
+/*}*/
 
 .calibratesel {
     background-color: #9CC2CF;
@@ -246,6 +246,10 @@ path {
     margin: 2px;
     list-style: none;
     cursor: pointer;
+}
+
+.modesel {
+    background-color: rgba(20, 20, 20, 0.1);
 }
 
 .utils {
@@ -523,11 +527,26 @@ form {
     width: 50%;
     float: left;
 }
+
 .mode {
     padding-right: 3pt;
 /*    margin-bottom: 10px;*/
     cursor: pointer;
     display: inline-block;
+/*    border: 1px solid black;*/
+}
+
+#modeLinear {
+    padding-left: 5px;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#modeExpression {
+    padding-left: 3px;
+    padding-right: 5px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
 }
 
 .button {

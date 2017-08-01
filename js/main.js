@@ -258,7 +258,7 @@ function initViewCommands()
     });
 
     // Search function boxes
-    $('#srcSearch, #dstSearch').on('keyup', function(e) {
+    $('#srcSearch, #dstSearch').on('input', function(e) {
         e.stopPropagation();
         let id = e.currentTarget.id;
         view.filter_signals(id, $('#'+id).val());
@@ -282,39 +282,44 @@ function initViewCommands()
     // link command
     // src = "devicename"
     // dst = "devicename"
-    $("#container").on("link", function(e, src, dst){
+    $("#container").on("link", function(e, src, dst) {
         model.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
     });
 
     // unlink command
     // src = "devicename"
     // dst = "devicename"
-    $("#container").on("unlink", function(e, src, dst){
+    $("#container").on("unlink", function(e, src, dst) {
         model.links.remove(src, dst);
     });
 
     // map command
     // src = "devicename/signalname"
     // dst = "devicename/signalname"
-    $("#container").on("map", function(e, src, dst, args){
+    $("#container").on("map", function(e, src, dst, args) {
         command.send('map', [src, dst, args]);
     });
 
     // unmap command
     // src = "devicename/signalname"
     // dst = "devicename/signalname"
-    $("#container").on("unmap", function(e, src, dst){
+    $("#container").on("unmap", function(e, src, dst) {
         command.send('unmap', [src, dst]);
     });
 
     // asks the view for the selected maps and updates the edit bar
-    $("#container").on("updateMapProperties", function(e){
+    $("#container").on("updateMapProperties", function(e) {
         mapProperties.updateMapProperties();
+    });
+
+    // updated the properties for a specific map
+    $("#container").on("updateMapPropertiesFor", function(e, key) {
+        mapProperties.updateMapPropertiesFor(key);
     });
 
     // asks the view for the save button link (based on the active device)
     // currently implemented in List view only
-    $("#container").on("updateSaveLocation", function(e){
+    $("#container").on("updateSaveLocation", function(e) {
         mapProperties.updateSaveLocation(view.get_save_location());
     });
 
