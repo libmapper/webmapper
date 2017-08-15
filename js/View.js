@@ -573,7 +573,8 @@ function MapperView(container, model)
                         let dst = map.dst.position;
                         if (!map.view) {
                             map.view = svgArea.path([['M', src.x, src.y], ['l', 0, 0]])
-                                              .attr({'arrow-end': 'block-wide-long'});
+                                              .attr({'stroke-width': 2,
+                                                     'arrow-end': 'block-wide-long'});
                         }
                         let path = [['M', src.x, src.y],
                                     ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
@@ -582,7 +583,8 @@ function MapperView(container, model)
                         path = Raphael.getSubpath(path, 10, len - 10);
                         map.view.animate({'path': path,
                                           'fill-opacity': '0',
-                                          'stroke-opacity': 1},
+                                          'stroke-opacity': 1,
+                                          'stroke-width': 2},
                                          speed, easing, function() {
                             map.view.attr({'arrow-end': 'block-wide-long'}).toFront();
                         });
@@ -706,7 +708,8 @@ function MapperView(container, model)
                         }
 
                         if (curve) {
-                            map.view.attr({'arrow-end': 'block-wide-long'});
+                            map.view.attr({'stroke-width': 2,
+                                           'arrow-end': 'block-wide-long'});
                             if (map.view.new) {
                                 map.view.attr({'path': self_path(src.cx, src.cy, src.cx, src.cy),
                                                'fill-opacity': 0,
@@ -728,7 +731,8 @@ function MapperView(container, model)
                             }
                         }
                         else {
-                            map.view.attr({'arrow-end': 'none'});
+                            map.view.attr({'arrow-end': 'none',
+                                           'stroke-width': 2});
                             if (map.view.new) {
                                 map.view.attr({'path': (src.cx > dst.cx)
                                               ? [['M', src.left + src.width, dst.top],
@@ -999,7 +1003,8 @@ function MapperView(container, model)
                         if (!map.view)
                             map.view = svgArea.path();
                         let path = canvas_bezier(map);
-                        map.view.attr({'arrow-end': 'block-wide-long'});
+                        map.view.attr({'stroke-width': 2,
+                                       'arrow-end': 'block-wide-long'});
                         if (!map.canvas_object) {
                             map.canvas_object = true;
                             let pos = map.src.canvas_object;
@@ -1098,7 +1103,8 @@ function MapperView(container, model)
                         let src = map.src.position;
                         let dst = map.dst.position;
                         if (!map.view)
-                            map.view = svgArea.path([['M', src.x, src.y], ['l', 0, 0]]);
+                            map.view = svgArea.path([['M', src.x, src.y], ['l', 0, 0]])
+                                              .attr({'stroke-width': 2});
                         let mp = new_pos((src.x + dst.x) * 0.5, (src.y + dst.y) * 0.5);
                         mp.x += (mp.x - svg_frame.cx) * 0.2;
                         mp.y += (mp.y - svg_frame.cy) * 0.2;
