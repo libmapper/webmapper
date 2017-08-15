@@ -27,6 +27,7 @@ function init() {
 
     // add the view wrapper
     $('body').append("<div id='container'></div>");
+    $('body').append("<div id='status'></div>");
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu

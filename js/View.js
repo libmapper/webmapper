@@ -402,9 +402,12 @@ function MapperView(container, model)
         }
 
         svgzoom = 1;
+        svgposx = 0;
+        svgposy = 0;
         svgArea.setViewBox(0, 0,
                            container_frame.width * svgzoom,
                            container_frame.height * svgzoom, false);
+        $('#status').text('');
 
         svg_offset_left = function(rect) {
             rect.left = left_tw;
@@ -1813,8 +1816,6 @@ function MapperView(container, model)
         }
         else if (event == 'added' && !sig.view) {
             sig.position = new_pos();
-            if (currentView == 'list' || currentView == 'canvas' || currentView == 'grid')
-                return;
             if (repaint)
                 redraw(default_speed, true);
         }
@@ -1920,14 +1921,23 @@ function MapperView(container, model)
                 redraw(0, false);
         }
         else {
-            svgzoom += delta * 0.05;
-            if (svgzoom < 0.1)
-                svgzoom = 0.1;
-            else if (svgzoom > 20)
-                svgzoom = 20;
-            svgArea.setViewBox(0, 0,
-                               svg_frame.width * svgzoom,
-                               svg_frame.height * svgzoom, false);
+            let newzoom = svgzoom + delta * 0.01;
+            if (newzoom < 0.1)
+                newzoom = 0.1;
+            else if (newzoom > 20)
+                newzoom = 20;
+            if (newzoom == svgzoom)
+                return;
+            let zoomdiff = svgzoom - newzoom;
+            svgposx += x * zoomdiff;
+            svgposy += (y - container_frame.top - svg_frame.top) * zoomdiff;
+            svgArea.setViewBox(svgposx, svgposy,
+                               svg_frame.width * newzoom,
+                               svg_frame.height * newzoom, false);
+
+            $('#status').text('zoom: '+(100/newzoom).toFixed(2)+'%');
+
+            svgzoom = newzoom;
         }
     }
 
@@ -1960,11 +1970,13 @@ function MapperView(container, model)
             redraw(0, false);
         }
         else {
-            svgposx += delta_x / svgzoom;
-            svgposy += delta_y;
+            svgposx += delta_x * svgzoom;
+            svgposy += delta_y * svgzoom;
+
             svgArea.setViewBox(svgposx, svgposy,
                                svg_frame.width * svgzoom,
                                svg_frame.height * svgzoom, false);
+            $('#status').text('pan: ['+svgposx.toFixed(2)+', '+svgposy.toFixed(2)+']');
         }
     }
 
