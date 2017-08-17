@@ -238,15 +238,46 @@ function canvas_rect_path(dim) {
     return path;
 }
 
-function canvas_bezier(map) {
-    let src = map.src.canvas_object;
-    let dst = map.dst.canvas_object;
-    let src_offset = (src.width * 0.5 + 10);
-    let dst_offset = (dst.width * -0.5 - 10);
-    return [['M', src.left + src_offset, src.top],
-            ['C', src.left + src_offset * 3, src.top,
-             dst.left + dst_offset * 3, dst.top,
-             dst.left + dst_offset, dst.top]];
+function canvas_bezier(map, table, table_x) {
+    let src_x, src_y, dst_x, dst_y;
+    let src_cx = null, dst_cx = null;
+    if (map.src.canvas_object) {
+        let o = map.src.canvas_object
+        let offset = o.width * 0.5 + 10;
+        src_x = o.left + offset;
+        src_cx = o.left + offset * 3;
+        src_y = o.top;
+    }
+    else {
+        let o = table.row_from_name(map.src.key);
+        if (!o)
+            return;
+        src_x = table_x;
+        src_y = o.cy;
+    }
+    if (map.dst.canvas_object) {
+        let o = map.dst.canvas_object
+        let offset = o.width * -0.5 - 10;
+        dst_x = o.left + offset;
+        dst_cx = o.left + offset * 3;
+        dst_y = o.top;
+    }
+    else {
+        let o = table.row_from_name(map.dst.key);
+        if (!o)
+            return;
+        dst_x = table_x;
+        dst_y = o.cy;
+    }
+    if (!src_cx && !dst_cx)
+        src_cx = dst_cx = Math.sqrt(Math.abs(src_y - dst_y)) * 2 + table_x;
+    else if (!src_cx)
+        src_cx = (src_x + dst_x) * 0.5;
+    else if (!dst_cx)
+        dst_cx = (src_x + dst_x) * 0.5;
+
+    return [['M', src_x, src_y],
+            ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
 }
 
 function grid_path(row, col) {

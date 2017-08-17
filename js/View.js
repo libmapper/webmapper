@@ -41,6 +41,8 @@ function MapperView(container, model)
     var snappingTo = null;
     var escaped = false;
 
+    var trashing = false;
+
     this.redraw = function(duration, update_tables) {
         if (redraw)
             redraw(duration, update_tables);
@@ -139,10 +141,6 @@ function MapperView(container, model)
     }
 
     function set_sig_hover(sig) {
-        sig.view.mouseup(function() {
-            if (draggingFrom && snappingTo)
-                $('#container').trigger('map', [draggingFrom.key, snappingTo.key]);
-        });
         sig.view.hover(
             function() {
                 if (currentView == 'canvas') {
@@ -220,6 +218,18 @@ function MapperView(container, model)
     }
 
     function set_sig_drag(sig) {
+        sig.view.mouseup(function() {
+            if (draggingFrom && snappingTo)
+                $('#container').trigger('map', [draggingFrom.key, snappingTo.key]);
+            else if (trashing) {
+                sig.view.label.remove();
+                sig.view.remove();
+                sig.view = null;
+                sig.canvas_object = null;
+                trashing = false;
+                redraw(0, false);
+            }
+        });
         sig.view.drag(
             function(dx, dy, x, y, event) {
                 if (currentView != 'canvas') {
@@ -242,6 +252,7 @@ function MapperView(container, model)
                     draggingFrom = null;
                     delete sig.canvas_object.drag_offset;
                     dragging = null;
+                    trashing = false;
                     cursor.attr({'stroke-opacity': 0,
                                  'arrow-start': 'none',
                                  'arrow-end': 'none'});
@@ -252,10 +263,26 @@ function MapperView(container, model)
                     obj.left = x + obj.drag_offset.x;
                     obj.top = y + obj.drag_offset.y;
                     constrain(obj, svg_frame, 5);
+
+                    sig.view.stop()
                     sig.view.attr({'path': canvas_rect_path(obj)});
                     sig.view.label.attr({'x': obj.left,
-                                         'y': obj.top}).toFront();
+                                         'y': obj.top,
+                                         'opacity': 1}).toFront();
+
+                    x -= svg_frame.width + svg_frame.left;
+                    y -= svg_frame.height + container_frame.top;
+                    let dist = Math.sqrt(x * x + y * y)
+                    if (dist < 100) {
+                        sig.view.attr({'stroke': 'gray'});
+                        trashing = true;
+                    }
+                    else {
+                        sig.view.attr({'stroke': sig.device.color});
+                        trashing = false;
+                    }
                     redraw(0, false);
+                    return;
                 }
                 else if (!snappingTo) {
                     let offset = obj.width * 0.5 + 10;
@@ -906,6 +933,16 @@ function MapperView(container, model)
                 leftTable.filter_dir('both');
                 leftTable.show_detail(true);
 
+                let trash = svgArea.path([['M', container_frame.width, container_frame.height],
+                                          ['l', 0, 0],
+                                          ['s', 0, 0, 0, 0],
+                                          ['Z']]);
+                trash.attr({'stroke': 0, 'fill': 'lightgray', 'fill-opacity': 0.5});
+                trash.animate({'path' : [['M', container_frame.width, container_frame.height],
+                                         ['l', 0, -100],
+                                         ['s', -100, 0, -100, 100],
+                                         ['Z']]}, default_speed, easing);
+
                 redraw = function(speed, update_tables) {
                     if (speed == null)
                         speed = default_speed;
@@ -915,102 +952,87 @@ function MapperView(container, model)
                     }
 
                     // hide devices and signals
-                    model.devices.each(function(dev) {
-                        let list = leftTable.row_from_name(dev.name);
-                        if (list) {
-                            list.left = 0;
-                            list.width = left_tw
-                        }
-                        else {
-                            if (dev.view) {
-                                dev.view.stop();
-                                dev.view.animate({'fill-opacity': 0}, speed, easing,
-                                                 function() {
-                                    this.remove();
-                                    dev.view = null;
-                                });
+                    if (!trashing) {
+                        model.devices.each(function(dev) {
+                            let list = leftTable.row_from_name(dev.name);
+                            if (list) {
+                                list.left = 0;
+                                list.width = left_tw
                             }
-                            return;
-                        }
-                        let path = rect_path(list);
-                        if (!dev.view) {
-                            dev.view = svgArea.path(path).attr({'fill-opacity': 0});
-                        }
-                        else
-                            dev.view.stop();
-                        dev.view.toBack();
+                            else {
+                                if (dev.view) {
+                                    dev.view.stop();
+                                    dev.view.animate({'fill-opacity': 0}, speed, easing,
+                                                     function() {
+                                        this.remove();
+                                        dev.view = null;
+                                    });
+                                }
+                                return;
+                            }
+                            let path = rect_path(list);
+                            if (!dev.view) {
+                                dev.view = svgArea.path(path).attr({'fill-opacity': 0});
+                            }
+                            else
+                                dev.view.stop();
+                            dev.view.toBack();
                             dev.view.animate({'path': path,
                                               'fill': dev.color,
                                               'fill-opacity': 0.5,
                                               'stroke-opacity': 0}, speed, easing);
-                        dev.signals.each(function(sig) {
-                            if (!sig.canvas_object) {
-                                // remove associated svg element
-                                remove_object_svg(sig, default_speed, 'linear');
-                                return;
-                            }
-                            let path = canvas_rect_path(sig.canvas_object);
+                            dev.signals.each(function(sig) {
+                                if (!sig.canvas_object) {
+                                    // remove associated svg element
+                                    remove_object_svg(sig, default_speed, 'linear');
+                                    return;
+                                }
+                                let path = canvas_rect_path(sig.canvas_object);
 
-                            let attrs = {'path': path,
-                                         'stroke': dev.color,
-                                         'stroke-opacity': 0.75,
-                                         'stroke-width': 20,
-                                         'fill': 'white',
-                                         'fill-opacity': 1};
-                            if (!sig.view)
-                                sig.view = svgArea.path(path);
-                            else
-                                sig.view.stop();
-                            sig.view.attr({'stroke-linecap': 'round'});
-                            sig.view.animate(attrs, speed, easing);
-                            if (!sig.view.label) {
-                                sig.view.label = svgArea.text(sig.position.x,
-                                                              sig.position.y,
-                                                              sig.key);
-                                sig.view.label.node.setAttribute('pointer-events', 'none');
-                            }
-                            else
-                                sig.view.label.stop();
-                            sig.view.label.attr({'font-size': 16});
-                            sig.view.label.animate({'x': sig.canvas_object.left,
-                                                    'y': sig.canvas_object.top,
-                                                    'opacity': 1,
-                                                    'fill': 'white'},
-                                                    speed, easing).toFront();
-                            if (first_transition) {
-                                set_sig_drag(sig);
-                                set_sig_hover(sig);
-                            }
+                                let attrs = {'path': path,
+                                             'stroke': dev.color,
+                                             'stroke-opacity': 0.75,
+                                             'stroke-width': 20,
+                                             'fill': 'white',
+                                             'fill-opacity': 1};
+                                if (!sig.view)
+                                    sig.view = svgArea.path(path);
+                                else
+                                    sig.view.stop();
+                                sig.view.attr({'stroke-linecap': 'round'});
+                                sig.view.animate(attrs, speed, easing);
+                                if (!sig.view.label) {
+                                    sig.view.label = svgArea.text(sig.position.x,
+                                                                  sig.position.y,
+                                                                  sig.key);
+                                    sig.view.label.node.setAttribute('pointer-events', 'none');
+                                }
+                                else
+                                    sig.view.label.stop();
+                                sig.view.label.attr({'font-size': 16});
+                                sig.view.label.animate({'x': sig.canvas_object.left,
+                                                        'y': sig.canvas_object.top,
+                                                        'opacity': 1,
+                                                        'fill': 'white'},
+                                                        speed, easing).toFront();
+                                if (first_transition) {
+                                    set_sig_drag(sig);
+                                    set_sig_hover(sig);
+                                }
+                            });
                         });
-                    });
+                    }
                     model.maps.each(function(map) {
-                        if (   !map.src.view
-                            || !map.src.canvas_object
-                            || !map.dst.view
-                            || !map.dst.canvas_object) {
-                            if (map.view) {
-                                // remove associated svg element
-                                map.view.attr({'arrow-end': 'none'});
-                                map.view.animate({'stroke-opacity': 0,
-                                                  'fill-opacity': 0}, speed, easing,
-                                                 function() {
-                                    this.remove();
-                                    map.view = null;
-                                });
-                            }
-                            return;
-                        }
-                        if (!map.view)
+                        let path = canvas_bezier(map, leftTable, left_tw);
+                        let color;
+                        if (map.src.canvas_object && map.dst.canvas_object)
+                            color = 'black';
+                        else
+                            color = 'lightgray';
+                        if (!map.view) {
                             map.view = svgArea.path();
-                        let path = canvas_bezier(map);
-                        map.view.attr({'stroke-width': 2,
-                                       'arrow-end': 'block-wide-long'});
-                        if (!map.canvas_object) {
-                            map.canvas_object = true;
-                            let pos = map.src.canvas_object;
-                            let x = pos.left + (pos.width * 0.5 + 10);
-                            let y = pos.top;
-                            map.view.attr({'path': [['M', x, y], ['l', 0, 0]],
+                            map.view.attr({'path': [['M', path[0][1], path[0][2]],
+                                                    ['l', 0, 0]],
                                            'stroke-opacity': 1,
                                            'fill-opacity': 0});
                             let len = Raphael.getTotalLength(path);
@@ -1025,6 +1047,9 @@ function MapperView(container, model)
                                               'stroke-opacity': 1,
                                               'fill-opacity': 0}, speed, easing);
                         }
+                        map.view.attr({'stroke-width': 2,
+                                       'arrow-end': 'block-wide-long',
+                                       'stroke': color});
                     });
                     first_transition = false;
                 }
@@ -1035,6 +1060,8 @@ function MapperView(container, model)
                                 sig.view.undrag();
                         });
                     });
+                    if (trash)
+                        trash.remove();
                 }
                 break;
             case 'graph':
@@ -1926,7 +1953,7 @@ function MapperView(container, model)
             if (update)
                 redraw(0, false);
         }
-        else {
+        else if (currentView != 'canvas') {
             let newzoom = svgzoom + delta * 0.01;
             if (newzoom < 0.1)
                 newzoom = 0.1;
@@ -1975,7 +2002,7 @@ function MapperView(container, model)
             // TODO: should pan svg canvas instead
             redraw(0, false);
         }
-        else {
+        else if (currentView != 'canvas') {
             svgposx += delta_x * svgzoom;
             svgposy += delta_y * svgzoom;
 
