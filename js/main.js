@@ -132,6 +132,8 @@ function initViewCommands()
             if (!map.view)
                 return;
             let m = {'sources': [], 'destinations': []};
+            let src = {};
+            let dst = {};
             for (var attr in map) {
                 switch (attr) {
                     // ignore a few properties
@@ -140,14 +142,10 @@ function initViewCommands()
                     case 'key':
                         break;
                     case 'src':
-                        let src = map.src.key;
-                        if (!m.sources.includes(src))
-                            m.sources.push(src);
+                        src.name = map.src.key;
                         break;
                     case 'dst':
-                        let dst = map.dst.key;
-                        if (!m.destinations.includes(dst))
-                            m.destinations.push(dst);
+                        dst.name = map.dst.key;
                     case 'expression':
                         // need to replace x and y variables with signal references
                         // TODO: better regexp to avoid conflicts with user vars
@@ -158,11 +156,29 @@ function initViewCommands()
                         expr = expr.replace(/\bx(?!\w)/g, "src[0]");
                         m.expression = expr;
                         break;
+                    case 'process_location':
+                        let loc = map[attr];
+                        if (loc == 1)
+                            m.process_location = 'source';
+                        else if (loc == 2)
+                            m.process_location = 'destination';
+                        break;
                     default:
-                        if (map.hasOwnProperty(attr))
+                        if (!map.hasOwnProperty(attr))
+                            break;
+                        if (attr.startsWith('src_')) {
+                            src[attr.slice(4)] = map[attr];
+                        }
+                        else if (attr.startsWith('dst_')) {
+                            dst[attr.slice(4)] = map[attr];
+                        }
+                        else
                             m[attr] = map[attr];
+                        break;
                 }
             }
+            m.sources.push(src);
+            m.destinations.push(dst);
             file.mapping.maps.push(m);
         });
 

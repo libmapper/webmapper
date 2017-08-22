@@ -1327,7 +1327,7 @@ function MapperView(container, model)
                     for (var i in maps) {
                         let map = maps[i];
                         for (var j in map.sources) {
-                            let dev = map.sources[j].split('/')[0];
+                            let dev = map.sources[j].name.split('/')[0];
                             if (dev in devs)
                                 devs[dev].src += 1;
                             else {
@@ -1336,7 +1336,7 @@ function MapperView(container, model)
                             }
                         }
                         for (var j in map.destinations) {
-                            let dev = map.destinations[j].split('/')[0];
+                            let dev = map.destinations[j].name.split('/')[0];
                             if (dev in devs)
                                 devs[dev].dst += 1;
                             else {
@@ -1581,9 +1581,9 @@ function MapperView(container, model)
                                     }
 
                                     // TODO: extend to support convergent maps
-                                    let src = map.sources[0].split('/');
+                                    let src = map.sources[0].name.split('/');
                                     delete map.sources;
-                                    let dst = map.destinations[0].split('/');
+                                    let dst = map.destinations[0].name.split('/');
                                     delete map.destinations;
 
                                     // find device correspondence
