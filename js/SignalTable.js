@@ -395,8 +395,9 @@ function mapperTable(model, id, orientation, detail)
             if (num_dev_sigs <= 0)
                 return;
 
+            let devname = (collapseAll || dev.collapsed ? '▷  ' : '▽  ') + dev.name;
             $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+
-                            dev.name+" ("+num_dev_sigs+" "+title.toLowerCase()+")"+
+                            devname+" ("+num_dev_sigs+" "+title.toLowerCase()+")"+
                             "</th></tr>");
             let even = false;
             for (var i in sigs) {
