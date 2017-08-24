@@ -41,6 +41,7 @@ function MapperView(container, model)
     var snappingTo = null;
     var escaped = false;
 
+    var left_tw, left_th, right_tw, right_th, top_tw, top_th;
     var trashing = false;
 
     this.redraw = function(duration, update_tables) {
@@ -348,145 +349,147 @@ function MapperView(container, model)
 
         first_transition = true;
 
-        // stop current animations
-        $('#leftTable').stop(true, false);
-        $('#rightTable').stop(true, false);
-        $('#topTable').stop(true, false);
+        resize_elements = function(duration) {
+            // stop current animations
+            $('#leftTable').stop(true, false);
+            $('#rightTable').stop(true, false);
+            $('#topTable').stop(true, false);
 
-        let left_tw, left_th, right_tw, right_th, top_tw, top_th;
+            switch (currentView) {
+                case 'list':
+                    left_tw = container_frame.width * 0.4;
+                    left_th = container_frame.height;
+                    right_tw = container_frame.width * 0.4;
+                    right_th = container_frame.height;
+                    top_tw = container_frame.width - left_tw - right_tw;
+                    top_th = 0;
+                    svg_frame.left = left_tw;
+                    svg_frame.top = 0;
+                    svg_frame.height = container_frame.height;
+                    svg_frame.width = container_frame.width - left_tw - right_tw;
+                    svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                    svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
+                    break;
+                case 'canvas':
+                    left_tw = container_frame.width * 0.25;
+                    left_th = container_frame.height;
+                    right_tw = 0;
+                    right_th = container_frame.height;
+                    top_tw = container_frame.width - left_tw - right_tw;
+                    top_th = 0;
+                    svg_frame.left = left_tw;
+                    svg_frame.top = 0;
+                    svg_frame.height = container_frame.height;
+                    svg_frame.width = container_frame.width - left_tw;
+                    svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                    svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
+                    break;
+                case 'grid':
+                    left_tw = 200;
+                    left_th = container_frame.height - 200;
+                    right_tw = 0;
+                    right_th = container_frame.height - 200;
+                    top_tw = container_frame.width - 180;
+                    top_th = 200;
+                    svg_frame.left = left_tw;
+                    svg_frame.top = top_th;
+                    svg_frame.height = container_frame.height - top_th;
+                    svg_frame.width = container_frame.width - left_tw;
+                    svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                    svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
+                    break;
+                case 'link':
+                    left_tw = container_frame.width * 0.25;
+                    left_th = container_frame.height;
+                    right_tw = container_frame.width * 0.25;
+                    right_th = container_frame.height;
+                    top_tw = container_frame.width - left_tw - right_tw;
+                    top_th = 0;
+                    svg_frame.left = left_tw;
+                    svg_frame.top = 0;
+                    svg_frame.height = container_frame.height;
+                    svg_frame.width = container_frame.width - left_tw - right_tw;
+                    svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                    svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
+                    break;
+                default:
+                    left_tw = 0;
+                    left_th = container_frame.height;
+                    right_tw = 0;
+                    right_th = container_frame.height;
+                    top_tw = container_frame.width - left_tw - right_tw;
+                    top_th = 0;
+                    svg_frame.left = 0;
+                    svg_frame.top = 0;
+                    svg_frame.width = container_frame.width;
+                    svg_frame.height = container_frame.height;
+                    svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
+                    svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
+                    break;
+            }
 
-        switch (view) {
-            case 'list':
-                left_tw = container_frame.width * 0.4;
-                left_th = container_frame.height;
-                right_tw = container_frame.width * 0.4;
-                right_th = container_frame.height;
-                top_tw = container_frame.width - left_tw - right_tw;
-                top_th = 0;
-                svg_frame.left = left_tw;
-                svg_frame.top = 0;
-                svg_frame.height = container_frame.height;
-                svg_frame.width = container_frame.width - left_tw - right_tw;
-                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
-                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
-                break;
-            case 'canvas':
-                left_tw = container_frame.width * 0.25;
-                left_th = container_frame.height;
-                right_tw = 0;
-                right_th = container_frame.height;
-                top_tw = container_frame.width - left_tw - right_tw;
-                top_th = 0;
-                svg_frame.left = left_tw;
-                svg_frame.top = 0;
-                svg_frame.height = container_frame.height;
-                svg_frame.width = container_frame.width - left_tw;
-                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
-                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
-                break;
-            case 'grid':
-                left_tw = 200;
-                left_th = container_frame.height - 200;
-                right_tw = 0;
-                right_th = container_frame.height - 200;
-                top_tw = container_frame.width - 180;
-                top_th = 200;
-                svg_frame.left = left_tw;
-                svg_frame.top = top_th;
-                svg_frame.height = container_frame.height - top_th;
-                svg_frame.width = container_frame.width - left_tw;
-                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
-                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
-                break;
-            case 'load':
-                left_tw = container_frame.width * 0.25;
-                left_th = container_frame.height;
-                right_tw = container_frame.width * 0.25;
-                right_th = container_frame.height;
-                top_tw = container_frame.width - left_tw - right_tw;
-                top_th = 0;
-                svg_frame.left = left_tw;
-                svg_frame.top = 0;
-                svg_frame.height = container_frame.height;
-                svg_frame.width = container_frame.width - left_tw - right_tw;
-                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
-                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
-                break;
-            default:
-                left_tw = 0;
-                left_th = container_frame.height;
-                right_tw = 0;
-                right_th = container_frame.height;
-                top_tw = container_frame.width - left_tw - right_tw;
-                top_th = 0;
-                svg_frame.left = 0;
-                svg_frame.top = 0;
-                svg_frame.width = container_frame.width;
-                svg_frame.height = container_frame.height;
-                svg_frame.cx = svg_frame.left + svg_frame.width * 0.5;
-                svg_frame.cy = svg_frame.top + svg_frame.height * 0.5;
-                break;
-        }
+            svgzoom = 1;
+            svgposx = 0;
+            svgposy = 0;
+            svgArea.setViewBox(0, 0,
+                               container_frame.width * svgzoom,
+                               container_frame.height * svgzoom, false);
+            $('#status').text('');
 
-        svgzoom = 1;
-        svgposx = 0;
-        svgposy = 0;
-        svgArea.setViewBox(0, 0,
-                           container_frame.width * svgzoom,
-                           container_frame.height * svgzoom, false);
-        $('#status').text('');
+            svg_offset_left = function(rect) {
+                rect.left = left_tw;
+                rect.cx = left_tw;
+                rect.top += top_th - 20;
+                rect.cy += top_th - 20;
+            }
+            svg_offset_top = function(rect) {
+                rect.left += left_tw;
+                rect.cx += left_tw;
+                rect.top = top_th;
+                rect.cy = top_th;
+            }
 
-        svg_offset_left = function(rect) {
-            rect.left = left_tw;
-            rect.cx = left_tw;
-            rect.top += top_th - 20;
-            rect.cy += top_th - 20;
-        }
-        svg_offset_top = function(rect) {
-            rect.left += left_tw;
-            rect.cx += left_tw;
-            rect.top = top_th;
-            rect.cy = top_th;
-        }
+            animate_leftTable = function() {
+                $('#leftTable').animate({'width': left_tw + 'px'},
+                                        {duration: duration * 0.33,
+                                         step: function(now, fx) {
+                                            leftTableWidth = now;
+                                            $('#topTable').css({
+                                                'width': (container_frame.width - leftTableWidth
+                                                          - rightTableWidth + 20) + 'px',
+                                                'left': leftTableWidth - 20 + 'px'});
+                                         },
+                                         complete: animate_rightTable
+                                        });
+            }
 
-        animate_leftTable = function() {
-            $('#leftTable').animate({'width': left_tw + 'px'},
-                                    {duration: default_speed * 0.33,
-                                     step: function(now, fx) {
-                                        leftTableWidth = now;
-                                        $('#topTable').css({
-                                            'width': (container_frame.width - leftTableWidth
-                                                      - rightTableWidth + 20) + 'px',
-                                            'left': leftTableWidth - 20 + 'px'});
-                                     },
-                                     complete: animate_rightTable
-                                    });
-        }
+            animate_rightTable = function() {
+                $('#rightTable').animate({'width': right_tw + 'px'},
+                                         {duration: duration * 0.33,
+                                         step: function(now, fx) {
+                                            rightTableWidth = now;
+                                            $('#rightTable').css({'left': container_frame.width - now});
+                                            $('#topTable').css({
+                                                'width': (container_frame.width - leftTableWidth
+                                                          - rightTableWidth) + 20 + 'px'});
+                                         }});
+            }
 
-        animate_rightTable = function() {
-            $('#rightTable').animate({'width': right_tw + 'px'},
-                                     {duration: default_speed * 0.33,
-                                     step: function(now, fx) {
-                                        rightTableWidth = now;
-                                        $('#rightTable').css({'left': container_frame.width - now});
-                                        $('#topTable').css({
-                                            'width': (container_frame.width - leftTableWidth
-                                                      - rightTableWidth) + 20 + 'px'});
-                                     }});
-        }
+            arrange_tables = function() {
+                $('#topTable').animate({'height': top_th + 'px'},
+                                       {duration: duration * 0.33,
+                                        step: function(now, fx) {
+                                            topTableHeight = now;
+                                            $('#leftTable, #rightTable').css({
+                                                'height': (container_frame.height
+                                                           - topTableHeight / 200 * 180) + 'px',
+                                                'top': topTableHeight / 200 * 180 + 'px'});
+                                        },
+                                        complete: animate_leftTable
+                                       });
+            }
 
-        arrange_tables = function() {
-            $('#topTable').animate({'height': top_th + 'px'},
-                                   {duration: default_speed * 0.33,
-                                    step: function(now, fx) {
-                                        topTableHeight = now;
-                                        $('#leftTable, #rightTable').css({
-                                            'height': (container_frame.height
-                                                       - topTableHeight / 200 * 180) + 'px',
-                                            'top': topTableHeight / 200 * 180 + 'px'});
-                                    },
-                                    complete: animate_leftTable
-                                   });
+            arrange_tables();
         }
 
         switch (view) {
@@ -663,7 +666,7 @@ function MapperView(container, model)
                             }
                             return;
                         }
-                        let path = grid_path(row, col);
+                        let path = grid_path(row, col, container_frame);
                         if (!dev.view) {
                             dev.view = svgArea.path(path).attr({'fill-opacity': 0});
                         }
@@ -706,7 +709,8 @@ function MapperView(container, model)
                                     return
                                 svg_offset_top(dst);
                                 // both endpoints are 'input' signals
-                                path = self_path(src.cx, top_th, dst.cx, top_th);
+                                path = self_path(src.cx, top_th, dst.cx, top_th,
+                                                 container_frame);
                                 curve = true;
                             }
                         }
@@ -717,7 +721,8 @@ function MapperView(container, model)
                                 return
                             svg_offset_left(src);
                             // both endpoints are 'output' signals
-                            path = self_path(left_tw, src.cy, left_tw, dst.cy);
+                            path = self_path(left_tw, src.cy, left_tw, dst.cy,
+                                             container_frame);
                             curve = true;
                         }
                         else {
@@ -738,7 +743,9 @@ function MapperView(container, model)
                             map.view.attr({'stroke-width': 2,
                                            'arrow-end': 'block-wide-long'});
                             if (map.view.new) {
-                                map.view.attr({'path': self_path(src.cx, src.cy, src.cx, src.cy),
+                                map.view.attr({'path': self_path(src.cx, src.cy,
+                                                                 src.cx, src.cy,
+                                                                 container_frame),
                                                'fill-opacity': 0,
                                                'stroke': map.view.selected ? mapsel : mappath,
                                                'stroke-opacity': 1});
@@ -831,7 +838,7 @@ function MapperView(container, model)
                         let src = leftTable.row_from_name(dev.name);
                         if (src) {
                             src.left = 0;
-                            src.width = left_tw
+                            src.width = left_tw;
                         }
                         let dst = rightTable.row_from_name(dev.name);
                         if (dst) {
@@ -849,7 +856,7 @@ function MapperView(container, model)
                             }
                             return;
                         }
-                        let path = list_path(src, dst, true);
+                        let path = list_path(src, dst, true, container_frame);
                         if (!dev.view) {
                             dev.view = svgArea.path(path).attr({'fill-opacity': 0});
                         }
@@ -938,12 +945,13 @@ function MapperView(container, model)
                                           ['s', 0, 0, 0, 0],
                                           ['Z']]);
                 trash.attr({'stroke': 0, 'fill': 'lightgray', 'fill-opacity': 0.5});
-                trash.animate({'path' : [['M', container_frame.width, container_frame.height],
-                                         ['l', 0, -100],
-                                         ['s', -100, 0, -100, 100],
-                                         ['Z']]}, default_speed, easing);
 
                 redraw = function(speed, update_tables) {
+                    trash.animate({'path' : [['M', container_frame.width, container_frame.height],
+                                             ['l', 0, -100],
+                                             ['s', -100, 0, -100, 100],
+                                             ['Z']]}, default_speed, easing);
+
                     if (speed == null)
                         speed = default_speed;
 
@@ -957,7 +965,7 @@ function MapperView(container, model)
                             let list = leftTable.row_from_name(dev.name);
                             if (list) {
                                 list.left = 0;
-                                list.width = left_tw
+                                list.width = left_tw;
                             }
                             else {
                                 if (dev.view) {
@@ -1289,7 +1297,7 @@ function MapperView(container, model)
                     delete dst_nodes;
                 }
                 break;
-            case 'load':
+            case 'link':
                 leftTable.collapseAll = true;
                 leftTable.filter_dir('output');
                 leftTable.show_detail(false);
@@ -1430,7 +1438,7 @@ function MapperView(container, model)
                         let src = leftTable.row_from_name(dev.name);
                         if (src) {
                             src.left = 0;
-                            src.width = left_tw
+                            src.width = left_tw;
                         }
                         let dst = rightTable.row_from_name(dev.name);
                         if (dst) {
@@ -1448,7 +1456,7 @@ function MapperView(container, model)
                             }
                             return;
                         }
-                        let path = list_path(src, dst, false);
+                        let path = list_path(src, dst, false, container_frame);
                         if (!dev.view) {
                             dev.view = svgArea.path(path).attr({'fill-opacity': 0});
                         }
@@ -1744,8 +1752,8 @@ function MapperView(container, model)
                 break;
         }
         if (first_transition) {
+            setTimeout(resize_elements(default_speed), default_speed);
             redraw(default_speed, true);
-            setTimeout(arrange_tables, default_speed);
         }
     }
 
@@ -1939,7 +1947,7 @@ function MapperView(container, model)
             if (rightTable.zoom(y - container_frame.top - svg_frame.top, delta))
                 redraw(0, false);
         }
-        else if (currentView == 'list' || currentView == 'load') {
+        else if (currentView == 'list' || currentView == 'link') {
             // send to both left and right tables
             let update = leftTable.zoom(y - container_frame.top - svg_frame.top, delta);
             update |= rightTable.zoom(y - container_frame.top - svg_frame.top, delta);
@@ -1989,7 +1997,7 @@ function MapperView(container, model)
             rightTable.pan(delta_y);
             redraw(0, false);
         }
-        else if (currentView == 'list' || currentView == 'load') {
+        else if (currentView == 'list' || currentView == 'link') {
             // send to both left and right tables
             leftTable.pan(delta_y);
             rightTable.pan(delta_y);
@@ -2259,12 +2267,15 @@ function MapperView(container, model)
                         // draw smooth path from table to self
                         if (src_table == topTable)
                             path = self_path(src.cx + 200, 200,
-                                             dst.cx + 200, 200);
+                                             dst.cx + 200, 200,
+                                             container_frame);
                         else if (currentView == 'grid')
                             path = self_path(src.left, src.cy + 180,
-                                             src.left, y + 180);
+                                             src.left, y + 180,
+                                             container_frame);
                         else
-                            path = self_path(src.left, src.cy, src.left, y);
+                            path = self_path(src.left, src.cy, src.left, y,
+                                             container_frame);
                     }
                     else if (currentView == 'grid') {
                         // draw crosshairs and triangle pointing from src to dst
@@ -2363,18 +2374,18 @@ function MapperView(container, model)
             });
         });
     }
-}
 
-MapperView.prototype = {
-
-    // when browser window gets resized
-    on_resize : function () {
+    this.on_resize = function() {
         container_frame = fullOffset($(container)[0]);
         svg_frame = fullOffset($('#svgDiv')[0]);
         svg_frame.cx = svg_frame.width * 0.5;
         svg_frame.cy = svg_frame.height * 0.5;
-        this.switch_view();
-    },
+        resize_elements(0);
+        redraw(default_speed);
+    }
+}
+
+MapperView.prototype = {
 
     cleanup : function () {
         document.onkeydown = null;

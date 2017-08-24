@@ -208,11 +208,11 @@ function rect_path(dim) {
             ['z']];
 }
 
-function self_path(x1, y1, x2, y2) {
+function self_path(x1, y1, x2, y2, frame) {
     let mp = [(x1 + x2) * 0.5, (y1 + y2) * 0.5]
     if (x1 == x2) {
         let d = Math.abs(y1 - y2);
-        let thresh = container_frame.width * 0.5;
+        let thresh = frame.width * 0.5;
         if (d > thresh)
             d = thresh;
         mp[0] += (x1 > thresh) ? -d : d;
@@ -221,7 +221,7 @@ function self_path(x1, y1, x2, y2) {
     }
     if (y1 == y2) {
         let d = Math.abs(x1 - x2);
-        let thresh = container_frame.height * 0.5;
+        let thresh = frame.height * 0.5;
         if (d > thresh)
             d = thresh;
         mp[1] += (y1 > thresh) ? -d : d;
@@ -280,7 +280,7 @@ function canvas_bezier(map, table, table_x) {
             ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
 }
 
-function grid_path(row, col) {
+function grid_path(row, col, frame) {
     if (row && col) {
         return [['M', col.left, col.top],
                 ['l', col.width, 0],
@@ -298,22 +298,22 @@ function grid_path(row, col) {
     }
     else if (row)
         return [['M', 0, row.top],
-                ['l', container_frame.width, 0],
+                ['l', frame.width, 0],
                 ['l', 0, row.height],
-                ['l', -container_frame.width, 0],
+                ['l', -container.width, 0],
                 ['Z']];
     else if (col)
         return [['M', col.left, 0],
                 ['l', col.width, 0],
-                ['l', 0, container_frame.height],
+                ['l', 0, frame.height],
                 ['l', -col.width, 0],
                 ['Z']];
     return null;
 }
 
-function list_path(src, dst, connect) {
+function list_path(src, dst, connect, frame) {
     if (src && dst && connect) {
-        let mp = container_frame.width * 0.5;
+        let mp = frame.width * 0.5;
         return [['M', src.left, src.top],
                 ['l', src.width, 0],
                 ['C', mp, src.top, mp, dst.top, dst.left, dst.top],

@@ -501,6 +501,10 @@ form {
     background-image: url(/images/balloon_icon_black.png);
 }
 
+#linkButton {
+    background-image: url(/images/link_icon_black.png);
+}
+
 #wsstatus {
     position: fixed;
     top: 4px;

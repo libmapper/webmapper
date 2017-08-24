@@ -47,9 +47,21 @@ function init() {
     initViewCommands();
     initMapPropertiesCommands();
 
+//    window.onresize = function (e) {
+//        console.log('main.on_resize()');
+//        view.on_resize();
+//    };
+
+    let resizing = false;
     window.onresize = function (e) {
-        view.on_resize();
-    };
+        if (!resizing) {
+            window.requestAnimationFrame(function() {
+                view.on_resize();
+                resizing = false;
+            });
+            resizing = true;
+        }
+    }
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
@@ -115,6 +127,9 @@ function initViewCommands()
                 break;
             case "balloonButton":
                 view.switch_view("balloon");
+                break;
+            case "linkButton":
+                view.switch_view("link");
                 break;
         }
         $('.viewButton').removeClass("viewButtonsel");
@@ -222,6 +237,10 @@ function initViewCommands()
                 /* 6 */
                 new_view = 'balloon';
                 break;
+            case 55:
+                /* 7 */
+                new_view = 'link';
+                break;
             case 79:
                 if (e.metaKey == true) {
                     e.preventDefault();
@@ -246,7 +265,7 @@ function initViewCommands()
         view.redraw(0);
     });
 
-    let ticking = false;
+    let wheeling = false;
     let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
         e.preventDefault();
@@ -260,7 +279,7 @@ function initViewCommands()
         deltaY = e.deltaY;
         zooming = e.ctrlKey;
 
-        if (!ticking) {
+        if (!wheeling) {
             window.requestAnimationFrame(function() {
                 if (zooming) {
                     view.zoom(pageX, pageY, deltaY);
@@ -268,10 +287,10 @@ function initViewCommands()
                 else {
                     view.pan(pageX, pageY, deltaX, deltaY);
                 }
-                ticking = false;
+                wheeling = false;
             });
         }
-        ticking = true;
+        wheeling = true;
     });
 
     // Search function boxes
