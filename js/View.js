@@ -41,6 +41,8 @@ function MapperView(container, model)
     var snappingTo = null;
     var escaped = false;
 
+    var parse_file = null;
+
     var left_tw, left_th, right_tw, right_th, top_tw, top_th;
     var trashing = false;
 
