@@ -383,7 +383,7 @@ function initViewCommands()
                     reader.abort();
                     return;
                 }
-                view.switch_view("load");
+                view.switch_view("link");
                 view.parse_file(parsed);
             };
         })(f);
