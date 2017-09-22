@@ -201,7 +201,7 @@ function initViewCommands()
         let blob = new Blob([JSON.stringify(file, null, '\t')]);
         let url = URL.createObjectURL(blob);
         link.href = url;
-        link.setAttribute('download', 'foo2.json');
+        link.setAttribute('download', 'mapping.json');
         link.click();
     });
 

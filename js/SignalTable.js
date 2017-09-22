@@ -163,7 +163,6 @@ function mapperTable(model, id, orientation, detail)
 
     this.row_from_name = function(name) {
         let id = name.replace('/', '\\/');
-        let foo = null;
         let row_height = Math.round(this.row_height);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
@@ -220,30 +219,30 @@ function mapperTable(model, id, orientation, detail)
         let row = $(td).parents('tr');
         let row_height = Math.round(this.row_height);
         row = row[0];
-        let foo;
+        let output;
         if (this.orientation == 'top') {
             let left = row.offsetTop - this.scrolled;
             let top = row.offsetLeft;
-            foo = { 'left': left,
-                     'top': top,
-                     'width': row_height,
-                     'height': row.offsetWidth,
-                     'cx': left + row.offsetHeight * 0.5,
-                     'cy': top + row.offsetWidth * 0.5,
-                     'id': row.id.replace('\\/', '\/') };
+            output = { 'left': left,
+                       'top': top,
+                       'width': row_height,
+                       'height': row.offsetWidth,
+                       'cx': left + row.offsetHeight * 0.5,
+                       'cy': top + row.offsetWidth * 0.5,
+                       'id': row.id.replace('\\/', '\/') };
         }
         else {
             let left = row.offsetLeft;
             let top = row.offsetTop - this.scrolled + 20;
-            foo = { 'left': left,
-                     'top': top,
-                     'width': row.offsetWidth,
-                     'height': row_height,
-                     'cx': left + row.offsetWidth * 0.5,
-                     'cy': top + row.offsetHeight * 0.5,
-                     'id': row.id.replace('\\/', '\/') };
+            output = { 'left': left,
+                       'top': top,
+                       'width': row.offsetWidth,
+                       'height': row_height,
+                       'cx': left + row.offsetWidth * 0.5,
+                       'cy': top + row.offsetHeight * 0.5,
+                       'id': row.id.replace('\\/', '\/') };
         }
-        return foo;
+        return output;
     }
 
     this.highlight_row = function(row, clear) {

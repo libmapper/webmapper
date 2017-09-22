@@ -1522,7 +1522,7 @@ function MapperView(container, model)
                                     angle = '90';
                                 }
                                 else
-                                    angle == '270';
+                                    angle = '270';
                                 let qp = src.left > mp ? mp + src.height : mp - src.height;
                                 path = [['M', src.left, src.top],
                                         ['C', mp, src.top,
