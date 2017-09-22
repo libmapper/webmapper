@@ -1862,7 +1862,7 @@ function MapperView(container, model)
             if (repaint)
                 redraw(default_speed, true);
         }
-        else if (event == 'removed')
+        else if (event == 'modified' || event == 'removed')
             redraw(default_speed, true);
     }
 
