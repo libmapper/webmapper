@@ -907,7 +907,7 @@ function MapperView(container, model)
                             map.view.attr({'path': [['M', src.left, src.cy],
                                                     ['C', src.left, src.cy, src.left,
                                                      src.cy, src.left, src.cy]],
-                                           'stroke-dasharray': map.muted ? '--' : '',
+                                           'stroke-dasharray': map.muted ? '-' : '',
                                            'arrow-end': 'block-wide-long',
                                            'stroke': map.view.selected ? mapsel : mappath,
                                            'fill-opacity': 0,
@@ -929,7 +929,7 @@ function MapperView(container, model)
                                                      'stroke': map.view.selected ? mapsel : mappath},
                                                     speed, easing, function() {
                                 map.view.attr({'arrow-end': 'block-wide-long',
-                                               'stroke-dasharray': map.muted ? '--' : '' });
+                                               'stroke-dasharray': map.muted ? '-' : '' });
                             });
                         }
                     });
@@ -1503,7 +1503,7 @@ function MapperView(container, model)
                         if (!dst)
                             return;
                         let path;
-                        let angle = src.left < dst.left ? 0 : 180;
+                        let angle = src.left < dst.left ? '0' : '180';
                         if (srctab == dsttab) {
                             if (src.top == dst.top) {
                                 // same row
@@ -1519,10 +1519,10 @@ function MapperView(container, model)
                                     let temp = src;
                                     src = dst;
                                     dst = temp;
-                                    angle = 90;
+                                    angle = '90';
                                 }
                                 else
-                                    angle == 270;
+                                    angle == '270';
                                 let qp = src.left > mp ? mp + src.height : mp - src.height;
                                 path = [['M', src.left, src.top],
                                         ['C', mp, src.top,
@@ -1875,8 +1875,10 @@ function MapperView(container, model)
                 break;
             case 'modified':
                 console.log('  ', map);
-                if (map.view && map.view.selected)
+                if (map.view && map.view.selected) {
                     $('#container').trigger("updateMapPropertiesFor", map.key);
+                    redraw();
+                }
                 break;
             case 'removing':
                 if (map.view) {
