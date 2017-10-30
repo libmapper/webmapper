@@ -1,14 +1,20 @@
-A browser-based GUI for libmapper network
-=========================================
+<img style="padding:10px;width:150px;float:left" src="./images/libmapper_logo_black_512px.png">
 
-- Authors: Stephen Sinclair, Joseph Malloch, Aaron Krajeski & Jon Wilansky
+# Webmapper: a browser-based interface for administration of control-mapping networks
+
+<br/>
+
+- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang
 - Email: [dot_mapper@googlegroups.com](mailto:dot_mapper@googlegroups.com)
 - Discussion: [https://groups.google.com/forum/#!forum/dot_mapper](https://groups.google.com/forum/#!forum/dot_mapper)
 - Web: [http://libmapper.org](http://libmapper.org)
 
-During a variety of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) command the library to create maps between signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript. 
+**Note: this document is not complete!**
 
-All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network links and maps, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
+
+During a variety of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
+
+All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
 ### GUI functionality:
 
@@ -17,100 +23,142 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 * mode and function editor for maps
 * collaborative undo/redo
 * filtering parameter lists by OSC prefix or string-matching
-* saving and loading mapping sets (including consideration of mapping transportability per the GDIF project)
+* saving and loading mapping sets, including support for mapping transportability (cf. the GDIF project)
 * multiple "views" of the mapping network, using different visualization techniques
 
 ### To run:
 
 1. Build and install [libmapper](https://github.com/libmapper/libmapper)
-1. Copy `_mapper.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory.
-2. Run webmapper.py from terminal
-3. Terminal will display "serving at port #####"
-4. Open a browser
-5. Type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in terminal
+2. Copy `_mapper.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory.
+3. Run webmapper.py from terminal
+4. Terminal will display "serving at port #####"
+5. A browser window should be opened automatically and directed to the correct port.
 
-### A note on saving and loading:
+If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal
 
-As of now saving and loading work via a naïve approach. In the list view (currently the only view tested for saving and loading) the `save` button saves data for the active tab. Similarly, loading only loads maps for signals in the active tab. Our development roadmap includes improvements to the save/load functionality.
+### To build standalone application:
 
+1. $ python setup.py py2app
 
-Views:
-------
+### Saving and loading:
+
+<img style="padding:0px;vertical-align:middle" src="./images/screenshots/file_io.png">
+
+Recent versions of Webmapper have added a new functionality called *map staging*. While the previous naïve approach loaded saved maps against all of the device names in the current tab, loading a file now switches to a new view showing only devices and network links. The file is parsed to retrieve the number of devices involved, and an interactive object is displayed allowing the user to assign device representations from the file to devices that are active on the network. Once the devices have been assigned, clicking on the central file representation launches an attempt to recreate the saved maps.
+
+### Searching/filtering signals
+
+<img style="padding:0px;vertical-align:middle" src="./images/screenshots/signal_filter.png">
+
+### Editing map properties
+
+<img style="padding:0px;vertical-align:middle" src="./images/screenshots/map_properties.png">
+
+If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s):
+
+* **Mode:** switch between `Linear` and `Expression` mode.
+* **Expression:** view and edit the expression used for processing values streaming on this map
+* **Src Range:** view and edit the range (minimum and maximum values) for each source of the selected map. New maps will have these values autopopulated from the source signal's minimum and maximum properties if they are specified. When a map is in `Linear Mode`, these values will be used to calculate an interpolation function.
+    * **Range Switch:** the double arrow button located between the Src Range fields can be used to swap the minimum and maximum.
+    * **Calib:** Toggle `calibration` to incoming values.
+* **Dst Range:** view and edit the range (minimum and maximum values) for each destination of the selected map. New maps will have these values autopopulated from the source signal's minimum and maximum properties if they are specified. When a map is in `Linear Mode`, these values will be used to calculate an interpolation function.
+    * **Range Switch:** the double arrow button located between the Src Range fields can be used to swap the minimum and maximum.
+    * **Boundary Modes:** buttons beside fields for minimum and maximum can be used to switch the `Boundary mode` in case the outgoing value exceeds the specified range:
+        * `None` Value is passed through unchanged
+        * `Mute` Value is muted if it exceeds the range boundary
+        * `Clamp` Value is limited to the range boundary
+        * `Fold` Value continues in opposite direction
+        * `Wrap` Value appears as modulus offset at the opposite boundary
+
+### View Independent Interactions
+
+Lines representing inter-signal maps may be drawn between the signals on each side, and properties are set by first selecting the map(s) to work on and then setting properties as described above. The GUI contains multiple "tabs": the leftmost tab always displays the network overview (links between devices) and subsequent tabs provide user-configurable representations of desired sub-graphs.
+
+* `alt`+`tab` : Change tab to the right
+* `alt`+`shift`+`tab` : Change tab to the left
+* `cmd`+`t` : add new tab
+* `cmd`+`w` : remove existing tab
+* edit selected maps
+* switch view
+* `cmd`+`o` : open file
+* `cmd`+`s` : save file
+* filter signals
+* Scroll and pan using using multitouch gestures, mouse scroll wheel or arrow keys. Scrolling over signal tables will be contrained to the table only, while scrolling and panning over canvas areas is will affect the entire display.
+* Zoom using multitouch pinch and spread gestures or the `+`/`-` keys. Applying zoom commands over tables will zoom the table only, while zoom commands applied over canvas areas will zoom the entire display.
+* Drag and drop between signals to create maps (hold the `m` key while dropping to create a muted map). This works whether the signal representation is embedded in a table or as an individual object.
+* Click or click-and-drag–across an existing map to select it.
+* Press `cmd`+`a` to select all displayed maps
+* Press the `delete` or `backspace` key to remove selected maps
+
+## Views:
+
+<img style="padding:0px;vertical-align:middle" src="./images/screenshots/view_selector.png">
 
 We have explored several alternative visualization and interaction techniques, which allow more informed and flexible interaction with the mapping network. Crucially, we believe that there is no need for a single “correct” user interface; rather, different network representations and interaction approaches may be useful to different users, for different mapping tasks, or at different times.
 
-**Webmapper** includes four different views: `List`, `Grid`, `Hive`, and `Balloon`. These views can be enabled by choosing them from the "Display" menu located on the top left of the running GUI.
+**Webmapper** currently includes seven different views. Following is a brief description of each view, including any view-specific interactions. For each, the shortcut key is displayed as `N`, followed by the view's icon representation in the view selector widget.
 
+### `1` <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view
 
-### List view:
+The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
 
-The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right. Lines representing inter-device links and inter-signal maps may be drawn between the entities on each side, and properties are set by first selecting the map(s) to work on and then setting properties in a separate “edit bar”. The GUI contains multiple "tabs": the leftmost tab always displays the network overview (links between devices) and subsequent tabs provide sub-graph representations of the maps belonging to a specific linked device.
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/list.png">
 
-**Shortcut keys:**
+### `2` <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view
 
-* 'c' : Connect/Map selected devices/signals
-* 'delete': Delete selected links/maps
-* 'cmd+a'    : Select all links/maps
-* 'alt+tab' : Change tab to the right
-* 'alt+shift+tab' : Change tab to the left
-* hold down 'm' while connecting to create muted maps
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/graph.png">
 
+#### View-specific interactions
 
-### Grid View (tested on Chrome only):
+* choosing axes
+* switch axis polarity
 
-There are 2 grids. The left side is the DEVICES grid, the right is the SIGNALS grid. To view signals in the SIGNALS grid: select cells (or labels) on the DEVICES grid and press the "Add"/"Remove" button ('a'/'s' keyboard shortcut). This will include/exclude the selected devices in the SIGNALS grid. Vertical/horizontal lines indicate if the device is included. 
+### `3` <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view
 
-You can use the keyboard arrows to move the selected cell around. All keyboard shortcuts affect the 'active' grid, indicated by the little square in the upper left corner of the grid.
+The canvas view is loosely modeled after the UI for the application ICon (Input Configurator) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
-You can save the current view in the SIGNALS grid as a 'preset' using the "SaveNew" button on the top right hand side. Note that changes to the current preset will not be remembered unless you press the "Update" button.
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/canvas.png">
 
-Note the keyboard shortcuts for changing the active grid, moving the selected cell, toggling cells, loading presets, … they enable you to use the interface much more efficiently:
+#### View-specific interactions
 
-**Shortcut keys:**
+* Drag a signal from the list on the left to create an associated canvas object.
+* Click and drag the middle of a canvas object to reposition it.
+* Drag a canvas object to the grey 'trash' area in the bottom right to remove it from the canvas.
+* Click and drag the right or left edges of a canvas object to create a map. Drop the other end of the map on the desired signal.
 
-* click on cell: set the cell as selected
-* COMMAND click a cell: select multiple cells
-* arrows: move selected cell
-* SHIFT + arrows: move selected cell by 3
-* space: toggle selected cell(s)
-* c: connect selected cell(s)
-* d: disconnect selected cell(s)
+### `4` <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view
 
-* CTRL +: zoom in on active grid
-* CTRL -: zoom out on active grid
-* CTRL 0: zoom-to-fit on active grid
-* CTRL 1: switch to SPLIT view
-* CTRL 2: switch to DEVICES only view
-* CTRL 3: switch to SIGNALS only view
+In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
-* ALT leftArrow: set DEVICES grid as active
-* ALT rightArrow: set SIGNALS grid as active
-* ALT up/down arrows: cycle through presets
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/grid.png">
 
+### `5` <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view
 
-### Hive plot view:
+In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/hive.png">
 
-The hive plot is a method for visualizing networks. In this view, the upper half of the plot is designated for source devices, and the lower for destinations. In view mode 1, an adapted hive plot, each device is given its own axis. In view mode 2, a traditional hive plot, source/destination devices are grouped along a single axis. 
-
-Although designed mainly as an aid for visualization, this view also provides the basic functionality to configure maps. Mouse over a device or signal in the list on the left hand side (or in the plot) to highlight its connections. Select signals by clicking its name in the list (or its node in the plot). Once a source and destination signal is selected, you can create or remove the map by clicking on the blue bar at the bottom (or by using the keyboard shortcuts). 
-
-Connections on specific devices can be shown or hidden from view using the checkboxes in the list next to the device names.
-
-**Shortcut keys:**
-
-* c: connect selected cell(s)
-* d: disconnect selected cell(s)
-
-* CTRL 1: switch to view mode 1 (adapted Hive plot)
-* CTRL 2: switch to view mode 2 (Hive plot)
-
-
-### Balloon plot view:
+### `6` <img style="padding:0px;vertical-align:middle" src="./images/balloon_icon_black.png" width="25px"> Balloon plot view
 
 Balloon plot is brand new and has not yet been thoroughly tested.
 
+quote some text from Vijay's thesis
 
+<img style="padding:0px" src="./images/screenshots/balloon.png">
 
+#### View-specific interactions
 
+* click a signal group to expand it and view its children
+* click outside a balloon to collapse the current signal group and view the next-higher level
 
+### `7` <img style="padding:0px;vertical-align:middle" src="./images/link_icon_black.png" width="25px"> Link view (file staging view)
+
+This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and overlay a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
+
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load1.png">
+
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
+
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
+
+## Working Offline
