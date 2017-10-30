@@ -1012,9 +1012,10 @@ function MapperView(container, model)
                                 sig.view.attr({'stroke-linecap': 'round'});
                                 sig.view.animate(attrs, speed, easing);
                                 if (!sig.view.label) {
+                                    let key = (sig.direction == 'input') ? '→ ' + sig.key : sig.key + ' →';
                                     sig.view.label = svgArea.text(sig.position.x,
                                                                   sig.position.y,
-                                                                  sig.key);
+                                                                  key);
                                     sig.view.label.node.setAttribute('pointer-events', 'none');
                                 }
                                 else
@@ -1035,6 +1036,7 @@ function MapperView(container, model)
                     model.maps.each(function(map) {
                         let path = canvas_bezier(map, leftTable, left_tw);
                         let color;
+                        let len = Raphael.getTotalLength(path) * 0.5;
                         if (map.src.canvas_object && map.dst.canvas_object)
                             color = 'black';
                         else
@@ -1045,8 +1047,7 @@ function MapperView(container, model)
                                                     ['l', 0, 0]],
                                            'stroke-opacity': 1,
                                            'fill-opacity': 0});
-                            let len = Raphael.getTotalLength(path);
-                            let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
+                            let path_mid = Raphael.getSubpath(path, 0, len);
                             map.view.animate({'path': path_mid}, speed * 0.5, easing,
                                              function() {
                                 map.view.animate({'path': path}, speed * 0.5, easing);

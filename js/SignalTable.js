@@ -342,7 +342,11 @@ function mapperTable(model, id, orientation, detail)
             let sigs = [];
             dev.signals.each(function(sig) {
                 // todo: check for filters
-                if (dir && sig.direction != dir)
+                if (dir) {
+                    if (sig.direction != dir)
+                        return;
+                }
+                else if (sig.canvas_object)
                     return;
                 if (regexp && !regexp.test(sig.key))
                     return;
