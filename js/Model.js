@@ -264,6 +264,15 @@ function MapperModel() {
         if (dev)
             dev.signals.remove(sig);
     }
+    this.find_signal = function(name) {
+        name = name.split('/');
+        if (name.length < 2) {
+            console.log("error parsing signal name", name);
+            return null;
+        }
+        let dev = model.devices.find(name[0]);
+        return dev ? dev.signals.find(String(name.join('/'))) : null;
+    }
     this.add_links = function(cmd, links) {
 //        console.log('add links', links);
         for (var i in links) {

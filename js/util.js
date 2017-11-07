@@ -85,10 +85,13 @@ function fullOffset(e) {
     var o = { left: 0, top: 0, width: 0, height: 0 };
     if (e.offsetParent)
         o = fullOffset(e.offsetParent);
-    return { left: e.offsetLeft - e.scrollLeft + o.left,
-             top: e.offsetTop - e.scrollTop + o.top,
-             width: e.offsetWidth,
-             height: e.offsetHeight };
+    let o2 = { left: e.offsetLeft - e.scrollLeft + o.left,
+               top: e.offsetTop - e.scrollTop + o.top,
+               width: e.offsetWidth,
+               height: e.offsetHeight};
+    o2.cx = o2.left + o2.width * 0.5;
+    o2.cy = o2.top + o2.height * 0.5;
+    return o2;
 }
 
 function offset(e) {
@@ -194,8 +197,8 @@ function labeloffset(start, label) {
         'y': start.y - 10 };
 }
 
-function circle_path(x, y, radius) {
-    return [['M', x + radius * 0.65, y - radius * 0.65],
+function circle_path(cx, cy, radius) {
+    return [['M', cx + radius * 0.65, cy - radius * 0.65],
             ['a', radius, radius, 0, 1, 0, 0.001, 0.001],
             ['z']];
 }
@@ -300,7 +303,7 @@ function grid_path(row, col, frame) {
         return [['M', 0, row.top],
                 ['l', frame.width, 0],
                 ['l', 0, row.height],
-                ['l', -container.width, 0],
+                ['l', -frame.width, 0],
                 ['Z']];
     else if (col)
         return [['M', col.left, 0],
@@ -343,22 +346,96 @@ function list_path(src, dst, connect, frame) {
     return path;
 }
 
-function remove_object_svg(obj, speed, easing) {
+function remove_object_svg(obj, duration) {
     if (!obj.view)
         return;
+    if (!duration)
+        duration = 1000;
     if (obj.view.label) {
         obj.view.label.stop();
-        obj.view.label.animate({'stroke-opacity': 0,
-                               'fill-opacity': 0}, speed, easing,
-                               function() {
-                               this.remove();
-                               });
+        obj.view.label.animate({'stroke-opacity': 0, 'fill-opacity': 0},
+                               duration, 'linear', function() { this.remove(); });
+        obj.view.label = null;
     }
-    obj.view.label = null;
     obj.view.stop();
-    obj.view.animate({'stroke-opacity': 0,
-                     'fill-opacity': 0}, speed, easing, function() {
-                     this.remove();
-                     });
+    obj.view.animate({'stroke-opacity': 0, 'fill-opacity': 0},
+                     duration, 'linear', function() { this.remove(); });
     obj.view = null;
+}
+
+function position(x, y, frame) {
+    return { 'x': x != null ? x : Math.random() * frame.width,
+             'y': y != null ? y : Math.random() * frame.height };
+}
+
+function animate_tables(frame, left_width, right_width, top_height, duration) {
+    // stop current animations
+    $('#leftTable').stop(true, false);
+    $('#rightTable').stop(true, false);
+    $('#topTable').stop(true, false);
+
+    $('#topTable').animate({'height': top_height + 'px'},
+                           {duration: duration * 0.33,
+                           step: function(now, fx) {
+        $('#leftTable, #rightTable').css({
+            'height': (frame.height - now / 200 * 180) + 'px',
+            'top': now / 200 * 180 + 'px' });
+    }});
+
+    let prev_right_width = $('#rightTable').width();
+    $('#leftTable').animate({'width': left_width + 'px'},
+                            {duration: duration * 0.33,
+                            step: function(now, fx) {
+        $('#topTable').css({
+            'width': (frame.width - now - prev_right_width + 20) + 'px',
+            'left': now - 20 + 'px' });
+    }});
+
+    $('#rightTable').animate({'width': right_width + 'px'},
+                             {duration: duration * 0.33,
+                             step: function(now, fx) {
+        $('#rightTable').css({
+            'left': frame.width - now});
+        $('#topTable').css({
+            'width': (frame.width - left_width - now) + 20 + 'px' });
+    }});
+}
+
+function select_all_maps() {
+    let updated = false;
+    model.maps.each(function(map) {
+        if (!map.view || map.view.selected)
+            return;
+        if (map.view.attr('stroke-opacity') > 0) {
+            map.view.animate({'stroke': 'red'}, 50);
+            map.view.selected = true;
+            updated = true;
+        }
+        if (map.view.attr('fill-opacity') > 0) {
+            map.view.animate({'fill': 'red'}, 50);
+            map.view.selected = true;
+            updated = true;
+        }
+    });
+    if (updated)
+        $('#container').trigger("updateMapProperties");
+}
+
+function deselect_all_maps(tables) {
+    if (tables) {
+        tables.left.highlight_row(null, true);
+        tables.right.highlight_row(null, true);
+        tables.top.highlight_row(null, true);
+    }
+
+    let updated = false;
+    model.maps.each(function(map) {
+        if (map.view && map.view.selected) {
+            map.view.animate({'stroke': 'white', 'fill': 'white'}, 50);
+            map.view.selected = false;
+            updated = true;
+        }
+    });
+    if (updated)
+        $('#container').trigger("updateMapProperties");
 }

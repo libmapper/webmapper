@@ -184,7 +184,9 @@ function mapperTable(model, id, orientation, detail)
                              'cy': top + row.offsetWidth * 0.5,
                              'id': row.id.replace('\\/', '\/'),
                              'even': $(row).hasClass('even'),
-                             'isOutput': $(row).hasClass('output')};
+                             'isOutput': $(row).hasClass('output'),
+                             'type': $(row).hasClass('device') ? 'device' : 'signal'
+                    };
                 }
                 else {
                     let left = row.offsetLeft;
@@ -197,7 +199,9 @@ function mapperTable(model, id, orientation, detail)
                              'cy': top + this.row_height * 0.5,
                              'id': row.id.replace('\\/', '\/'),
                              'even': $(row).hasClass('even'),
-                             'isOutput': $(row).hasClass('output') };
+                             'isOutput': $(row).hasClass('output'),
+                             'type': $(row).hasClass('device') ? 'device' : 'signal'
+                    };
                 }
                 break;
             }
@@ -229,7 +233,9 @@ function mapperTable(model, id, orientation, detail)
                        'height': row.offsetWidth,
                        'cx': left + row.offsetHeight * 0.5,
                        'cy': top + row.offsetWidth * 0.5,
-                       'id': row.id.replace('\\/', '\/') };
+                       'id': row.id.replace('\\/', '\/'),
+                       'type': $(row).hasClass('device') ? 'device' : 'signal'
+            };
         }
         else {
             let left = row.offsetLeft;
@@ -240,7 +246,10 @@ function mapperTable(model, id, orientation, detail)
                        'height': row_height,
                        'cx': left + row.offsetWidth * 0.5,
                        'cy': top + row.offsetHeight * 0.5,
-                       'id': row.id.replace('\\/', '\/') };
+                       'id': row.id.replace('\\/', '\/'),
+                       'type': $(row).hasClass('device') ? 'device' : 'signal'
+
+            };
         }
         return output;
     }
@@ -335,6 +344,18 @@ function mapperTable(model, id, orientation, detail)
         let detail = this.detail;
         let regexp = this.regexp;
         let collapseAll = this.collapseAll;
+        let collapse_bit;
+        switch (this.orientation) {
+            case 'left':
+                collapse_bit = 1;
+                break;
+            case 'right':
+                collapse_bit = 2;
+                break;
+            default:
+                collapse_bit = 4;
+                break;
+        }
         let title = this.title;
 
         model.devices.each(function(dev) {
@@ -398,7 +419,8 @@ function mapperTable(model, id, orientation, detail)
             if (num_dev_sigs <= 0)
                 return;
 
-            let devname = (collapseAll || dev.collapsed ? '▷  ' : '▽  ') + dev.name;
+            let devname = (collapseAll || (dev.collapsed & collapse_bit)
+                           ? ' ▶ ' : '▼  ') + dev.name;
             $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+
                             devname+" ("+num_dev_sigs+" "+title.toLowerCase()+")"+
                             "</th></tr>");
@@ -407,7 +429,7 @@ function mapperTable(model, id, orientation, detail)
                 let new_row = "<tr class='"+sigs[i][3];
                 if (even)
                     new_row += " even";
-                if (collapseAll || dev.collapsed)
+                if (collapseAll || (dev.collapsed & collapse_bit))
                     new_row += " invisible";
                 new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
                 if (detail)
@@ -416,7 +438,7 @@ function mapperTable(model, id, orientation, detail)
                 $(tbody).append(new_row);
                 even = !even;
             }
-            if (!collapseAll && !dev.collapsed)
+            if (!collapseAll && !(dev.collapsed & collapse_bit))
                 num_sigs += num_dev_sigs;
             num_devs += 1;
         });

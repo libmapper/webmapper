@@ -41,7 +41,6 @@ function init() {
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), model);
     mapProperties.init();
 
-
     // init controller
     initMonitorCommands();
     initViewCommands();
@@ -269,7 +268,7 @@ function initViewCommands()
     let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
         e.preventDefault();
-        if (e.pageX < 45 || e.pageY < 86) {
+        if (e.pageY < 107) {
             // not over container
             return;
         }

@@ -299,6 +299,7 @@ def handler_page(out, args):
 <!-- View includes -->
 <script type="text/javascript" src="js/View.js"></script>
 <script type="text/javascript" src="js/SignalTable.js"></script>
+<script type="text/javascript" src="js/ListView.js"></script>
 
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>

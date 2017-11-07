@@ -61,15 +61,15 @@ body {
 /* Main color */
 body {
 /*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%);*/
-/*    background-image: radial-gradient(farthest-corner at 50% 80%, rgb(250, 250, 250), rgb(170, 170, 170));*/
+    background-image: radial-gradient(farthest-corner at 50% 80%, rgb(100, 100, 100), rgb(50, 50, 50));
 /*    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));*/
-background: white;
+/*background: white;*/
 }
 .svgDiv, .tableDiv {
 /*    background: #FEFEFE;*/
-    background: rgba(20, 20, 20, 0.1);
+    background: rgba(220, 220, 220, 0.1);
 /*    background: rgba(1, 1, 1, 0.1);*/
-    color: black;
+    color: white;
 }
 
 /* blues */
@@ -111,7 +111,7 @@ thead, #svgTop, #networkMenu {
 /* tertiary highlight selection */
 .displayTable tr.even {
 /*    background: #EDF5FF;*/
-    background: rgba(20, 20, 20, 0.1);
+    background: rgba(220, 220, 220, 0.1);
 }
 
 .trsel, tr.even.trsel {
@@ -198,7 +198,7 @@ path {
 }
 
 .topMenu {
-    background: rgba(20, 20, 20, 0.1);
+    background: rgba(220, 220, 220, 0.1);
     height: 70px;
     border-radius: 12px;
     position: relative;
@@ -212,7 +212,7 @@ path {
 .topMenu div {
     display: inline-block;
     vertical-align: top;
-/*    color: white;*/
+    color: white;
 }
 
 .topMenuTitle {
@@ -223,7 +223,7 @@ path {
     transform-origin: 0% 0%;
     transform: translate(0px, 70px) rotate(270deg);
     color: white;
-    background: rgba(20, 20, 20, 0.1);
+    background: rgba(220, 220, 220, 0.1);
     text-align: center;
     text-decoration: bold;
 }
@@ -478,31 +478,31 @@ form {
 }
 
 #listButton {
-    background-image: url(/images/list_icon_black.png);
+    background-image: url(/images/list_icon_white.png);
 }
 
 #graphButton {
-    background-image: url(/images/graph_icon_black.png);
+    background-image: url(/images/graph_icon_white.png);
 }
 
 #canvasButton {
-    background-image: url(/images/canvas_icon_black.png);
+    background-image: url(/images/canvas_icon_white.png);
 }
 
 #gridButton {
-    background-image: url(/images/grid_icon_black.png);
+    background-image: url(/images/grid_icon_white.png);
 }
 
 #hiveButton {
-    background-image: url(/images/hive_icon_black.png);
+    background-image: url(/images/hive_icon_white.png);
 }
 
 #balloonButton {
-    background-image: url(/images/balloon_icon_black.png);
+    background-image: url(/images/balloon_icon_white.png);
 }
 
 #linkButton {
-    background-image: url(/images/link_icon_black.png);
+    background-image: url(/images/link_icon_white.png);
 }
 
 #wsstatus {
