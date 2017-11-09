@@ -126,8 +126,6 @@ function ListView(frame, tables, canvas, model)
         let path = [['M', src.left, src.cy],
                     ['C', h_center, y3, h_center, y4, dst.left, dst.cy]];
 
-        console.log("drawing ", map.view.new, map.status);
-
         if (map.view.new) {
             map.view.new = false;
             if (map.status == "staged") {

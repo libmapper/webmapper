@@ -1,8 +1,8 @@
 //++++++++++++++++++++++++++++++++++++++//
-//              View Class              //
+//         ViewManager Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function MapperView(container, model)
+function ViewManager(container, model)
 {
     let frame = null;
     let canvas = null;

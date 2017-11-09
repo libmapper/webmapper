@@ -297,8 +297,14 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/Model.js"></script>
 
 <!-- View includes -->
-<script type="text/javascript" src="js/View.js"></script>
+<script type="text/javascript" src="js/ViewManager.js"></script>
 <script type="text/javascript" src="js/SignalTable.js"></script>
+<script type="text/javascript" src="js/BalloonView.js"></script>
+<script type="text/javascript" src="js/CanvasView.js"></script>
+<script type="text/javascript" src="js/GraphView.js"></script>
+<script type="text/javascript" src="js/GridView.js"></script>
+<script type="text/javascript" src="js/HiveView.js"></script>
+<script type="text/javascript" src="js/LinkView.js"></script>
 <script type="text/javascript" src="js/ListView.js"></script>
 
 <!-- Main includes -->

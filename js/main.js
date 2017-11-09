@@ -246,8 +246,8 @@ function initViewCommands()
                     input.trigger("click");
                 }
                 break;
-            default:
-                console.log('key:', e.which);
+//            default:
+//                console.log('key:', e.which);
         }
         if (new_view) {
             view.switch_view(new_view);
@@ -430,7 +430,7 @@ function switch_mode(newMode)
             view.init();
             break;
         case 'new':
-            view = new MapperView(document.getElementById('container'), model);
+            view = new ViewManager(document.getElementById('container'), model);
             viewIndex = 3;
             view.init();
             view.on_resize();
