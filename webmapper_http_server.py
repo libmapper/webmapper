@@ -284,7 +284,7 @@ def handler_page(out, args):
     print >>out, """<!DOCTYPE html>
 <html>
 <head>
-<title>mapperGUI</title>
+<title>mapperGUI: connecting...</title>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
 <script type="text/javascript" src="includes/jquery-2.0.3.min.js"></script> <!-- JQuery -->

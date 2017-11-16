@@ -16,12 +16,6 @@ window.onload = init;           // Kick things off
 
 /* The main program. */
 function init() {
-    // add the top tabs
-    $('body').append("<ul class='topTabs'>"+
-                        "<li id='allDevices' class='tabsel'>Home</li>"+
-                        "<li id='allDevices'>+</li>"+
-                     "</ul>");
-
     // add the top menu wrapper
     $('body').append("<div class=propertiesDiv id='TopMenuWrapper'></div>");
 
@@ -181,10 +175,18 @@ function initViewCommands()
                         if (!map.hasOwnProperty(attr))
                             break;
                         if (attr.startsWith('src_')) {
-                            src[attr.slice(4)] = map[attr];
+                            let key = attr.slice(4);
+                            if (key == 'min' || key == 'max')
+                                src[key + 'imum'] = map[attr];
+                            else
+                                src[key] = map[attr];
                         }
                         else if (attr.startsWith('dst_')) {
-                            dst[attr.slice(4)] = map[attr];
+                            let key = attr.slice(4);
+                            if (key == 'min' || key == 'max')
+                                dst[key + 'imum'] = map[attr];
+                            else
+                                dst[key] = map[attr];
                         }
                         else
                             m[attr] = map[attr];
@@ -257,11 +259,11 @@ function initViewCommands()
     });
 
     $('#container').on('updateView', function(e) {
-        view.redraw();
+        view.draw();
     });
 
     $('#container').on('scrolll', function(e) {
-        view.redraw(0);
+        view.draw(0);
     });
 
     let wheeling = false;
@@ -371,14 +373,24 @@ function initViewCommands()
                     reader.abort();
                     return;
                 }
-                if (parsed.fileversion != "2.2") {
+                if (parsed.fileversion == "2.2") {
+                    if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
+                        console.log("error: no maps in file");
+                        reader.abort();
+                        return;
+                    }
+                }
+                else if (parsed.fileversion == "2.1") {
+                    if (   !parsed.mapping.connections
+                        || !parsed.mapping.connections.length) {
+                        console.log("error: no maps in file");
+                        reader.abort();
+                        return;
+                    }
+                }
+                else {
                     console.log("error: unsupported fileversion",
                                 parsed.fileversion);
-                    reader.abort();
-                    return;
-                }
-                if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
-                    console.log("error: no maps in file");
                     reader.abort();
                     return;
                 }
@@ -453,5 +465,6 @@ function select_obj(obj) {
         return false;
     obj.view.selected = true;
     obj.view.animate({'stroke': 'red', 'fill': 'red'}, 50);
+    obj.view.toFront();
     return true;
 }

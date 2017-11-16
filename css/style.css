@@ -16,7 +16,6 @@ html, body {
     overflow: hidden;
 }
 
-
 /*@-webkit-keyframes myfirst 
 {
     from {background: default;}
@@ -194,7 +193,7 @@ path {
     padding-top: 5px;
     padding-bottom: 5px;
     position: absolute;
-    top: 27px;
+/*    top: 27px;*/
 }
 
 .topMenu {
@@ -416,11 +415,12 @@ form {
     table-layout: fixed;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    height: calc(100% - 126px);
-/*    height: 100%;*/
+/*    height: calc(100% - 126px);*/
+    height: 100%;
     width: 38px;
     float: left;
-    top: 107px;
+/*    top: 107px;*/
+    top: 80px;
     position: absolute;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -503,14 +503,6 @@ form {
 
 #linkButton {
     background-image: url(/images/link_icon_white.png);
-}
-
-#wsstatus {
-    position: fixed;
-    top: 4px;
-    right: 8px;
-    z-index: 9;
-    opacity: 0.5;
 }
 
 .signalControl {
@@ -789,9 +781,11 @@ input.searchBar {
     width: calc(100% - 9px);
 /*    height: calc(100% - 126px);*/
     height: calc(100% - 110px);
+    height: calc(100% - 83px);
     float: left;
     position: absolute;
-    top: 107px;
+/*    top: 107px;*/
+    top: 80px;
 /*    padding: 5px;*/
 /*    left: 48px;*/
 }

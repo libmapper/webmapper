@@ -7,220 +7,313 @@ function GridView(frame, tables, canvas, model)
     let map_pane;
     let escaped = false;
 
+    // table settings
+    tables.left.filter_dir('output');
+    tables.left.show_detail(false);
+    tables.top.filter_dir('input');
+    tables.top.show_detail(false);
+
+    // change device click
+    model.devices.each(function(dev) {
+        dev.view.unclick().click(function(e) {
+            dev.collapsed ^= 5;
+            update_devices();
+            draw(200);
+        });
+    });
+
+    // remove signal svg
+    model.devices.each(function(dev) {
+        dev.signals.each(remove_object_svg);
+    });
+
     this.resize = function(new_frame) {
         if (new_frame)
             frame = new_frame;
         animate_tables(frame, 200, 0, 200, 1000);
         map_pane = {'left': 200,
-                    'right': frame.width,
-                    'top': 200,
-                    'width': frame.width - 200,
-                    'height': frame.height - 200};
+            'right': frame.width,
+            'top': 200,
+            'width': frame.width - 200,
+            'height': frame.height - 200,
+            'cx': (frame.width - 200) * 0.5,
+            'cy': (frame.height - 200) * 0.5};
     };
-
     this.resize();
-
-    tables.left.filter_dir('output');
-    tables.left.show_detail(false);
-
-    tables.top.filter_dir('input');
-    tables.top.show_detail(false);
 
     this.type = function() {
         return 'grid';
     }
 
-    function redraw_signal(sig) {
-        remove_object_svg(sig);
+    get_sig_pos = function(sig) {
+        let s;
+        if (sig.direction == 'output') {
+            s = tables.left.row_from_name(sig.key);
+            return s ? {'table': 'left', 'index': s.index} : null;
+        }
+        else {
+            s = tables.top.row_from_name(sig.key);
+            return s ? {'table': 'top', 'index': s.index} : null;
+        }
+        return s;
     }
 
-    function redraw_device(dev, duration) {
-        dev.signals.each(redraw_signal);
+    function update_devices() {
+        // update left and top tables
+        tables.left.update(map_pane.height);
+        tables.top.update(map_pane.width);
 
-        let row = tables.left.row_from_name(dev.name);
-        if (row) {
-            row.left = 0;
-            row.top += map_pane.top - 20;
-            row.width = frame.width;
-            row.cy += map_pane.top - 20;
-        }
-        let col = tables.top.row_from_name(dev.name);
-        if (col) {
-            col.left += map_pane.left;
-            col.cx += map_pane.left;
-            col.top = 0;
-            col.height = frame.height;
-        }
-        if (!row && !col) {
-            if (dev.view) {
-                dev.view.stop();
-                dev.view.animate({'fill-opacity': 0}, duration, '>', function() {
-                    this.remove();
-                    dev.view = null;
+        model.devices.each(function(dev) {
+            let src = tables.left.row_from_name(dev.key);
+            let dst = tables.top.row_from_name(dev.key);
+            if (!src && !dst) {
+                remove_object_svg(dev);
+                return;
+            }
+            if (!dev.view) {
+                dev.view = canvas.path().attr({'fill': dev.color,
+                                               'fill-opacity': 0});
+                dev.view.click(function(e) {
+                    dev.collapsed ^= 5;
+                    update_devices();
+                    draw(200);
                 });
             }
-            return;
-        }
-        let path = grid_path(row, col, frame);
-        if (!dev.view) {
-            dev.view = canvas.path(path).attr({'fill-opacity': 0});
-        }
-        dev.view.stop();
-        dev.view.toBack();
-        dev.view.animate({'path': path,
-                          'fill': dev.color,
-                          'fill-opacity': 0.5,
-                          'stroke-opacity': 0}, duration, '>');
-        dev.view.unclick().click(function(e) {
-            dev.collapsed ^= 5;
-            redraw(200, true);
+            // cache table indexes
+            dev.view.src_index = src ? src.index : null;
+            dev.view.dst_index = dst ? dst.index : null;
+
+            dev.signals.each(function(sig) {
+                sig.view = get_sig_pos(sig);
+            });
         });
     }
 
-    canvas_offset_left = function(rect) {
-        rect.left = map_pane.left;
-        rect.cx = map_pane.left;
-        rect.top += map_pane.top - 20;
-        rect.cy += map_pane.top - 20;
-    }
+    function draw_devices(duration) {
+        let lh = Math.round(tables.left.row_height);
+        let tw = Math.round(tables.top.row_height);
 
-    canvas_offset_top = function(rect) {
-        rect.left += map_pane.left;
-        rect.cx += map_pane.left;
-        rect.top = map_pane.top;
-        rect.cy = map_pane.top;
-    }
+        let lo = map_pane.top - tables.left.scrolled;
+        let to = map_pane.left - tables.top.scrolled;
 
-    function redraw_map(map, duration) {
-        if (!map.view) {
-            map.view = canvas.path();
-            map.view.new = true;
-        }
-        map.view.click(function(e) {
-            if (select_obj(map))
-                $('#container').trigger("updateMapProperties");
+        model.devices.each(function(dev) {
+            if (!dev.view)
+                return;
+            dev.view.stop();
+            dev.view.toBack();
+            let row = dev.view.src_index;
+            let col = dev.view.dst_index;
+            if (row == null && col == null) {
+                remove_object_svg(dev);
+                return;
+            }
+            let path;
+            if (row != null && col != null) {
+                let row_top = row * lh + lo;
+                let col_left = col * tw + to;
+                path = [['M', col_left, 0],
+                        ['l', tw, 0],
+                        ['L', col_left + tw, row_top],
+                        ['L', map_pane.right, row_top],
+                        ['l', 0, lh],
+                        ['L', col_left + tw, row_top + lh],
+                        ['L', col_left + tw, frame.height],
+                        ['l', -tw, 0],
+                        ['L', col_left, row_top + lh],
+                        ['L', 0, row_top + lh],
+                        ['l', 0, -lh],
+                        ['L', col_left, row_top],
+                        ['z']];
+            }
+            else if (row != null) {
+                let row_top = row * lh + lo;
+                path = [['M', 0, row_top],
+                        ['l', frame.width, 0],
+                        ['l', 0, lh],
+                        ['l', -frame.width, 0],
+                        ['Z']];
+            }
+            else if (col != null) {
+                let col_left = col * tw + to;
+                path = [['M', col_left, 0],
+                        ['l', tw, 0],
+                        ['l', 0, frame.height],
+                        ['l', -tw, 0],
+                        ['Z']];
+            }
+            dev.view.animate({'path': path,
+                              'fill': dev.color,
+                              'fill-opacity': 0.5,
+                              'stroke-opacity': 0}, duration, '>');
         });
-        let path, curve = false;
-        src = tables.top.row_from_name(map.src.key);
-        dst = tables.left.row_from_name(map.dst.key);
-        if (src) {
-            canvas_offset_top(src);
-            if (dst) {
-                canvas_offset_left(dst);
-                path = [['M', src.left + src.width, dst.top],
-                        ['L', src.left, dst.cy],
-                        ['L', src.left + src.width, dst.top + dst.height],
+    }
+
+    function update_maps() {
+        model.maps.each(function(map) {
+            if (!map.view) {
+                map.view = canvas.path();
+                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
+                               'stroke': map.view.selected ? 'red' : 'white',
+                               'fill-opacity': 0,
+                               'stroke-width': 2});
+                map.view.click(function(e) {
+                    if (select_obj(map))
+                        $('#container').trigger("updateMapProperties");
+                });
+                map.view.new = true;
+            }
+        });
+    }
+
+    function draw_maps(duration) {
+        let lh = Math.round(tables.left.row_height);
+        let tw = Math.round(tables.top.row_height);
+        let ls = tables.left.scrolled;
+        let ts = tables.top.scrolled;
+
+        let lo = map_pane.top - tables.left.scrolled;
+        let loc = lo + 0.5 * lh;
+        let to = map_pane.left - tables.top.scrolled;
+        let toc = to + 0.5 * tw
+
+        model.maps.each(function(map) {
+            if (!map.view) {
+                return;
+            }
+            src = map.src.view;
+            dst = map.dst.view;
+
+            let path, curve = false;
+            if (src.table == dst.table) {
+                // draw a curve from table to self
+                if (src.table == 'left') {
+                    let y1 = src.index * lh + loc;
+                    let y2 = dst.index * lh + loc;
+                    let d = Math.abs(y1 - y2);
+                    if (d > map_pane.cx)
+                        d = map_pane.cx;
+                    return [['M', map_pane.left, y1],
+                            ['C', d, y1, d, y2, map_pane.left, y2]];
+                }
+                else {
+                    let x1 = src.index * tw + toc;
+                    let x2 = dst.index * tw + toc;
+                    let d = Math.abs(x1 - x2);
+                    if (d > map_pane.cy)
+                        d = map_pane.cy;
+                    return [['M', x1, map_pane.top],
+                            ['C', x1, -d, x2, -d, x2, map_pane.top]];
+                }
+                curve = true;
+            }
+            else if (src.table == 'left') {
+                let x = dst.index * tw + to;
+                let y = src.index * lh + lo;
+                path = [['M', x, y + lh],
+                        ['l', tw * 0.5, -lh],
+                        ['l', tw * 0.5, lh],
                         ['Z']];
             }
             else {
-                dst = tables.top.row_from_name(map.dst.key);
-                if (!dst)
-                    return
-                canvas_offset_top(dst);
-                // both endpoints are 'input' signals
-                path = self_path(src.cx, map_pane.top, dst.cx, map_pane.top, frame);
-                curve = true;
+                let x = src.index * tw + to;
+                let y = dst.index * lh + lo;
+                path = [['M', x + tw, y],
+                        ['l', -tw, lh * 0.5],
+                        ['l', tw, lh * 0.5],
+                        ['Z']];
             }
-        }
-        else if (dst) {
-            canvas_offset_left(dst);
-            src = tables.left.row_from_name(map.src.key);
-            if (!src)
-                return
-            canvas_offset_left(src);
-            // both endpoints are 'output' signals
-            path = self_path(map_pane.left, src.cy, map_pane.left, dst.cy, frame);
-            curve = true;
-        }
-        else {
-            // could be 'reversed' map
-            src = tables.left.row_from_name(map.src.key);
-            dst = tables.top.row_from_name(map.dst.key);
-            if (!src || !dst)
-                return;
-            canvas_offset_left(src);
-            canvas_offset_top(dst);
-            path = [['M', dst.left, src.top + src.height],
-                    ['L', dst.cx, src.top],
-                    ['L', dst.left + dst.width, src.top + src.height],
-                    ['Z']];
-        }
 
-        if (curve) {
-            map.view.attr({'stroke-width': 2,
-                           'arrow-end': 'block-wide-long'});
-            if (map.view.new) {
-                map.view.attr({'path': self_path(src.cx, src.cy, src.cx, src.cy,
-                                                 frame),
-                               'fill-opacity': 0,
-                               'stroke': map.view.selected ? 'red' : 'white',
-                               'stroke-opacity': 1});
-                let len = Raphael.getTotalLength(path);
-                let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
-                map.view.animate({'path': path_mid}, duration * 0.5, '>',
-                                 function() {
-                    map.view.animate({'path': path}, duration * 0.5, '>');
-                }).toFront();
-                map.view.new = false;
+            if (curve) {
+                map.view.attr({'stroke-width': 2,
+                               'arrow-end': 'block-wide-long'});
+                if (map.view.new) {
+                    map.view.attr({'path': self_path(src.cx, src.cy, src.cx, src.cy,
+                                                     frame),
+                                   'fill-opacity': 0,
+                                   'stroke': map.view.selected ? 'red' : 'white',
+                                   'stroke-opacity': 1});
+                    let len = Raphael.getTotalLength(path);
+                    let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
+                    map.view.animate({'path': path_mid}, duration * 0.5, '>',
+                                     function() {
+                        map.view.animate({'path': path}, duration * 0.5, '>');
+                    }).toFront();
+                    map.view.new = false;
+                }
+                else {
+                    map.view.animate({'path': path,
+                                      'fill-opacity': 0,
+                                      'stroke': map.view.selected ? 'red' : 'white',
+                                      'stroke-opacity': 1}, duration, '>').toFront();
+                }
             }
             else {
+                map.view.attr({'arrow-end': 'none',
+                               'stroke-width': 2});
+                if (map.view.new) {
+                    map.view.attr({'path': (src.cx > dst.cx)
+                                  ? [['M', src.left + src.width, dst.top],
+                                     ['L', src.left + src.width, dst.cy],
+                                     ['L', src.left + src.width, dst.top + dst.height],
+                                     ['Z']]
+                                  : [['M', dst.left, src.top + src.height],
+                                     ['L', dst.cx, src.top + src.height],
+                                     ['L', dst.left + dst.width, src.top + src.height],
+                                     ['Z']]});
+                    map.view.new = false;
+                }
                 map.view.animate({'path': path,
                                   'fill-opacity': 0,
-                                 'stroke': map.view.selected ? 'red' : 'white',
-                                  'stroke-opacity': 1}, duration, '>').toFront();
+                                  'fill': map.view.selected ? 'red' : 'white',
+                                  'stroke-opacity': 1}, duration, '>');
             }
-        }
-        else {
-            map.view.attr({'arrow-end': 'none',
-                           'stroke-width': 2});
-            if (map.view.new) {
-                map.view.attr({'path': (src.cx > dst.cx)
-                              ? [['M', src.left + src.width, dst.top],
-                                 ['L', src.left + src.width, dst.cy],
-                                 ['L', src.left + src.width, dst.top + dst.height],
-                                 ['Z']]
-                              : [['M', dst.left, src.top + src.height],
-                                 ['L', dst.cx, src.top + src.height],
-                                 ['L', dst.left + dst.width, src.top + src.height],
-                                 ['Z']]});
-                map.view.new = false;
-            }
-            map.view.animate({'path': path,
-                              'fill-opacity': 0,
-                              'fill': map.view.selected ? 'red' : 'white',
-                              'stroke-opacity': 1}, duration, '>');
-        }
+        });
     }
 
-    function redraw(duration, update_tables) {
-        if (update_tables != false) {
-            tables.left.update(map_pane.height);
-            tables.top.update(map_pane.width);
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
         }
-
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
-        model.maps.each(function(map) { redraw_map(map, duration); });
+        if (elements.indexOf('devices') >= 0) {
+            update_devices();
+        }
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+        draw(1000);
     }
+    this.update = update;
 
-    this.redraw = redraw;
+    function draw(duration) {
+        draw_devices(duration);
+        draw_maps(duration);
+    }
 
     this.pan = function(x, y, delta_x, delta_y) {
         if (y < frame.top + map_pane.top) {
             if (x > frame.left + map_pane.left) {
                 tables.top.pan(delta_x);
-                redraw(0, false);
+                draw(0);
             }
         }
         else if (x < frame.left + map_pane.left) {
             tables.left.pan(delta_y);
-            redraw(0, false);
+            draw(0);
         }
         else {
             // send to both left and top tables
             tables.left.pan(delta_y);
             tables.top.pan(delta_x);
             // TODO: should pan svg canvas instead
-            redraw(0, false);
+            draw(0);
         }
     }
 
@@ -228,19 +321,19 @@ function GridView(frame, tables, canvas, model)
         if (y < frame.top + map_pane.top) {
             if (x > frame.left + map_pane.left) {
                 if (tables.top.zoom(x - frame.left - map_pane.left, delta))
-                    redraw(0, false);
+                    draw(0);
             }
         }
         else if (x < frame.left + map_pane.left) {
             if (tables.left.zoom(y - frame.top - map_pane.top, delta))
-                redraw(0, false);
+                draw(0);
         }
         else {
             // send to both left and top tables
             let update = tables.left.zoom(y - frame.top - map_pane.top, delta);
             update |= tables.top.zoom(x - frame.left - map_pane.left, delta);
             if (update)
-                redraw(0, false);
+                draw(0);
         }
     }
 
@@ -249,7 +342,7 @@ function GridView(frame, tables, canvas, model)
             tables.top.filter_text(text);
         else
             tables.left.filter_text(text);
-        redraw(1000, true);
+        draw(1000);
     }
 
     $('.tableDiv').on('mousedown', 'tr', function(e) {
@@ -278,7 +371,7 @@ function GridView(frame, tables, canvas, model)
                     dev.collapsed ^= 1;
                 else
                     dev.collapsed ^= 4;
-                redraw(200, true);
+                update_devices();
             }
             return;
         }
@@ -415,11 +508,19 @@ function GridView(frame, tables, canvas, model)
     });
 
     this.cleanup = function() {
-            // clean up any objects created only for this view
+        // clean up any objects created only for this view
+        model.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.view) {
+                    delete sig.view;
+                    sig.view = null;
+                }
+            });
+        });
         model.maps.each(function(map) {
-                        if (map.view)
-                        map.view.unclick();
-                        });
+            if (map.view)
+                map.view.unclick();
+        });
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');

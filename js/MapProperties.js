@@ -59,10 +59,6 @@ MapProperties.prototype = {
 //                "<div id='dstCalibrate' class='calibrate' type='button'>Calib</div>"+
             "</div>");
 
-        // extra tools
-        $('.propertiesDiv').append(
-            "<div id='wsstatus' class='extratools'>websocket uninitialized</div>");
-
         this.addHandlers();
     },
 

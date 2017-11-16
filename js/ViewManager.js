@@ -18,10 +18,14 @@ function ViewManager(container, model)
 
     let view = null;
 
-    this.redraw = function() {
-        if (view)
-            view.redraw(duration);
+    this.draw = function() {
+        //
     };
+
+    this.parse_file = function(file) {
+        if (view && view.type() == 'link')
+            view.parse_file(file);
+    }
 
     this.switch_view = function(viewType) {
         if (view) {
@@ -58,17 +62,18 @@ function ViewManager(container, model)
                 break;
         }
 
-        resize_elements = function(duration) {
+        view.update();
+    }
+
+    resize_elements = function(duration) {
+        if (view)
             view.resize(frame);
 
-            canvas_zoom = 1;
-            canvas_pan = [0, 0];
-            canvas.setViewBox(0, 0, frame.width * canvas_zoom,
-                              frame.height * canvas_zoom, false);
-            $('#status').text('');
-        }
-
-        view.redraw(duration);
+        canvas_zoom = 1;
+        canvas_pan = [0, 0];
+        canvas.setViewBox(0, 0, frame.width * canvas_zoom,
+                          frame.height * canvas_zoom, false);
+        $('#status').text('');
     }
 
     add_model_callbacks = function() {
@@ -134,37 +139,43 @@ function ViewManager(container, model)
             dev.signals.each(function(sig) {
                 update_signals(sig, 'added', false);
             });
-            view.redraw(duration);
+            view.update('devices');
         }
         else if (event == 'removed')
-            view.redraw(duration);
+            view.update('devices');
     }
 
     function update_signals(sig, event, repaint) {
         if (event == 'added' && !sig.view) {
             sig.position = position(null, null, frame);
             if (repaint)
-                view.redraw(duration);
+                view.update('signals');
         }
         else if (event == 'modified' || event == 'removed')
-            view.redraw(duration);
+            view.update('signals');
+    }
+
+    function update_links(link, event) {
+        if (viewType != "link")
+            return;
+        view.update('links');
     }
 
     function update_maps(map, event) {
         switch (event) {
             case 'added':
                 if (!map.view)
-                    view.redraw(duration, false);
+                    view.update('maps');
                 break;
             case 'modified':
                 if (map.view) {
                     if (map.view.selected)
                         $('#container').trigger("updateMapPropertiesFor", map.key);
-                    view.redraw(duration, false);
+                    view.update('maps');
                 }
                 break;
             case 'removed':
-                view.redraw(duration, false);
+                view.update('maps');
                 break;
         }
     }
@@ -194,18 +205,6 @@ function ViewManager(container, model)
                 if (e.metaKey == true) {
                     e.preventDefault();
                     console.log('should add tab');
-                }
-                break;
-            case 32:
-                if (currentView == 'graph') {
-                    model.devices.each(function(dev) {
-                        dev.signals.each(function(sig) {
-                            if (!sig.view)
-                                return;
-                            sig.position = position(null, null, frame);
-                        });
-                    });
-                    view.redraw(duration);
                 }
                 break;
             case 27:
@@ -298,6 +297,5 @@ function ViewManager(container, model)
     this.on_resize = function() {
         frame = fullOffset($(container)[0]);
         resize_elements(0);
-        view.redraw(duration);
     }
 }

@@ -227,7 +227,7 @@ function MapperModel() {
         }
     }
     this.del_device = function(cmd, dev) {
-        console.log('remove device');
+//        console.log('remove device');
         dev = model.devices.find(dev.name);
         if (!dev)
             return;
@@ -273,26 +273,6 @@ function MapperModel() {
         let dev = model.devices.find(name[0]);
         return dev ? dev.signals.find(String(name.join('/'))) : null;
     }
-    this.add_links = function(cmd, links) {
-//        console.log('add links', links);
-        for (var i in links) {
-            let src = this.devices.find(links[i].src);
-            let dst = this.devices.find(links[i].dst);
-            if (!src || !dst) {
-                console.log("error adding link: couldn't find devices",
-                            links[i].src, links[i].dst);
-                return;
-            }
-            links[i].src = src
-            links[i].dst = dst;
-            this.links.add(links[i]);
-        }
-    }
-    this.del_link = function(cmd, link) {
-//        console.log('remove link');
-        if (link && !link.local)
-            this.links.remove(link);
-    }
     this.add_maps = function(cmd, maps) {
 //        console.log('add maps', cmd, maps);
         let self = this;
@@ -323,13 +303,53 @@ function MapperModel() {
             maps[i].src = src;
             maps[i].dst = dst;
             maps[i].status = 'active';
-            this.maps.add(maps[i]);
+            let map = this.maps.add(maps[i]);
+            if (!map) {
+                console.log("error adding map:", maps[i]);
+                return;
+            }
+
+            let link_key = src.device.name + '->' + dst.device.name;
+            let link = this.links.find(link_key);
+            if (!link) {
+                link = this.links.add({'key': link_key,
+                                       'src': src.device,
+                                       'dst': dst.device,
+                                       'maps': [map.key]});
+                if (src.device.links_out)
+                    src.device.links_out.push(link_key);
+                else
+                    src.device.links_out = [link_key];
+                if (dst.device.links_in)
+                    dst.device.links_in.push(link_key);
+                else
+                    dst.device.links_in = [link_key];
+            }
+            else if (!link.maps.includes(map.key))
+                link.maps.push(map.key);
         }
     }
     this.del_map = function(cmd, map) {
-//        console.log('remove map', map);
-        var key = this.maps.remove(map);
-//        $('#mapPropsDiv').updateMapPropertiesFor(key);
+        let record = this.maps.find(map.key);
+        if (!record)
+            return;
+        let link_key = record.src.device.name + '->' + record.dst.device.name;
+        let link = this.links.find(link_key);
+        if (link) {
+            let index = link.maps.indexOf(record.key);
+            if (index > -1)
+                link.maps.splice(index, 1);
+            if (link.maps.length == 0) {
+                index = link.src.links_out.indexOf(link_key);
+                if (index > -1)
+                    link.src.links_out.splice(index, 1);
+                index = link.dst.links_in.indexOf(link_key);
+                if (index > -1)
+                    link.dst.links_in.splice(index, 1);
+                this.links.remove(link);
+            }
+        }
+        this.maps.remove(map);
     }
 
     // delete handlers in case of refresh
@@ -337,8 +357,6 @@ function MapperModel() {
     command.unregister("del_device");
     command.unregister("add_signals");
     command.unregister("del_signal");
-    command.unregister("add_links");
-    command.unregister("del_link");
     command.unregister("add_maps");
     command.unregister("del_map");
 
@@ -346,8 +364,6 @@ function MapperModel() {
     command.register("del_device", this.del_device.bind(this));
     command.register("add_signals", this.add_signals.bind(this));
     command.register("del_signal", this.del_signal.bind(this));
-    command.register("add_links", this.add_links.bind(this));
-    command.register("del_link", this.del_link.bind(this));
     command.register("add_maps", this.add_maps.bind(this));
     command.register("del_map", this.del_map.bind(this));
 };

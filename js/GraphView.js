@@ -17,12 +17,23 @@ function GraphView(frame, canvas, model)
             frame = new_frame;
         animate_tables(frame, 0, 0, 0, 1000);
     };
-
     this.resize()
 
     this.type = function() {
         return 'graph';
     }
+
+    // remove associated svg elements for devices
+    // set hover and drag for existing signal objects
+    model.devices.each(function(dev) {
+        remove_object_svg(dev);
+        dev.signals.each(function(sig) {
+            if (sig.view) {
+                set_sig_drag(sig);
+                set_sig_hover(sig);
+            }
+        });
+    });
 
     function set_sig_hover(sig) {
         sig.view.hover(
@@ -103,7 +114,10 @@ function GraphView(frame, canvas, model)
         );
     }
 
-    function redraw_signal(sig, duration) {
+    function draw_signal(sig, duration) {
+        if (!sig.view)
+            return;
+        sig.view.stop();
         let remove = false;
         if (sig.direction == 'output') {
             if (srcregexp && !srcregexp.test(sig.key))
@@ -117,22 +131,10 @@ function GraphView(frame, canvas, model)
             return;
         }
 
-        let pos = sig.position;
+        let pos = sig.view.position;
         let is_output = sig.direction == 'output';
-        if (!sig.view) {
-            sig.view = canvas.path(circle_path(pos.x, pos.y,
-                                               is_output ? 7 : 10));
-            set_sig_drag(sig);
-            set_sig_hover(sig);
-        }
-        else if (first_draw) {
-            set_sig_drag(sig);
-            set_sig_hover(sig);
-        }
 
-        let path = circle_path(pos.x, pos.y,
-                               is_output ? 7 : 10);
-        sig.view.stop();
+        let path = circle_path(pos.x, pos.y, is_output ? 7 : 10);
         sig.view.animate({'path': path,
                           'fill': is_output ? 'black' : sig.device.color,
                           'fill-opacity': 1,
@@ -140,56 +142,97 @@ function GraphView(frame, canvas, model)
                           'stroke-width': 6,
                           'stroke-opacity': sig.direction == 'output' ? 1 : 0},
                          duration, '>');
-        if (sig.view.label) {
-            sig.view.label.stop();
-            sig.view.label.animate({'x': pos.x, 'y': pos.y,
-                                    'opacity': 0}, duration, '>', function() {
-                this.remove();
-                sig.view.label = null;
+    }
+
+    function update_devices() {
+        model.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (!sig.view) {
+                    let is_output = sig.direction == 'output';
+                    let pos = position(null, null, frame);
+                    sig.view = canvas.path(circle_path(pos.x, pos.y, 0));
+                    sig.view.position = pos;
+                    set_sig_drag(sig);
+                    set_sig_hover(sig);
+                }
             });
-        }
-    }
-
-    function redraw_device(dev, duration) {
-        // remove associated svg elements
-        remove_object_svg(dev);
-
-        // draw signals
-        dev.signals.each(function(sig) { redraw_signal(sig, duration); });
-    }
-
-    function redraw_map(map, duration) {
-        if (!map.src.view || !map.dst.view) {
-            remove_object_svg(map);
-            return;
-        }
-        let src = map.src.position;
-        let dst = map.dst.position;
-        if (!map.view)
-            map.view = canvas.path([['M', src.x, src.y], ['l', 0, 0]])
-                             .attr({'stroke-width': 2});
-        let mp = position((src.x + dst.x) * 0.5, (src.y + dst.y) * 0.5);
-        mp.x += (mp.x - frame.cx) * 0.2;
-        mp.y += (mp.y - frame.cy) * 0.2;
-        let path = [['M', src.x, src.y],
-                    ['S', mp.x, mp.y, dst.x, dst.y]];
-        let len = Raphael.getTotalLength(path);
-        path = Raphael.getSubpath(path, 10, len - 10);
-        map.view.stop();
-        map.view.animate({'path': path,
-                          'stroke-opacity': 1,
-                          'fill-opacity': 0}, duration, '>', function() {
-            map.view.attr({'arrow-end': 'block-wide-long'});
         });
     }
 
-    function redraw(duration) {
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
-        model.maps.each(function(map) { redraw_map(map, duration); });
-        first_draw = false;
+    function draw_devices(duration) {
+        model.devices.each(function(dev) {
+            // draw signals
+            dev.signals.each(function(sig) { draw_signal(sig, duration); });
+        });
     }
 
-    this.redraw = redraw;
+    function update_maps() {
+        model.maps.each(function(map) {
+            if (!map.view && map.src.view) {
+                let pos = map.src.view.position;
+                map.view = canvas.path([['M', pos.x, pos.y], ['l', 0, 0]]);
+                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
+                               'stroke': map.view.selected ? 'red' : 'white',
+                               'fill-opacity': 0,
+                               'stroke-width': 2});
+            }
+        });
+    }
+
+    function draw_maps(duration) {
+        model.maps.each(function(map) {
+            if (!map.view)
+                return;
+            if (!map.src.view || !map.dst.view) {
+                remove_object_svg(map);
+                return;
+            }
+            map.view.stop();
+            let src = map.src.view.position;
+            let dst = map.dst.view.position;
+
+            let mp = position((src.x + dst.x) * 0.5, (src.y + dst.y) * 0.5);
+            mp.x += (mp.x - frame.cx) * 0.2;
+            mp.y += (mp.y - frame.cy) * 0.2;
+            let path = [['M', src.x, src.y],
+                        ['S', mp.x, mp.y, dst.x, dst.y]];
+            // truncate path to allow for signal rep radius
+            let len = Raphael.getTotalLength(path);
+            path = Raphael.getSubpath(path, 10, len - 10);
+            map.view.animate({'path': path,
+                              'stroke-opacity': 1,
+                              'fill-opacity': 0}, duration, '>', function() {
+                map.view.attr({'arrow-end': 'block-wide-long'});
+            });
+        });
+    }
+
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'signals', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
+        }
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
+            update_devices();
+        }
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+        draw(1000);
+    }
+    this.update = update;
+
+    function draw(duration) {
+        draw_devices(duration);
+        draw_maps(duration);
+    }
 
     this.pan = function(x, y, delta_x, delta_y) {
         // placeholder

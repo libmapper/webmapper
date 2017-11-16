@@ -2,10 +2,41 @@
 //           List View Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
+// public functions
+// resize() // called when window size changes
+// update() // called on changes to the model/database
+// draw() // called on pan/scroll events
+// cleanup() // called when view is destroyed
+// type() // returns view type
+
 function ListView(frame, tables, canvas, model)
 {
     let map_pane;
     let escaped = false;
+
+    // table settings
+    tables.left.filter_dir('output');
+    tables.left.show_detail(true);
+    tables.right.filter_dir('input');
+    tables.right.show_detail(true);
+
+    // change device click
+    model.devices.each(function(dev) {
+        if (!dev.view)
+            return;
+        dev.view.unclick().click(function(e) {
+            dev.collapsed ^= 3;
+            update_devices();
+            draw(200);
+        });
+    });
+
+    // remove signal svg
+    model.devices.each(function(dev) {
+        dev.signals.each(function(sig) {
+            remove_object_svg(sig);
+        });
+    });
 
     this.resize = function(new_frame) {
         if (new_frame)
@@ -17,160 +48,239 @@ function ListView(frame, tables, canvas, model)
                     'width': frame.width * 0.2,
                     'height': frame.height,
                     'cx': frame.width * 0.5};
+        draw(0);
     };
-
     this.resize();
-
-    tables.left.filter_dir('output');
-    tables.left.show_detail(true);
-
-    tables.right.filter_dir('input');
-    tables.right.show_detail(true);
 
     this.type = function() {
         return 'list';
     }
 
-    get_sig_pos = function(sig, offset) {
+    get_sig_pos = function(sig) {
         let s;
         if (sig.direction == 'output') {
             s = tables.left.row_from_name(sig.key);
-            if (!s)
-                return null;
-            s.left = offset ? map_pane.left : 0;
+            return s ? {'table': 'left', 'index': s.index} : null;
         }
         else {
             s = tables.right.row_from_name(sig.key);
-            if (!s)
-                return null;
-            s.left = map_pane.right;
+            return s ? {'table': 'right', 'index': s.index} : null;
         }
-        s.width = map_pane.left;
-        return s;
     }
 
-    function redraw_signal(sig) {
-        // remove associated svg elements
-        remove_object_svg(sig);
-    }
+    function update_devices() {
+        // update left and right tables
+        tables.left.update(frame.height);
+        tables.right.update(frame.height);
 
-    function redraw_device(dev, duration) {
-        dev.signals.each(redraw_signal);
+        model.devices.each(function(dev) {
+            let src = tables.left.row_from_name(dev.key);
+            let dst = tables.right.row_from_name(dev.key);
+            if (!src && !dst) {
+                remove_object_svg(dev);
+                return;
+            }
+            if (!dev.view) {
+                dev.view = canvas.path().attr({'fill': dev.color,
+                                               'fill-opacity': 0});
+                dev.view.click(function(e) {
+                    dev.collapsed ^= 3;
+                    update_devices();
+                    draw(200);
+                });
+            }
+            // cache table indexes
+            dev.view.src_index = src ? src.index : null;
+            dev.view.dst_index = dst ? dst.index : null;
 
-        let src = tables.left.row_from_name(dev.name);
-        if (src) {
-            src.left = 0;
-            src.width = map_pane.left;
-        }
-        let dst = tables.right.row_from_name(dev.name);
-        if (dst) {
-            dst.left = map_pane.right;
-            dst.width = map_pane.left;
-        }
-        if (!src && !dst) {
-            remove_object_svg(dev);
-            return;
-        }
-        let path = list_path(src, dst, true, frame);
-        if (!dev.view) {
-            dev.view = canvas.path(path).attr({ 'fill-opacity': 0 });
-        }
-        else
-            dev.view.stop();
-        dev.view.toBack();
-        dev.view.animate({'path': path,
-                          'fill': dev.color,
-                          'fill-opacity': 0.5,
-                          'stroke-opacity': 0}, duration, '>');
-        dev.view.unclick().click(function(e) {
-            dev.collapsed ^= 3;
-            redraw(200, true);
+            dev.signals.each(function(sig) {
+                sig.view = get_sig_pos(sig);
+            });
         });
     }
 
-    function redraw_map(map, duration) {
-        let src = get_sig_pos(map.src, true);
-        let dst = get_sig_pos(map.dst, true);
-        if (!src || !dst) {
-            remove_object_svg(map, 500);
-            return;
-        }
+    function draw_devices(duration) {
+        let lh = tables.left.row_height;
+        let rh = tables.right.row_height;
+        let lo = 20 - tables.left.scrolled;
+        let ro = 20 - tables.right.scrolled;
+        let w = map_pane.left;
+        let cx = map_pane.cx;
 
-        if (map.view) {
-            map.view.stop();
-        }
-        else {
-            map.view = canvas.path([['M', src.left, src.cy],
-                                    ['c', 0, 0, 0, 0, 0, 0]])
-            map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
-                           'stroke': map.view.selected ? 'red' : 'white',
-                           'fill-opacity': 0,
-                           'stroke-width': 2});;
-            map.view.new = true;
-        }
+        model.devices.each(function(dev) {
+            if (!dev.view)
+                return;
+            dev.view.stop();
+            let path = null;
+            if (dev.view.src_index != null) {
+                let ltop = lh * dev.view.src_index + lo;
+                if (dev.view.dst_index != null) {
+                    let rtop = rh * dev.view.dst_index + ro;
+                    path = [['M', 0, ltop],
+                            ['l', w, 0],
+                            ['C', cx, ltop, cx, rtop, map_pane.right, rtop],
+                            ['l', w, 0],
+                            ['l', 0, rh],
+                            ['l', -w, 0],
+                            ['C', cx, rtop + rh, cx, ltop + lh, w, ltop + lh],
+                            ['l', -w, 0],
+                            ['Z']];
+                }
+                else {
+                    path = [['M', 0, ltop],
+                            ['l', w, 0],
+                            ['l', 0, lh],
+                            ['l', -w, 0],
+                            ['Z']];
+                }
+            }
+            else if (dev.view.dst_index != null) {
+                let rtop = rh * dev.view.dst_index + ro;
+                path = [['M', map_pane.right, rtop],
+                        ['l', w, 0],
+                        ['l', 0, rh],
+                        ['l', -w, 0],
+                        ['Z']];
+            }
+            if (path) {
+                dev.view.toBack();
+                dev.view.animate({'path': path,
+                                  'fill': dev.color,
+                                  'fill-opacity': 0.5,
+                                  'stroke-opacity': 0}, duration, '>');
+            }
+        });
+    }
 
-        let v_center = (src.cy + dst.cy) * 0.5;
-        let h_center = map_pane.cx;
-        let h_quarter = (h_center + src.left) * 0.5;
-
-        let y3 = src.cy * 0.9 + v_center * 0.1;
-        let y4 = dst.cy * 0.9 + v_center * 0.1;
-
-        if (src.left == dst.left) {
-            let mult = Math.abs(src.cy - dst.cy) * 0.25 + 35;
-            h_center = (src.left < h_center
-                        ? map_pane.left + mult
-                        : map_pane.left + map_pane.width - mult);
-        }
-
-        let path = [['M', src.left, src.cy],
-                    ['C', h_center, y3, h_center, y4, dst.left, dst.cy]];
-
-        if (map.view.new) {
-            map.view.new = false;
-            if (map.status == "staged") {
-                // draw map directly
-                map.view.attr({'path': path,
-                               'stroke-opacity': 0.5,
+    function update_maps() {
+        model.maps.each(function(map) {
+            if (!map.view) {
+                map.view = canvas.path();
+                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.view.selected ? 'red' : 'white',
-                               'arrow-end': 'block-wide-long',
-                               'stroke-dasharray': map.muted ? '-' : ''});
+                               'fill-opacity': 0,
+                               'stroke-width': 2});
+                map.view.new = true;
+            }
+        });
+    }
+
+    function draw_maps(duration) {
+        let lh = tables.left.row_height;
+        let rh = tables.right.row_height;
+        let lo = 20 - tables.left.scrolled;
+        let ro = 20 - tables.right.scrolled;
+
+        model.maps.each(function(map) {
+            if (!map.view)
+                return;
+            if (map.hidden) {
+                map.view.attr({'stroke-opacity': 0}, duration, '>');
                 return;
             }
-            // draw animation following arrow path
-            let len = Raphael.getTotalLength(path);
-            let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
-            map.view.animate({'path': path_mid,
-                              'stroke-opacity': 1.0},
-                             duration * 0.5, '>', function() {
-                this.animate({'path': path}, duration * 0.5, '>', function() {
-                    this.attr({'arrow-end': 'block-wide-long'});
+            map.view.stop();
+            let src = map.src.view;
+            let dst = map.dst.view;
+            if (!src || !dst) {
+                console.log('missing endpoint for map', map);
+                return;
+            }
+            let x1, y1, x2, y2;
+            if (src.table == 'left') {
+                // left table
+                x1 = map_pane.left;
+                y1 = (src.index + 0.5) * lh + lo;
+            }
+            else {
+                // right table
+                x1 = map_pane.right;
+                y1 = (src.index + 0.5) * rh + ro;
+            }
+            if (dst.table == 'left') {
+                // left table
+                x2 = map_pane.left;
+                y2 = (dst.index + 0.5) * lh + lo;
+            }
+            else {
+                // right table
+                x2 = map_pane.right;
+                y2 = (dst.index + 0.5) * rh + ro;
+            }
+
+            let cy = (y1 + y2) * 0.5;
+            let cx = map_pane.cx;
+            let h_quarter = (cx + x1) * 0.5;
+            let y3 = y1 * 0.9 + cy * 0.1;
+            let y4 = y2 * 0.9 + cy * 0.1;
+
+            if (x1 == x2) {
+                let mult = Math.abs(y1 - y2) * 0.25 + 35;
+                cx = x1 < cx ? map_pane.left + mult : map_pane.right - mult;
+            }
+
+            let path = [['M', x1, y1], ['C', cx, y3, cx, y4, x2, y2]];
+
+            if (map.view.new) {
+                map.view.new = false;
+                if (map.status == "staged") {
+                    // draw map directly
+                    map.view.attr({'path': path,
+                                   'stroke-opacity': 0.5,
+                                   'stroke': map.view.selected ? 'red' : 'white',
+                                   'arrow-end': 'block-wide-long',
+                                   'stroke-dasharray': map.muted ? '-' : ''});
+                    return;
+                }
+                // draw animation following arrow path
+                let len = Raphael.getTotalLength(path);
+                let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
+                map.view.animate({'path': path_mid,
+                                  'stroke-opacity': 1.0},
+                                 duration * 0.5, '>', function() {
+                    this.animate({'path': path}, duration * 0.5, '>', function() {
+                        this.attr({'arrow-end': 'block-wide-long'});
+                    });
                 });
-            });
-        }
-        else {
-            map.view.animate({'path': path,
-                              'stroke-opacity': 1.0,
-                              'fill-opacity': 0,
-                              'stroke-width': 2,
-                              'stroke': map.view.selected ? 'red' : 'white'},
-                             duration, '>', function() {
-                this.attr({'arrow-end': 'block-wide-long',
-                           'stroke-dasharray': map.muted ? '-' : ''});
-            });
-        }
+            }
+            else {
+                map.view.animate({'path': path,
+                                  'stroke-opacity': 1.0,
+                                  'fill-opacity': 0,
+                                  'stroke-width': 2,
+                                  'stroke': map.view.selected ? 'red' : 'white'},
+                                 duration, '>', function() {
+                    this.attr({'arrow-end': 'block-wide-long',
+                               'stroke-dasharray': map.muted ? '-' : ''});
+                });
+            }
+        });
     }
 
-    function redraw(duration, update_tables) {
-        if (update_tables != false) {
-            tables.left.update(frame.height);
-            tables.right.update(frame.height);
-        }
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
-        model.maps.each(function(map) { redraw_map(map, duration); });
+    function draw(duration) {
+        draw_devices(duration);
+        draw_maps(duration);
     }
 
-    this.redraw = redraw;
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'signals', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
+        }
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+            update_devices();
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+        draw(1000);
+    }
+    this.update = update;
 
     this.pan = function(x, y, delta_x, delta_y) {
         if (x < frame.left + map_pane.left) {
@@ -184,24 +294,24 @@ function ListView(frame, tables, canvas, model)
             tables.left.pan(delta_y);
             tables.right.pan(delta_y);
         }
-        redraw(0, false);
+        draw(0);
     }
 
     this.zoom = function(x, y, delta) {
         if (x < frame.left + map_pane.left) {
             if (tables.left.zoom(y - frame.top - map_pane.top, delta))
-                redraw(0, false);
+                draw(0);
         }
         else if (x > frame.left + map_pane.right) {
             if (tables.right.zoom(y - frame.top - map_pane.top, delta))
-                redraw(0, false);
+                draw(0);
         }
         else {
             // send to both left and right tables
             let update = tables.left.zoom(y - frame.top - map_pane.top, delta);
             update |= tables.right.zoom(y - frame.top - map_pane.top, delta);
             if (update)
-                redraw(0, false);
+                draw(0);
         }
     }
 
@@ -210,7 +320,8 @@ function ListView(frame, tables, canvas, model)
             tables.left.filter_text(text);
         else
             tables.right.filter_text(text);
-        redraw(1000, true);
+        update();
+        draw(1000);
     }
 
     // dragging maps from table
@@ -240,7 +351,7 @@ function ListView(frame, tables, canvas, model)
                     dev.collapsed ^= 1;
                 else
                     dev.collapsed ^= 2;
-                redraw(200, true);
+                draw(200);
             }
             return;
         }
@@ -363,9 +474,18 @@ function ListView(frame, tables, canvas, model)
     });
 
     this.cleanup = function() {
-            // clean up any objects created only for this view
+        // clean up any objects created only for this view
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
+
+        model.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.view) {
+                    delete sig.view;
+                    sig.view = null;
+                }
+            });
+        });
     }
 }

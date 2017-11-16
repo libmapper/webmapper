@@ -22,21 +22,27 @@ function CanvasView(frame, tables, canvas, model)
                     'width': frame.width * 0.75,
                     'height': frame.height};
     };
-
     this.resize();
 
     tables.left.filter_dir('both');
     tables.left.show_detail(true);
 
-    let trash = canvas.path([['M', frame.width, frame.height],
-                             ['l', 0, 0],
-                             ['s', 0, 0, 0, 0],
-                             ['Z']]);
-    trash.attr({'stroke': 0, 'fill': 'lightgray', 'fill-opacity': 0.5});
-
     this.type = function() {
         return 'canvas';
     }
+
+    // remove device and unused signal svg
+    model.devices.each(function(dev) {
+        remove_object_svg(dev);
+        dev.signals.each(function(sig) {
+            if (!sig.canvas_object)
+                remove_object_svg(sig);
+            else {
+                set_sig_hover(sig);
+                set_sig_drag(sig);
+            }
+        });
+    });
 
     function set_sig_hover(sig) {
         sig.view.hover(
@@ -180,7 +186,7 @@ function CanvasView(frame, tables, canvas, model)
         );
     }
 
-    function redraw_signal(sig, duration) {
+    function draw_signal(sig, duration) {
         if (!sig.canvas_object) {
             // remove associated svg element
             remove_object_svg(sig);
@@ -223,75 +229,124 @@ function CanvasView(frame, tables, canvas, model)
                                duration, '>').toFront();
     }
 
-    function redraw_device(dev, duration) {
-        let pos = tables.left.row_from_name(dev.name);
-        if (pos) {
-            pos.left = 0;
-            pos.width = map_pane.left;
-        }
-        else {
-            remove_object_svg(device, duration, 'linear');
-            return;
-        }
-        let path = rect_path(pos);
-        if (!dev.view) {
-            dev.view = canvas.path(path).attr({'fill-opacity': 0});
-        }
-        else
-            dev.view.stop();
-        dev.view.toBack();
-        dev.view.animate({'path': path,
-                          'fill': dev.color,
-                          'fill-opacity': 0.5,
-                          'stroke-opacity': 0}, duration, '>');
-        dev.signals.each(function(sig) { redraw_signal(sig, duration); });
-    }
-
-    function redraw_map(map, duration) {
-        let path = canvas_bezier(map, tables.left, map_pane.left);
-        let color;
-        let len = Raphael.getTotalLength(path) * 0.5;
-        if (map.src.canvas_object && map.dst.canvas_object)
-            color = 'white';
-        else
-            color = 'lightgray';
-        if (!map.view) {
-            map.view = canvas.path();
-            map.view.attr({'path': [['M', path[0][1], path[0][2]],
-                                    ['l', 0, 0]],
-                           'stroke-opacity': 1,
-                           'fill-opacity': 0});
-            let path_mid = Raphael.getSubpath(path, 0, len);
-            map.view.animate({'path': path_mid}, duration * 0.5, '>',
-                             function() {
-                map.view.animate({'path': path}, duration * 0.5, '>');
+    function update_devices() {
+        // update left table
+        tables.left.update(frame.height);
+        model.devices.each(function(dev) {
+            let row = tables.left.row_from_name(dev.key);
+            if (!row) {
+                remove_object_svg(dev);
+                return;
+            }
+            if (!dev.view) {
+                dev.view = canvas.path().attr({'fill': dev.color,
+                                               'fill-opacity': 0.5,
+                                               'stroke-opacity': 0});
+                dev.view.index = row.index;
+            }
+            dev.signals.each(function(sig) {
+                let row = tables.left.row_from_name(sig.key);
+                sig.view = row ? row.index : null;
             });
-        }
-        else {
-            map.view.animate({'path': path,
-                              'stroke-opacity': 1,
-                              'fill-opacity': 0}, duration, '>');
-        }
-        map.view.attr({'stroke-width': 2,
-                       'arrow-end': 'block-wide-long',
-                       'stroke': color});
+        });
     }
 
-    function redraw(duration, update_tables) {
-        trash.animate({ 'path' : [['M', frame.width, frame.height],
-                                  ['l', 0, -100],
-                                  ['s', -100, 0, -100, 100],
-                                  ['Z']] }, duration, '>');
+    function draw_devices(duration) {
+        let h = tables.left.row_height;
+        let o = 20 - tables.left.scrolled;
+        let w = map_pane.left;
 
-        if (update_tables != false)
-            tables.left.update(frame.height);
-
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
-        model.maps.each(function(map) {redraw_map(map, duration); });
-        first_draw = false;
+        model.devices.each(function(dev) {
+            if (!dev.view)
+                return;
+            dev.view.stop()
+            let path = [['M', 0, h * dev.index + o],
+                        ['l', w, 0],
+                        ['l', 0, h],
+                        ['l', -w, 0],
+                        ['Z']];
+            dev.view.toBack();
+            dev.view.animate({'path': path,
+                              'fill': dev.color,
+                              'fill-opacity': 0.5,
+                              'stroke-opacity': 0}, duration, '>');
+            dev.signals.each(function(sig) { draw_signal(sig, duration); });
+        });
     }
 
-    this.redraw = redraw;
+    function update_maps() {
+        model.maps.each(function(map) {
+            if (!map.view) {
+                map.view = canvas.path();
+                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
+                               'stroke': map.view.selected ? 'red' : 'white',
+                               'fill-opacity': 0,
+                               'stroke-width': 2});
+                map.view.new = true;
+            }
+        });
+    }
+
+    function draw_maps(duration) {
+        model.maps.each(function(map) {
+            if (!map.view)
+                return;
+            map.view.stop();
+            let path = canvas_bezier(map, tables.left, map_pane.left);
+            let color;
+            let len = Raphael.getTotalLength(path) * 0.5;
+            if (map.src.canvas_object && map.dst.canvas_object)
+                color = 'white';
+            else
+                color = 'lightgray';
+            if (map.view.new) {
+                map.view.attr({'path': [['M', path[0][1], path[0][2]],
+                                        ['l', 0, 0]],
+                               'stroke-opacity': 1,
+                               'fill-opacity': 0});
+                let path_mid = Raphael.getSubpath(path, 0, len);
+                map.view.animate({'path': path_mid}, duration * 0.5, '>',
+                                 function() {
+                    map.view.animate({'path': path}, duration * 0.5, '>');
+                });
+                map.view.new = false;
+            }
+            else {
+                map.view.animate({'path': path,
+                                  'stroke-opacity': 1,
+                                  'fill-opacity': 0}, duration, '>');
+            }
+            map.view.attr({'stroke-width': 2,
+                           'arrow-end': 'block-wide-long',
+                           'stroke': color});
+        });
+    }
+
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'signals', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
+        }
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+            update_devices();
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+        draw(1000);
+    }
+    this.update = update;
+
+    function draw(duration) {
+        draw_devices(duration);
+        draw_maps(duration);
+    }
 
     this.pan = function(x, y, delta_x, delta_y) {
         if (x < frame.left + map_pane.left) {

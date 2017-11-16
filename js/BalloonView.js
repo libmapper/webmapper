@@ -71,10 +71,9 @@ function BalloonView(frame, canvas, model)
         path.push(circle_path(frame.left + frame.width * 0.67, frame.cy, 0));
         outline.attr({'path': path}).toBack();
     }
-
     this.resize();
 
-    function redraw_signal(sig, duration) {
+    function draw_signal(sig, duration) {
         // remove associated svg elements
         remove_object_svg(sig);
 
@@ -113,14 +112,25 @@ function BalloonView(frame, canvas, model)
         }
     }
 
-    function redraw_device(dev, duration) {
-        // remove associated svg elements
-        remove_object_svg(dev);
-        let line_count = 0;
-        dev.signals.each(function(sig) { redraw_signal(sig, duration); });
+    function update_devices() {
+        // build/rebuild signal namespace heirarchy
+        // label signals with final position
     }
 
-    this.redraw = function(duration) {
+    function draw_devices(duration) {
+        model.devices.each(function(dev) {
+            // remove associated svg elements
+            remove_object_svg(dev);
+            let line_count = 0;
+            dev.signals.each(function(sig) { draw_signal(sig, duration); });
+        });
+    }
+
+    function draw_maps(duration) {
+        // draw arcs for maps
+    }
+
+    this.draw = function(duration) {
         let path = circle_path(frame.left + frame.width * 0.33, frame.cy,
                                frame.height * 0.46);
         path.push(circle_path(frame.left + frame.width * 0.67, frame.cy,
@@ -138,6 +148,27 @@ function BalloonView(frame, canvas, model)
         adjust_nodes(dst_nodes, frame.left + frame.width * 0.67, frame.cy,
                      frame.height * 0.46, 0, true);
     }
+
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'signals', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
+        }
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+            update_devices();
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+        draw(1000);
+    }
+    this.update = update;
 
     this.pan = function(x, y, delta_x, delta_y) {
         // placeholder

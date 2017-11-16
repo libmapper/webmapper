@@ -14,6 +14,7 @@ function mapperTable(model, id, orientation, detail)
         frame = fullOffset(this.table);
         frame.cx = frame.left + frame.width * 0.5;
         frame.cy = frame.top + frame.height * 0.5;
+        width = frame.width;
     };
 
     this.direction = null;
@@ -40,6 +41,8 @@ function mapperTable(model, id, orientation, detail)
     this.num_sigs = 0;
     this.collapseAll = false;
     this.title = 'SIGNALS';
+
+    this.width = 0;
 
     function makeTable(self) {
         $(self.div).empty();
@@ -161,6 +164,49 @@ function mapperTable(model, id, orientation, detail)
         return this.row_height * this.table.rows.length;
     }
 
+    this.row_from_index = function(idx) {
+        let row_height = Math.round(this.row_height);
+        let j = 0;
+        for (var i = 0, row; row = this.table.rows[i]; i++) {
+            if ($(row).hasClass('invisible'))
+                continue;
+            if (j < idx) {
+                ++j;
+                continue;
+            }
+            if (this.orientation == 'top') {
+                let left = j * row_height - this.scrolled;
+                let top = row.offsetLeft;
+                return {'left': left,
+                        'top': top,
+                        'width': row_height,
+                        'height': row.offsetWidth,
+                        'cx': left + row_height * 0.5,
+                        'cy': top + row.offsetWidth * 0.5,
+                        'id': row.id.replace('\\/', '\/'),
+                        'even': $(row).hasClass('even'),
+                        'isOutput': $(row).hasClass('output'),
+                        'type': $(row).hasClass('device') ? 'device' : 'signal',
+                        'index': j};
+            }
+            else {
+                let left = row.offsetLeft;
+                let top = j * row_height - this.scrolled + 20;
+                return {'left': left,
+                        'top': top,
+                        'width': row.offsetWidth,
+                        'height': row_height,
+                        'cx': left + row.offsetWidth * 0.5,
+                        'cy': top + this.row_height * 0.5,
+                        'id': row.id.replace('\\/', '\/'),
+                        'even': $(row).hasClass('even'),
+                        'isOutput': $(row).hasClass('output'),
+                        'type': $(row).hasClass('device') ? 'device' : 'signal',
+                        'index': j};
+            }
+        }
+    }
+
     this.row_from_name = function(name) {
         let id = name.replace('/', '\\/');
         let row_height = Math.round(this.row_height);
@@ -176,32 +222,32 @@ function mapperTable(model, id, orientation, detail)
                 if (this.orientation == 'top') {
                     let left = j * row_height - this.scrolled;
                     let top = row.offsetLeft;
-                    return { 'left': left,
-                             'top': top,
-                             'width': row_height,
-                             'height': row.offsetWidth,
-                             'cx': left + row_height * 0.5,
-                             'cy': top + row.offsetWidth * 0.5,
-                             'id': row.id.replace('\\/', '\/'),
-                             'even': $(row).hasClass('even'),
-                             'isOutput': $(row).hasClass('output'),
-                             'type': $(row).hasClass('device') ? 'device' : 'signal'
-                    };
+                    return {'left': left,
+                            'top': top,
+                            'width': row_height,
+                            'height': row.offsetWidth,
+                            'cx': left + row_height * 0.5,
+                            'cy': top + row.offsetWidth * 0.5,
+                            'id': row.id.replace('\\/', '\/'),
+                            'even': $(row).hasClass('even'),
+                            'isOutput': $(row).hasClass('output'),
+                            'type': $(row).hasClass('device') ? 'device' : 'signal',
+                            'index': j};
                 }
                 else {
                     let left = row.offsetLeft;
                     let top = j * row_height - this.scrolled + 20;
-                    return { 'left': left,
-                             'top': top,
-                             'width': row.offsetWidth,
-                             'height': row_height,
-                             'cx': left + row.offsetWidth * 0.5,
-                             'cy': top + this.row_height * 0.5,
-                             'id': row.id.replace('\\/', '\/'),
-                             'even': $(row).hasClass('even'),
-                             'isOutput': $(row).hasClass('output'),
-                             'type': $(row).hasClass('device') ? 'device' : 'signal'
-                    };
+                    return {'left': left,
+                            'top': top,
+                            'width': row.offsetWidth,
+                            'height': row_height,
+                            'cx': left + row.offsetWidth * 0.5,
+                            'cy': top + this.row_height * 0.5,
+                            'id': row.id.replace('\\/', '\/'),
+                            'even': $(row).hasClass('even'),
+                            'isOutput': $(row).hasClass('output'),
+                            'type': $(row).hasClass('device') ? 'device' : 'signal',
+                            'index': j};
                 }
                 break;
             }
@@ -227,29 +273,26 @@ function mapperTable(model, id, orientation, detail)
         if (this.orientation == 'top') {
             let left = row.offsetTop - this.scrolled;
             let top = row.offsetLeft;
-            output = { 'left': left,
-                       'top': top,
-                       'width': row_height,
-                       'height': row.offsetWidth,
-                       'cx': left + row.offsetHeight * 0.5,
-                       'cy': top + row.offsetWidth * 0.5,
-                       'id': row.id.replace('\\/', '\/'),
-                       'type': $(row).hasClass('device') ? 'device' : 'signal'
-            };
+            output = {'left': left,
+                      'top': top,
+                      'width': row_height,
+                      'height': row.offsetWidth,
+                      'cx': left + row.offsetHeight * 0.5,
+                      'cy': top + row.offsetWidth * 0.5,
+                      'id': row.id.replace('\\/', '\/'),
+                      'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
         else {
             let left = row.offsetLeft;
             let top = row.offsetTop - this.scrolled + 20;
-            output = { 'left': left,
-                       'top': top,
-                       'width': row.offsetWidth,
-                       'height': row_height,
-                       'cx': left + row.offsetWidth * 0.5,
-                       'cy': top + row.offsetHeight * 0.5,
-                       'id': row.id.replace('\\/', '\/'),
-                       'type': $(row).hasClass('device') ? 'device' : 'signal'
-
-            };
+            output = {'left': left,
+                      'top': top,
+                      'width': row.offsetWidth,
+                      'height': row_height,
+                      'cx': left + row.offsetWidth * 0.5,
+                      'cy': top + row.offsetHeight * 0.5,
+                      'id': row.id.replace('\\/', '\/'),
+                      'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
         return output;
     }

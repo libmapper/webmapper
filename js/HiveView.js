@@ -29,7 +29,6 @@ function HiveView(frame, canvas, model)
                     'width': frame.width - 100,
                     'height': frame.height - 100};
     };
-
     this.resize();
 
     this.type = function() {
@@ -105,32 +104,8 @@ function HiveView(frame, canvas, model)
         );
     }
 
-    function redraw_signal(sig, duration) {
-        let remove = false;
-        if (sig.direction == 'output') {
-            if (srcregexp && !srcregexp.test(sig.key))
-                remove = true;
-        }
-        else if (dstregexp && !dstregexp.test(sig.key)) {
-            remove = true;
-        }
-        if (remove) {
-            remove_object_svg(sig);
-            return;
-        }
-
+    function draw_signal(sig, angle, duration) {
         let is_output = sig.direction == 'output';
-        if (!sig.view) {
-            sig.view = canvas.path(circle_path(sig.position.x,
-                                               sig.position.y,
-                                               is_output ? 7 : 10));
-            set_sig_hover(sig);
-            set_sig_drag(sig);
-        }
-        else if (first_draw) {
-            set_sig_hover(sig);
-            set_sig_drag(sig);
-        }
 
         sig_index += 1;
         let x = map_pane.left + map_pane.width * inc * sig_index * Math.cos(angle);
@@ -162,81 +137,120 @@ function HiveView(frame, canvas, model)
         }
     }
 
-    function redraw_device(dev, duration) {
-        angle = dev_index * -angleInc;
-        dev_index += 1;
-        sig_index = 0;
-        dev_start_path = null;
-        dev_target_path = null;
-        let vis_sigs = dev.signals.reduce(function(count, sig) {
-            let found = 0;
-            if (sig.direction == 'output') {
-                if (!srcregexp || srcregexp.test(sig.key))
-                    found = 1;
+    function update_devices() {
+        let dev_index = 0;
+        model.devices.each(function(dev) {
+            let sig_index = 0;
+            dev.signals.each(function(sig) {
+                let regexp = sig.direction == 'output' ? srcregexp : dstregexp;
+                if (regexp && !regexp.test(sig.key)) {
+                    remove_object_svg(sig);
+                    return;
+                }
+                if (!sig.view) {
+                    sig.view = canvas.path(circle_path(0, frame.height, 0))
+                                     .attr({'fill-opacity': 0,
+                                            'stroke-opacity': 0});
+                    set_sig_drag(sig);
+                    set_sig_hover(sig);
+                }
+                sig.view.index = sig_index++;
+            });
+            // if no signals visible, hide device also
+            if (!sig_index) {
+                remove_object_svg(dev);
+                return;
             }
-            else if (!dstregexp || dstregexp.test(sig.key))
-                found = 1;
-            return count ? count + found : found;
-        });
-        inc = vis_sigs ? 1 / vis_sigs : 1;
-        dev.signals.each(function(sig) { redraw_signal(sig, duration); });
-
-        if (!dev.view) {
-            dev.view = canvas.path(dev_start_path)
-                             .attr({'stroke': dev.color,
-                                    'stroke-width': 20,
-                                    'stroke-opacity': 0,
-                                    'fill': dev.color,
-                                    'fill-opacity': 0,
-                                    'stroke-linecap': 'round'});
-        }
-        else
-            dev.view.stop();
-        dev.view.toBack();
-        dev.view.animate({'path': dev_target_path,
-                          'stroke': dev.color,
-                          'stroke-width': 20,
-                          'stroke-opacity': 0.5,
-                          'fill': dev.color,
-                          'fill-opacity': 0,
-                          'stroke-linecap': 'round'}, duration, '>');
-    }
-
-    function redraw_map(map, duration) {
-        let src = map.src.position;
-        let dst = map.dst.position;
-        if (!map.view) {
-            map.view = canvas.path([['M', src.x, src.y], ['l', 0, 0]])
-                             .attr({'stroke-width': 2,
-                                    'arrow-end': 'block-wide-long' });
-        }
-        let path = [['M', src.x, src.y],
-                    ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
-                     dst.x, dst.y]];
-        let len = Raphael.getTotalLength(path);
-        path = Raphael.getSubpath(path, 10, len - 10);
-        map.view.animate({'path': path,
-                          'fill-opacity': '0',
-                          'stroke-opacity': 1,
-                          'stroke-width': 2},
-                         duration, '>', function() {
-            map.view.attr({'arrow-end': 'block-wide-long'}).toFront();
+            if (!dev.view)
+                dev.view = canvas.path().attr({'stroke-opacity': 0});
+            dev.view.attr({'stroke': dev.color,
+                           'stroke-width': 20,
+                           'stroke-linecap': 'round'});
+            dev.view.index = dev_index++;
+            dev.view.num_sigs = sig_index + 1;
         });
     }
 
-    this.redraw = function(duration) {
+    function draw_devices(duration) {
         dev_index = 0;
         let dev_num = model.devices.size();
         if (dev_num && dev_num > 1)
             dev_num -= 1;
         else
             dev_num = 1;
-        angleInc = (Math.PI * 0.5) / dev_num;
+        angleInc = (Math.PI * -0.5) / dev_num;
 
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
-        model.maps.each(function(map) { redraw_map(map, duration); });
+        model.devices.each(function(dev) {
+            if (!dev.view)
+                return;
+            dev.view.stop();
+            angle = dev.view.index * angleInc;
+
+           
+            inc = vis_sigs ? 1 / vis_sigs : 1;
+            dev.signals.each(function(sig) { draw_signal(sig, angle, duration); });
+
+                dev.view.stop();
+            dev.view.toBack();
+            dev.view.animate({'path': dev_target_path,
+                              'stroke': dev.color,
+                              'stroke-width': 20,
+                              'stroke-opacity': 0.5,
+                              'fill': dev.color,
+                              'fill-opacity': 0,
+                              'stroke-linecap': 'round'}, duration, '>');
+        });
+    }
+
+    function draw_maps(duration) {
+        model.maps/each(function(map) {
+            let src = map.src.position;
+            let dst = map.dst.position;
+            if (!map.view) {
+                map.view = canvas.path([['M', src.x, src.y], ['l', 0, 0]])
+                                 .attr({'stroke-width': 2,
+                                        'arrow-end': 'block-wide-long' });
+            }
+            let path = [['M', src.x, src.y],
+                        ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
+                         dst.x, dst.y]];
+            let len = Raphael.getTotalLength(path);
+            path = Raphael.getSubpath(path, 10, len - 10);
+            map.view.animate({'path': path,
+                              'fill-opacity': '0',
+                              'stroke-opacity': 1,
+                              'stroke-width': 2},
+                             duration, '>', function() {
+                map.view.attr({'arrow-end': 'block-wide-long'}).toFront();
+            });
+        });
+    }
+
+    function draw(duration) {
+        draw_devices(duration);
+        draw_maps(duration);
         first_draw = false;
     }
+
+    function update() {
+        let elements;
+        switch (arguments.length) {
+            case 0:
+                elements = ['devices', 'signals', 'maps'];
+                break;
+            case 1:
+                elements = [arguments[0]];
+                break;
+            default:
+                elements = arguments;
+                break;
+        }
+        if (elements.indexOf('devices') >= 0)
+            update_devices();
+        if (elements.indexOf('maps') >= 0)
+            update_maps();
+    }
+    this.update = update;
 
     this.pan = function(x, y, delta_x, delta_y)  {
         // placeholder
@@ -251,7 +265,7 @@ function HiveView(frame, canvas, model)
             srcregexp = text ? new RegExp(text, 'i') : null;
         else
             dstregexp = text ? new RegExp(text, 'i') : null;
-        redraw(1000);
+        draw(1000);
     }
 
     this.cleanup = function() {
