@@ -252,7 +252,7 @@ function CanvasView(frame, tables, canvas, model)
     }
 
     function draw_devices(duration) {
-        let h = tables.left.row_height;
+        let h = Math.round(tables.left.row_height);
         let o = 20 - tables.left.scrolled;
         let w = map_pane.left;
 

@@ -307,7 +307,7 @@ form {
 .rangeSwitch {
     width: 20px;
     height: 20px;
-    background: url(/images/range_switch.png);
+    background: url(/images/range_switch_white.png);
     background-repeat: no-repeat;
     cursor: pointer;
     border: none;
@@ -323,7 +323,7 @@ form {
 .boundary {
     width: 24px;
     height: 24px;
-    background: url(/images/boundary_icons.png);
+    background: url(/images/boundary_icons_white.png);
     background-repeat: no-repeat;
     cursor: pointer;
     border: none;

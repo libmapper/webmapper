@@ -229,7 +229,6 @@ function HiveView(frame, canvas, model)
     function draw(duration) {
         draw_devices(duration);
         draw_maps(duration);
-        first_draw = false;
     }
 
     function update() {

@@ -23,6 +23,8 @@ function GraphView(frame, canvas, model)
         return 'graph';
     }
 
+    let new_map = null;
+
     // remove associated svg elements for devices
     // set hover and drag for existing signal objects
     model.devices.each(function(dev) {
@@ -38,7 +40,7 @@ function GraphView(frame, canvas, model)
     function set_sig_hover(sig) {
         sig.view.hover(
             function() {
-                let pos = labeloffset(sig.position, sig.key);
+                let pos = labeloffset(sig.view.position, sig.key);
                 if (!sig.view.label) {
                     sig.view.label = canvas.text(pos.x, pos.y, sig.key);
                     sig.view.label.node.setAttribute('pointer-events', 'none');
@@ -47,6 +49,7 @@ function GraphView(frame, canvas, model)
                     sig.view.label.stop();
                 sig.view.label.attr({'x': pos.x,
                                      'y': pos.y,
+                                     'fill': 'white',
                                      'opacity': 1,
                                      'font-size': 16,}).toFront();
                 if (draggingFrom == null)
@@ -56,14 +59,14 @@ function GraphView(frame, canvas, model)
                     return;
                 }
                 snappingTo = sig;
-                let src = draggingFrom.position;
-                let dst = sig.position;
+                let src = draggingFrom.view.position;
+                let dst = sig.view.position;
                 let path = [['M', src.x, src.y],
                             ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
                              dst.x, dst.y]];
                 let len = Raphael.getTotalLength(path);
                 path = Raphael.getSubpath(path, 10, len - 10);
-                staged_map.attr({'path': path});
+                new_map.attr({'path': path});
             },
             function() {
                 snappingTo = null;
@@ -88,18 +91,26 @@ function GraphView(frame, canvas, model)
             function(dx, dy, x, y, event) {
                 if (snappingTo)
                     return;
+                if (escaped) {
+                    draggingFrom = null;
+                    new_map.remove();
+                    new_map = null;
+                    return;
+                }
                 x -= frame.left;
                 y -= frame.top;
-                let src = draggingFrom.position;
+                let src = draggingFrom.view.position;
                 let path = [['M', src.x, src.y],
                             ['S', (src.x + x) * 0.6, (src.y + y) * 0.4,
                              x, y]];
                 if (!new_map) {
-                    new_map = canvas.path(path).attr({'stroke': 'black',
+                    new_map = canvas.path(path).attr({'stroke': 'white',
+                                                      'stroke-width': 2,
                                                       'stroke-opacity': 1,
                                                       'arrow-start': 'none',
                                                       'arrow-end': 'block-wide-long'});
                 }
+                new_map.attr({'path': path});
             },
             function(x, y, event) {
                 escaped = false;
@@ -107,9 +118,8 @@ function GraphView(frame, canvas, model)
             },
             function(x, y, event) {
                 draggingFrom = null;
-                cursor.attr({'stroke-opacity': 0,
-                             'arrow-start': 'none',
-                             'arrow-end': 'none'});
+                new_map.remove();
+                new_map = null;
             }
         );
     }

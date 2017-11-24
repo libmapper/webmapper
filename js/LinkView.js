@@ -12,8 +12,7 @@ function LinkView(frame, tables, canvas, model)
     tables.right.filter_dir('both');
     tables.right.show_detail(false);
 
-    var fileRep = {};
-    fileRep.devices = [];
+    var staged_file = null;
     let maps = null;
     let links = {};
 
@@ -29,63 +28,68 @@ function LinkView(frame, tables, canvas, model)
     });
     model.maps.each(function(map) { remove_object_svg(map); });
 
-    function set_device_target(dev_idx, table, name) {
-        fileRep.devices[dev_idx].target_table = table;
-        fileRep.devices[dev_idx].target_name = name;
+    function set_device_target(dev_idx, table, row) {
+        console.log('set_device_target', dev_idx, tables, row);
+        staged_file.devices[dev_idx].target_table = table;
+        staged_file.devices[dev_idx].target_name = row.id;
+        staged_file.devices[dev_idx].target_index = row.index;
     }
 
-    this.parse_file = function(file) {
+    function upgrade_file(file) {
+        // update to version 2.2
+        file.mapping.maps = [];
+        for (var i in file.mapping.connections) {
+            let c = file.mapping.connections[i];
+            let map = {};
+            let src = {'name': c.source[0].slice(1)};
+            let dst = {'name': c.destination[0].slice(1)};
+            if (c.mute != null)
+                map.muted = c.mute ? true : false;
+            if (c.expression != null)
+                map.expression = c.expression.replace('s[', 'src[')
+                .replace('d[', 'dst[');
+            if (c.srcMin != null)
+                src.minimum = c.srcMin;
+            if (c.srcMax != null)
+                src.maximum = c.srcMax;
+            if (c.dstMin != null)
+                dst.minimum = c.dstMin;
+            if (c.dstMax != null)
+                dst.maximum = c.dstMax;
+            if (c.boundMin != null)
+                dst.bound_min = c.boundMin;
+            if (c.boundMax != null)
+                dst.bound_max = c.boundMax;
+
+            if (c.mode == 'reverse') {
+                map.mode = 'expression';
+                map.expression = 'y=x';
+                map.sources = [dst];
+                map.destinations = [src];
+            }
+            else {
+                if (c.mode == 'calibrate') {
+                    map.mode = 'linear';
+                    dst.calibrating = true;
+                }
+                else
+                    map.mode = c.mode;
+                map.sources = [src];
+                map.destinations = [dst];
+            }
+            file.mapping.maps.push(map);
+        }
+        delete file.mapping.connections;
+        file.fileversion = "2.2";
+    }
+
+    this.stage_file = function(file) {
         if (!file.fileversion || !file.mapping) {
             console.log("unknown file type");
             return;
         }
         if (file.fileversion == "2.1") {
-            // update to version 2.2
-            file.mapping.maps = [];
-            for (var i in file.mapping.connections) {
-                let c = file.mapping.connections[i];
-                let map = {};
-                let src = {'name': c.source[0].slice(1)};
-                let dst = {'name': c.destination[0].slice(1)};
-                if (c.mute != null)
-                    map.muted = c.mute ? true : false;
-                if (c.expression != null)
-                    map.expression = c.expression.replace('s[', 'src[')
-                                                 .replace('d[', 'dst[');
-                if (c.srcMin != null)
-                    src.minimum = c.srcMin;
-                if (c.srcMax != null)
-                    src.maximum = c.srcMax;
-                if (c.dstMin != null)
-                    dst.minimum = c.dstMin;
-                if (c.dstMax != null)
-                    dst.maximum = c.dstMax;
-                if (c.boundMin != null)
-                    dst.bound_min = c.boundMin;
-                if (c.boundMax != null)
-                    dst.bound_max = c.boundMax;
-
-                if (c.mode == 'reverse') {
-                    map.mode = 'expression';
-                    map.expression = 'y=x';
-                    map.sources = [dst];
-                    map.destinations = [src];
-                }
-                else {
-                    if (c.mode == 'calibrate') {
-                        map.mode = 'linear';
-                        dst.calibrating = true;
-                    }
-                    else
-                        map.mode = c.mode;
-                    map.sources = [src];
-                    map.destinations = [dst];
-                }
-                file.mapping.maps.push(map);
-            }
-            delete file.mapping.connections;
-            file.fileversion = "2.2";
-            console.log(file);
+            upgrade_file(file);
         }
         if (file.fileversion != "2.2") {
             console.log("unsupported fileversion", file.fileversion);
@@ -95,78 +99,171 @@ function LinkView(frame, tables, canvas, model)
             console.log("no maps in file");
             return;
         }
-        maps = file.mapping.maps;
-        let devs = {};
-        let num_devs = 0;
+
+        if (staged_file) {
+            // remove canvas elements for devices
+            for (var i in staged_file.devices) {
+                remove_object_svg(staged_file.devices[i]);
+            }
+            remove_object_svg(staged_file);
+            delete staged_file;
+        }
+        staged_file = file;
+
+        // find devices referenced in file
+        staged_file.devices = {};
+        staged_file.num_devices = 0;
+        maps = staged_file.mapping.maps;
         for (var i in maps) {
             let map = maps[i];
             for (var j in map.sources) {
                 let dev = map.sources[j].name.split('/')[0];
-                if (dev in devs)
-                    devs[dev].src += 1;
+                if (dev in staged_file.devices)
+                    staged_file.devices[dev].src += 1;
                 else {
-                    devs[dev] = {"src": 1, "dst": 0};
-                    num_devs += 1;
+                    staged_file.devices[dev] = {"src": 1, "dst": 0};
+                    ++staged_file.num_devices;
                 }
             }
             for (var j in map.destinations) {
                 let dev = map.destinations[j].name.split('/')[0];
-                if (dev in devs)
-                    devs[dev].dst += 1;
+                if (dev in staged_file.devices)
+                    staged_file.devices[dev].dst += 1;
                 else {
-                    devs[dev] = {"src": 0, "dst": 1};
-                    num_devs += 1;
+                    staged_file.devices[dev] = {"src": 0, "dst": 1};
+                    ++staged_file.num_devices;
                 }
             }
         }
-        if (num_devs == 0) {
+        if (!staged_file.num_devices) {
             console.log("no devices found in file!");
             return;
         }
-        let angleInc = Math.PI * 2.0 / num_devs;
-        let count = 0;
-        for (key in devs) {
-            let device = {};
-            device.view = canvas.path([['M', frame.cx, frame.cy],
-                                       ['l', 0, 0]])
-                                .attr({'stroke-width': '200px',
-                                       'stroke-opacity': 0.5})
-                                .toBack();
-            let pos_x = frame.cx + 200 * Math.sin(count * angleInc);
-            let pos_y = frame.cy + 200 * Math.cos(count * angleInc);
-            device.view.animate({'path': [['M', frame.cx, frame.cy],
-                                          ['L', pos_x, pos_y]]},
-                                1000, 'linear');
-            device.view.index = count;
 
-            // enable dragging to a different target device
-            device.view.drag(function(dx, dy, x, y, event) {
+        let count = 0;
+        let angleInc = Math.PI * 2.0 / staged_file.num_devices;
+        for (key in staged_file.devices) {
+            let dev = staged_file.devices[key];
+            let pos_x = Math.sin(count * angleInc);
+            let pos_y = Math.cos(count * angleInc);
+            dev.view = canvas.path([['M', frame.cx, frame.cy],
+                                    ['l', 0, 0]])
+                .attr({'stroke-width': '200px',
+                       'stroke-opacity': 0.5})
+                .animate({'path': [['M', frame.cx, frame.cy],
+                                   ['l', pos_x * 200, pos_y * 200]]},
+                         1000, 'linear', function() {
+//                    this.label = canvas.text(frame.cx + pos_x * 180, frame.cy + pos_y * 180,
+//                                             dev.source_name+' ('+dev.src+' src, '+dev.dst+' dst)')
+//                         .attr({'font-size': 16, 'fill': 'white'})
+//                         .node.setAttribute('pointer-events', 'none');
+                })
+                .toFront();
+
+            dev.view.index = count++;
+            dev.view.drag(function(dx, dy, x, y, event) {
+                // enable dragging to a different target device
                 if (x < frame.cx) {
                     set_device_target(this.index, 'left',
-                                      tables.left.row_from_position(x, y).id);
+                                      tables.left.row_from_position(x, y));
                 }
                 else {
                     set_device_target(this.index, 'right',
-                                      tables.right.row_from_position(x, y).id);
+                                      tables.right.row_from_position(x, y));
                 }
-                draw(0, false);
+                draw_file(0);
             });
+            console.log('dev:', dev);
 
-            pos_x = frame.cx + 180 * Math.sin(count * angleInc);
-            pos_y = frame.cy + 180 * Math.cos(count * angleInc);
-            device.label = canvas.text(pos_x, pos_y,
-                                       key+' ('+ devs[key].src+' src, '+
-                                       devs[key].dst+' dst)');
-            device.label.attr({'font-size': 16, 'fill': 'white'});
-            device.label.node.setAttribute('pointer-events', 'none');
+            dev.source_name = key;
 
-            device.source_name = key;
-
-            fileRep.devices.push(device);
-            count += 1;
         }
-        fileRep.label.attr({'text': 'Drag handles\nto devices\n\nclick to load'});
-        var loaded = true;
+        staged_file.view = canvas.circle(frame.cx, frame.cy, 0)
+            .attr({'fill': 'black', 'stroke': 'white'})
+            .animate({'r': 100}, 1000, 'linear', function() {
+                this.label = canvas.text(frame.cx, frame.cy,
+                                         'Drag handles\nto devices\n\nclick to load')
+                    .attr({'font-size': 24, 'fill': 'white'})
+                    .node.setAttribute('pointer-events', 'none');
+            })
+            .hover(
+                function() {
+                    this.animate({'stroke': 'red', 'stroke-width': 10}, 1000, 'linear');
+                },
+                function() {
+                    this.animate({'stroke': 'black', 'stroke-width': 0}, 1000, 'linear');
+            })
+            .click(function() {
+                load_file();
+            });
+    }
+
+    function draw_file() {
+        let angleInc = Math.PI * 2.0 / staged_file.num_devices;
+        for (var key in staged_file.devices) {
+            let dev = staged_file.devices[key];
+            let pos_x = Math.sin(dev.view.index * angleInc);
+            let pos_y = Math.cos(dev.view.index * angleInc);
+            let path;
+            let color = 'gray';
+            if (!dev.target_table) {
+                dev.view.animate({'path': [['M', frame.cx, frame.cy],
+                                           ['l', pos_x * 200, pos_y * 200]]},
+                                 1000, 'linear');
+//                dev.view.label.animate({'x': frame.cx + pos_x * 180,
+//                                        'y': frame.cy + pos_y * 180 });
+                continue;
+            }
+            else if (target_table == 'left') {
+                let qx = (link_pane.left + frame.cx) * 0.5;
+                let top_angle = Math.atan2(target.top - frame.cy, qx - frame.cx);
+                let bot_angle = Math.atan2(target.top + target.height - frame.cy,
+                                           qx - frame.cx);
+                top_angle += Math.PI * 0.5;
+                bot_angle -= Math.PI * 0.5;
+                let top_isect = [frame.cx + Math.cos(top_angle) * 100,
+                                 frame.cy + Math.sin(top_angle) * 100];
+                let bot_isect = [frame.cx + Math.cos(bot_angle) * 100,
+                                 frame.cy + Math.sin(bot_angle) * 100];
+                path = [['M', link_pane.left, target.top],
+                        ['S', qx, target.top, top_isect[0], top_isect[1]],
+                        ['L', bot_isect[0], bot_isect[1]],
+                        ['S', qx, target.top + target.height, link_pane.left,
+                         target.top + target.height],
+                        ['Z']];
+//                dev.label.attr({'x': link_pane.left + 10,
+//                                'y': target.cy,
+//                                'text-anchor': 'start'});
+            }
+            else {
+                let x = link_pane.right;
+                let qx = (link_pane.right + frame.cx) * 0.5;
+                let top_angle = Math.atan2(target.top - frame.cy, qx - frame.cx);
+                let bot_angle = Math.atan2(target.top + target.height - frame.cy,
+                                           qx - frame.cx);
+                top_angle -= Math.PI * 0.5;
+                bot_angle += Math.PI * 0.5;
+                let top_isect = [frame.cx + Math.cos(top_angle) * 100,
+                                 frame.cy + Math.sin(top_angle) * 100];
+                let bot_isect = [frame.cx + Math.cos(bot_angle) * 100,
+                                 frame.cy + Math.sin(bot_angle) * 100];
+                path = [['M', link_pane.right, target.top],
+                        ['S', qx, target.top, top_isect[0], top_isect[1]],
+                        ['L', bot_isect[0], bot_isect[1]],
+                        ['S', qx, target.top + target.height, x,
+                         target.top + target.height],
+                        ['Z']];
+                dev.label.attr({'x': link_pane.right - 10,
+                                'y': target.cy,
+                                'text-anchor': 'end'});
+            }
+            dev.view.attr({'path': path,
+                           'stroke-width': 0,
+                           'stroke-opacity': 0,
+                           'fill': model.devices.find(target_name).color,
+                           'fill-opacity': 0.5}).toFront();
+            dev.label.toFront();
+        }
     }
 
     this.resize = function(new_frame) {
@@ -327,6 +424,53 @@ function LinkView(frame, tables, canvas, model)
         });
     }
 
+    function load_file() {
+        if (!staged_file || !staged_file.maps)
+            return;
+
+        // load file using chosen device mapping
+        for (var i in staged_file.maps) {
+            let map = staged_file[i];
+            // fix expression
+            if (map.expression) {
+                // TODO: better regexp to avoid conflicts with user vars
+                map.expression = map.expression.replace(/src/g, "x");
+                map.expression = map.expression.replace(/dst/g, "y");
+            }
+
+            // TODO: extend to support convergent maps
+            let src = map.sources[0].name.split('/');
+            let dst = map.destinations[0].name.split('/');
+
+            // find device correspondence
+            for (var i in staged_file.devices) {
+                let dev = staged_file.devices[i];
+                if (dev.source_name == src[0]) {
+                    src[0] = dev.target_name;
+                    break;
+                }
+            }
+            for (var i in staged_file.devices) {
+                let dev = staged_file.devices[i];
+                if (dev.source_name == dst[0]) {
+                    dst[0] = dev.target_name;
+                    break;
+                }
+            }
+            src = src.join('/');
+            dst = dst.join('/');
+            $('#container').trigger('map', [src, dst, map]);
+        }
+
+        // remove any existing device reps
+        for (var i in staged_file.devices) {
+            remove_object_svg(staged_file.devices[i], 500);
+            delete staged_file.devices[i];
+        }
+        remove_object_svg(staged_file, 1000);
+        staged_file = null;
+    }
+
     function update() {
         let elements;
         switch (arguments.length) {
@@ -354,6 +498,8 @@ function LinkView(frame, tables, canvas, model)
     function draw(duration) {
         draw_devices(duration);
         draw_links(duration);
+        if (staged_file)
+            draw_file(duration);
     };
 
     this.pan = function(x, y, delta_x, delta_y) {
@@ -401,197 +547,21 @@ function LinkView(frame, tables, canvas, model)
     }
 
     this.cleanup = function() {
+        console.log('cleaning up Link View');
         // clean up any objects created only for this view
         tables.left.collapseAll = false;
         tables.right.collapseAll = false;
-        if (!fileRep)
-            return
-        for (var i in fileRep.devices) {
-            let dev = fileRep.devices[i];
-            if (dev.label)
-                dev.label.remove();
-            if (dev.view)
-                dev.view.remove();
+        if (staged_file) {
+            for (var i in staged_file.devices) {
+                remove_object_svg(staged_file.devices[i]);
+            }
+            remove_object_svg(staged_file);
+            staged_file = null;
         }
-        if (fileRep.label)
-            fileRep.label.remove();
-        if (fileRep.view)
-            fileRep.view.remove();
-        parse_file = null;
-
         model.devices.each(function(dev) {
             delete dev.view.src_offset;
             delete dev.view.dst_offset;
         });
-        model.links.each(function(link) { remove_object_svg(link); });
+        model.links.each(remove_object_svg);
     }
-
-    // create representation of file
-    // draggable
-    // clickable to load
-    // cancellable
-    // future: load to offline device representations
-    function stage_file() {
-        // load file representation
-        fileRep.view = canvas.circle(frame.cx, frame.cy, 0)
-                             .attr({'fill': 'black', 'stroke': 'white'})
-                             .animate({'r': 100}, duration, 'linear');
-        fileRep.view.hover(
-            function() {
-                this.animate({'stroke': 'red',
-                              'stroke-width': 10}, duration, 'linear');
-            },
-            function() {
-                this.animate({'stroke': 'black',
-                              'stroke-width': 0}, duration, 'linear');
-        });
-        fileRep.view.click(function() {
-            if (maps) {
-                // load file using chosen device mapping
-                for (var i in maps) {
-                    let map = maps[i];
-                    // fix expression
-                    if (map.expression) {
-                        // TODO: better regexp to avoid conflicts with user vars
-                        map.expression = map.expression.replace(/src/g, "x");
-                        map.expression = map.expression.replace(/dst/g, "y");
-                    }
-
-                    // TODO: extend to support convergent maps
-                    let src = map.sources[0].name.split('/');
-                    delete map.sources;
-                    let dst = map.destinations[0].name.split('/');
-                    delete map.destinations;
-
-                    // find device correspondence
-                    for (var i in fileRep.devices) {
-                        let d = fileRep.devices[i];
-                        if (d.source_name == src[0]) {
-                            src[0] = d.target_name;
-                            break;
-                        }
-                    }
-                    for (var i in fileRep.devices) {
-                        let d = fileRep.devices[i];
-                        if (d.source_name == dst[0]) {
-                            dst[0] = d.target_name;
-                            break;
-                        }
-                    }
-                    src = src.join('/');
-                    dst = dst.join('/');
-                    $('#container').trigger('map', [src, dst, map]);
-                }
-            }
-            // remove any existing device reps
-            for (var i in fileRep.devices) {
-                let dev = fileRep.devices[i];
-                if (dev.label)
-                    dev.label.animate({'stroke-opacity': 0}, duration * 0.5,
-                                       'linear', function() {
-                        this.remove();
-                    });
-                if (dev.view)
-                    dev.view.animate({'fill-opacity': 0}, duration * 0.5,
-                                      'linear', function() {
-                        this.remove();
-                    });
-                delete fileRep.devices[i];
-            }
-            fileRep.label.animate({'fill-opacity': 0}, duration,
-                                   'linear', function() {
-                this.remove();
-                fileRep.label = null;
-            });
-            fileRep.view.animate({'r': 0}, duration, 'linear', function() {
-                this.remove();
-                fileRep.view = null;
-            });
-            if (maps) {
-                maps = null;
-                return;
-            }
-            return false; // avoiding navigation
-        });
-
-        fileRep.label = canvas.text(frame.cx, frame.cy, 'select file');
-        fileRep.label.attr({'font-size': 24,
-                            'fill': 'white'});
-        fileRep.label.node.setAttribute('pointer-events', 'none');
-        first_draw = false;
-    }
-
-    for (var i in fileRep.devices) {
-        let dev = fileRep.devices[i];
-        let target_table = dev.target_table;
-        let target_name = dev.target_name;
-        if (!target_table || !target_name) {
-            continue;
-        }
-        let color = model.devices.find(target_name).color;
-        let target;
-        if (target_table == 'left')
-            target = tables.left.row_from_name(target_name);
-        else if (target_table == 'right')
-            target = tables.right.row_from_name(target_name);
-        else
-            continue;
-        if (!target)
-            continue;
-        let path;
-
-        if (target_table == 'left') {
-            let qx = (link_pane.left + frame.cx) * 0.5;
-            let top_angle = Math.atan2(target.top - frame.cy, qx - frame.cx);
-            let bot_angle = Math.atan2(target.top + target.height - frame.cy,
-                                       qx - frame.cx);
-            top_angle += Math.PI * 0.5;
-            bot_angle -= Math.PI * 0.5;
-            let top_isect = [frame.cx + Math.cos(top_angle) * 100,
-                             frame.cy + Math.sin(top_angle) * 100];
-            let bot_isect = [frame.cx + Math.cos(bot_angle) * 100,
-                             frame.cy + Math.sin(bot_angle) * 100];
-            path = [['M', link_pane.left, target.top],
-                    ['S', qx, target.top, top_isect[0], top_isect[1]],
-                    ['L', bot_isect[0], bot_isect[1]],
-                    ['S', qx, target.top + target.height, link_pane.left,
-                     target.top + target.height],
-                    ['Z']];
-            dev.label.attr({'x': link_pane.left + 10,
-                            'y': target.cy,
-                            'text-anchor': 'start'});
-        }
-        else {
-            let x = link_pane.right;
-            let qx = (link_pane.right + frame.cx) * 0.5;
-            let top_angle = Math.atan2(target.top - frame.cy, qx - frame.cx);
-            let bot_angle = Math.atan2(target.top + target.height - frame.cy,
-                                       qx - frame.cx);
-            top_angle -= Math.PI * 0.5;
-            bot_angle += Math.PI * 0.5;
-            let top_isect = [frame.cx + Math.cos(top_angle) * 100,
-                             frame.cy + Math.sin(top_angle) * 100];
-            let bot_isect = [frame.cx + Math.cos(bot_angle) * 100,
-                             frame.cy + Math.sin(bot_angle) * 100];
-            path = [['M', link_pane.right, target.top],
-                    ['S', qx, target.top, top_isect[0], top_isect[1]],
-                    ['L', bot_isect[0], bot_isect[1]],
-                    ['S', qx, target.top + target.height, x,
-                     target.top + target.height],
-                    ['Z']];
-            dev.label.attr({'x': link_pane.right - 10,
-                            'y': target.cy,
-                            'text-anchor': 'end'});
-        }
-        dev.view.attr({'path': path,
-                       'stroke-width': 0,
-                       'stroke-opacity': 0,
-                       'fill': color,
-                       'fill-opacity': 0.5}).toFront();
-        dev.label.toFront();
-    }
-//        if (fileRep.view)
-//            fileRep.view.toFront();
-//        if (fileRep.label)
-//            fileRep.label.toFront();
 }

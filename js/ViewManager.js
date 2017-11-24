@@ -24,7 +24,7 @@ function ViewManager(container, model)
 
     this.parse_file = function(file) {
         if (view && view.type() == 'link')
-            view.parse_file(file);
+            view.stage_file(file);
     }
 
     this.switch_view = function(viewType) {

@@ -100,8 +100,8 @@ function ListView(frame, tables, canvas, model)
     }
 
     function draw_devices(duration) {
-        let lh = tables.left.row_height;
-        let rh = tables.right.row_height;
+        let lh = Math.round(tables.left.row_height);
+        let rh = Math.round(tables.right.row_height);
         let lo = 20 - tables.left.scrolled;
         let ro = 20 - tables.right.scrolled;
         let w = map_pane.left;
@@ -166,8 +166,8 @@ function ListView(frame, tables, canvas, model)
     }
 
     function draw_maps(duration) {
-        let lh = tables.left.row_height;
-        let rh = tables.right.row_height;
+        let lh = Math.round(tables.left.row_height);
+        let rh = Math.round(tables.right.row_height);
         let lo = 20 - tables.left.scrolled;
         let ro = 20 - tables.right.scrolled;
 
@@ -351,6 +351,7 @@ function ListView(frame, tables, canvas, model)
                     dev.collapsed ^= 1;
                 else
                     dev.collapsed ^= 2;
+                update_devices();
                 draw(200);
             }
             return;

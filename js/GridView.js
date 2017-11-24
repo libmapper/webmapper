@@ -372,6 +372,7 @@ function GridView(frame, tables, canvas, model)
                 else
                     dev.collapsed ^= 4;
                 update_devices();
+                draw(200);
             }
             return;
         }
