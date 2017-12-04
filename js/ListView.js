@@ -456,15 +456,18 @@ function ListView(frame, tables, canvas, model)
                 $('svg, .displayTable tbody tr').off('.drawing');
                 if (dst && dst.id) {
                     $('#container').trigger('map', [src.id, dst.id]);
+
+                    model.maps.add({
+                        'src': model.find_signal(src.id),
+                        'dst': model.find_signal(dst.id),
+                        'key': src.id + '->' + dst.id,
+                        'status': 'staged'
+                    });
                 }
                 // clear table highlights
                 tables.left.highlight_row(null, true);
                 tables.right.highlight_row(null, true);
 
-                model.maps.add({'src': model.find_signal(src.id),
-                                'dst': model.find_signal(dst.id),
-                                'key': src.id + '->' + dst.id,
-                                'status': 'staged'});
                 new_map.remove();
                 new_map = null;
             });
