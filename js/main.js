@@ -118,6 +118,9 @@ function initViewCommands()
             case "hiveButton":
                 view.switch_view("hive");
                 break;
+            case "parallelButton":
+                view.switch_view("parallel");
+                break;
             case "balloonButton":
                 view.switch_view("balloon");
                 break;
@@ -236,10 +239,14 @@ function initViewCommands()
                 break;
             case 54:
                 /* 6 */
-                new_view = 'balloon';
+                new_view = 'parallel';
                 break;
             case 55:
                 /* 7 */
+                new_view = 'balloon';
+                break;
+            case 56:
+                /* 8 */
                 new_view = 'link';
                 break;
             case 79:
@@ -270,7 +277,7 @@ function initViewCommands()
     let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
         e.preventDefault();
-        if (e.pageY < 107) {
+        if (e.pageY < 80) {
             // not over container
             return;
         }
@@ -298,7 +305,7 @@ function initViewCommands()
     $('#srcSearch, #dstSearch').on('input', function(e) {
         e.stopPropagation();
         let id = e.currentTarget.id;
-        view.filter_signals(id, $('#'+id).val());
+        view.filterSignals(id, $('#'+id).val());
     });
 
     // from list view

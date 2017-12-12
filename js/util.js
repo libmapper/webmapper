@@ -89,6 +89,8 @@ function fullOffset(e) {
                top: e.offsetTop - e.scrollTop + o.top,
                width: e.offsetWidth,
                height: e.offsetHeight};
+    o2.right = o2.left + o2.width;
+    o2.bottom = o2.top + o2.height;
     o2.cx = o2.left + o2.width * 0.5;
     o2.cy = o2.top + o2.height * 0.5;
     return o2;
@@ -252,7 +254,7 @@ function canvas_bezier(map, table, table_x) {
         src_y = o.top;
     }
     else {
-        let o = table.row_from_name(map.src.key);
+        let o = table.getRowFromName(map.src.key);
         if (!o)
             return;
         src_x = table_x;
@@ -266,7 +268,7 @@ function canvas_bezier(map, table, table_x) {
         dst_y = o.top;
     }
     else {
-        let o = table.row_from_name(map.dst.key);
+        let o = table.getRowFromName(map.dst.key);
         if (!o)
             return;
         dst_x = table_x;
@@ -368,39 +370,6 @@ function position(x, y, frame) {
              'y': y != null ? y : Math.random() * frame.height };
 }
 
-function animate_tables(frame, left_width, right_width, top_height, duration) {
-    // stop current animations
-    $('#leftTable').stop(true, false);
-    $('#rightTable').stop(true, false);
-    $('#topTable').stop(true, false);
-
-    $('#topTable').animate({'height': top_height + 'px'},
-                           {duration: duration * 0.33,
-                           step: function(now, fx) {
-        $('#leftTable, #rightTable').css({
-            'height': (frame.height - now / 200 * 180) + 'px',
-            'top': now / 200 * 180 + 'px' });
-    }});
-
-    let prev_right_width = $('#rightTable').width();
-    $('#leftTable').animate({'width': left_width + 'px'},
-                            {duration: duration * 0.33,
-                            step: function(now, fx) {
-        $('#topTable').css({
-            'width': (frame.width - now - prev_right_width + 20) + 'px',
-            'left': now - 20 + 'px' });
-    }});
-
-    $('#rightTable').animate({'width': right_width + 'px'},
-                             {duration: duration * 0.33,
-                             step: function(now, fx) {
-        $('#rightTable').css({
-            'left': frame.width - now});
-        $('#topTable').css({
-            'width': (frame.width - left_width - now) + 20 + 'px' });
-    }});
-}
-
 function select_all_maps() {
     let updated = false;
     model.maps.each(function(map) {
@@ -421,11 +390,12 @@ function select_all_maps() {
         $('#container').trigger("updateMapProperties");
 }
 
-function deselect_all_maps(tables) {
+function deselectAllMaps(tables) {
     if (tables) {
-        tables.left.highlight_row(null, true);
-        tables.right.highlight_row(null, true);
-        tables.top.highlight_row(null, true);
+        if (tables.left)
+            tables.left.highlightRow(null, true);
+        if (tables.right)
+            tables.right.highlightRow(null, true);
     }
 
     let updated = false;

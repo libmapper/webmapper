@@ -6,7 +6,7 @@ function ViewManager(container, model)
 {
     let frame = null;
     let canvas = null;
-    let tables = { 'left': null, 'right': null, 'top': null };
+    let tables = { 'left': null, 'right': null };
 
     let duration = 1000;
 
@@ -29,7 +29,7 @@ function ViewManager(container, model)
 
     this.switch_view = function(viewType) {
         if (view) {
-            if (view.type() == viewType) {
+            if (view.type == viewType) {
                 // already on correct view
                 return;
             }
@@ -39,19 +39,22 @@ function ViewManager(container, model)
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, canvas, model);
+                view = new BalloonView(frame, tables, canvas, model);
                 break;
             case 'canvas':
                 view = new CanvasView(frame, tables, canvas, model);
                 break;
             case 'graph':
-                view = new GraphView(frame, canvas, model);
+                view = new GraphView(frame, tables, canvas, model);
                 break;
             case 'grid':
                 view = new GridView(frame, tables, canvas, model);
                 break;
+            case 'parallel':
+                view = new ParallelView(frame, tables, canvas, model);
+                break;
             case 'hive':
-                view = new HiveView(frame, canvas, model);
+                view = new HiveView(frame, tables, canvas, model);
                 break;
             case 'link':
                 view = new LinkView(frame, tables, canvas, model);
@@ -98,14 +101,8 @@ function ViewManager(container, model)
     };
 
     function add_display_tables() {
-        tables.left  = new mapperTable(model, 'leftTable', 'left', true);
-        tables.right = new mapperTable(model, 'rightTable', 'right', true);
-        tables.top   = new mapperTable(model, 'topTable', 'top', false);
-
-        // Put the tables in the DOM
-        tables.left.create_within($('#container')[0]);
-        tables.right.create_within($('#container')[0]);
-        tables.top.create_within($('#container')[0]);
+        tables.left  = new Table($('#container')[0], 'left', frame);
+        tables.right = new Table($('#container')[0], 'right', frame);
     }
 
     function add_canvas() {
@@ -208,7 +205,7 @@ function ViewManager(container, model)
                 }
                 break;
             case 27:
-                escaped = true;
+                view.escape();
                 break;
         }
     });
@@ -221,15 +218,15 @@ function ViewManager(container, model)
         view.pan(x, y, delta_x, delta_y);
     }
 
-    this.filter_signals = function(searchbar, text) {
+    this.filterSignals = function(searchbar, text) {
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
             srcregexp = text ? new RegExp(text, 'i') : null;
-            view.filter_signals('src', text.length ? text : null);
+            view.filterSignals('src', text.length ? text : null);
         }
         else {
             dstregexp = text ? new RegExp(text, 'i') : null;
-            view.filter_signals('dst', text.length ? text : null);
+            view.filterSignals('dst', text.length ? text : null);
         }
     }
 

@@ -2,40 +2,65 @@
 //           Link View Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function LinkView(frame, tables, canvas, model)
-{
-    tables.left.collapseAll = true;
-    tables.left.filter_dir('both');
-    tables.left.show_detail(false);
+'use strict';
 
-    tables.right.collapseAll = true;
-    tables.right.filter_dir('both');
-    tables.right.show_detail(false);
+class LinkView extends View {
+    constructor(frame, tables, canvas, model) {
+        super('link', frame, {'left': tables.left, 'right': tables.right},
+              canvas, model);
 
-    var staged_file = null;
-    let maps = null;
-    let links = {};
+        // set left table properties
+        this.tables.left.collapseAll = true;
+        this.tables.left.filterByDirection('both');
+        this.tables.left.showDetail(false);
 
-    let link_pane = null;
+        // set right table properties
+        this.tables.right.snap = 'left';
+        this.tables.right.collapseAll = true;
+        this.tables.right.filterByDirection('both');
+        this.tables.right.showDetail(false);
 
-    this.type = function() {
-        return 'link';
+        // remove associated svg elements for signals
+        model.devices.each(function(dev) {
+            dev.signals.each(function(sig) { remove_object_svg(sig); });
+        });
+        // remove associated svg elements for maps
+        model.maps.each(function(map) { remove_object_svg(map); });
+
+        this.stagedFile = null;
+
+        this.pan = this.tablePan;
+        this.zoom = this.tableZoom;
+
+        this.resize(null, 1000);
     }
 
-    // remove associated svg elements for signals and maps
-    model.devices.each(function(dev) {
-        dev.signals.each(function(sig) { remove_object_svg(sig); });
-    });
-    model.maps.each(function(map) { remove_object_svg(map); });
+    resize(newFrame, duration) {
+        if (newFrame)
+            this.frame = newFrame;
 
-    function set_device_target(dev_idx, table, row) {
-        console.log('set_device_target', dev_idx, tables, row);
-        staged_file.devices[dev_idx].target_table = table;
-        staged_file.devices[dev_idx].target_name = row.id;
-        staged_file.devices[dev_idx].target_index = row.index;
+        let self = this;
+        this.tables.left.adjust(0, 0, this.frame.width * 0.4,
+                                this.frame.height, 0, duration);
+        this.tables.right.adjust(this.frame.width * 0.6, 0, this.frame.width * 0.4,
+                                 this.frame.height, 0, duration,
+                                 function() {self.draw()});
+        this.mapPane.left = this.frame.width * 0.4;
+        this.mapPane.width = this.frame.width * 0.2;
+        this.mapPane.height = this.frame.height;
+        this.mapPane.cx = this.frame.width * 0.5;
+        this.mapPane.cy = this.frame.height * 0.5;
+        this.draw();
     }
 
-    function upgrade_file(file) {
+    setDeviceTarget(dev_idx, table, row) {
+        console.log('set_device_target', dev_idx, this.tables, row);
+        this.stagedFile.devices[dev_idx].target_table = table;
+        this.stagedFile.devices[dev_idx].target_name = row.id;
+        this.stagedFile.devices[dev_idx].target_index = row.index;
+    }
+
+    upgradeFile(file) {
         // update to version 2.2
         file.mapping.maps = [];
         for (var i in file.mapping.connections) {
@@ -83,7 +108,8 @@ function LinkView(frame, tables, canvas, model)
         file.fileversion = "2.2";
     }
 
-    this.stage_file = function(file) {
+    stageFile(file) {
+        let self = this;
         if (!file.fileversion || !file.mapping) {
             console.log("unknown file type");
             return;
@@ -100,50 +126,49 @@ function LinkView(frame, tables, canvas, model)
             return;
         }
 
-        if (staged_file) {
+        if (this.stagedFile) {
             // remove canvas elements for devices
-            for (var i in staged_file.devices) {
-                remove_object_svg(staged_file.devices[i]);
+            for (var i in this.stagedFile.devices) {
+                remove_object_svg(this.stagedFile.devices[i]);
             }
-            remove_object_svg(staged_file);
-            delete staged_file;
+            remove_object_svg(this.stagedFile);
         }
-        staged_file = file;
+        this.stagedFile = file;
 
         // find devices referenced in file
-        staged_file.devices = {};
-        staged_file.num_devices = 0;
-        maps = staged_file.mapping.maps;
+        this.stagedFile.devices = {};
+        this.stagedFile.num_devices = 0;
+        maps = this.stagedFile.mapping.maps;
         for (var i in maps) {
             let map = maps[i];
             for (var j in map.sources) {
                 let dev = map.sources[j].name.split('/')[0];
-                if (dev in staged_file.devices)
-                    staged_file.devices[dev].src += 1;
+                if (dev in this.stagedFile.devices)
+                    this.stagedFile.devices[dev].src += 1;
                 else {
-                    staged_file.devices[dev] = {"src": 1, "dst": 0};
-                    ++staged_file.num_devices;
+                    this.stagedFile.devices[dev] = {"src": 1, "dst": 0};
+                    ++this.stagedFile.num_devices;
                 }
             }
             for (var j in map.destinations) {
                 let dev = map.destinations[j].name.split('/')[0];
-                if (dev in staged_file.devices)
-                    staged_file.devices[dev].dst += 1;
+                if (dev in this.stagedFile.devices)
+                    this.stagedFile.devices[dev].dst += 1;
                 else {
-                    staged_file.devices[dev] = {"src": 0, "dst": 1};
-                    ++staged_file.num_devices;
+                    this.stagedFile.devices[dev] = {"src": 0, "dst": 1};
+                    ++this.stagedFile.num_devices;
                 }
             }
         }
-        if (!staged_file.num_devices) {
+        if (!this.stagedFile.num_devices) {
             console.log("no devices found in file!");
             return;
         }
 
         let count = 0;
-        let angleInc = Math.PI * 2.0 / staged_file.num_devices;
-        for (key in staged_file.devices) {
-            let dev = staged_file.devices[key];
+        let angleInc = Math.PI * 2.0 / this.stagedFile.num_devices;
+        for (key in this.stagedFile.devices) {
+            let dev = this.stagedFile.devices[key];
             let pos_x = Math.sin(count * angleInc);
             let pos_y = Math.cos(count * angleInc);
             dev.view = canvas.path([['M', frame.cx, frame.cy],
@@ -165,20 +190,21 @@ function LinkView(frame, tables, canvas, model)
                 // enable dragging to a different target device
                 if (x < frame.cx) {
                     set_device_target(this.index, 'left',
-                                      tables.left.row_from_position(x, y));
+                                      self.tables.left.getRowFromPosition(x, y));
                 }
                 else {
                     set_device_target(this.index, 'right',
-                                      tables.right.row_from_position(x, y));
+                                      self.tables.right.getRowFromPosition(x, y));
                 }
-                draw_file(0);
+                this.drawFile(0);
             });
             console.log('dev:', dev);
 
             dev.source_name = key;
 
         }
-        staged_file.view = canvas.circle(frame.cx, frame.cy, 0)
+        let self = this;
+        this.stagedFile.view = canvas.circle(frame.cx, frame.cy, 0)
             .attr({'fill': 'black', 'stroke': 'white'})
             .animate({'r': 100}, 1000, 'linear', function() {
                 this.label = canvas.text(frame.cx, frame.cy,
@@ -198,7 +224,7 @@ function LinkView(frame, tables, canvas, model)
             });
     }
 
-    function draw_file() {
+    drawFile() {
         let angleInc = Math.PI * 2.0 / staged_file.num_devices;
         for (var key in staged_file.devices) {
             let dev = staged_file.devices[key];
@@ -266,21 +292,7 @@ function LinkView(frame, tables, canvas, model)
         }
     }
 
-    this.resize = function(new_frame) {
-        if (new_frame)
-            frame = new_frame;
-        animate_tables(frame, frame.width * 0.25, frame.width * 0.25, 0, 1000);
-        link_pane = {'left': frame.width * 0.25,
-                     'right': frame.width * 0.75,
-                     'top': 0,
-                     'width': frame.width * 0.5,
-                     'height': frame.height,
-                     'cx': frame.width * 0.5};
-        draw(0);
-    }
-    this.resize();
-
-    function matrix(x, y) {
+    matrix(x, y) {
         var M = new Array(x);
         var i = x;
         while (i--) {
@@ -290,53 +302,7 @@ function LinkView(frame, tables, canvas, model)
         return M;
     }
 
-    function update_devices() {
-        model.devices.each(function(dev) {
-            if (!dev.view)
-                dev.view = canvas.path().attr({'fill': dev.color,
-                                               'fill-opacity': 0});
-            let row = tables.left.row_from_name(dev.name);
-            dev.view.src_index = row ? row.index : null;
-            row = tables.right.row_from_name(dev.name);
-            dev.view.dst_index = row ? row.index : null;
-        });
-    }
-
-    function draw_devices(duration) {
-        let lh = tables.left.row_height;
-        let rh = tables.right.row_height;
-        let ls = tables.left.scrolled;
-        let rs = tables.right.scrolled;
-        let w = link_pane.left;
-        let cx = link_pane.cx;
-
-        model.devices.each(function(dev) {
-            if (!dev.view)
-                return;
-            dev.view.stop();
-            let path = [];
-            if (dev.view.src_index != null) {
-                path.push(['M', 0, lh * dev.view.src_index - ls + 20],
-                          ['l', w, 0],
-                          ['l', 0, lh],
-                          ['l', -w, 0],
-                          ['Z']);
-            }
-            if (dev.view.dst_index != null) {
-                path.push(['M', link_pane.right, rh * dev.view.dst_index - rs + 20],
-                          ['l', w, 0],
-                          ['l', 0, rh],
-                          ['l', -w, 0],
-                          ['Z']);
-            }
-            dev.view.toBack();
-            dev.view.animate({'path': path,
-                              'fill-opacity': 0.5,
-                              'stroke-opacity': 0}, duration, '>');
-        });
-    }
-
-    function update_links() {
+    updateLinks() {
         model.devices.each(function(dev) {
             dev.view.src_indices = [];
             dev.view.dst_indices = [];
@@ -390,17 +356,17 @@ function LinkView(frame, tables, canvas, model)
         });
     }
 
-    function ratio(array, item) {
+    ratio(array, item) {
         let index = array.indexOf(item);
         return index >= 0 ? index / array.length : 0;
     }
 
-    function draw_links(duration) {
-        let lh = tables.left.row_height;
-        let rh = tables.right.row_height;
-        let ls = tables.left.scrolled;
-        let rs = tables.right.scrolled;
-        let cx = frame.cx;
+    drawLinks(duration) {
+        let lh = this.tables.left.row_height;
+        let rh = this.tables.right.row_height;
+        let ls = this.tables.left.scrolled;
+        let rs = this.tables.right.scrolled;
+        let cx = this.frame.cx;
 
         model.links.each(function(link) {
             if (!link.view)
@@ -424,7 +390,7 @@ function LinkView(frame, tables, canvas, model)
         });
     }
 
-    function load_file() {
+    loadFile() {
         if (!staged_file || !staged_file.maps)
             return;
 
@@ -471,7 +437,7 @@ function LinkView(frame, tables, canvas, model)
         staged_file = null;
     }
 
-    function update() {
+    update() {
         let elements;
         switch (arguments.length) {
             case 0:
@@ -485,69 +451,25 @@ function LinkView(frame, tables, canvas, model)
                 break;
         }
         if (elements.indexOf('devices') >= 0) {
-            tables.left.update(frame.height);
-            tables.right.update(frame.height);
-            update_devices();
+            this.updateDevices();
         }
         if (elements.indexOf('links') >= 0)
-            update_links();
-        draw(1000);
+            this.updateLinks();
+        this.draw(1000);
     }
-    this.update = update;
 
-    function draw(duration) {
-        draw_devices(duration);
-        draw_links(duration);
+    draw(duration) {
+        this.drawDevices(duration);
+        this.drawLinks(duration);
         if (staged_file)
-            draw_file(duration);
+            this.drawFile(duration);
     };
 
-    this.pan = function(x, y, delta_x, delta_y) {
-        if (x < frame.left + link_pane.left) {
-            tables.left.pan(delta_y);
-            draw(0, false);
-        }
-        else if (x > (frame.left + link_pane.right)) {
-            tables.right.pan(delta_y);
-            draw(0, false);
-        }
-        else {
-            // send to both left and right tables
-            tables.left.pan(delta_y);
-            tables.right.pan(delta_y);
-            draw(0, false);
-        }
-    }
-
-    this.zoom = function(x, y, delta) {
-        if (x < frame.left + link_pane.left) {
-            if (tables.left.zoom(y - frame.top - link_pane.top, delta))
-                draw(0, false);
-        }
-        else if (x > (frame.left + link_pane.right)) {
-            if (tables.right.zoom(y - frame.top - link_pane.top, delta))
-                draw(0, false);
-        }
-        else {
-            // send to both left and right tables
-            let update = tables.left.zoom(y - frame.top - link_pane.top, delta);
-            update |= tables.right.zoom(y - frame.top - link_pane.top, delta);
-            if (update)
-                draw(0, false);
-        }
-    }
-
-    this.filter_signals = function(signal_direction, text) {
-        if (signal_direction == 'src')
-            tables.left.filter_text(text);
-        else
-            tables.right.filter_text(text);
-        update();
-        draw(1000, true);
-    }
-
-    this.cleanup = function() {
+    cleanup() {
         console.log('cleaning up Link View');
+
+        super.cleanup();
+
         // clean up any objects created only for this view
         tables.left.collapseAll = false;
         tables.right.collapseAll = false;

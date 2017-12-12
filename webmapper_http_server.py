@@ -299,13 +299,15 @@ def handler_page(out, args):
 <!-- View includes -->
 <script type="text/javascript" src="js/ViewManager.js"></script>
 <script type="text/javascript" src="js/SignalTable.js"></script>
-<script type="text/javascript" src="js/BalloonView.js"></script>
-<script type="text/javascript" src="js/CanvasView.js"></script>
-<script type="text/javascript" src="js/GraphView.js"></script>
-<script type="text/javascript" src="js/GridView.js"></script>
-<script type="text/javascript" src="js/HiveView.js"></script>
-<script type="text/javascript" src="js/LinkView.js"></script>
-<script type="text/javascript" src="js/ListView.js"></script>
+<script type="text/javascript" src="js/views/View.js"></script>
+<script type="text/javascript" src="js/views/BalloonView.js"></script>
+<script type="text/javascript" src="js/views/CanvasView.js"></script>
+<script type="text/javascript" src="js/views/GraphView.js"></script>
+<script type="text/javascript" src="js/views/GridView.js"></script>
+<script type="text/javascript" src="js/views/HiveView.js"></script>
+<script type="text/javascript" src="js/views/LinkView.js"></script>
+<script type="text/javascript" src="js/views/ListView.js"></script>
+<script type="text/javascript" src="js/views/ParallelView.js"></script>
 
 <!-- Main includes -->
 <script type="text/javascript" src="js/main.js"></script>

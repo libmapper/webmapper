@@ -493,6 +493,10 @@ form {
     background-image: url(/images/grid_icon_white.png);
 }
 
+#parallelButton {
+    background-image: url(/images/parallel_icon_white.png);
+}
+
 #hiveButton {
     background-image: url(/images/hive_icon_white.png);
 }
@@ -694,6 +698,7 @@ tbody {
     position: absolute;
     bottom: 0px;
     text-align: center;
+    color: white;
 /*    padding-left: 10px;*/
 /*    padding-top: 3px;*/
     /*border: 1px solid black;*/

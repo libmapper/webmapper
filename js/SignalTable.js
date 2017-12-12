@@ -1,65 +1,58 @@
+'use strict';
+
 // An object for the overall display
-function mapperTable(model, id, orientation, detail)
-{
-    var tableHeight = 0;
-    var frame = null;
+class Table {
+    constructor(container, location, frame) {
+        this.id = location + 'Table';
+        this.detail = true;
+        this.direction = null;
+        this.snap = 'right';
+        this.scrolled = 0;
+        this.zoomed = 1;
 
-    // The most recently selected rows, for shift-selecting
-    var selected = new Assoc();
+        this.targetHeight = 600;
+        this.rowHeight = 0;
+        this.regexp = null;
 
-    this.unmappedVisible = true; // Are unmapped signals visible?
+        this.num_devs = 0;
+        this.num_sigs = 0;
 
-    this.on_resize = function() {
-        tableHeight = $('#'+this.id).height();
-        frame = fullOffset(this.table);
-        frame.cx = frame.left + frame.width * 0.5;
-        frame.cy = frame.top + frame.height * 0.5;
-        width = frame.width;
-    };
+        this.collapseAll = false;
 
-    this.direction = null;
-    this.orientation = orientation;
-    this.id = id;
-    this.detail = null;
-    this.parent;        // The node containing the table
-    this.div;           // The div node (and status)
-    this.table;         // The table node itself
-    this.tbody;         // The <tbody> node
-    this.title = 'Signals';
+        this.title = 'SIGNALS';
 
-    this.nRows;         // Number of rows (e.g. devices or signals) present
-    this.nVisibleRows;  // Number of rows actually visible to the user
-    this.nCols;         // Number of columns in table
-    this.scrolled = 0;
-    this.zoomed = 1;
+        // The selected rows, for shift-selecting
+        this.selectedRows = {};
 
-    this.border = false;
-    this.row_height = 0;
-    this.regexp = null;
-    this.targetHeight = 600;
-    this.num_devs = 0;
-    this.num_sigs = 0;
-    this.collapseAll = false;
-    this.title = 'SIGNALS';
+        // Create the div containing the table
+        $(container).append("<div class='tableDiv' id='"+this.id+"'></div>");
+        this.div = $(container).children("#"+this.id);
+        this.table;         // The table node itself
+        this.tbody;         // The <tbody> node
+        this.makeTable();
 
-    this.width = 0;
+        this.frame = {'left': location == 'left' ? 0 : frame.width,
+                      'top': 0,
+                      'width': 0,
+                      'height': frame.height, 'angle': 0};
+    }
 
-    function makeTable(self) {
-        $(self.div).empty();
+    makeTable() {
+        $(this.div).empty();
 
         // Create the skeleton for the table within the div
         // TODO: move div properties to css
-        if (self.detail) {
-            $(self.div).append(
+        if (this.detail) {
+            $(this.div).append(
                 "<div style='height:20px; position:relative; width:100%;'>"+
-                    "<div id="+self.id+"Title style='float:left; position:relative; width:75%; padding-left:10px'>"+
-                        "<strong>"+self.title+"</strong>"+
+                    "<div id="+this.id+"Title style='float:left; position:relative; width:75%; padding-left:10px'>"+
+                        "<strong>"+this.title+"</strong>"+
                     "</div>"+
                     "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
                         "<strong>TYPE</strong>"+
                     "</div>"+
                 "</div>"+
-                "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                "<div id="+this.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
                     "<table class='displayTable'>"+
                         "<colgroup>"+
                             "<col style='width:75%'>"+
@@ -69,65 +62,89 @@ function mapperTable(model, id, orientation, detail)
                     "</table>"+
                 "</div>");
         }
-        else if (self.id == 'topTable') {
-            $(self.div).append(
-                "<div style='height: 200px; position:relative; width:20px'>"+
-                    "<div id="+self.id+"Title style='float: left; position:relative; width:200px; text-align:center; transform-origin: 0% 0%; transform: translate(0%, 200px) rotate(270deg);'>"+
-                        "<strong>"+self.title+"</strong>"+
-                    "</div>"+
-                "</div>"+
-                "<div id="+self.id+"Scroller style='left:20px; top:0px; height:100%; width:calc(100% - 20px); position:absolute; overflow:auto'>"+
-                    "<table class='displayTable'>"+
-                        "<tbody></tbody>"+
-                    "</table>"+
-                "</div>");
-        }
         else {
-            $(self.div).append(
+            $(this.div).append(
                 "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div id="+self.id+"Title style='float: left; position:relative; width:100%; text-align: center'>"+
-                        "<strong>"+self.title+"</strong>"+
+                    "<div id="+this.id+"Title style='float: left; position:relative; width:100%; text-align: center'>"+
+                        "<strong>"+this.title+"</strong>"+
                     "</div>"+
                 "</div>"+
-                "<div id="+self.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                "<div id="+this.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
                     "<table class='displayTable'>"+
                         "<tbody></tbody>"+
                     "</table>"+
                 "</div>");
         }
-        self.table = $("#"+self.id+" .displayTable")[0];
-        self.tbody = $("#"+self.id+" .displayTable tbody")[0];
+        this.table = $("#"+this.id+" .displayTable")[0];
+        this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
-        frame = fullOffset(self.table);
-        frame.cx = frame.left + frame.width * 0.5;
-        frame.cy = frame.top + frame.height * 0.5;
+        $('#'+this.id+' tr').hover(function() {
+            $(this).toggleClass('hover');
+        });
     }
 
-    // Should be passed a the node for the parent
-    this.create_within = function(parent) {
-        this.parent = parent;
+    adjust(left, top, width, height, angle, duration, func) {
+        // stop any current animations
+        $('#'+this.id).stop(true, false);
 
-        // Create the div containing the table
-        $(this.parent).append("<div class='tableDiv' id='"+id+"'></div>");
-        this.div = $(this.parent).children("#"+this.id);
-        tableHeight = $('.tableDiv').height();
+        if (left == null)
+            left = this.frame.left;
+        if (top == null)
+            top = this.frame.top;
+        if (width == null)
+            width = this.frame.width;
+        if (height == null)
+            height = this.frame.height;
+        if (angle == null)
+            angle = this.frame.angle;
+        if (duration == null)
+            duration = 1000;
 
-        makeTable(this);
-        this.add_handlers(this);
-    };
+        let self = this;
+        let left_was = this.frame.left;
+        let top_was = this.frame.top;
+        let width_was = this.frame.width;
+        let height_was = this.frame.height;
+        let angle_was = this.frame.angle;
+        if (angle - angle_was > Math.PI)
+            angle_was -= Math.PI * 2;
+        else if (angle - angle_was < -Math.PI)
+            angle_was += Math.PI * 2;
 
-//    this.set_title = function(title) {
-////        console.log('set_title', title, this.title);
-//        this.title = title;
-//        $('#'+this.id+' h2').text(title);
-//    }
+        $({someValue: 0}).animate({someValue: 1},
+                                  {duration: duration * 0.33,
+                                  step: function(now, fx) {
+            let was = 1 - now;
+            self.frame.left = left * now + left_was * was;
+            self.frame.top = top * now + top_was * was;
+            self.frame.width = width * now + width_was * was;
+            self.frame.height = height * now + height_was * was;
+            self.frame.angle = angle * now + angle_was * was;
+            $('#' + self.id).css({
+                'left': self.frame.left,
+                'top': self.frame.top,
+                'width': self.frame.width,
+                'height': self.frame.height,
+                'transform-origin': 'top right',
+                'WebkitTransform': 'rotate(' + self.frame.angle + 'rad)',
+                '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
+                'transform': 'rotate(' + self.frame.angle + 'rad)'
+            });
+            if (func)
+                func();
+        }});
+    }
 
-    this.filter_text = function(string) {
+    filterByName(string) {
+        if (this.filterstring == string)
+            return;
         this.filterstring = string;
         this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
+        if (this.regexp)
+            this.update();
     }
 
-    this.filter_dir = function(dir) {
+    filterByDirection(dir) {
         if (dir)
             this.direction = (dir == 'both') ? null : dir;
         switch (dir) {
@@ -145,27 +162,19 @@ function mapperTable(model, id, orientation, detail)
         this.title = dir;
     }
 
-    this.show_detail = function(show) {
+    showDetail(show) {
         if (this.detail == show)
             return;
         this.detail = (show == true);
-        makeTable(this);
-        this.add_handlers(this);
+        this.makeTable(this);
     }
 
-    this.border_mode = function(enabled) {
-        this.border = (enabled == true);
-
-        $(this.table).css({'width': this.border ? '200px' : '100%'});
-//        $(this.table 'td').css({'width': this.border ? '50px' : '75px'});
+    get height() {
+        return this.rowHeight * this.table.rows.length;
     }
 
-    this.height = function() {
-        return this.row_height * this.table.rows.length;
-    }
-
-    this.row_from_index = function(idx) {
-        let row_height = Math.round(this.row_height);
+    getRowFromIndex(idx) {
+        let rowHeight = Math.round(this.rowHeight);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if ($(row).hasClass('invisible'))
@@ -174,78 +183,84 @@ function mapperTable(model, id, orientation, detail)
                 ++j;
                 continue;
             }
-            if (this.orientation == 'top') {
-                let left = j * row_height - this.scrolled;
-                let top = row.offsetLeft;
+            if (this.snap == 'bottom') {
+                let left = j * rowHeight - this.scrolled + 200;
+                let top = row.offsetLeft + this.div[0].offsetTop;
                 return {'left': left,
+                        'right': left + rowHeight,
                         'top': top,
-                        'width': row_height,
+                        'bottom': top + row.offsetWidth,
+                        'width': rowHeight,
                         'height': row.offsetWidth,
-                        'cx': left + row_height * 0.5,
-                        'cy': top + row.offsetWidth * 0.5,
+                        'x': top + row.offsetWidth,
+                        'y': left + rowHeight * 0.5,
+                        'vx': Math.cos(this.frame.angle),
+                        'vy': Math.sin(this.frame.angle),
                         'id': row.id.replace('\\/', '\/'),
                         'even': $(row).hasClass('even'),
-                        'isOutput': $(row).hasClass('output'),
                         'type': $(row).hasClass('device') ? 'device' : 'signal',
                         'index': j};
             }
             else {
-                let left = row.offsetLeft;
-                let top = j * row_height - this.scrolled + 20;
+                let left = row.offsetLeft + this.div[0].offsetLeft;
+                let top = j * rowHeight - this.scrolled + 20 + this.div[0].offsetTop;
                 return {'left': left,
+                        'right': left + row.offsetWidth,
                         'top': top,
+                        'bottom': top + rowHeight,
                         'width': row.offsetWidth,
-                        'height': row_height,
-                        'cx': left + row.offsetWidth * 0.5,
-                        'cy': top + this.row_height * 0.5,
+                        'height': rowHeight,
+                        'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                        'y': top + rowHeight * 0.5,
+                        'vx': Math.cos(this.frame.angle),
+                        'vy': Math.sin(this.frame.angle),
                         'id': row.id.replace('\\/', '\/'),
                         'even': $(row).hasClass('even'),
-                        'isOutput': $(row).hasClass('output'),
                         'type': $(row).hasClass('device') ? 'device' : 'signal',
                         'index': j};
             }
         }
     }
 
-    this.row_from_name = function(name) {
+    getRowFromName(name) {
         let id = name.replace('/', '\\/');
-        let row_height = Math.round(this.row_height);
+        let rowHeight = Math.round(this.rowHeight);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
             if (row.id == id) {
                 if ($(row).hasClass('invisible')) {
                     if (name.indexOf('/') != -1)
-                        return this.row_from_name(name.split('/')[0]);
+                        return this.getRowFromName(name.split('/')[0]);
                     else
                         return null;
                 }
-                if (this.orientation == 'top') {
-                    let left = j * row_height - this.scrolled;
+                if (this.snap == 'bottom') {
+                    let left = j * rowHeight - this.scrolled;
                     let top = row.offsetLeft;
                     return {'left': left,
                             'top': top,
-                            'width': row_height,
+                            'width': rowHeight,
                             'height': row.offsetWidth,
-                            'cx': left + row_height * 0.5,
-                            'cy': top + row.offsetWidth * 0.5,
+                            'x': left + rowHeight * 0.5,
+                            'y': top + row.offsetWidth,
+                            'vx': Math.cos(this.frame.angle),
+                            'vy': Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
-                            'even': $(row).hasClass('even'),
-                            'isOutput': $(row).hasClass('output'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
                             'index': j};
                 }
                 else {
                     let left = row.offsetLeft;
-                    let top = j * row_height - this.scrolled + 20;
+                    let top = j * rowHeight - this.scrolled + 20;
                     return {'left': left,
                             'top': top,
                             'width': row.offsetWidth,
-                            'height': row_height,
-                            'cx': left + row.offsetWidth * 0.5,
-                            'cy': top + this.row_height * 0.5,
+                            'height': rowHeight,
+                            'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                            'y': top + rowHeight * 0.5,
+                            'vx': Math.cos(this.frame.angle),
+                            'vy': Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
-                            'even': $(row).hasClass('even'),
-                            'isOutput': $(row).hasClass('output'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
                             'index': j};
                 }
@@ -256,48 +271,70 @@ function mapperTable(model, id, orientation, detail)
         }
     }
 
-    this.row_from_position = function(x, y) {
+    getRowFromPosition(x, y, margin) {
         if (x == null || y == null)
             return;
-        if (this.orientation == 'top') {
-            y = frame.top + 50;
+        if (!margin)
+            margin = 100;
+        switch (this.snap) {
+            case 'left':
+                if (x < this.frame.left - this.frame.width * margin)
+                    return;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                break;
+            case 'right':
+                if (x > this.frame.left + this.frame.width * (1 + margin))
+                    return;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                break;
+            case 'bottom':
+                if (y > this.frame.top + this.frame.height * (1 + margin))
+                    return;
+                y = this.div[0].offsetTop + 50;
+                break;
+            default:
+                console.log("unknown table snap property", this.snap);
+                return;
         }
-        else {
-            x = this.div[0].offsetLeft + 50;
-        }
+
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
-        let row_height = Math.round(this.row_height);
+        let rowHeight = Math.round(this.rowHeight);
         row = row[0];
         let output;
-        if (this.orientation == 'top') {
+        if (this.snap == 'bottom') {
             let left = row.offsetTop - this.scrolled;
             let top = row.offsetLeft;
             output = {'left': left,
                       'top': top,
-                      'width': row_height,
+                      'width': rowHeight,
                       'height': row.offsetWidth,
-                      'cx': left + row.offsetHeight * 0.5,
-                      'cy': top + row.offsetWidth * 0.5,
+                      'x': left + rowHeight * 0.5,
+                      'y': top + row.offsetWidth,
+                      'vx': Math.cos(this.frame.angle),
+                      'vy': Math.sin(this.frame.angle),
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
         else {
-            let left = row.offsetLeft;
+            let left = this.frame.left;
             let top = row.offsetTop - this.scrolled + 20;
             output = {'left': left,
                       'top': top,
                       'width': row.offsetWidth,
-                      'height': row_height,
-                      'cx': left + row.offsetWidth * 0.5,
-                      'cy': top + row.offsetHeight * 0.5,
+                      'height': rowHeight,
+                      'x': this.snap == 'left' ? left : left + this.frame.width,
+                      'y': top + rowHeight * 0.5,
+                      'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
+                      'vy': Math.sin(this.frame.angle),
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
+//        console.log('output', output);
         return output;
     }
 
-    this.highlight_row = function(row, clear) {
+    highlightRow(row, clear) {
         if (clear)
             $('#'+this.id+' tr').removeClass('trsel');
         if (row && row.id) {
@@ -307,68 +344,96 @@ function mapperTable(model, id, orientation, detail)
         }
     }
 
-    this.pan = function(delta) {
+    pan(dx, dy, x, y) {
+        if (!dx && !dy)
+            return false;
+        if (this.snap == "bottom") {
+            // rotated 90deg: invert x and y
+            let temp = x;
+            x = y;
+            y = temp;
+        }
+        if (x != null && y != null) {
+            // check if position applies to this table
+            if (   x < this.div[0].offsetLeft
+                || x > this.div[0].offsetLeft + this.div[0].offsetWidth
+                || y < this.div[0].offsetTop
+                || y > this.div[0].offsetTop + this.div[0].offsetHeight) {
+                return false;
+            }
+        }
+        let delta = (this.snap == 'bottom') ? dx : dy;
         let new_scroll = this.scrolled + delta;
-        if (this.id == 'topTable') {
-            this.scrolled = $("#"+this.id+"Scroller")
-                                .scrollLeft(new_scroll)
-                                .scrollLeft();
-        }
-        else {
-            this.scrolled = $("#"+this.id+"Scroller")
-                                .scrollTop(new_scroll)
-                                .scrollTop();
-        }
+        this.scrolled = $("#"+this.id+"Scroller")
+            .scrollTop(new_scroll)
+            .scrollTop();
         if (this.scrolled == Math.floor(new_scroll)) {
             // keep fractional part
             this.scrolled = new_scroll;
         }
-        return Math.floor(this.scrolled) + 20;
+        return true;
     }
 
-    this.set_row_height = function() {
+    adjustRowHeight() {
         // adjust row heights to fill table
-        let nat_row_height = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (nat_row_height > 18) {
+        let natRowHeight = this.targetHeight / (this.num_devs + this.num_sigs);
+        if (natRowHeight > 19) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
-        let row_height = nat_row_height * this.zoomed;
-        if (row_height < 18) {
-            row_height = 18;
-            this.zoomed = row_height / nat_row_height;
+        let rowHeight = natRowHeight * this.zoomed;
+        if (rowHeight < 19) {
+            rowHeight = 19;
+            this.zoomed = rowHeight / natRowHeight;
         }
-        let changed = (Math.round(row_height) != Math.round(this.row_height));
-        this.row_height = row_height;
+        let changed = (Math.round(rowHeight) != Math.round(this.rowHeight));
+        this.rowHeight = rowHeight;
         if (changed)
-            $("#"+this.id+' tbody tr').css('height', this.row_height+'px');
+            $("#"+this.id+' tbody tr').css('height', this.rowHeight+'px');
         return changed;
     }
 
-    this.zoom = function(offset, delta) {
+    zoom(delta, x, y, constrain) {
+        if (!delta)
+            return false;
+        if (this.snap == "bottom") {
+            // rotated 90deg: invert x and y
+            let temp = x;
+            x = y;
+            y = temp;
+        }
+        if (constrain && x != null && y != null) {
+            // check if position applies to this table
+            if (   x < this.div[0].offsetLeft
+                || x > this.div[0].offsetLeft + this.div[0].offsetWidth
+                || y < this.div[0].offsetTop
+                || y > this.div[0].offsetTop + this.div[0].offsetHeight)
+                return null;
+        }
         this.zoomed -= delta * 0.01;
         if (this.zoomed < 0.1)
             this.zoomed = 0.1;
         else if (this.zoomed > 20)
             this.zoomed = 20;
 
-        let old_row_height = this.row_height;
-        let changed = this.set_row_height();
+        let oldRowHeight = this.rowHeight;
+        let changed = this.adjustRowHeight();
         if (!changed)
             return false;
 
+        let offset = (this.snap == 'bottom') ? x - this.table.offsetLeft : y - 80;
         offset -= 20;   // column headers
 
         // old offset in rows
-        let norm_offset = (Math.floor(this.scrolled) + offset) / Math.round(old_row_height);
-        let row_diff = Math.round(this.row_height) - Math.round(old_row_height);
-        this.pan(row_diff * norm_offset);
+        let normOffset = (Math.floor(this.scrolled) + offset) / Math.round(oldRowHeight);
+        let rowDiff = Math.round(this.rowHeight) - Math.round(oldRowHeight);
+        this.pan(rowDiff * normOffset, rowDiff * normOffset);
 
         return true;
     }
 
-    this.update = function(targetHeight) {
+    update(devices, targetHeight) {
         if (targetHeight)
             this.targetHeight = targetHeight - 20; // headers
 
@@ -388,11 +453,11 @@ function mapperTable(model, id, orientation, detail)
         let regexp = this.regexp;
         let collapseAll = this.collapseAll;
         let collapse_bit;
-        switch (this.orientation) {
-            case 'left':
+        switch (this.snap) {
+            case 'right':
                 collapse_bit = 1;
                 break;
-            case 'right':
+            case 'left':
                 collapse_bit = 2;
                 break;
             default:
@@ -401,7 +466,7 @@ function mapperTable(model, id, orientation, detail)
         }
         let title = this.title;
 
-        model.devices.each(function(dev) {
+        devices.each(function(dev) {
             let num_dev_sigs = 0;
             let sigs = [];
             dev.signals.each(function(sig) {
@@ -487,46 +552,6 @@ function mapperTable(model, id, orientation, detail)
         });
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
-        this.set_row_height();
-    }
-
-    function select_tr(tr) {
-        if (!tr)
-            return;
-
-        var t = $(tr);
-        var name = tr.firstChild.innerHTML.replace(/<wbr>/g,'');
-
-        if (t.hasClass("trsel")) {
-            t.removeClass("trsel");
-            selected.remove(name);
-        } else {
-            t.addClass("trsel");
-            selected.add(name);
-        }
-        $('#container').trigger("updateMapProperties");
-    }
-
-    this.add_handlers = function(self) {
-        $('#'+this.id+' tr').hover(function() {
-            $(this).toggleClass('hover');
-        });
-//        $('.displayTable tbody').on({
-//            mousedown: function(e) {
-//                if (e.shiftKey == false)
-//                    deselect_all();
-//                select_tr(this);
-//            },
-//            click: function(e) { e.stopPropagation(); }
-//        }, 'tr');
-
-
-//        $('#'+this.id).on('mousedown', 'tr', function(tableClick) {
-//            var sourceRow = this;
-//            $(document).one('mouseup.drawing', function(mouseUpEvent) {
-//                $("*").off('.drawing').removeClass('incompatible');
-//                $(document).off('.drawing');
-//            });
-//        });
+        this.adjustRowHeight();
     }
 }
