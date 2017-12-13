@@ -212,7 +212,7 @@ class Table {
                         'height': rowHeight,
                         'x': this.snap == 'left' ? left : left + row.offsetWidth,
                         'y': top + rowHeight * 0.5,
-                        'vx': Math.cos(this.frame.angle),
+                        'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
                         'vy': Math.sin(this.frame.angle),
                         'id': row.id.replace('\\/', '\/'),
                         'even': $(row).hasClass('even'),
@@ -258,7 +258,7 @@ class Table {
                             'height': rowHeight,
                             'x': this.snap == 'left' ? left : left + row.offsetWidth,
                             'y': top + rowHeight * 0.5,
-                            'vx': Math.cos(this.frame.angle),
+                            'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
                             'vy': Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
@@ -330,7 +330,6 @@ class Table {
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
-//        console.log('output', output);
         return output;
     }
 

@@ -427,14 +427,17 @@ class View {
     }
 
     endpoint(sig, dir) {
-        if (sig.position)
-            return [sig.position.x, sig.position.y, 1, 1];
-
         if (sig.tableIndices) {
             let loc = sig.tableIndices[0];
-            let table = sig.tableIndices[0].table == 'left' ? tables.left : tables.right;
-            let row = table.getRowFromIndex(sig.tableIndices[0].index);
-            return [row.x, row.y, row.vx, row.vy];
+            let table = (sig.tableIndices[0].table == 'left' ?
+                         this.tables.left : this.tables.right);
+            return table.getRowFromIndex(sig.tableIndices[0].index);
+        }
+        if (sig.position) {
+            return {'x': sig.position.x,
+                'y': sig.position.y,
+                'vx': 1,
+                'vy': 1};
         }
 
         if (sig.canvasObj) {
@@ -457,43 +460,17 @@ class View {
             let src = self.endpoint(map.src);
             let dst = self.endpoint(map.dst);
             if (!src || !dst) {
-                console.log('missing infor for map endpoint', map);
+                console.log('missing info for map endpoint', map);
                 return;
             }
-            let x1, y1, x2, y2;
-            if (src.table == 'left') {
-                // left table
-                x1 = self.mapPane.left;
-                y1 = (src.index + 0.5) * lh + lo;
-            }
-            else {
-                // right table
-                x1 = self.mapPane.right;
-                y1 = (src.index + 0.5) * rh + ro;
-            }
-            if (dst.table == 'left') {
-                // left table
-                x2 = self.mapPane.left;
-                y2 = (dst.index + 0.5) * lh + lo;
-            }
-            else {
-                // right table
-                x2 = self.mapPane.right;
-                y2 = (dst.index + 0.5) * rh + ro;
-            }
 
-            let cy = (y1 + y2) * 0.5;
-            let cx = self.mapPane.cx;
-            let h_quarter = (cx + x1) * 0.5;
-            let y3 = y1 * 0.9 + cy * 0.1;
-            let y4 = y2 * 0.9 + cy * 0.1;
-
-            if (x1 == x2) {
-                let mult = Math.abs(y1 - y2) * 0.25 + 35;
-                cx = x1 < cx ? self.mapPane.left + mult : self.mapPane.right - mult;
-            }
-
-            let path = [['M', x1, y1], ['C', cx, y3, cx, y4, x2, y2]];
+            let path = [['M', src.x, src.y],
+                        ['C',
+                         src.x + src.vx * self.mapPane.width * 0.5,
+                         src.y + src.vy * self.mapPane.width * 0.5,
+                         dst.x + dst.vx * self.mapPane.width * 0.5,
+                         dst.y + dst.vy * self.mapPane.height * 0.5,
+                         dst.x, dst.y]];
 
             if (map.view.new) {
                 map.view.new = false;
@@ -532,13 +509,11 @@ class View {
     }
 
     update() {
-        console('prototype::update()');
         this.updateDevices();
         this.updateMaps();
     }
 
     tablePan(x, y, delta_x, delta_y) {
-        console.log('tablePan');
         x -= this.frame.left;
         y -= this.frame.top;
         let index, updated = false;
@@ -557,7 +532,6 @@ class View {
     }
 
     canvasPan(x, y, delta_x, delta_y) {
-        console.log('canvasPan');
         x -= this.frame.left;
         y -= this.frame.top;
         this.svgPosX += delta_x * this.svgZoom;
@@ -572,7 +546,6 @@ class View {
     }
 
     tableZoom(x, y, delta) {
-        console.log('tableZoom');
         x -= this.frame.left;
         y -= this.frame.top;
         let index, updated = false;
@@ -591,7 +564,6 @@ class View {
     }
 
     canvasZoom(x, y, delta) {
-        console.log('canvasZoom');
         x -= this.frame.left;
         y -= this.frame.top;
         let newZoom = this.svgZoom + delta * 0.01;
@@ -616,13 +588,11 @@ class View {
     }
 
     filterSignals(direction, text) {
-        console.log('view::filterSignals('+text+')');
         let index, updated = false;
         if (this.tables) {
             for (index in this.tables) {
                 updated |= this.tables[index].filterByName(text, direction);
             }
-            console.log('updated:', updated);
             if (updated) {
                 this.update('signals');
                 this.draw(1000);

@@ -233,7 +233,7 @@ function ViewManager(container, model)
     function selection_handlers() {
         $('svg').on('mousedown', function(e) {
             if (e.shiftKey == false) {
-                deselect_all_maps(tables);
+                deselectAllMaps(tables);
             }
             escaped = false;
 
