@@ -12,9 +12,6 @@ class ParallelView extends View {
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
-        // remove link svg
-        this.model.links.each(remove_object_svg);
-
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
@@ -51,7 +48,7 @@ class ParallelView extends View {
             let sigInc = numSigs ? self.mapPane.height / numSigs : self.mapPane.height;
 
             dev.view.toBack();
-            dev.view.animate({'path': [['M', self.mapPane.left + devInc * dev.index,
+            dev.view.animate({'path': [['M', self.mapPane.left + self.mapPane.width - devInc * dev.index,
                                         self.mapPane.top + self.mapPane.height],
                                        ['l', 0, -self.mapPane.height]],
                               'stroke': dev.color,
@@ -64,7 +61,7 @@ class ParallelView extends View {
                 if (!sig.view)
                     return;
                 // assign position along line
-                sig.position.x = self.mapPane.left + devInc * dev.index;
+                sig.position.x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
                 sig.position.y = self.mapPane.top + self.mapPane.height - sigInc * sig.index;
                 self.drawSignal(sig, duration);
             });

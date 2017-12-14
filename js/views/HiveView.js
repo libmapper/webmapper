@@ -12,9 +12,6 @@ class HiveView extends View {
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
-        // remove link svg
-        this.model.links.each(remove_object_svg);
-
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 

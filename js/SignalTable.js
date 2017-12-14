@@ -125,7 +125,7 @@ class Table {
                 'top': self.frame.top,
                 'width': self.frame.width,
                 'height': self.frame.height,
-                'transform-origin': 'top right',
+                'transform-origin': 'top left',
                 'WebkitTransform': 'rotate(' + self.frame.angle + 'rad)',
                 '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
                 'transform': 'rotate(' + self.frame.angle + 'rad)'
@@ -185,17 +185,17 @@ class Table {
             }
             if (this.snap == 'bottom') {
                 let left = j * rowHeight - this.scrolled + 200;
-                let top = row.offsetLeft + this.div[0].offsetTop;
+                let top = this.frame.top - this.frame.width;
                 return {'left': left,
                         'right': left + rowHeight,
                         'top': top,
-                        'bottom': top + row.offsetWidth,
+                        'bottom': top + this.frame.width,
                         'width': rowHeight,
-                        'height': row.offsetWidth,
-                        'x': top + row.offsetWidth,
-                        'y': left + rowHeight * 0.5,
+                        'height': this.frame.width,
+                        'x': left + rowHeight * 0.5,
+                        'y': top + this.frame.width,
                         'vx': Math.cos(this.frame.angle),
-                        'vy': Math.sin(this.frame.angle),
+                        'vy': -Math.sin(this.frame.angle),
                         'id': row.id.replace('\\/', '\/'),
                         'even': $(row).hasClass('even'),
                         'type': $(row).hasClass('device') ? 'device' : 'signal',
@@ -204,6 +204,7 @@ class Table {
             else {
                 let left = row.offsetLeft + this.div[0].offsetLeft;
                 let top = j * rowHeight - this.scrolled + 20 + this.div[0].offsetTop;
+                let snap = this.snap == 'left' ? -1 : 1;
                 return {'left': left,
                         'right': left + row.offsetWidth,
                         'top': top,
@@ -212,7 +213,7 @@ class Table {
                         'height': rowHeight,
                         'x': this.snap == 'left' ? left : left + row.offsetWidth,
                         'y': top + rowHeight * 0.5,
-                        'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
+                        'vx': Math.cos(this.frame.angle) * snap,
                         'vy': Math.sin(this.frame.angle),
                         'id': row.id.replace('\\/', '\/'),
                         'even': $(row).hasClass('even'),
@@ -236,7 +237,7 @@ class Table {
                 }
                 if (this.snap == 'bottom') {
                     let left = j * rowHeight - this.scrolled;
-                    let top = row.offsetLeft;
+                    let top = row.offsetLeft - this.frame.top;
                     return {'left': left,
                             'top': top,
                             'width': rowHeight,
@@ -252,13 +253,14 @@ class Table {
                 else {
                     let left = row.offsetLeft;
                     let top = j * rowHeight - this.scrolled + 20;
+                    let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
                             'top': top,
                             'width': row.offsetWidth,
                             'height': rowHeight,
                             'x': this.snap == 'left' ? left : left + row.offsetWidth,
                             'y': top + rowHeight * 0.5,
-                            'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
+                            'vx': Math.cos(this.frame.angle) * snap,
                             'vy': Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
@@ -271,24 +273,24 @@ class Table {
         }
     }
 
-    getRowFromPosition(x, y, margin) {
+    getRowFromPosition(x, y, snapRatio) {
         if (x == null || y == null)
             return;
-        if (!margin)
-            margin = 100;
+        if (!snapRatio)
+            snapRatio = 100;
         switch (this.snap) {
             case 'left':
-                if (x < this.frame.left - this.frame.width * margin)
+                if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
                 x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
                 break;
             case 'right':
-                if (x > this.frame.left + this.frame.width * (1 + margin))
+                if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
                 x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
                 break;
             case 'bottom':
-                if (y > this.frame.top + this.frame.height * (1 + margin))
+                if (y > this.frame.top + this.frame.height * (1 + snapRatio))
                     return;
                 y = this.div[0].offsetTop + 50;
                 break;
@@ -304,7 +306,7 @@ class Table {
         let output;
         if (this.snap == 'bottom') {
             let left = row.offsetTop - this.scrolled;
-            let top = row.offsetLeft;
+            let top = row.offsetLeft - this.frame.top;
             output = {'left': left,
                       'top': top,
                       'width': rowHeight,
@@ -399,15 +401,15 @@ class Table {
         if (this.snap == "bottom") {
             // rotated 90deg: invert x and y
             let temp = x;
-            x = y;
+            x = y + this.frame.left;
             y = temp;
         }
         if (constrain && x != null && y != null) {
             // check if position applies to this table
-            if (   x < this.div[0].offsetLeft
-                || x > this.div[0].offsetLeft + this.div[0].offsetWidth
-                || y < this.div[0].offsetTop
-                || y > this.div[0].offsetTop + this.div[0].offsetHeight)
+            if (   x < this.frame.left
+                || x > this.frame.left + this.frame.width
+                || y < this.frame.top
+                || y > this.frame.top + this.frame.height)
                 return null;
         }
         this.zoomed -= delta * 0.01;
@@ -421,8 +423,13 @@ class Table {
         if (!changed)
             return false;
 
-        let offset = (this.snap == 'bottom') ? x - this.table.offsetLeft : y - 80;
-        offset -= 20;   // column headers
+//        let offset = (this.snap == 'bottom') ? x - this.table.offsetLeft : y - 80;
+//        offset -= 20;   // column headers
+        let offset = y - 20;
+        if (this.snap == 'bottom')
+            offset -= this.frame.left;
+        else
+            offset -= this.frame.top;
 
         // old offset in rows
         let normOffset = (Math.floor(this.scrolled) + offset) / Math.round(oldRowHeight);

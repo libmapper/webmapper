@@ -105,14 +105,6 @@ MapProperties.prototype = {
             if (e.which == 77)
                 _self.setMapProperty("muted", null);
         });
-
-        $('#refreshButton').on('click', function(e) {
-            $(this).css({'-webkit-animation': 'refreshButtonSpin 1s'});
-            $(this._container).trigger("refreshAll");
-            setTimeout(function() {
-                $('#refresh').css({'-webkit-animation': ''});
-            }, 1000);
-        });
     },
 
     updateNetworkInterfaces : function() {

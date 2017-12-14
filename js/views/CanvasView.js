@@ -16,16 +16,10 @@ class CanvasView extends View {
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
         // remove device and unused signal svg
-        let self = this;
         this.model.devices.each(function(dev) {
-            remove_object_svg(dev);
             dev.signals.each(function(sig) {
                 if (!sig.canvas_object)
                     remove_object_svg(sig);
-                else {
-                    self.set_sig_hover(sig);
-                    self.set_sig_drag(sig);
-                }
             });
         });
 

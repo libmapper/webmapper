@@ -80,6 +80,17 @@ class View {
 
         this.canvas.setViewBox(0, 0, frame.width, frame.height, false);
         $('#status').text('');
+
+        // remove tableIndices from last view
+        let self = this;
+        this.model.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.tableIndices) {
+                    delete sig.tableIndices;
+                    sig.tableIndices = null;
+                }
+            });
+        });
     }
 
     resize(newFrame) {
@@ -317,9 +328,6 @@ class View {
                 if (self.snappingTo)
                     return;
                 if (self.escaped) {
-                    draggingFrom = null;
-                    self.newMap.remove();
-                    self.newMap = null;
                     return;
                 }
                 x -= self.frame.left;
@@ -428,7 +436,6 @@ class View {
 
     endpoint(sig, dir) {
         if (sig.tableIndices) {
-            let loc = sig.tableIndices[0];
             let table = (sig.tableIndices[0].table == 'left' ?
                          this.tables.left : this.tables.right);
             return table.getRowFromIndex(sig.tableIndices[0].index);
@@ -480,7 +487,8 @@ class View {
                                    'stroke-opacity': 0.5,
                                    'stroke': map.view.selected ? 'red' : 'white',
                                    'arrow-end': 'block-wide-long',
-                                   'stroke-dasharray': map.muted ? '-' : ''});
+                                   'stroke-dasharray': map.muted ? '-' : ''})
+                            .toFront();
                     return;
                 }
                 // draw animation following arrow path
@@ -492,7 +500,7 @@ class View {
                     this.animate({'path': path}, duration * 0.5, '>', function() {
                         this.attr({'arrow-end': 'block-wide-long'});
                     });
-                });
+                }).toFront();
             }
             else {
                 map.view.animate({'path': path,
@@ -503,7 +511,7 @@ class View {
                                  duration, '>', function() {
                     this.attr({'arrow-end': 'block-wide-long',
                                'stroke-dasharray': map.muted ? '-' : ''});
-                });
+                }).toFront();
             }
         });
     }
@@ -540,9 +548,12 @@ class View {
         this.canvas.setViewBox(this.svgPosX, this.svgPosY,
                                this.mapPane.width * this.svgZoom,
                                this.mapPane.height * this.svgZoom, false);
-        $('#status').text('pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']')
-                    .css({'left': x - this.frame.width * 0.5 + 80,
-                          'top': y + 50});
+        $('#status').stop(true, false)
+                    .text('pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']')
+                    .css({'left': x + 10,
+                          'top': y + 60,
+                          'opacity': 1})
+                    .animate({opacity: 0}, {duration: 2000});
     }
 
     tableZoom(x, y, delta) {
@@ -580,9 +591,12 @@ class View {
                                this.mapPane.width * newZoom,
                                this.mapPane.height * newZoom, false);
 
-        $('#status').text('zoom: '+(100/newZoom).toFixed(2)+'%')
-                    .css({'left': x - this.frame.width * 0.5 + 70,
-                          'top': y + 50});
+        $('#status').stop(true, false)
+                    .text('zoom: '+(100/newZoom).toFixed(2)+'%')
+                    .css({'left': x + 10,
+                          'top': y + 60,
+                          'opacity': 1})
+                    .animate({opacity: 0}, {duration: 2000});
 
         this.svgZoom = newZoom;
     }
@@ -609,6 +623,7 @@ class View {
 
     escape() {
         this.escaped = true;
+        this.draggingFrom = null;
         if (this.newMap) {
             this.newMap.remove();
             this.newMap = null;
@@ -682,10 +697,6 @@ class View {
                     if (self.escaped) {
                         $(document).off('.drawing');
                         $('svg, .displayTable tbody tr').off('.drawing');
-                        if (self.newMap) {
-                            self.newMap.remove();
-                            self.newMap = null;
-                        }
                         return;
                     }
 
@@ -706,12 +717,13 @@ class View {
 
                     if (src_table == dst_table) {
                         // draw smooth path from table to self
+                        let dist = Math.abs(src.x - dst.x) + Math.abs(src.y - dst.y) * 0.5;
                         path = [['M', src.x, src.y],
                                 ['C',
-                                 src.x + src.vx * self.mapPane.width * 0.5,
-                                 src.y + src.vy * self.mapPane.height * 0.5,
-                                 dst.x + dst.vx * self.mapPane.width * 0.5,
-                                 dst.y + dst.vy * self.mapPane.height * 0.5,
+                                 src.x + src.vx * dist,
+                                 src.y + src.vy * dist,
+                                 dst.x + dst.vx * dist,
+                                 dst.y + dst.vy * dist,
                                  dst.x, dst.y]];
                     }
                     else if (dst) {

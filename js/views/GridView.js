@@ -21,9 +21,8 @@ class GridView extends View {
         let self = this;
         model.devices.each(function(dev) {
             // remove signal svg
-            dev.signals.each(function(sig) {
-                remove_object_svg(sig);
-            });
+            dev.signals.each(remove_object_svg);
+
             if (!dev.view)
                 return;
             // change device click
@@ -50,8 +49,9 @@ class GridView extends View {
 
         let self = this;
         this.tables.left.adjust(0, 180, 200, this.frame.height - 180, 0, duration);
-        this.tables.right.adjust(-20, 0, 200, this.frame.width - 180, -Math.PI * 0.5, duration,
-                                 function() {self.draw()});
+        this.tables.right.adjust(180, 200, 200, this.frame.width - 180,
+                                 -Math.PI * 0.5, duration,
+                                 function() {self.draw(1000)});
         this.mapPane.left = 200;
         this.mapPane.width = this.frame.width - 200;
         this.mapPane.top = 200;

@@ -13,17 +13,7 @@ class GraphView extends View {
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
         // remove associated svg elements for devices
-        // set hover and drag for existing signal objects
-        let self = this;
-        this.model.devices.each(function(dev) {
-            remove_object_svg(dev);
-            dev.signals.each(function(sig) {
-                if (sig.view) {
-                    self.setSigDrag(sig);
-                    self.setSigHover(sig);
-                }
-            });
-        });
+        this.model.devices.each(remove_object_svg);
 
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;

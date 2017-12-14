@@ -21,9 +21,8 @@ class ListView extends View {
         let self = this;
         model.devices.each(function(dev) {
             // remove signal svg
-            dev.signals.each(function(sig) {
-                remove_object_svg(sig);
-            });
+            dev.signals.each(remove_object_svg);
+
             if (!dev.view)
                 return;
             // change device click
@@ -51,7 +50,7 @@ class ListView extends View {
                                 duration);
         this.tables.right.adjust(this.frame.width * 0.6, 0, this.frame.width * 0.4,
                                  this.frame.height, 0, duration,
-                                 function() {self.draw()});
+                                 function() {self.draw(1000)});
         this.mapPane.left = this.frame.width * 0.4;
         this.mapPane.width = this.frame.width * 0.2;
         this.mapPane.height = this.frame.height;
