@@ -755,15 +755,15 @@ class View {
                     $('svg, .displayTable tbody tr').off('.drawing');
                     if (dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
+                        model.maps.add({'src': model.find_signal(src.id),
+                                        'dst': model.find_signal(dst.id),
+                                        'key': src.id + '->' + dst.id,
+                                        'status': 'staged'});
                     }
                     // clear table highlights
                     self.tables.left.highlightRow(null, true);
                     self.tables.right.highlightRow(null, true);
 
-                    model.maps.add({'src': model.find_signal(src.id),
-                                    'dst': model.find_signal(dst.id),
-                                    'key': src.id + '->' + dst.id,
-                                    'status': 'staged'});
                     self.newMap.remove();
                     self.newMap = null;
                 });
