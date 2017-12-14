@@ -95,7 +95,7 @@ MapperNodeArray.prototype = {
                 this.cb_func('removing', this.obj_type, this.contents[key]);
             delete this.contents[key];
             if (this.cb_func)
-                this.cb_func('removed', this.obj_type, this.contents[key]);
+                this.cb_func('removed', this.obj_type, {'key': key});
         }
         return key;
     },
@@ -180,7 +180,7 @@ MapperEdgeArray.prototype = {
                 this.cb_func('removing', this.obj_type, this.contents[key]);
             delete this.contents[key];
             if (this.cb_func)
-                this.cb_func('removed', this.obj_type, this.contents[key]);
+                this.cb_func('removed', this.obj_type, {'key': key});
         }
         return key;
     },
