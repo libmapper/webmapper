@@ -476,20 +476,21 @@ tbody {
     padding: 4px 6px 4px 6px;
     vertical-align: middle;
     position: absolute;
-    text-align: center;
+/*    text-align: left;*/
     color: white;
     background: #111;
     border-radius: 10px;
     opacity: 0;
+    white-space: pre-line;
 }
 
-.status.middle {
-    width: 20%;
-    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/*.status.middle {*/
+/*    width: 20%;*/
+/*    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/*/
+/*    white-space: nowrap;*/
+/*    overflow: hidden;*/
+/*    text-overflow: ellipsis;*/
+/*}*/
 /****************/
 
 /*For the SVG area*/

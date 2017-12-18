@@ -68,6 +68,37 @@ class ParallelView extends View {
         });
     }
 
+    mapPath(map) {
+        if (!map.view)
+            return;
+
+        // draw L-R bezier
+        let src = map.src.position;
+        let dst = map.dst.position;
+        if (!src || !dst) {
+            console.log('missing signal positions for drawing map', map);
+            return null;
+        }
+
+        let path;
+
+        if (src.x == dst.x) {
+            // signals belong to same device
+            let offsetx = src.x + (src.y - dst.y) * 0.5;
+            path = [['M', src.x, src.y],
+                    ['C', offsetx, src.y, offsetx, dst.y, dst.x, dst.y]];
+        }
+        else {
+            let mpx = (src.x + dst.x) * 0.5;
+            path = [['M', src.x, src.y],
+                    ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        }
+
+        // shorten path so it doesn't draw over signals
+        let len = Raphael.getTotalLength(path);
+        return Raphael.getSubpath(path, 10, len - 10);
+    }
+
     draw(duration) {
         this.drawDevices(duration);
         this.drawMaps(duration);

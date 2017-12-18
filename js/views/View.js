@@ -72,7 +72,10 @@ class View {
         this.mapPane = {'left': frame.left,
                         'top': frame.top,
                         'width': frame.width,
-                        'height': frame.height};
+                        'height': frame.height,
+                        'cx': this.frame.width * 0.5,
+                        'cy': this.frame.height * 0.5
+        };
 
         this.svgZoom = 1;
         this.svgPosX = 0;
@@ -91,6 +94,10 @@ class View {
                 }
             });
         });
+
+        this.origin = [this.mapPane.cx, this.mapPane.cy];
+
+        this.sigLabel = null;
     }
 
     resize(newFrame) {
@@ -103,6 +110,8 @@ class View {
                         'height': this.frame.height,
                         'cx': this.frame.width * 0.5,
                         'cy': this.frame.height * 0.5};
+
+        this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.draw(0);
     }
@@ -117,7 +126,7 @@ class View {
         return rows.length ? rows : null;
     }
 
-    updateDevices() {
+    updateDevices(func) {
         for (var i in this.tables)
             this.tables[i].update(model.devices, this.frame.height);
 
@@ -169,6 +178,12 @@ class View {
             }
             else
                 dev.tableIndices = null;
+
+            if (func && func(dev)) {
+                remove_object_svg(dev);
+                return;
+            }
+
             if (!dev.view) {
                 let path = [['M', self.frame.left + 50, self.frame.height - 50],
                             ['l', 0, 0]];
@@ -275,18 +290,21 @@ class View {
         let self = this;
         sig.view.hover(
             function() {
-                let pos = labeloffset(sig.position, sig.key);
                 if (!sig.view.label) {
-                    sig.view.label = self.canvas.text(pos.x, pos.y, sig.key);
-                    sig.view.label.node.setAttribute('pointer-events', 'none');
+                    // show label
+                    let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
+                    let minstring = sig.min != null ? '\nminimum: ' + sig.min : '';
+                    let maxstring = sig.max != null ? '\nmaximum: ' + sig.max : '';
+                    $('#status').stop(true, false)
+                       .text('name: ' + sig.key
+                             + '\ndirection: ' + sig.direction
+                             + '\ntype: ' + typestring
+                             + '\nunit: ' + sig.unit
+                             + minstring + maxstring)
+                       .css({'left': sig.position.x + 20,
+                             'top': sig.position.y + 70,
+                             'opacity': 1});
                 }
-                else
-                    sig.view.label.stop();
-                sig.view.label.attr({'x': pos.x,
-                                     'y': pos.y,
-                                     'fill': 'white',
-                                     'opacity': 1,
-                                     'font-size': 16,}).toFront();
                 if (self.draggingFrom == null)
                     return;
                 else if (sig == self.draggingFrom) {
@@ -305,13 +323,8 @@ class View {
             },
             function() {
                 self.snappingTo = null;
-                if (sig.view.label) {
-                    sig.view.label.stop();
-                    sig.view.label.animate({'opacity': 0}, 1000, '>', function() {
-                        this.remove();
-                        sig.view.label = null;
-                    });
-                }
+                $('#status').stop(true, false)
+                            .animate({opacity: 0}, {duration: 2000});
             }
         );
     }
@@ -424,7 +437,9 @@ class View {
         model.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
-                map.view = self.canvas.path();
+                let pos = map.src.position;
+                let path = pos ? [['M', pos.x, pos.y], ['l', 0, 0]] : null;
+                map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.view.selected ? 'red' : 'white',
                                'fill-opacity': 0,
@@ -434,24 +449,71 @@ class View {
         });
     }
 
-    endpoint(sig, dir) {
-        if (sig.tableIndices) {
-            let table = (sig.tableIndices[0].table == 'left' ?
-                         this.tables.left : this.tables.right);
-            return table.getRowFromIndex(sig.tableIndices[0].index);
+    mapPath(map) {
+        let self = this;
+        function tableRow(sig) {
+            if (self.tables && sig.tableIndices) {
+                let table = self.tables[sig.tableIndices[0].table];
+                return table.getRowFromIndex(sig.tableIndices[0].index);
+            }
+            return null;
         }
-        if (sig.position) {
-            return {'x': sig.position.x,
-                'y': sig.position.y,
-                'vx': 1,
-                'vy': 1};
+        let src = tableRow(map.src);
+        let dst = tableRow(map.dst);
+        if (src && dst) {
+            /* If src and dst are from same table we will always draw a bezier
+             * curve using the signal spacing for calculating control points. */
+            if (src.vx == dst.vx) {
+                // same table
+                if (src.x == dst.x) {
+                    // signals are inline vertically
+                    let ctlx = Math.abs(src.y - dst.y) * 0.5 * src.vx + src.x;
+                    return [['M', src.x, src.y],
+                            ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+                }
+                else {
+                    // signals are inline horizontally
+                    let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
+                    return [['M', src.x, src.y],
+                            ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
+                }
+            }
+            else if (src.vy != dst.vy) {
+                // draw intersection between tables
+                return ((src.x > dst.x)
+                        ? [['M', src.left, dst.y],
+                           ['L', src.left + src.width, dst.top],
+                           ['l', 0, dst.height],
+                           ['Z']]
+                        : [['M', dst.x, src.top],
+                           ['L', dst.left, src.top + src.height],
+                           ['l', dst.width, 0],
+                           ['Z']]);
+            }
+            else {
+                // draw bezier curve between signal tables
+                let mpx = (src.x + dst.x) * 0.5;
+                return [['M', src.x, src.y],
+                        ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+            }
         }
+        if (!src)
+            src = map.src.position
+        if (!dst)
+            dst = map.dst.position;
+        if (!src || !dst)
+            return null;
 
-        if (sig.canvasObj) {
+        // calculate midpoint
+        let mpx = (src.x + dst.x) * 0.5;
+        let mpy = (src.y + dst.y) * 0.5;
 
-        }
+        // inflate midpoint around origin to create a curve
+        mpx = mpx + (mpx - this.origin[0]) * 0.2;
+        mpy = mpy + (mpy - this.origin[1]) * 0.2;
 
-        return null;
+        return [['M', src.x, src.y],
+                ['S', mpx, mpy, dst.x, dst.y]];
     }
 
     drawMaps(duration) {
@@ -464,20 +526,12 @@ class View {
                 return;
             }
             map.view.stop();
-            let src = self.endpoint(map.src);
-            let dst = self.endpoint(map.dst);
-            if (!src || !dst) {
-                console.log('missing info for map endpoint', map);
+
+            let path = self.mapPath(map);
+            if (!path) {
+                console.log('problem generating path for map', map);
                 return;
             }
-
-            let path = [['M', src.x, src.y],
-                        ['C',
-                         src.x + src.vx * self.mapPane.width * 0.5,
-                         src.y + src.vy * self.mapPane.width * 0.5,
-                         dst.x + dst.vx * self.mapPane.width * 0.5,
-                         dst.y + dst.vy * self.mapPane.height * 0.5,
-                         dst.x, dst.y]];
 
             if (map.view.new) {
                 map.view.new = false;
