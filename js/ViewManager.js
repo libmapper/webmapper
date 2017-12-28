@@ -101,8 +101,8 @@ function ViewManager(container, model)
     };
 
     function add_display_tables() {
-        tables.left  = new Table($('#container')[0], 'left', frame);
-        tables.right = new Table($('#container')[0], 'right', frame);
+        tables.left  = new Table($('#container')[0], 'left', frame, model);
+        tables.right = new Table($('#container')[0], 'right', frame, model);
     }
 
     function add_canvas() {

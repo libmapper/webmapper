@@ -50,12 +50,13 @@ class ListView extends View {
                                 duration);
         this.tables.right.adjust(this.frame.width * 0.6, 0, this.frame.width * 0.4,
                                  this.frame.height, 0, duration,
-                                 function() {self.draw(1000)});
+                                 function() {self.draw(0)});
         this.mapPane.left = this.frame.width * 0.4;
         this.mapPane.width = this.frame.width * 0.2;
         this.mapPane.height = this.frame.height;
         this.mapPane.cx = this.frame.width * 0.5;
         this.mapPane.cy = this.frame.height * 0.5;
+        this.draw();
     }
 
     draw(duration) {

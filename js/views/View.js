@@ -2,33 +2,12 @@
 //              View Class              //
 //++++++++++++++++++++++++++++++++++++++//
 
-//changes:
-//    on drag, ask tables if snapping
-//    have tables/signals indicate attachment direction
-//    use only 2 tables
-//    use canvas pan and zoom as default
-//        can't use for over-table panning in list/link views
-
 // public functions
 // resize() // called when window size changes
 // update() // called on changes to the model/database
-// draw() // called on pan/scroll events
+// draw() // called by update/pan/scroll events
 // cleanup() // called when view is destroyed
 // type() // returns view type
-
-/* set sigs to have (index), (parent table), (direction), (offset)
- if (!index) {
-    view.remove()
-    return;
- }
- if (parent_table) {
-    use it to find position & direction
- }
- else if (direction) {
-    use it to set control pts for edge
- }
- use +/-offset for drawing edges
- */
 
 'use strict';
 
@@ -81,6 +60,9 @@ class View {
         this.svgPosX = 0;
         this.svgPosY = 0;
 
+        this.xAxis = null;
+        this.yAxis = null;
+
         this.canvas.setViewBox(0, 0, frame.width, frame.height, false);
         $('#status').text('');
 
@@ -98,6 +80,14 @@ class View {
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.sigLabel = null;
+
+        // default to arrowheads on maps
+        model.maps.each(function(map) {
+            if (map.view)
+                map.view.attr({'arrow-end': 'block-wide-long'});
+        });
+
+        this.update();
     }
 
     resize(newFrame) {
@@ -128,7 +118,7 @@ class View {
 
     updateDevices(func) {
         for (var i in this.tables)
-            this.tables[i].update(model.devices, this.frame.height);
+            this.tables[i].update(this.frame.height);
 
         let self = this;
         let devIndex = 0;
@@ -286,6 +276,61 @@ class View {
         });
     }
 
+    updateLinks() {
+        let self = this;
+        model.devices.each(function(dev) {
+            dev.linkSrcIndices = [];
+            dev.linkDstIndices = [];
+        });
+        model.links.each(function(link) {
+            let src = link.src;
+            let dst = link.dst;
+            if (!src.linkDstIndices.includes(dst.index)) {
+                src.linkDstIndices.push(dst.index);
+                src.linkDstIndices.sort();
+            }
+            if (!dst.linkSrcIndices.includes(src.index)) {
+                dst.linkSrcIndices.push(src.index);
+                dst.linkSrcIndices.sort();
+            }
+            if (link.view)
+                return;
+            link.view = self.canvas.path();
+            let rgb = Raphael.getRGB(src.color);
+            let gradient = [];
+            gradient[0] = '0-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
+            rgb = Raphael.getRGB(dst.color);
+            gradient[1] = ')-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
+
+            link.view.attr({'fill': gradient[0]+0.25+gradient[1]+0.25+')',
+                            'stroke-opacity': 0});
+            link.view.setAlpha = function(alpha1, alpha2) {
+                if (!alpha2)
+                    alpha2 = alpha1;
+                this.attr({'fill': gradient[0]+alpha1+gradient[1]+alpha2+')'});
+            }
+            link.view.hover(
+                function() {
+                    link.view.toFront();
+                    link.view.setAlpha(0.5);
+                    this.mousemove(function (e, x) {
+                        let ratio = (x - self.mapPane.left) / self.mapPane.width;
+                        ratio = ratio * 0.25;
+                        link.view.setAlpha(0.5-ratio, 0.25+ratio);
+                    });
+                },
+                function() {
+                    this.unmousemove();
+                    this.setAlpha(0.25);
+            });
+            link.view.unclick().click(function(e, x) {
+                console.log('click');
+                // check if close to table
+                // enable dragging to new device
+            });
+        });
+    }
+
     setSigHover(sig) {
         let self = this;
         sig.view.hover(
@@ -408,7 +453,7 @@ class View {
     }
 
     drawSignal(sig, duration) {
-        if (!sig.view || !sig.index)
+        if (!sig.view)
             return;
         sig.view.stop();
         let pos = sig.position;
@@ -443,7 +488,9 @@ class View {
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.view.selected ? 'red' : 'white',
                                'fill-opacity': 0,
-                               'stroke-width': 2});
+                               'stroke-width': 2,
+                               'arrow-start': 'none',
+                               'arrow-end': 'block-wide-long'});
                 map.view.new = true;
             }
         });
@@ -540,7 +587,6 @@ class View {
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
                                    'stroke': map.view.selected ? 'red' : 'white',
-                                   'arrow-end': 'block-wide-long',
                                    'stroke-dasharray': map.muted ? '-' : ''})
                             .toFront();
                     return;
@@ -550,11 +596,8 @@ class View {
                 let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
                 map.view.animate({'path': path_mid,
                                   'stroke-opacity': 1.0},
-                                 duration * 0.5, '>', function() {
-                    this.animate({'path': path}, duration * 0.5, '>', function() {
-                        this.attr({'arrow-end': 'block-wide-long'});
-                    });
-                }).toFront();
+                                 duration * 0.5, '>')
+                        .toFront();
             }
             else {
                 map.view.animate({'path': path,
@@ -562,10 +605,8 @@ class View {
                                   'fill-opacity': 0,
                                   'stroke-width': 2,
                                   'stroke': map.view.selected ? 'red' : 'white'},
-                                 duration, '>', function() {
-                    this.attr({'arrow-end': 'block-wide-long',
-                               'stroke-dasharray': map.muted ? '-' : ''});
-                }).toFront();
+                                 duration, '>')
+                        .toFront();
             }
         });
     }
@@ -656,10 +697,13 @@ class View {
     }
 
     filterSignals(direction, text) {
+        direction = direction == 'src' ? 'output' : 'input';
         let index, updated = false;
         if (this.tables) {
             for (index in this.tables) {
-                updated |= this.tables[index].filterByName(text, direction);
+                let table = this.tables[index];
+                if (!table.direction || table.direction == direction)
+                    updated |= table.filterByName(text);
             }
             if (updated) {
                 this.update('signals');
@@ -671,6 +715,7 @@ class View {
                 this.srcregexp = text ? new RegExp(text, 'i') : null;
             else
                 this.dstregexp = text ? new RegExp(text, 'i') : null;
+            this.update('signals');
             this.draw(1000);
         }
     }

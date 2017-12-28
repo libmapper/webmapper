@@ -2,7 +2,8 @@
 
 // An object for the overall display
 class Table {
-    constructor(container, location, frame) {
+    constructor(container, location, frame, model) {
+        this.model = model;
         this.id = location + 'Table';
         this.detail = true;
         this.direction = null;
@@ -52,7 +53,7 @@ class Table {
                         "<strong>TYPE</strong>"+
                     "</div>"+
                 "</div>"+
-                "<div id="+this.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
                     "<table class='displayTable'>"+
                         "<colgroup>"+
                             "<col style='width:75%'>"+
@@ -69,7 +70,7 @@ class Table {
                         "<strong>"+this.title+"</strong>"+
                     "</div>"+
                 "</div>"+
-                "<div id="+this.id+"Scroller style='top:20px; height:calc(100% - 20px); width:100%; position:absolute; overflow:auto'>"+
+                "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
                     "<table class='displayTable'>"+
                         "<tbody></tbody>"+
                     "</table>"+
@@ -177,8 +178,9 @@ class Table {
         let rowHeight = Math.round(this.rowHeight);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
-            if ($(row).hasClass('invisible'))
+            if ($(row).hasClass('invisible')) {
                 continue;
+            }
             if (j < idx) {
                 ++j;
                 continue;
@@ -203,7 +205,7 @@ class Table {
             }
             else {
                 let left = row.offsetLeft + this.div[0].offsetLeft;
-                let top = j * rowHeight - this.scrolled + 20 + this.div[0].offsetTop;
+                let top = j * rowHeight - this.scrolled + 20 + this.frame.top;
                 let snap = this.snap == 'left' ? -1 : 1;
                 return {'left': left,
                         'right': left + row.offsetWidth,
@@ -378,14 +380,14 @@ class Table {
     adjustRowHeight() {
         // adjust row heights to fill table
         let natRowHeight = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (natRowHeight > 19) {
+        if (natRowHeight > 18) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
         let rowHeight = natRowHeight * this.zoomed;
-        if (rowHeight < 19) {
-            rowHeight = 19;
+        if (rowHeight < 18) {
+            rowHeight = 18;
             this.zoomed = rowHeight / natRowHeight;
         }
         let changed = (Math.round(rowHeight) != Math.round(this.rowHeight));
@@ -439,7 +441,7 @@ class Table {
         return true;
     }
 
-    update(devices, targetHeight) {
+    update(targetHeight) {
         if (targetHeight)
             this.targetHeight = targetHeight - 20; // headers
 
@@ -472,7 +474,7 @@ class Table {
         }
         let title = this.title;
 
-        devices.each(function(dev) {
+        model.devices.each(function(dev) {
             let num_dev_sigs = 0;
             let sigs = [];
             dev.signals.each(function(sig) {
@@ -481,7 +483,7 @@ class Table {
                     if (sig.direction != dir)
                         return;
                 }
-                else if (sig.canvas_object)
+                if (sig.canvas_object)
                     return;
                 if (regexp && !regexp.test(sig.key))
                     return;

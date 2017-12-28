@@ -160,7 +160,7 @@ MapProperties.prototype = {
             if (expression == null)
                 expression = map.expression;
             else if (expression != map.expression)
-                expression = 'multiple';
+                expression = 'multiple expressions';
 
             if (src_min == null)
                 src_min = map.src_min;
@@ -206,8 +206,11 @@ MapProperties.prototype = {
 
         if (expression != null) {
             $(".expression").removeClass('waiting');
-            if (expression != 'multiple')
-                $(".expression").val(expression);
+            $(".expression").val(expression);
+            if (expression == 'multiple expressions')
+                $(".expression").css({'font-style': 'italic'});
+            else
+                $(".expression").css({'font-style': 'normal'});
         }
 
         if (src_min != null) {

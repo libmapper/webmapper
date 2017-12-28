@@ -22,6 +22,12 @@ class GraphView extends View {
     }
 
     update() {
+        if (!this.xAxis)
+            this.xAxis = this.canvas.path().attr({'stroke': 'white',
+                                                  'arrow-end': 'block-wide-long'});
+        if (!this.yAxis)
+            this.yAxis = this.canvas.path().attr({'stroke': 'white',
+                                                  'arrow-end': 'block-wide-long'});
         let elements;
         let self = this;
         switch (arguments.length) {
@@ -39,6 +45,7 @@ class GraphView extends View {
             this.updateSignals(function(sig) {
                 if (!sig.position)
                     sig.position = position(null, null, self.frame);
+                return false;
             });
         }
         if (elements.indexOf('maps') >= 0)
@@ -54,6 +61,7 @@ class GraphView extends View {
         let dst = map.dst.position;
         if (!src || !dst) {
             console.log('missing signal positions for drawing map', map);
+            remove_object_svg(map);
             return null;
         }
 
@@ -75,7 +83,19 @@ class GraphView extends View {
     }
 
     draw(duration) {
+        this.xAxis.attr({'path': [['M', 50, this.frame.height - 50],
+                                  ['l', this.frame.width - 100, 0]]});
+        this.yAxis.attr({'path': [['M', 50, this.frame.height - 50],
+                                  ['l', 0, -(this.frame.height - 100)]]});
         this.drawSignals(duration);
         this.drawMaps(duration);
+    }
+
+    cleanup() {
+        super.cleanup();
+        this.xAxis.remove();
+        this.xAxis = null;
+        this.yAxis.remove();
+        this.yAxis = null;
     }
 }
