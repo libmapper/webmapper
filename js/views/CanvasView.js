@@ -5,8 +5,8 @@
 'use strict';
 
 class CanvasView extends View {
-    constructor(frame, tables, canvas, model) {
-        super('canvas', frame, {'left': tables.left}, canvas, model);
+    constructor(frame, tables, canvas, database) {
+        super('canvas', frame, {'left': tables.left}, canvas, database);
 
         // set left table properties
         this.tables.left.filterByDirection('both');
@@ -16,7 +16,7 @@ class CanvasView extends View {
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
         // remove device and unused signal svg
-        this.model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (!sig.canvas_object)
                     remove_object_svg(sig);
@@ -232,7 +232,7 @@ class CanvasView extends View {
         // if present, use it instead of table
         // needs direction
         let self = this;
-        model.maps.each(function(map) {
+        this.database.maps.each(function(map) {
             if (!map.view)
                 return;
             map.view.stop();
@@ -313,7 +313,7 @@ class CanvasView extends View {
 //        escaped = false;
 //        var src_row = this;
 //        if ($(src_row).hasClass('device')) {
-//            let dev = model.devices.find(src_row.id);
+//            let dev = this.database.devices.find(src_row.id);
 //            if (dev) {
 //                dev.collapsed ^= 1;
 //                redraw(200, true);
@@ -331,7 +331,7 @@ class CanvasView extends View {
 //            var width = labelwidth(src.id);
 //
 //            // add object to canvas
-//            let sig = model.find_signal(src.id);
+//            let sig = this.database.find_signal(src.id);
 //            if (!sig)
 //                return;
 //
@@ -396,7 +396,7 @@ class CanvasView extends View {
         super.cleanup();
 
         // clean up any objects created only for this view
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (sig.view)
                     sig.view.undrag();

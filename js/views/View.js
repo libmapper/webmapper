@@ -4,7 +4,7 @@
 
 // public functions
 // resize() // called when window size changes
-// update() // called on changes to the model/database
+// update() // called on changes to the database
 // draw() // called by update/pan/scroll events
 // cleanup() // called when view is destroyed
 // type() // returns view type
@@ -12,12 +12,12 @@
 'use strict';
 
 class View {
-    constructor(type, frame, tables, canvas, model) {
+    constructor(type, frame, tables, canvas, database) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
         this.canvas = canvas;
-        this.model = model;
+        this.database = database;
 
         this.srcregexp = null;
         this.dstregexp = null;
@@ -68,7 +68,7 @@ class View {
 
         // remove tableIndices from last view
         let self = this;
-        this.model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (sig.tableIndices) {
                     delete sig.tableIndices;
@@ -82,7 +82,7 @@ class View {
         this.sigLabel = null;
 
         // default to arrowheads on maps
-        model.maps.each(function(map) {
+        this.database.maps.each(function(map) {
             if (map.view)
                 map.view.attr({'arrow-end': 'block-wide-long'});
         });
@@ -122,7 +122,7 @@ class View {
 
         let self = this;
         let devIndex = 0;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             // update device signals
             let sigIndex = 0;
             dev.signals.each(function(sig) {
@@ -197,7 +197,7 @@ class View {
     drawDevices(duration) {
         let self = this;
         let cx = this.frame.cx;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             if (!dev.view || !dev.tableIndices || !dev.tableIndices.length)
                 return;
             dev.view.stop();
@@ -278,11 +278,11 @@ class View {
 
     updateLinks() {
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.linkSrcIndices = [];
             dev.linkDstIndices = [];
         });
-        model.links.each(function(link) {
+        this.database.links.each(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!src.linkDstIndices.includes(dst.index)) {
@@ -420,7 +420,7 @@ class View {
 
     updateSignals(func) {
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (sig.view)
                     sig.view.stop();
@@ -470,7 +470,7 @@ class View {
 
     drawSignals(duration) {
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 self.drawSignal(sig, duration);
             });
@@ -479,7 +479,7 @@ class View {
 
     updateMaps() {
         let self = this;
-        model.maps.each(function(map) {
+        this.database.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
                 let pos = map.src.position;
@@ -565,7 +565,7 @@ class View {
 
     drawMaps(duration) {
         let self = this;
-        model.maps.each(function(map) {
+        this.database.maps.each(function(map) {
             if (!map.view)
                 return;
             if (map.hidden) {
@@ -753,7 +753,7 @@ class View {
                     return;
             }
             if ($(src_row).hasClass('device')) {
-                let dev = self.model.devices.find(src_row.id);
+                let dev = self.database.devices.find(src_row.id);
                 if (dev) {
                     switch (src_table) {
                     case self.tables.left:
@@ -854,8 +854,8 @@ class View {
                     $('svg, .displayTable tbody tr').off('.drawing');
                     if (dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
-                        model.maps.add({'src': model.find_signal(src.id),
-                                        'dst': model.find_signal(dst.id),
+                        self.database.maps.add({'src': self.database.find_signal(src.id),
+                                        'dst': self.database.find_signal(dst.id),
                                         'key': src.id + '->' + dst.id,
                                         'status': 'staged'});
                     }

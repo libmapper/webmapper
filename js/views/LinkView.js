@@ -5,9 +5,9 @@
 'use strict';
 
 class LinkView extends View {
-    constructor(frame, tables, canvas, model) {
+    constructor(frame, tables, canvas, database) {
         super('link', frame, {'left': tables.left, 'right': tables.right},
-              canvas, model);
+              canvas, database);
 
         // set left table properties
         this.tables.left.collapseAll = true;
@@ -21,11 +21,11 @@ class LinkView extends View {
         this.tables.right.showDetail(false);
 
         // remove associated svg elements for signals
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) { remove_object_svg(sig); });
         });
         // remove associated svg elements for maps
-        model.maps.each(function(map) { remove_object_svg(map); });
+        this.database.maps.each(function(map) { remove_object_svg(map); });
 
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
@@ -69,7 +69,7 @@ class LinkView extends View {
 
         let self = this;
 
-        model.links.each(function(link) {
+        this.database.links.each(function(link) {
             if (!link.view)
                 return;
             link.view.stop();
@@ -116,7 +116,7 @@ class LinkView extends View {
 
     drawDevices(duration) {
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             if (!dev.view || !dev.tableIndices || !dev.tableIndices.length)
                 return;
             dev.view.stop();
@@ -154,10 +154,10 @@ class LinkView extends View {
         this.tables.left.collapseAll = false;
         this.tables.right.collapseAll = false;
 
-        this.model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             delete dev.linkSrcIndices;
             delete dev.linkDstIndices;
         });
-        this.model.links.each(remove_object_svg);
+        this.database.links.each(remove_object_svg);
     }
 }

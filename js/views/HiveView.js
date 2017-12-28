@@ -5,8 +5,8 @@
 'use strict';
 
 class HiveView extends View {
-    constructor(frame, tables, canvas, model) {
-        super('hive', frame, null, canvas, model);
+    constructor(frame, tables, canvas, database) {
+        super('hive', frame, null, canvas, database);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
@@ -34,7 +34,7 @@ class HiveView extends View {
 
     drawDevices(duration) {
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();
@@ -120,7 +120,7 @@ class HiveView extends View {
                 break;
         }
         if (elements.indexOf('devices') >= 0) {
-            let dev_num = model.devices.size();
+            let dev_num = this.database.devices.size();
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
             let angleInc = (Math.PI * -0.5) / dev_num;
             this.updateDevices(function(dev) {
@@ -134,6 +134,6 @@ class HiveView extends View {
 
     cleanup() {
         super.cleanup();
-        model.devices.each(function(dev) {dev.angle = null;});
+        this.database.devices.each(function(dev) {dev.angle = null;});
     }
 }

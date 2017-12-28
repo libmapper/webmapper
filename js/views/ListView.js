@@ -5,9 +5,9 @@
 'use strict';
 
 class ListView extends View {
-    constructor(frame, tables, canvas, model) {
+    constructor(frame, tables, canvas, database) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, model);
+              canvas, database);
 
         // set left table properties
         this.tables.left.filterByDirection('output');
@@ -19,7 +19,7 @@ class ListView extends View {
         this.tables.right.showDetail(true);
 
         let self = this;
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             // remove signal svg
             dev.signals.each(remove_object_svg);
 
@@ -87,7 +87,7 @@ class ListView extends View {
     cleanup() {
         super.cleanup();
 
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (sig.view) {
                     delete sig.view;

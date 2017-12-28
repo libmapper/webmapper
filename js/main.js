@@ -1,5 +1,5 @@
 "use strict";
-var model = new MapperModel();
+var database = new MapperDatabase();
 
 var view;                       // holds the current view object
 var viewIndex;                  // index of current view
@@ -30,9 +30,11 @@ function init() {
     saverLoader.init();
     viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
     viewSelector.init();
-    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), model);
+    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
+                                 database);
     devFilter.init();
-    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), model);
+    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
+                                      database);
     mapProperties.init();
 
     // init controller
@@ -87,11 +89,11 @@ function init() {
  */
 function initMonitorCommands() {
     command.register("available_networks", function(cmd, args) {
-        model.networkInterfaces.available = args;
+        database.networkInterfaces.available = args;
         mapProperties.updateNetworkInterfaces(args);
     });
     command.register("active_network", function(cmd, args) {
-        model.networkInterfaces.selected = args
+        database.networkInterfaces.selected = args
         mapProperties.updateNetworkInterfaces(args);
     });
 }
@@ -139,7 +141,7 @@ function initViewCommands()
                      "mapping": { "maps": [] }
                    };
 
-        model.maps.each(function(map) {
+        database.maps.each(function(map) {
             if (!map.view)
                 return;
             let m = {'sources': [], 'destinations': []};
@@ -313,7 +315,7 @@ function initViewCommands()
     $("#container").on("tab", function(e, tab){
         if (tab != 'All Devices') {
             // retrieve linked destination devices
-            model.links.each(function(link) {
+            database.links.each(function(link) {
                 if (tab == link.src)
                     command.send('subscribe', link.dst);
                 else if (tab == link.dst)
@@ -327,14 +329,14 @@ function initViewCommands()
     // src = "devicename"
     // dst = "devicename"
     $("#container").on("link", function(e, src, dst) {
-        model.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
+        database.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
     });
 
     // unlink command
     // src = "devicename"
     // dst = "devicename"
     $("#container").on("unlink", function(e, src, dst) {
-        model.links.remove(src, dst);
+        database.links.remove(src, dst);
     });
 
     // map command
@@ -423,7 +425,7 @@ function initMapPropertiesCommands()
 }
 
 function refresh_all() {
-    model.clearAll();
+    database.clearAll();
     command.send('refresh');
 }
 
@@ -444,12 +446,12 @@ function switch_mode(newMode)
     $('#container').empty();
     switch (newMode) {
         case 'classic':
-            view = new listView(model);
+            view = new listView(database);
             viewIndex = 0;
             view.init();
             break;
         case 'new':
-            view = new ViewManager(document.getElementById('container'), model);
+            view = new ViewManager(document.getElementById('container'), database);
             viewIndex = 3;
             view.init();
             view.on_resize();

@@ -1,6 +1,6 @@
-function MapProperties(container, model) {
+function MapProperties(container, database) {
     this._container = container;
-    this.model = model;
+    this.database = database;
     this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
     this.mapModes = ["Linear", "Expression"];
     this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
@@ -109,9 +109,9 @@ MapProperties.prototype = {
 
     updateNetworkInterfaces : function() {
         $('#networkSelection').children('*').remove();
-        for (var i in model.networkInterfaces.available) {
-            let iface = model.networkInterfaces.available[i];
-            if (iface == model.networkInterfaces.selected)
+        for (var i in this.database.networkInterfaces.available) {
+            let iface = this.database.networkInterfaces.available[i];
+            if (iface == this.database.networkInterfaces.selected)
                 $('#networkSelection').append("<option value='"+iface+"' selected>"+iface+"</option>");
             else
                 $('#networkSelection').append("<option value='"+iface+"'>"+iface+"</option>");
@@ -151,7 +151,7 @@ MapProperties.prototype = {
         $('.signalControl').removeClass('disabled');
         $('.signalControl').children('*').removeClass('disabled');
 
-        this.model.maps.filter(this.selected).each(function(map) {
+        this.database.maps.filter(this.selected).each(function(map) {
             if (mode == null)
                 mode = map.mode;
             else if (mode != map.mode)
@@ -252,7 +252,7 @@ MapProperties.prototype = {
     // object with arguments for the map
     updateMapPropertiesFor : function(key) {
         // check if map is selected
-        var map = this.model.maps.find(key);
+        var map = this.database.maps.find(key);
         if (this.selected(map))
             this.updateMapProperties();
     },
@@ -260,7 +260,7 @@ MapProperties.prototype = {
     setMapProperty : function(key, value) {
         let container = $(this._container);
         let modes = this.mapModeCommands;
-        this.model.maps.filter(this.selected).each(function(map) {
+        this.database.maps.filter(this.selected).each(function(map) {
             if (map[key] == value || map[key] == parseFloat(value))
                 return;
 
@@ -384,7 +384,7 @@ MapProperties.prototype = {
             // Split them into sources and destinations
             var srcdevs = [];
             var dstdevs = [];
-            model.devices.each(function(dev) {
+            this.database.devices.each(function(dev) {
                 if (devs.includes(dev.name)) {
                     if (dev.num_outputs)
                         srcdevs.push(dev.name);

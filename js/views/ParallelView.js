@@ -5,8 +5,8 @@
 'use strict';
 
 class ParallelView extends View {
-    constructor(frame, tables, canvas, model) {
-        super('hive', frame, null, canvas, model);
+    constructor(frame, tables, canvas, database) {
+        super('hive', frame, null, canvas, database);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
@@ -33,14 +33,14 @@ class ParallelView extends View {
     drawDevices(duration) {
         let self = this;
 
-        let dev_num = model.devices.size();
+        let dev_num = this.database.devices.size();
         if (dev_num && dev_num > 1)
             dev_num -= 1;
         else
             dev_num = 1;
         let devInc = self.mapPane.width / dev_num;
 
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();

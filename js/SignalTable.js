@@ -2,8 +2,8 @@
 
 // An object for the overall display
 class Table {
-    constructor(container, location, frame, model) {
-        this.model = model;
+    constructor(container, location, frame, database) {
+        this.database = database;
         this.id = location + 'Table';
         this.detail = true;
         this.direction = null;
@@ -474,7 +474,7 @@ class Table {
         }
         let title = this.title;
 
-        model.devices.each(function(dev) {
+        this.database.devices.each(function(dev) {
             let num_dev_sigs = 0;
             let sigs = [];
             dev.signals.each(function(sig) {

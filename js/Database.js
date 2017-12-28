@@ -190,7 +190,7 @@ MapperEdgeArray.prototype = {
     },
 };
 
-function MapperModel() {
+function MapperDatabase() {
     callbacks = [];
     this.add_callback = function(f) {
         callbacks.push(f);
@@ -228,7 +228,7 @@ function MapperModel() {
     }
     this.del_device = function(cmd, dev) {
 //        console.log('remove device');
-        dev = model.devices.find(dev.name);
+        dev = this.devices.find(dev.name);
         if (!dev)
             return;
         let maps = this.maps;
@@ -270,7 +270,7 @@ function MapperModel() {
             console.log("error parsing signal name", name);
             return null;
         }
-        let dev = model.devices.find(name[0]);
+        let dev = this.devices.find(name[0]);
         return dev ? dev.signals.find(String(name.join('/'))) : null;
     }
     this.add_maps = function(cmd, maps) {
@@ -351,6 +351,11 @@ function MapperModel() {
         }
         this.maps.remove(map);
     }
+    this.loadFile = function(file) {
+        for (var i in file.devices) {
+
+        }
+    }
 
     // delete handlers in case of refresh
     command.unregister("add_devices");
@@ -367,7 +372,3 @@ function MapperModel() {
     command.register("add_maps", this.add_maps.bind(this));
     command.register("del_map", this.del_map.bind(this));
 };
-
-//MapperModel.prototype = {
-//
-//};

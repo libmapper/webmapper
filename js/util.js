@@ -372,7 +372,7 @@ function position(x, y, frame) {
 
 function select_all_maps() {
     let updated = false;
-    model.maps.each(function(map) {
+    database.maps.each(function(map) {
         if (!map.view || map.view.selected)
             return;
         if (map.view.attr('stroke-opacity') > 0) {
@@ -399,7 +399,7 @@ function deselectAllMaps(tables) {
     }
 
     let updated = false;
-    model.maps.each(function(map) {
+    database.maps.each(function(map) {
         if (map.view && map.view.selected) {
             map.view.animate({'stroke': 'white', 'fill': 'white'}, 50);
             map.view.selected = false;
