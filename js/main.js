@@ -403,8 +403,8 @@ function initViewCommands()
                     reader.abort();
                     return;
                 }
-                view.switch_view("link");
-                view.parse_file(parsed);
+                view.switch_view("file");
+                view.loadFile(parsed);
             };
         })(f);
         reader.readAsText(f);

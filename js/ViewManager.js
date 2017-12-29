@@ -22,7 +22,7 @@ function ViewManager(container, database)
         //
     };
 
-    this.parse_file = function(file) {
+    this.loadFile = function(file) {
         if (view && view.type() == 'link')
             view.stage_file(file);
     }
@@ -59,6 +59,9 @@ function ViewManager(container, database)
             case 'link':
                 view = new LinkView(frame, tables, canvas, database);
                 break;
+            case 'chord':
+                view = new ChordView(frame, tables, canvas, database);
+                break;
             case 'list':
             default:
                 view = new ListView(frame, tables, canvas, database);
@@ -89,6 +92,9 @@ function ViewManager(container, database)
             switch (type) {
                 case 'device':
                     update_devices(obj, event);
+                    break;
+                case 'link':
+                    update_links(obj, event);
                     break;
                 case 'signal':
                     update_signals(obj, event, true);
@@ -132,7 +138,6 @@ function ViewManager(container, database)
 
     function update_devices(dev, event) {
         if (event == 'added' && !dev.view) {
-            dev.color = Raphael.getColor();
             dev.signals.each(function(sig) {
                 update_signals(sig, 'added', false);
             });
@@ -153,8 +158,6 @@ function ViewManager(container, database)
     }
 
     function update_links(link, event) {
-        if (viewType != "link")
-            return;
         view.update('links');
     }
 

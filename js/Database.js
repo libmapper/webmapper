@@ -77,8 +77,10 @@ MapperNodeArray.prototype = {
                 this.cb_func('modified', this.obj_type, existing);
         }
         else {
-            if (this.obj_type == 'device')
+            if (this.obj_type == 'device') {
                 obj.signals = new MapperNodeArray('signal', this.cb_func);
+                obj.color = Raphael.getColor();
+            }
             this.contents[key] = obj;
             if (this.cb_func)
                 this.cb_func('added', this.obj_type, this.contents[key]);
@@ -352,8 +354,37 @@ function MapperDatabase() {
         this.maps.remove(map);
     }
     this.loadFile = function(file) {
-        for (var i in file.devices) {
-
+        let self = this;
+        addSigDev = function(obj) {
+            let name = obj.name.split('/');
+            if (name.length < 2) {
+                console.log("error parsing signal name", name);
+                return null;
+            }
+            let dev = self.devices.add({'key': name[0]});
+            obj.key = obj.name;
+            return dev.signals.add(obj);
+        }
+        for (var i in file.maps) {
+            let map = file.maps[i];
+            // TODO: enable multiple sources and destinations
+            let src = addSigDev(map.sources[0]);
+            let dst = addSigDev(map.destinations[0]);
+            if (!src || !dst) {
+                console.log("error adding map from file:", map);
+                continue;
+            }
+            map.sources = map.destinations = null;
+            map.src = src;
+            map.dst = dst;
+            map.status = 'active';
+            if (map.expression) {
+                // fix expression
+                // TODO: better regexp to avoid conflicts with user vars
+                map.expression = map.expression.replace(/src/g, "x");
+                map.expression = map.expression.replace(/dst/g, "y");
+            }
+            this.maps.add(map);
         }
     }
 

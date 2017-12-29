@@ -302,6 +302,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/views/View.js"></script>
 <script type="text/javascript" src="js/views/BalloonView.js"></script>
 <script type="text/javascript" src="js/views/CanvasView.js"></script>
+<script type="text/javascript" src="js/views/ChordView.js"></script>
 <script type="text/javascript" src="js/views/GraphView.js"></script>
 <script type="text/javascript" src="js/views/GridView.js"></script>
 <script type="text/javascript" src="js/views/HiveView.js"></script>
