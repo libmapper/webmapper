@@ -2,29 +2,33 @@
 //         Balloon View Class           //
 //++++++++++++++++++++++++++++++++++++++//
 
-function BalloonView(frame, canvas, model)
-{
-    let draggingFrom = null;
-    let snappingTo = null;
-    let escaped = false;
+'use strict';
 
-    let path = circle_path(frame.left + frame.width * 0.33, frame.cy, 0);
-    path.push(circle_path(frame.left + frame.width * 0.67, frame.cy, 0));
-    let outline = canvas.path().attr({'path': path,
-                                      'stroke-opacity': 0,
-                                      'fill': 'lightgray',
-                                      'fill-opacity': 0.1}).toBack();
-    let src_nodes = {};
-    let dst_nodes = {};
+class BalloonView extends View {
+    constructor(frame, tables, canvas, database) {
+        super(frame, null, canvas, database);
 
-    let srcregexp;
-    let dstregexp;
+        // hide tables
+        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
-    this.type = function() {
-        return 'balloon';
+        // draw background
+        let path = circle_path(frame.left + frame.width * 0.33, frame.cy, 0);
+        path.push(circle_path(frame.left + frame.width * 0.67, frame.cy, 0));
+        this.background = this.canvas.path().attr({'path': path,
+                                                   'stroke-opacity': 0,
+                                                   'fill': 'lightgray',
+                                                   'fill-opacity': 0.1}).toBack();
+        this.srcNodes = {};
+        this.dstNodes = {};
+
+        this.pan = this.canvasPan;
+        this.zoom = this.canvasZoom;
+
+        this.resize();
     }
 
-    function adjust_nodes(nodes, px, py, pr, depth, rev) {
+    adjustNodes(nodes, px, py, pr, depth, rev) {
         let count = Object.keys(nodes).length;
         if (count == 0)
             return;
@@ -54,7 +58,7 @@ function BalloonView(frame, canvas, model)
         }
     }
 
-    function remove_node_svg(root) {
+    removeNodeSVG(root) {
         if (root.view)
             root.view.remove();
         if (root.label)
@@ -63,17 +67,15 @@ function BalloonView(frame, canvas, model)
             remove_node_svg(root.children[i]);  // recurse
     }
 
-    this.resize = function(new_frame) {
-        if (new_frame)
-            frame = new_frame;
-        animate_tables(frame, 0, 0, 0, 1000);
-        let path = circle_path(frame.left + frame.width * 0.33, frame.cy, 0);
-        path.push(circle_path(frame.left + frame.width * 0.67, frame.cy, 0));
-        outline.attr({'path': path}).toBack();
-    }
-    this.resize();
+    resize(newFrame) {
+        super.resize(newFrame);
 
-    function draw_signal(sig, duration) {
+        let path = circle_path(this.frame.left + this.frame.width * 0.33, this.frame.cy, 0);
+        path.push(circle_path(this.frame.left + this.frame.width * 0.67, this.frame.cy, 0));
+        this.background.attr({'path': path}).toBack();
+    }
+
+    drawSignal(sig, duration) {
         // remove associated svg elements
         remove_object_svg(sig);
 
@@ -112,13 +114,13 @@ function BalloonView(frame, canvas, model)
         }
     }
 
-    function update_devices() {
+    updateDevices() {
         // build/rebuild signal namespace heirarchy
         // label signals with final position
     }
 
-    function draw_devices(duration) {
-        model.devices.each(function(dev) {
+    drawDevices(duration) {
+        this.database.devices.each(function(dev) {
             // remove associated svg elements
             remove_object_svg(dev);
             let line_count = 0;
@@ -126,30 +128,29 @@ function BalloonView(frame, canvas, model)
         });
     }
 
-    function draw_maps(duration) {
-        // draw arcs for maps
-    }
-
-    this.draw = function(duration) {
+    draw(duration) {
         let path = circle_path(frame.left + frame.width * 0.33, frame.cy,
                                frame.height * 0.46);
         path.push(circle_path(frame.left + frame.width * 0.67, frame.cy,
                               frame.height * 0.46));
-        outline.animate({'path': path, 'fill-opacity': 0.5}, duration, '>');
+        this.background.animate({'path': path, 'fill-opacity': 0.5}, duration, '>');
 
-        model.devices.each(function(dev) { redraw_device(dev, duration); });
+        let self = this;
+        this.database.devices.each(function(dev) {
+            self.redrawDevice(dev, duration);
+        });
 
-        console.log('srcs', src_nodes);
-        console.log('dsts', dst_nodes);
+        console.log('srcs', this.srcNodes);
+        console.log('dsts', this.dstNodes);
 
         // arrange hierarchical view
-        adjust_nodes(src_nodes, frame.left + frame.width * 0.33, frame.cy,
-                     frame.height * 0.46, 0, false);
-        adjust_nodes(dst_nodes, frame.left + frame.width * 0.67, frame.cy,
-                     frame.height * 0.46, 0, true);
+        this.adjustNodes(this.srcNodes, this.frame.left + this.frame.width * 0.33, this.frame.cy,
+            frame.height * 0.46, 0, false);
+        this.adjustNodes(this.dstNodes, this.frame.left + this.frame.width * 0.67, this.frame.cy,
+            frame.height * 0.46, 0, true);
     }
 
-    function update() {
+    update() {
         let elements;
         switch (arguments.length) {
             case 0:
@@ -163,40 +164,24 @@ function BalloonView(frame, canvas, model)
                 break;
         }
         if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
-            update_devices();
+            this.updateDevices();
         if (elements.indexOf('maps') >= 0)
-            update_maps();
-        draw(1000);
-    }
-    this.update = update;
-
-    this.pan = function(x, y, delta_x, delta_y) {
-        // placeholder
+            this.updateMaps();
+        this.draw(1000);
     }
 
-    this.zoom = function(x, y, delta) {
-        // placeholder
-    }
+    cleanup() {
+        super.cleanup();
 
-    this.filter_signals = function(signal_direction, text) {
-        if (signal_direction == 'src')
-            srcregexp = text ? new RegExp(text, 'i') : null;
-        else
-            dstregexp = text ? new RegExp(text, 'i') : null;
-        redraw(1000);
-    }
-
-    this.cleanup = function() {
-        // clean up any objects created only for this view
         if (outline) {
             outline.remove();
             outline = null;
         }
-        for (var i in src_nodes)
-            remove_node_svg(src_nodes[i]);
-        delete src_nodes;
-        for (var i in dst_nodes)
-            remove_node_svg(dst_nodes[i]);
-        delete dst_nodes;
+        for (var i in this.srcNodes)
+            remove_node_svg(this.srcNodes[i]);
+        delete this.srcNodes;
+        for (var i in this.dstNodes)
+            remove_node_svg(this.dstNodes[i]);
+        delete this.dstNodes;
     }
 }

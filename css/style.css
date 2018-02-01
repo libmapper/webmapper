@@ -16,24 +16,6 @@ html, body {
     overflow: hidden;
 }
 
-/*@-webkit-keyframes myfirst 
-{
-    from {background: default;}
-    to {background: yellow;}
-}
-
-.displayTable tbody tr {
-    -webkit-transition: background .5s;
-}
-
-.displayTable tbody tr:hover {
-    -webkit-animation: myfirst 1s;
-}
-
-path.selected {
-    -webkit-transition: stroke .5s;
-}*/
-
 input {
     -webkit-user-select: text;
     -khtml-user-select: text;
@@ -59,24 +41,15 @@ body {
 
 /* Main color */
 body {
-/*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%);*/
     background-image: radial-gradient(farthest-corner at 50% 80%, rgb(100, 100, 100), rgb(50, 50, 50));
-/*    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));*/
-/*background: white;*/
 }
 .svgDiv, .tableDiv {
-/*    background: #FEFEFE;*/
     background: rgba(220, 220, 220, 0.1);
-/*    background: rgba(1, 1, 1, 0.1);*/
     color: white;
 }
 
-/* blues */
-#statusBar, #titleSearchDiv, #leftSearchDiv, #rightSearchDiv, .topTabs li.tabsel {
-/*    background: rgb(134,222,248) !important;*/
-/*    background: rgb(104,202,255) !important;*/
-/*position: absolute;*/
-/*    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));*/
+/* grays */
+#statusBar, #titleSearchDiv, #leftSearchDiv, #rightSearchDiv {
     background-image: radial-gradient(farthest-corner at 50% 80%, rgb(255, 255, 255), rgb(235, 235, 235));
     background-size: cover;
     background-position: center;
@@ -86,30 +59,16 @@ body {
 }
 
 /* Header Bars */
-thead, #svgTop, #networkMenu {
+thead, #networkMenu {
     background: #EEE;
 }
-.displayTable #svgTop:hover {
-    background: #DDD;
-}
-
-/* highlights */
-/*.modesel, .calibratesel .displayTable #networkMenu {*/
-/*/*    background-color: #9CC2CF;*/*/
-/*}*/
 
 .calibratesel {
     background-color: #9CC2CF;
 }
 
-/* secondary highlight */
-/*.trsel.odd {*/
-/*    background: lightblue !important;*/
-/*}*/
-
 /* tertiary highlight selection */
 .displayTable tr.even {
-/*    background: #EDF5FF;*/
     background: rgba(220, 220, 220, 0.1);
 }
 
@@ -118,7 +77,6 @@ thead, #svgTop, #networkMenu {
 }
 
 .displayTable tr:hover {
-/*    background: rgb(104,202,255);*/
 }
 
 /* others */
@@ -137,52 +95,11 @@ path {
 }
 /******************/
 
-/* Used to position the tables and connection area. */
-#spacerTable {
-    float: left;
-    width: 100%;
-    height: 0px;
-    visibility: hidden;
-}
-
 .hidden {
     visibility: hidden;
     display: none;
     width: 0%;
     height: 0%;
-}
-
-/*Upper Tab Area */
-.topTabs {
-    margin: 0px;
-    border-radius: 0px;
-/*    background: lightgray;*/
-    background: linear-gradient(to bottom, lightgray 0%, darkgray 200%);
-    position: absolute;
-    left: -4px;
-    width: calc(100% + 4px);
-    padding-left: 6px;
-}
-
-.topTabs li {
-    border-radius: 12px 12px 0 0;
-    padding: 5px 15px;
-/*    background-image: linear-gradient(to bottom, rgb(238, 238, 238) 0%, rgb(224, 224, 224) 100%);*/
-    background: rgb(104,202,255);
-    display: inline-block;
-    list-style: none;
-    cursor: pointer;
-    margin-right: 1px;
-}
-
-.topTabs li:hover {
-/*    background-image: linear-gradient(to bottom, rgb(248, 248, 248) 0%, rgb(224, 224, 224) 100%);*/
-    background: radial-gradient(farthest-corner at 50% 0%, rgb(104,202,255), rgb(1, 1, 1));
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: black;
-    text-decoration: bold;
 }
 
 /****************/
@@ -193,7 +110,6 @@ path {
     padding-top: 5px;
     padding-bottom: 5px;
     position: absolute;
-/*    top: 27px;*/
 }
 
 .topMenu {
@@ -204,7 +120,6 @@ path {
     float: left;
     margin-right: 5px;
     overflow: hidden;
-/*    left: 40px;*/
     width: calc(100% - 40px);
 }
 
@@ -256,7 +171,6 @@ path {
     width: 160px;
     display:inline-block;
     padding: 10px;
-/*    background-color: #EEE;*/
     border-radius:12px;
     height: 76px;
 }
@@ -267,7 +181,6 @@ path {
 }
 
 .signalProps {
-/*    background-color: #EEE;*/
     border-radius:12px;
     width: calc(100% - 165px);
     padding: 10px;
@@ -294,10 +207,6 @@ form {
 .topMenu li a.disabled:hover {
     text-decoration: none;
 }
-
-/*.topMenu li a.disabled {
-    color: gray;
-}*/
 
 #ranges {
     padding-right: 10px;
@@ -351,93 +260,17 @@ form {
 }
 /****************/
 
-.extratools {
-    float: right;
-}
-
-#extratoolsDiv {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
-}
-
-@keyframes refreshButtonSpin {
-    0%  {transform: rotate(0deg);}
-    25%  {transform: rotate(90deg);}
-    50% {transform: rotate(180deg);}
-    75% {transform: rotate(270deg);}
-    100% {transform: rotate(360deg);}
-}
-
-@-webkit-keyframes refreshButtonSpin {
-    0%  {-webkit-transform: rotate(0deg);}
-    100% {-webkit-transform: rotate(360deg);}
-}
-
-/* #refreshButton:active {
-    -webkit-animation: refreshSpin 1s;
-}*/
-
-#refreshButton {
-    /*position: absolute;*/
-    top:  12px;
-    float: left;
-    background-image: url(/images/refresh.png);
-    background-size: contain;
-    background-repeat: no-repeat;
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-}
-
 #saveButton, #loadButton {
     cursor: pointer;
 }
 
 .history, .history table {
-/*    display: table-row;*/
     display: inline-block;
     cursor: pointer;
-/*    table-layout: fixed;*/
-/*    -moz-box-sizing: border-box;*/
-/*    box-sizing: border-box;*/
     height: 20px;
     width: 100%;
     float: left;
-/*    padding: 2px;*/
     margin: 0px;
-/*    background: #111;*/
-/*    color: #fff;*/
-}
-
-#sidebar {
-    display: table;
-    table-layout: fixed;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-/*    height: calc(100% - 126px);*/
-    height: 100%;
-    width: 38px;
-    float: left;
-/*    top: 107px;*/
-    top: 80px;
-    position: absolute;
-    margin-top: 0px;
-    margin-bottom: 0px;
-/*    padding-right: 10px;*/
-    padding: 5px;
-/*    padding-top: 30px;*/
-/*    background: rgb(134,222,248);*/
-/*    background: #111;*/
-/*    background-image: linear-gradient(225deg, rgb(104,202,255) 10%, rgb(1, 1, 1) 100%)*/
-/*    background: white;*/
-/*    opacity: 0.3;*/
-    background: rgba(20, 20, 20, 0.1);
-    border-radius: 12px;
-}
-
-#sidebar li {
-    display: table-row;
 }
 
 .viewButton {
@@ -449,24 +282,8 @@ form {
     background-size: contain;
     background-repeat: no-repeat;
     background-position-y: center;
-/*    position: relative;*/
-/*    margin-top: 60px;*/
     padding-right: 5px;
     opacity: 0.5;
-}
-
-.viewButtonMini {
-    display: table-cell;
-    vertical-align: bottom;
-    cursor: pointer;
-    width: 15px;
-    height: 15px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position-y: center;
-    /*    position: relative;*/
-    /*    margin-top: 60px;*/
-    opacity: 0.7;
 }
 
 .viewButtonsel {
@@ -493,6 +310,10 @@ form {
     background-image: url(/images/grid_icon_white.png);
 }
 
+#parallelButton {
+    background-image: url(/images/parallel_icon_white.png);
+}
+
 #hiveButton {
     background-image: url(/images/hive_icon_white.png);
 }
@@ -511,7 +332,6 @@ form {
 }
 
 #saveLoadDiv #networkSelection {
-/*    padding: 2px;*/
     padding: 0 10px;
 }
 
@@ -527,10 +347,8 @@ form {
 
 .mode {
     padding-right: 3pt;
-/*    margin-bottom: 10px;*/
     cursor: pointer;
     display: inline-block;
-/*    border: 1px solid black;*/
 }
 
 #modeLinear {
@@ -557,7 +375,6 @@ div.range {
     margin-left: 10px;
     padding: 3px 3px;
     width: 100%;
-/*    height: 100%;*/
 }
 input.range {
     text-align: center;
@@ -595,7 +412,6 @@ input.expression {
 
 .notification {
     font-style: italic;
-/*    background-color: #DDDDDD;*/
     border: solid 1px black;
     border-radius: 5px;
     -moz-border-radius: 5px;
@@ -610,8 +426,6 @@ input.expression {
     overflow: auto;
     width: 40%;
     height: 100%;
-/*    height: calc(100% - 61px);*/
-/*    border: solid 1px black;*/
     border-bottom: 0;
     border-radius: 12px;
 }
@@ -620,7 +434,6 @@ input.expression {
 
 /* The table itself */
 table.displayTable {
-/*    margin-top: 41px;*/
     border-collapse: collapse;
     width: 100.1%; /*Slightly more than 100%, cause 100% doesn't quite fill the frame for some reason*/
     height: 100%;
@@ -628,16 +441,13 @@ table.displayTable {
     font-size: 10pt;
 }
 thead {
-/*    overflow-y: scroll;*/
-/*    position: relative;*/
 }
 tbody {
     overflow: auto;
 }
 
 /* Rows and headers */
-.tableDiv th, #svgTop {
-/*    background: rgba(20, 20, 20, 0.1);*/
+.tableDiv th {
     cursor: pointer;
     font-weight: inherit;
     text-align: left;
@@ -660,118 +470,39 @@ tbody {
     padding-left: 20px;
 }
 
-#topTable {
-    height: 200px;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    direction: rl-tb;
-}
-
-#topTable table {
-    height: 150px;
-/*    width: var(width);*/
-    /*    display: block;*/
-    transform-origin: 0% 0%;
-    transform: translate(0%, 200px) rotate(270deg);
-    overflow-x: scroll;
-    overflow-y: hidden;
-}
-
 /*****************/
-/****************/
-
-#statusBar {
-    position: absolute;
-    width: 100%;
-    top: calc(100% - 20px);
-/*    bottom: 2px;*/
-    border-collapse: collapse;
-}
 
 #status {
-    width: 100%;
-    height: 20px;
+    padding: 4px 6px 4px 6px;
+    vertical-align: middle;
     position: absolute;
-    bottom: 0px;
-    text-align: center;
-/*    padding-left: 10px;*/
-/*    padding-top: 3px;*/
-    /*border: 1px solid black;*/
+/*    text-align: left;*/
+    color: white;
+    background: #111;
+    border-radius: 10px;
+    opacity: 0;
+    white-space: pre-line;
 }
 
-.status.middle {
-    width: 20%;
-    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/*.status.middle {*/
+/*    width: 20%;*/
+/*    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/*/
+/*    white-space: nowrap;*/
+/*    overflow: hidden;*/
+/*    text-overflow: ellipsis;*/
+/*}*/
 /****************/
 
-
 /*For the SVG area*/
-/*TODO change classes to IDs for single objects*/
-#svgDivCenter {
-    position: absolute;
-    border-bottom: 0;
-    left: 40%;
-    height: calc(100% - 41px);
-    width: 20%;
-}
 #svgDiv {
     overflow: scroll;
     position: absolute;
     border-bottom: 0;
-/*    height: calc(100% - 112px);*/
     height: 100%;
-/*    height: calc(100% - 41px);*/
     width: 100%;
-}
-#svgTop {
-    width: 100%;
-    position: absolute;
-    top: 0px;
-    cursor: pointer;
 }
 .incompatible {
     opacity: 0.5;
-}
-/****************/
-
-/* Title and search bar */
-/* Make sure inputs are not obscured*/
-#titleSearchDiv input, #leftSearchDiv input, #rightSearchDiv input {
-    margin-top: 12px;
-}
-#titleSearchDiv, #leftSearchDiv, #rightSearchDiv {
-    height: 41px;
-}
-#titleSearchDiv h2, #leftSearchDiv h2, #rightSearchDiv h2 {
-    margin-top: 9px;
-    margin-left: 9px;
-    font-weight: inherit;
-}
-#leftSearchDiv, #rightSearchDiv {
-    width: 40%;
-    position: absolute;
-}
-#rightSearchDiv {
-    left: 60%;
-}
-#svgTitle {
-    left: calc(40% + 10px);
-}
-.searchBar {
-    position: absolute;
-    margin: 0px;
-}
-input.searchBar {
-    width: 40%;
-    text-align: right;
-    right: 10px;
-}
-#leftTitle, #rightTitle {
-    left: 10px;
 }
 
 /****************/
@@ -779,15 +510,11 @@ input.searchBar {
 /* The overall container of elements not in skeleton*/
 #container {
     width: calc(100% - 9px);
-/*    height: calc(100% - 126px);*/
     height: calc(100% - 110px);
     height: calc(100% - 83px);
     float: left;
     position: absolute;
-/*    top: 107px;*/
     top: 80px;
-/*    padding: 5px;*/
-/*    left: 48px;*/
 }
 
 /* For disabled elements */

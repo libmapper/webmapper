@@ -2,11 +2,11 @@
 //         ViewManager Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function ViewManager(container, model)
+function ViewManager(container, database)
 {
     let frame = null;
     let canvas = null;
-    let tables = { 'left': null, 'right': null, 'top': null };
+    let tables = { 'left': null, 'right': null };
 
     let duration = 1000;
 
@@ -22,14 +22,14 @@ function ViewManager(container, model)
         //
     };
 
-    this.parse_file = function(file) {
+    this.loadFile = function(file) {
         if (view && view.type() == 'link')
             view.stage_file(file);
     }
 
     this.switch_view = function(viewType) {
         if (view) {
-            if (view.type() == viewType) {
+            if (view.type == viewType) {
                 // already on correct view
                 return;
             }
@@ -39,26 +39,32 @@ function ViewManager(container, model)
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, canvas, model);
+                view = new BalloonView(frame, tables, canvas, database);
                 break;
             case 'canvas':
-                view = new CanvasView(frame, tables, canvas, model);
+                view = new CanvasView(frame, tables, canvas, database);
                 break;
             case 'graph':
-                view = new GraphView(frame, canvas, model);
+                view = new GraphView(frame, tables, canvas, database);
                 break;
             case 'grid':
-                view = new GridView(frame, tables, canvas, model);
+                view = new GridView(frame, tables, canvas, database);
+                break;
+            case 'parallel':
+                view = new ParallelView(frame, tables, canvas, database);
                 break;
             case 'hive':
-                view = new HiveView(frame, canvas, model);
+                view = new HiveView(frame, tables, canvas, database);
                 break;
             case 'link':
-                view = new LinkView(frame, tables, canvas, model);
+                view = new LinkView(frame, tables, canvas, database);
+                break;
+            case 'chord':
+                view = new ChordView(frame, tables, canvas, database);
                 break;
             case 'list':
             default:
-                view = new ListView(frame, tables, canvas, model);
+                view = new ListView(frame, tables, canvas, database);
                 break;
         }
 
@@ -76,9 +82,9 @@ function ViewManager(container, model)
         $('#status').text('');
     }
 
-    add_model_callbacks = function() {
-        model.clear_callbacks();
-        model.add_callback(function(event, type, obj) {
+    add_database_callbacks = function() {
+        database.clear_callbacks();
+        database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
                 remove_object_svg(obj);
                 return;
@@ -86,6 +92,9 @@ function ViewManager(container, model)
             switch (type) {
                 case 'device':
                     update_devices(obj, event);
+                    break;
+                case 'link':
+                    update_links(obj, event);
                     break;
                 case 'signal':
                     update_signals(obj, event, true);
@@ -98,14 +107,8 @@ function ViewManager(container, model)
     };
 
     function add_display_tables() {
-        tables.left  = new mapperTable(model, 'leftTable', 'left', true);
-        tables.right = new mapperTable(model, 'rightTable', 'right', true);
-        tables.top   = new mapperTable(model, 'topTable', 'top', false);
-
-        // Put the tables in the DOM
-        tables.left.create_within($('#container')[0]);
-        tables.right.create_within($('#container')[0]);
-        tables.top.create_within($('#container')[0]);
+        tables.left  = new Table($('#container')[0], 'left', frame, database);
+        tables.right = new Table($('#container')[0], 'right', frame, database);
     }
 
     function add_canvas() {
@@ -128,14 +131,13 @@ function ViewManager(container, model)
 
         selection_handlers();
 
-        add_model_callbacks();
-        model.devices.each(function(dev) { update_devices(dev, 'added'); });
-        model.maps.each(function(map) { update_maps(map, 'added'); });
+        add_database_callbacks();
+        database.devices.each(function(dev) { update_devices(dev, 'added'); });
+        database.maps.each(function(map) { update_maps(map, 'added'); });
     }
 
     function update_devices(dev, event) {
         if (event == 'added' && !dev.view) {
-            dev.color = Raphael.getColor();
             dev.signals.each(function(sig) {
                 update_signals(sig, 'added', false);
             });
@@ -156,8 +158,6 @@ function ViewManager(container, model)
     }
 
     function update_links(link, event) {
-        if (viewType != "link")
-            return;
         view.update('links');
     }
 
@@ -190,7 +190,7 @@ function ViewManager(container, model)
                     e.preventDefault();
                 }
                 /* delete */
-                model.maps.each(function(map) {
+                database.maps.each(function(map) {
                     if (map.view && map.view.selected)
                         $('#container').trigger('unmap', [map.src.key, map.dst.key]);
                 });
@@ -208,7 +208,7 @@ function ViewManager(container, model)
                 }
                 break;
             case 27:
-                escaped = true;
+                view.escape();
                 break;
         }
     });
@@ -221,22 +221,22 @@ function ViewManager(container, model)
         view.pan(x, y, delta_x, delta_y);
     }
 
-    this.filter_signals = function(searchbar, text) {
+    this.filterSignals = function(searchbar, text) {
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
             srcregexp = text ? new RegExp(text, 'i') : null;
-            view.filter_signals('src', text.length ? text : null);
+            view.filterSignals('src', text.length ? text : null);
         }
         else {
             dstregexp = text ? new RegExp(text, 'i') : null;
-            view.filter_signals('dst', text.length ? text : null);
+            view.filterSignals('dst', text.length ? text : null);
         }
     }
 
     function selection_handlers() {
         $('svg').on('mousedown', function(e) {
             if (e.shiftKey == false) {
-                deselect_all_maps(tables);
+                deselectAllMaps(tables);
             }
             escaped = false;
 
@@ -247,7 +247,7 @@ function ViewManager(container, model)
 
             // check for edge intersections around point for 'click' selection
             let updated = false;
-            model.maps.each(function(map) {
+            database.maps.each(function(map) {
                 if (!map.view || map.view.selected)
                     return;
                 if (   edge_intersection(map.view, x1-3, y1-3, x1+3, y1+3)
@@ -272,7 +272,7 @@ function ViewManager(container, model)
 
                 // check for edge intersections for 'cross' selection
                 update = false;
-                model.maps.each(function(map) {
+                database.maps.each(function(map) {
                     if (!map.view || map.view.selected)
                         return;
                     if (edge_intersection(map.view, x1, y1, x2, y2)) {
