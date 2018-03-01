@@ -15,6 +15,9 @@ class GraphView extends View {
         // remove associated svg elements for devices
         this.database.devices.each(remove_object_svg);
 
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 

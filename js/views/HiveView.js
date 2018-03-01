@@ -12,6 +12,17 @@ class HiveView extends View {
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
+        // start with signals at origin
+        this.database.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.index && !sig.position)
+                    sig.position = this.origin;
+            });
+        });
+
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
@@ -33,10 +44,12 @@ class HiveView extends View {
     }
 
     drawDevices(duration) {
+        console.log('hive.drawDevices');
         let self = this;
         this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
+                                   console.log('drawing hive devices!');
             dev.view.stop();
             let numSigs = dev.numVisibleSigs;
             let inc = numSigs ? 1 / numSigs : 1;
@@ -107,6 +120,7 @@ class HiveView extends View {
     }
 
     update() {
+        console.log('hive.update()');
         let elements;
         switch (arguments.length) {
             case 0:

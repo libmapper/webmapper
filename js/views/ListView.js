@@ -33,6 +33,9 @@ class ListView extends View {
             });
         });
 
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this.escaped = false;
 
         this.pan = this.tablePan;

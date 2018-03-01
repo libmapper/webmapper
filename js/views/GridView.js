@@ -33,6 +33,9 @@ class GridView extends View {
             });
         });
 
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this.map_pane;
         this.escaped = false;
 

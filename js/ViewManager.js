@@ -127,7 +127,7 @@ function ViewManager(container, database)
         add_canvas();
         add_display_tables();
 
-        this.switch_view('list');
+        this.switch_view('chord');
 
         selection_handlers();
 

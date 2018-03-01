@@ -12,6 +12,9 @@ class ParallelView extends View {
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
@@ -44,12 +47,13 @@ class ParallelView extends View {
             if (!dev.view)
                 return;
             dev.view.stop();
-            let numSigs = dev.numVisibleSigs;
-            let sigInc = numSigs ? self.mapPane.height / numSigs : self.mapPane.height;
+            let numSigs = dev.numVisibleSigs - 1;
+            let sigInc = numSigs > 0 ? self.mapPane.height / numSigs : self.mapPane.height;
 
             dev.view.toBack();
-            dev.view.animate({'path': [['M', self.mapPane.left + self.mapPane.width - devInc * dev.index,
-                                        self.mapPane.top + self.mapPane.height],
+            let x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
+            let y = self.mapPane.top + self.mapPane.height;
+            dev.view.animate({'path': [['M', x, y],
                                        ['l', 0, -self.mapPane.height]],
                               'stroke': dev.color,
                               'stroke-width': 20,
@@ -57,12 +61,25 @@ class ParallelView extends View {
                               'fill': dev.color,
                               'fill-opacity': 0,
                               'stroke-linecap': 'round'}, duration, '>');
+            if (!dev.view.label) {
+                dev.view.label = self.canvas.text(0, 0, dev.name)
+                                            .attr({'opacity': 0,
+                                                   'pointer-events': 'none',
+                                                   'font-size': 24,
+                                                   'fill': 'white',
+                                                   'text-anchor': 'start'
+                                                  });
+            }
+            dev.view.label.animate({'x': x, 'y': y-20,
+                                    'opacity': 0.5,
+                                    'transform': 'r-90,'+x+','+y,
+                                   }, duration, '>');
             dev.signals.each(function(sig) {
                 if (!sig.view)
                     return;
                 // assign position along line
-                sig.position.x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
-                sig.position.y = self.mapPane.top + self.mapPane.height - sigInc * sig.index;
+                sig.position.x = x;
+                sig.position.y = y - sigInc * (sig.index + 0.5);
                 self.drawSignal(sig, duration);
             });
         });
@@ -106,6 +123,7 @@ class ParallelView extends View {
 
     update() {
         let elements;
+        let self = this;
         switch (arguments.length) {
             case 0:
                 elements = ['devices', 'signals', 'maps'];

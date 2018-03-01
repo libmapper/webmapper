@@ -251,6 +251,10 @@ function initViewCommands()
                 /* 8 */
                 new_view = 'link';
                 break;
+            case 57:
+                /* 9 */
+                new_view = 'chord';
+                break;
             case 79:
                 if (e.metaKey == true) {
                     e.preventDefault();

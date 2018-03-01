@@ -22,6 +22,8 @@ class LinkView extends View {
 
         // remove associated svg elements for signals
         this.database.devices.each(function(dev) {
+            if (dev.view && dev.view.label)
+                dev.view.label.remove();
             dev.signals.each(function(sig) { remove_object_svg(sig); });
         });
         // remove associated svg elements for maps
@@ -89,7 +91,9 @@ class LinkView extends View {
                         ['C', cx, rt + rh_frac, cx, lt + lh_frac,
                          self.mapPane.left, lt + lh_frac],
                         ['Z']];
-            link.view.animate({'path': path}, duration, '>');
+            link.view.animate({'path': path,
+                              'stroke-opacity': 0,
+                              'fill-opacity': 1}, duration, '>');
         });
     }
 

@@ -22,9 +22,29 @@ class ChordView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
-        this.inverted = true;
+        this.radius = 150;
 
         this.resize();
+
+        this.title = this.canvas.text(this.cx, this.cy, "Network")
+                                .attr({'font-size': 32,
+                                       'opacity': 1,
+                                       'fill': 'white',
+                                       'x': this.mapPane.cx,
+                                       'y': this.mapPane.cy + 170});
+        this.title.node.setAttribute('pointer-events', 'none');
+    }
+
+    resize(newFrame, duration) {
+        if (newFrame)
+            this.frame = newFrame;
+
+        this.mapPane.left = 0;
+        this.mapPane.width = this.frame.width;
+        this.mapPane.top = 0;
+        this.mapPane.height = this.frame.height;
+        this.mapPane.cx = this.frame.width * 0.5;
+        this.mapPane.cy = this.frame.height * 0.5;
     }
 
     updateDevices() {
@@ -51,35 +71,37 @@ class ChordView extends View {
 
     drawDevices(duration) {
         let self = this;
+        let ro = this.radius;
+        let ri = 150 * 0.8;
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
-        let lastPos = [cx + 75, cy];
+        let lastPos = [1, 0];
         let angleInc = Math.PI * 2.0 / this.database.devices.size();
         this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();
-            let angle = (dev.index + 1) * angleInc;
-            let pos = [cx + Math.cos(angle) * 75, cy + Math.sin(angle) * 75];
-            let path;
-            if (self.inverted) {
-                path = [['M', cx, cy],
-                        ['L', lastPos[0], lastPos[1]],
-                        ['A', 75, 75, angleInc, 0, 1, pos[0], pos[1]],
+            let startAngle = dev.index * angleInc;
+            let stopAngle = (dev.index + 1) * angleInc - 0.05;
+            let startPos = [Math.cos(startAngle), Math.sin(startAngle)];
+            let stopPos = [Math.cos(stopAngle), Math.sin(stopAngle)];
+            let path = [['M', cx + startPos[0] * ri, cy + startPos[1] * ri],
+                        ['L', cx + startPos[0] * ro, cy + startPos[1] * ro],
+                        ['A', ro, ro, angleInc, 0, 1, cx + stopPos[0] * ro, cy + stopPos[1] * ro],
+                        ['L', cx + stopPos[0] * ri, cy + stopPos[1] * ri],
+                        ['A', ri, ri, angleInc, 0, 0, cx + startPos[0] * ri, cy + startPos[1] * ri],
                         ['Z']];
-            }
-            else {
-                // TODO: draw devices as donut segments instead
-            }
             dev.view.animate({'path': path,
-                              'fill-opacity': 1}, duration, '>');
-            lastPos = pos;
+                              'fill-opacity': 1,
+                              'stroke-opacity': 0,
+                             }, duration, '>');
         });
     }
 
     updateLinks() {
         console.log('updateLinks()');
         let self = this;
+        let angleInc = Math.PI * 2.0 / this.database.devices.size();
         this.database.devices.each(function(dev) {
             dev.src_indices = [];
             dev.dst_indices = [];
@@ -96,43 +118,12 @@ class ChordView extends View {
                 dst.src_indices.push(src.src_index);
                 dst.src_indices.sort();
             }
-                                 console.log('checking if link already has view');
             if (link.view)
                 return;
-                                 console.log('adding view to link');
-            link.view = self.canvas.path();
-//            let rgb = Raphael.getRGB(link.src.color);
-//            let gradient = [];
-//            gradient[0] = '0-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
-//            rgb = Raphael.getRGB(link.dst.color);
-//            gradient[1] = ')-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
-//
-//            link.view.attr({'fill': gradient[0]+0.25+gradient[1]+0.25+')',
-//                            'stroke-opacity': 0});
-//            link.view.setAlpha = function(alpha1, alpha2) {
-//                if (!alpha2)
-//                    alpha2 = alpha1;
-//                this.attr({'fill': gradient[0]+alpha1+gradient[1]+alpha2+')'});
-//            }
-//            link.view.hover(
-//                function() {
-//                    link.view.toFront();
-//                    link.view.setAlpha(0.5);
-//                    this.mousemove(function (e, x) {
-//                        let ratio = (x - link_pane.left) / link_pane.width;
-//                        ratio = ratio * 0.25;
-//                        link.view.setAlpha(0.5-ratio, 0.25+ratio);
-//                    });
-//                },
-//                function() {
-//                    this.unmousemove();
-//                    this.setAlpha(0.25);
-//            });
-//            link.view.unclick().click(function(e, x) {
-//                console.log('click');
-//                // check if close to table
-//                // enable dragging to new device
-//            });
+            let angle = (src.index + 0.5) * angleInc;
+            let srcPos = [self.frame.cx + Math.cos(angle) * 150,
+                          self.frame.cy + Math.sin(angle) * 150];
+            link.view = self.canvas.path([['M', srcPos[0], srcPos[1]]]);
         });
     }
 
@@ -145,26 +136,22 @@ class ChordView extends View {
         console.log('drawLinks()');
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
+        let r = this.radius * 0.8;
         let angleInc = Math.PI * 2.0 / this.database.devices.size();
 
         this.database.links.each(function(link) {
-                                 console.log('checking link');
             if (!link.view)
                 return;
             link.view.stop();
-                                 console.log('drawig link');
 
             let src = link.src;
             let dst = link.dst;
-            let angle = (src.index + 0.5) * angleInc;
-            let srcPos = [Math.cos(angle) * 75, Math.sin(angle) * 75];
-            angle = (dst.index + 0.5) * angleInc;
-            let dstPos = [Math.cos(angle) * 75, Math.sin(angle) * 75];
-            let path = [['M', cx + srcPos[0], cy + srcPos[1]],
-                        ['C', cx + srcPos[0] * 2, cy + srcPos[1] * 2,
-                         cx + dstPos[0] * 2, cy + dstPos[1] * 2,
-                         cx + dstPos[0], cy + dstPos[1]]];
-                                 console.log('path', path);
+            let srcAngle = (src.index + 0.66) * angleInc;
+            let dstAngle = (dst.index + 0.33) * angleInc;
+            let srcPos = [cx + Math.cos(srcAngle) * r, cy + Math.sin(srcAngle) * r];
+            let dstPos = [cx + Math.cos(dstAngle) * r, cy + Math.sin(dstAngle) * r];
+            let path = [['M', srcPos[0], srcPos[1]],
+                        ['S', cx, cy, dstPos[0], dstPos[1]]];
             link.view.animate({'path': path,
                                'stroke': 'white',
                                'stroke-width': 4,
@@ -200,6 +187,7 @@ class ChordView extends View {
 
     cleanup() {
         super.cleanup();
+        this.title.remove();
 
         // clean up any objects created only for this view
     }
