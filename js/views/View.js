@@ -276,6 +276,87 @@ class View {
         });
     }
 
+    setDevHover(dev) {
+        let self = this;
+        dev.view.hover(
+            function() {
+                if (!dev.label) {
+                    // show label
+                    $('#status').stop(true, false)
+                                .text('name: ' + dev.key
+                                      + '\nsignals: ' + dev.signals.size())
+                                .css({'left': dev.position.x + 20,
+                                      'top': dev.position.y + 70,
+                                      'opacity': 1});
+                }
+//                if (self.draggingFrom == null)
+//                    return;
+//                else if (dev == self.draggingFrom) {
+//                    // don't snap to self
+//                    return;
+//                }
+//                self.snappingTo = dev;
+//                let src = self.draggingFrom.position;
+//                let dst = dev.position;
+//                let path = [['M', src.x, src.y],
+//                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
+//                             dst.x, dst.y]];
+//                let len = Raphael.getTotalLength(path);
+//                path = Raphael.getSubpath(path, 10, len - 10);
+//                self.newMap.attr({'path': path});
+            },
+            function() {
+//                self.snappingTo = null;
+                $('#status').stop(true, false)
+                            .animate({opacity: 0}, {duration: 2000});
+            }
+        );
+    }
+
+    setDevDrag(sig) {
+        let self = this;
+        dev.view.mouseup(function() {
+            if (self.draggingFrom && self.snappingTo)
+                $('#container').trigger('map', [self.draggingFrom.key,
+                                                self.snappingTo.key]);
+        });
+        sig.view.drag(
+                      function(dx, dy, x, y, event) {
+                      if (self.snappingTo)
+                      return;
+                      if (self.escaped) {
+                      return;
+                      }
+                      x -= self.frame.left;
+                      y -= self.frame.top;
+                      let src = self.draggingFrom.position;
+                      let path = [['M', src.x, src.y],
+                                  ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
+                      if (!self.newMap) {
+                      self.newMap = self.canvas.path(path);
+                      self.newMap.attr({'stroke': 'white',
+                                       'stroke-width': 2,
+                                       'stroke-opacity': 1,
+                                       'arrow-start': 'none',
+                                       'arrow-end': 'block-wide-long'});
+                      }
+                      else
+                      self.newMap.attr({'path': path});
+                      },
+                      function(x, y, event) {
+                      self.escaped = false;
+                      self.draggingFrom = sig;
+                      },
+                      function(x, y, event) {
+                      self.draggingFrom = null;
+                      if (self.newMap) {
+                      self.newMap.remove();
+                      self.newMap = null;
+                      }
+                      }
+                      );
+    }
+
     updateLinks() {
         let self = this;
         this.database.devices.each(function(dev) {

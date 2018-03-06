@@ -12,7 +12,7 @@
 **Note: this document is not complete!**
 
 
-During a variety of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
+During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
 All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
@@ -78,17 +78,17 @@ Lines representing inter-signal maps may be drawn between the signals on each si
 * `alt`+`shift`+`tab` : Change tab to the left
 * `cmd`+`t` : add new tab
 * `cmd`+`w` : remove existing tab
-* edit selected maps
-* switch view
+* `1`-`9` switch view
 * `cmd`+`o` : open file
 * `cmd`+`s` : save file
+* * `cmd`+`a`: to select all displayed maps
+* `delete` or `backspace`: remove selected maps
+* edit selected maps
 * filter signals
 * Scroll and pan using using multitouch gestures, mouse scroll wheel or arrow keys. Scrolling over signal tables will be contrained to the table only, while scrolling and panning over canvas areas is will affect the entire display.
 * Zoom using multitouch pinch and spread gestures or the `+`/`-` keys. Applying zoom commands over tables will zoom the table only, while zoom commands applied over canvas areas will zoom the entire display.
 * Drag and drop between signals to create maps (hold the `m` key while dropping to create a muted map). This works whether the signal representation is embedded in a table or as an individual object.
 * Click or click-and-drag–across an existing map to select it.
-* Press `cmd`+`a` to select all displayed maps
-* Press the `delete` or `backspace` key to remove selected maps
 
 ## Views:
 
@@ -138,7 +138,9 @@ In this view, each device is given its own axis arranged radially. Signals belon
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/hive.png">
 
-### `6` <img style="padding:0px;vertical-align:middle" src="./images/balloon_icon_black.png" width="25px"> Balloon plot view
+### `6` <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel plot view
+
+### `7` <img style="padding:0px;vertical-align:middle" src="./images/balloon_icon_black.png" width="25px"> Balloon plot view
 
 Balloon plot is brand new and has not yet been thoroughly tested.
 
@@ -151,7 +153,7 @@ quote some text from Vijay's thesis
 * click a signal group to expand it and view its children
 * click outside a balloon to collapse the current signal group and view the next-higher level
 
-### `7` <img style="padding:0px;vertical-align:middle" src="./images/link_icon_black.png" width="25px"> Link view (file staging view)
+### `8` <img style="padding:0px;vertical-align:middle" src="./images/link_icon_black.png" width="25px"> Link view (file staging view)
 
 This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and overlay a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
 
@@ -160,5 +162,7 @@ This view displays only devices and network links between them. It can be used t
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
+
+### `9` <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view (file staging view)
 
 ## Working Offline

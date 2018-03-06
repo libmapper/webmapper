@@ -23,8 +23,8 @@ function ViewManager(container, database)
     };
 
     this.loadFile = function(file) {
-        if (view && view.type() == 'link')
-            view.stage_file(file);
+        if (view && view.type() == 'chord')
+            view.stageFile(file);
     }
 
     this.switch_view = function(viewType) {

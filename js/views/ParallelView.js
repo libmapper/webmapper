@@ -53,14 +53,14 @@ class ParallelView extends View {
             dev.view.toBack();
             let x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
             let y = self.mapPane.top + self.mapPane.height;
+            dev.view.attr({'stroke-linecap': 'round'});
             dev.view.animate({'path': [['M', x, y],
                                        ['l', 0, -self.mapPane.height]],
                               'stroke': dev.color,
                               'stroke-width': 20,
                               'stroke-opacity': 0.5,
                               'fill': dev.color,
-                              'fill-opacity': 0,
-                              'stroke-linecap': 'round'}, duration, '>');
+                              'fill-opacity': 0}, duration, '>');
             if (!dev.view.label) {
                 dev.view.label = self.canvas.text(0, 0, dev.name)
                                             .attr({'opacity': 0,

@@ -99,6 +99,8 @@ MapperNodeArray.prototype = {
             if (this.cb_func)
                 this.cb_func('removed', this.obj_type, {'key': key});
         }
+        if (this.size() == 0)
+            Raphael.getColor.reset();
         return key;
     },
 
@@ -212,6 +214,8 @@ function MapperDatabase() {
 
     this.networkInterfaces = {'selected': null, 'available': []};
 
+    this.fileCounter = 0;
+
     // config items
     this.pathToImages = "images/";
 
@@ -222,14 +226,12 @@ function MapperDatabase() {
     };
 
     this.add_devices = function(cmd, devs) {
-//        console.log('add devices', devs);
         for (var i in devs) {
             this.devices.add(devs[i]);
             command.send('subscribe', devs[i].name);
         }
     }
     this.del_device = function(cmd, dev) {
-//        console.log('remove device');
         dev = this.devices.find(dev.name);
         if (!dev)
             return;
@@ -248,7 +250,6 @@ function MapperDatabase() {
         this.devices.remove(dev);
     }
     this.add_signals = function(cmd, sigs) {
-//        console.log('add signals', sigs);
         for (var i in sigs) {
             let dev = this.devices.find(sigs[i].device);
             if (!dev) {
@@ -261,7 +262,6 @@ function MapperDatabase() {
         }
     }
     this.del_signal = function(cmd, sig) {
-//        console.log('remove signal');
         let dev = this.devices.find(sig.device);
         if (dev)
             dev.signals.remove(sig);
@@ -276,7 +276,6 @@ function MapperDatabase() {
         return dev ? dev.signals.find(String(name.join('/'))) : null;
     }
     this.add_maps = function(cmd, maps) {
-//        console.log('add maps', cmd, maps);
         let self = this;
         findSig = function(name) {
             name = name.split('/');
@@ -304,7 +303,7 @@ function MapperDatabase() {
             }
             maps[i].src = src;
             maps[i].dst = dst;
-            maps[i].status = 'active';
+//            maps[i].status = 'active';
             let map = this.maps.add(maps[i]);
             if (!map) {
                 console.log("error adding map:", maps[i]);
@@ -317,7 +316,8 @@ function MapperDatabase() {
                 link = this.links.add({'key': link_key,
                                        'src': src.device,
                                        'dst': dst.device,
-                                       'maps': [map.key]});
+                                       'maps': [map.key],
+                                       'status': map.status});
                 if (src.device.links_out)
                     src.device.links_out.push(link_key);
                 else
@@ -329,6 +329,10 @@ function MapperDatabase() {
             }
             else if (!link.maps.includes(map.key))
                 link.maps.push(map.key);
+            if (link.status != 'active' && map.status == 'active') {
+                link.status = 'active';
+                this.links.cb_func('modified', 'link', link);
+            }
         }
     }
     this.del_map = function(cmd, map) {
@@ -354,19 +358,78 @@ function MapperDatabase() {
         this.maps.remove(map);
     }
     this.loadFile = function(file) {
+        this.fileCounter++;
         let self = this;
+
+        upgradeFile = function(file) {
+            // update to version 2.2
+            file.mapping.maps = [];
+            for (var i in file.mapping.connections) {
+                let c = file.mapping.connections[i];
+                let map = {};
+                let src = {'name': c.source[0].slice(1)};
+                let dst = {'name': c.destination[0].slice(1)};
+                if (c.mute != null)
+                    map.muted = c.mute ? true : false;
+                if (c.expression != null)
+                    map.expression = c.expression.replace('s[', 'src[')
+                    .replace('d[', 'dst[');
+                if (c.srcMin != null)
+                    src.minimum = c.srcMin;
+                if (c.srcMax != null)
+                    src.maximum = c.srcMax;
+                if (c.dstMin != null)
+                    dst.minimum = c.dstMin;
+                if (c.dstMax != null)
+                    dst.maximum = c.dstMax;
+                if (c.boundMin != null)
+                    dst.bound_min = c.boundMin;
+                if (c.boundMax != null)
+                    dst.bound_max = c.boundMax;
+
+                if (c.mode == 'reverse') {
+                    map.mode = 'expression';
+                    map.expression = 'y=x';
+                    map.sources = [dst];
+                    map.destinations = [src];
+                }
+                else {
+                    if (c.mode == 'calibrate') {
+                        map.mode = 'linear';
+                        dst.calibrating = true;
+                    }
+                    else
+                        map.mode = c.mode;
+                    map.sources = [src];
+                    map.destinations = [dst];
+                }
+                file.mapping.maps.push(map);
+            }
+            delete file.mapping.connections;
+            file.fileversion = "2.2";
+        }
+
         addSigDev = function(obj) {
             let name = obj.name.split('/');
             if (name.length < 2) {
                 console.log("error parsing signal name", name);
                 return null;
             }
-            let dev = self.devices.add({'key': name[0]});
-            obj.key = obj.name;
+            name[0] = self.fileCounter+'_'+name[0];
+            let dev = self.devices.add({'key': name[0],
+                                        'name': name[0],
+                                        'status': 'offline'});
+            obj.key = name.join('/');
+            obj.status = 'offline';
+            obj.device = dev;
             return dev.signals.add(obj);
         }
-        for (var i in file.maps) {
-            let map = file.maps[i];
+
+        if (file.fileversion != "2.2")
+            upgradeFile(file);
+
+        for (var i in file.mapping.maps) {
+            let map = file.mapping.maps[i];
             // TODO: enable multiple sources and destinations
             let src = addSigDev(map.sources[0]);
             let dst = addSigDev(map.destinations[0]);
@@ -374,10 +437,31 @@ function MapperDatabase() {
                 console.log("error adding map from file:", map);
                 continue;
             }
-            map.sources = map.destinations = null;
+            if (map.sources[0].bound_min)
+                map.src_bound_min = map.sources[0].bound_min;
+            if (map.sources[0].bound_max)
+                map.src_bound_min = map.sources[0].bound_max;
+            if (map.destinations[0].bound_min)
+                map.dst_bound_min = map.destinations[0].bound_min;
+            if (map.destinations[0].bound_max)
+                map.dst_bound_min = map.destinations[0].bound_max;
+            if (map.sources[0].calibrating)
+                map.src_calibrating = map.sources[0].calibrating;
+            if (map.destinations[0].calibrating)
+                map.dst_calibrating = map.destinations[0].calibrating;
+            if (map.sources[0].min)
+                map.src_min = map.sources[0].min;
+            if (map.sources[0].max)
+                map.src_max = map.sources[0].max;
+            if (map.destinations[0].min)
+                map.dst_min = map.destinations[0].min;
+            if (map.destinations[0].max)
+                map.dst_max = map.destinations[0].max;
+            delete map.sources;
+            delete map.destinations;
             map.src = src;
             map.dst = dst;
-            map.status = 'active';
+            map.status = 'offline';
             if (map.expression) {
                 // fix expression
                 // TODO: better regexp to avoid conflicts with user vars
@@ -385,6 +469,32 @@ function MapperDatabase() {
                 map.expression = map.expression.replace(/dst/g, "y");
             }
             this.maps.add(map);
+
+            // may need to also add link
+            let link_key = src.device.name + '->' + dst.device.name;
+            let link = this.links.find(link_key);
+            if (!link) {
+                console.log('database:file:adding link', link_key);
+                link = this.links.add({'key': link_key,
+                                      'src': src.device,
+                                      'dst': dst.device,
+                                      'maps': [map.key],
+                                      'status': 'offline'});
+                if (src.device.links_out)
+                    src.device.links_out.push(link_key);
+                else
+                    src.device.links_out = [link_key];
+                if (dst.device.links_in)
+                    dst.device.links_in.push(link_key);
+                else
+                    dst.device.links_in = [link_key];
+            }
+            else if (!link.maps.includes(map.key))
+                link.maps.push(map.key);
+            if (link.status != 'active' && map.status == 'active') {
+                link.status = 'active';
+                this.links.cb_func('modified', 'link', link);
+            }
         }
     }
 

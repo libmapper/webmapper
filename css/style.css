@@ -327,6 +327,10 @@ form {
     background-image: url(/images/link_icon_white.png);
 }
 
+#chordButton {
+    background-image: url(/images/chord_icon_white.png);
+}
+
 .signalControl {
     z-index: 1;
     position: relative;

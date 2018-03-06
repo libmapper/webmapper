@@ -129,6 +129,9 @@ function initViewCommands()
             case "linkButton":
                 view.switch_view("link");
                 break;
+            case "chordButton":
+                view.switch_view("chord");
+                break;
         }
         $('.viewButton').removeClass("viewButtonsel");
         $(this).addClass("viewButtonsel");
@@ -407,8 +410,8 @@ function initViewCommands()
                     reader.abort();
                     return;
                 }
-                view.switch_view("file");
-                view.loadFile(parsed);
+                database.loadFile(parsed);
+                view.switch_view("chord");
             };
         })(f);
         reader.readAsText(f);

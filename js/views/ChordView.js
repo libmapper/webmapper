@@ -12,8 +12,11 @@ class ChordView extends View {
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
-        // remove associated svg elements for signals
         this.database.devices.each(function(dev) {
+            // remove device labels (if any)
+            if (dev.view && dev.view.label)
+                dev.view.label.remove();
+            // remove associated svg elements for signals
             dev.signals.each(function(sig) { remove_object_svg(sig); });
         });
         // remove associated svg elements for maps
@@ -22,17 +25,29 @@ class ChordView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
-        this.radius = 150;
+        this.radius = 125;
 
         this.resize();
 
-        this.title = this.canvas.text(this.cx, this.cy, "Network")
-                                .attr({'font-size': 32,
-                                       'opacity': 1,
-                                       'fill': 'white',
-                                       'x': this.mapPane.cx,
-                                       'y': this.mapPane.cy + 170});
-        this.title.node.setAttribute('pointer-events', 'none');
+        this.onlineDevs = 0;
+        this.offlineDevs = 0;
+
+        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy, "Online")
+                                      .attr({'font-size': 32,
+                                             'opacity': 1,
+                                             'fill': 'white',
+                                             'x': this.frame.width * 0.25,
+                                             'y': this.mapPane.cy + 170});
+        this.onlineTitle.node.setAttribute('pointer-events', 'none');
+        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "Offline")
+                                       .attr({'font-size': 32,
+                                              'opacity': 1,
+                                              'fill': 'white',
+                                              'x': this.frame.width * 0.75,
+                                              'y': this.mapPane.cy + 170});
+        this.offlineTitle.node.setAttribute('pointer-events', 'none');
+
+        this.file = null;
     }
 
     resize(newFrame, duration) {
@@ -49,65 +64,95 @@ class ChordView extends View {
 
     updateDevices() {
         let self = this;
+        let r = this.radius;
+        this.onlineDevs = 0;
+        this.offlineDevs = 0;
         let dev_num = this.database.devices.size();
         if (dev_num < 1)
             return;
-        let index = 0;
         this.database.devices.each(function(dev) {
-            dev.index = index++;
+            if (dev.status == 'offline')
+                self.offlineDevs++;
+            else
+                self.onlineDevs++;
+        });
+        let onlineIndex = 0;
+        let offlineIndex = 0;
+        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
+        let cy = this.mapPane.cy;
+        this.database.devices.each(function(dev) {
+            let offline = (dev.status == 'offline');
+            if (offline)
+                dev.index = offlineIndex++;
+            else
+                dev.index = onlineIndex++;
+            let x = self.frame.width * (offline ? 0.75 : 0.25);
+            let half = (dev.index + 0.5) * (offline ? offlineInc : onlineInc);
+            dev.position = position(x + Math.cos(half) * r, cy + Math.sin(half) * r);
             if (!dev.view) {
-                let path = [['M', self.mapPane.cx, self.mapPane.cy],
-                            ['l', 0, 0]];
+                let path = [['M', x, cy]];
                 dev.view = self.canvas.path().attr({'path': path,
-                                                    'fill': dev.color,
                                                     'stroke': dev.color,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
-                                                    'stroke-linecap': 'round'
+                                                    'stroke-linecap': 'butt',
+                                                    'stroke-width': 0,
                                                    });
             }
+            self.setDevHover(dev);
         });
     }
 
     drawDevices(duration) {
         let self = this;
-        let ro = this.radius;
-        let ri = 150 * 0.8;
-        let cx = this.mapPane.cx;
+        let r = this.radius;
         let cy = this.mapPane.cy;
         let lastPos = [1, 0];
-        let angleInc = Math.PI * 2.0 / this.database.devices.size();
+        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
         this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();
+            let offline = (dev.status == 'offline');
+            let angleInc = offline ? offlineInc : onlineInc;
+            let cx = self.frame.width * (offline ? 0.75 : 0.25);
             let startAngle = dev.index * angleInc;
             let stopAngle = (dev.index + 1) * angleInc - 0.05;
             let startPos = [Math.cos(startAngle), Math.sin(startAngle)];
             let stopPos = [Math.cos(stopAngle), Math.sin(stopAngle)];
-            let path = [['M', cx + startPos[0] * ri, cy + startPos[1] * ri],
-                        ['L', cx + startPos[0] * ro, cy + startPos[1] * ro],
-                        ['A', ro, ro, angleInc, 0, 1, cx + stopPos[0] * ro, cy + stopPos[1] * ro],
-                        ['L', cx + stopPos[0] * ri, cy + stopPos[1] * ri],
-                        ['A', ri, ri, angleInc, 0, 0, cx + startPos[0] * ri, cy + startPos[1] * ri],
-                        ['Z']];
+//            let path = [['M', cx + startPos[0] * ri, cy + startPos[1] * ri],
+//                        ['L', cx + startPos[0] * ro, cy + startPos[1] * ro],
+//                        ['A', ro, ro, angleInc, 0, 1, cx + stopPos[0] * ro, cy + stopPos[1] * ro],
+//                        ['L', cx + stopPos[0] * ri, cy + stopPos[1] * ri],
+//                        ['A', ri, ri, angleInc, 0, 0, cx + startPos[0] * ri, cy + startPos[1] * ri],
+//                        ['Z']];
+//            dev.view.animate({'path': path,
+//                              'fill-opacity': 1,
+//                              'stroke-opacity': 0,
+//                             }, duration, '>');
+            let path = [['M', cx + startPos[0] * r, cy + startPos[1] * r],
+                        ['A', r, r, angleInc, 0, 1, cx + stopPos[0] * r, cy + stopPos[1] * r]];
+            dev.view.attr({'stroke-linecap': 'butt'});
             dev.view.animate({'path': path,
-                              'fill-opacity': 1,
-                              'stroke-opacity': 0,
+                              'fill-opacity': 0,
+                              'stroke-opacity': 1,
+                              'stroke-width': 40,
                              }, duration, '>');
         });
     }
 
     updateLinks() {
-        console.log('updateLinks()');
         let self = this;
-        let angleInc = Math.PI * 2.0 / this.database.devices.size();
+        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
+        let r = this.radius - 20;
         this.database.devices.each(function(dev) {
             dev.src_indices = [];
             dev.dst_indices = [];
         });
         this.database.links.each(function(link) {
-                                 console.log('updatinglink');
             let src = link.src;
             let dst = link.dst;
             if (!src.dst_indices.includes(dst.dst_index)) {
@@ -120,10 +165,14 @@ class ChordView extends View {
             }
             if (link.view)
                 return;
-            let angle = (src.index + 0.5) * angleInc;
-            let srcPos = [self.frame.cx + Math.cos(angle) * 150,
-                          self.frame.cy + Math.sin(angle) * 150];
-            link.view = self.canvas.path([['M', srcPos[0], srcPos[1]]]);
+            let angle = (src.index + 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
+            let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
+            console.log('x', x, link.status);
+            let srcPos = [x + Math.cos(angle) * r,
+                          self.frame.cy + Math.sin(angle) * r];
+            console.log('link.addingview');
+            link.view = self.canvas.path([['M', srcPos[0], srcPos[1]],
+                                          ['l', 0, 0]]);
         });
     }
 
@@ -133,11 +182,12 @@ class ChordView extends View {
     }
 
     drawLinks(duration) {
-        console.log('drawLinks()');
+        let self = this;
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
-        let r = this.radius * 0.8;
-        let angleInc = Math.PI * 2.0 / this.database.devices.size();
+        let r = this.radius - 19;
+        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
 
         this.database.links.each(function(link) {
             if (!link.view)
@@ -146,16 +196,45 @@ class ChordView extends View {
 
             let src = link.src;
             let dst = link.dst;
-            let srcAngle = (src.index + 0.66) * angleInc;
-            let dstAngle = (dst.index + 0.33) * angleInc;
-            let srcPos = [cx + Math.cos(srcAngle) * r, cy + Math.sin(srcAngle) * r];
-            let dstPos = [cx + Math.cos(dstAngle) * r, cy + Math.sin(dstAngle) * r];
+            let srcAngle = (src.index + 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
+            let dstAngle = (dst.index + 0.67) * (dst.status == 'offline' ? offlineInc : onlineInc);
+            let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
+            let srcPos = [x + Math.cos(srcAngle) * r, cy + Math.sin(srcAngle) * r];
+            let dstPos = [x + Math.cos(dstAngle) * r, cy + Math.sin(dstAngle) * r];
             let path = [['M', srcPos[0], srcPos[1]],
-                        ['S', cx, cy, dstPos[0], dstPos[1]]];
+                        ['S', x, cy, dstPos[0], dstPos[1]]];
             link.view.animate({'path': path,
-                               'stroke': 'white',
-                               'stroke-width': 4,
-                               'stroke-opacity': 1}, duration, '>');
+                               'stroke': src.color,
+                               'stroke-width': 6,
+                               'stroke-opacity': 1}, duration, '>')
+                     .attr({'arrow-end': 'block-wide-long'});
+//            let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
+//            let srcInc = (src.status == 'offline') ? offlineInc : onlineInc;
+//            let dstInc = (dst.status == 'offline') ? offlineInc : onlineInc;
+//            let srcPos = [x + Math.cos(src.index * srcInc) * r,
+//                          cy + Math.sin(src.index * srcInc) * r,
+//                          x + Math.cos((src.index + 1) * srcInc - 0.05) * r,
+//                          cy + Math.sin((src.index + 1) * srcInc - 0.05) * r];
+//            let dstPos = [x + Math.cos(dst.index * dstInc) * r,
+//                          cy + Math.sin(dst.index * dstInc) * r,
+//                          x + Math.cos((dst.index + 1) * dstInc - 0.05) * r,
+//                          cy + Math.sin((dst.index + 1) * dstInc - 0.05) * r];
+//            let path = [['M', srcPos[0], srcPos[1]],
+//                        ['A', r, r, srcInc, 0, 1, srcPos[2], srcPos[3]],
+//                        ['S', x, cy, dstPos[0], dstPos[1]],
+//                        ['A', r, r, dstInc, 0, 1, dstPos[2], dstPos[3]],
+//                        ['S', x, cy, srcPos[0], srcPos[1]]];
+//            let rgb = Raphael.getRGB(src.color);
+//            let angle = Raphael.deg((src.index * srcInc + dst.index * dstInc) * 0.5)+270;
+//                                 console.log('using angle', angle);
+//            let gradient = [];
+//            gradient[0] = angle+'-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
+//            rgb = Raphael.getRGB(dst.color);
+//            gradient[1] = ')-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
+//            link.view.animate({'path': path,
+//                               'fill': gradient[0]+1+gradient[1]+1+')',
+//                               'fill-opacity': 1,
+//                               'stroke-opacity': 0}, duration, '>')
         });
     }
 
@@ -174,6 +253,10 @@ class ChordView extends View {
         }
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
+            if (this.onlineTitle)
+                this.onlineTitle.attr({'text': 'Online ('+this.onlineDevs+' devices)'});
+            if (this.offlineTitle)
+                this.offlineTitle.attr({'text': 'Offline ('+this.offlineDevs+' devices)'});
         }
         if (elements.indexOf('links') >= 0)
             this.updateLinks();
@@ -184,10 +267,18 @@ class ChordView extends View {
         this.drawDevices(duration);
         this.drawLinks(duration);
     };
+//
+//    this.stageFile = function(file) {
+//        this.file = file;
+//        draw(duration);
+//    };
 
     cleanup() {
         super.cleanup();
-        this.title.remove();
+        if (this.onlineTitle)
+            this.onlineTitle.remove();
+        if (this.offlineTitle)
+            this.offlineTitle.remove();
 
         // clean up any objects created only for this view
     }

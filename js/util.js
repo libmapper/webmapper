@@ -360,6 +360,8 @@ function remove_object_svg(obj, duration) {
         obj.view.label = null;
     }
     obj.view.stop();
+    obj.view.unhover();
+    obj.view.undrag();
     obj.view.animate({'stroke-opacity': 0, 'fill-opacity': 0},
                      duration, 'linear', function() { this.remove(); });
     obj.view = null;

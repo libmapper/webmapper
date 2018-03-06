@@ -55,6 +55,7 @@ def dev_props(dev):
     if 'synced' in props:
         props['synced'] = props['synced'].get_double()
     props['key'] = dev.name
+    props['status'] = 'active'
     del props['is_local']
     del props['id']
     return props
@@ -64,6 +65,7 @@ def link_props(link):
     props['src'] = link.device(0).name
     props['dst'] = link.device(1).name
     props['key'] = link.device(0).name + '<->' + link.device(1).name
+    props['status'] = 'active'
     del props['is_local']
     del props['id']
     return props
@@ -73,6 +75,7 @@ def sig_props(sig):
     props['device'] = sig.device().name
     props['key'] = props['device'] + '/' + props['name']
     props['num_maps'] = sig.num_maps;
+    props['status'] = 'active'
     del props['is_local']
     del props['id']
     if props['direction'] == mapper.DIR_INCOMING:
@@ -89,6 +92,11 @@ def map_props(map):
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
     props['key'] = props['src'] + '->' + props['dst']
+    if props['process_location'] == mapper.LOC_SOURCE:
+        props['process_location'] = 'source'
+    else:
+        props['process_location'] = 'destination'
+    props['status'] = 'active'
     del props['is_local']
     del props['id']
 

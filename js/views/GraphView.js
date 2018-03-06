@@ -21,6 +21,9 @@ class GraphView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
+        this.xAxisProp = 'direction'
+        this.yAxisProp = null;
+
         this.resize();
     }
 

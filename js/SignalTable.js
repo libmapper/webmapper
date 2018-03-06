@@ -253,7 +253,7 @@ class Table {
                             'index': j};
                 }
                 else {
-                    let left = row.offsetLeft;
+                    let left = row.offsetLeft + this.div[0].offsetLeft;
                     let top = j * rowHeight - this.scrolled + 20;
                     let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
@@ -321,15 +321,16 @@ class Table {
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
         else {
-            let left = this.frame.left;
+            let left = row.offsetLeft + this.div[0].offsetLeft;
             let top = row.offsetTop - this.scrolled + 20;
+            let snap = this.snap == 'left' ? -1 : 1;
             output = {'left': left,
                       'top': top,
                       'width': row.offsetWidth,
                       'height': rowHeight,
-                      'x': this.snap == 'left' ? left : left + this.frame.width,
+                      'x': this.snap == 'left' ? left : left + row.offsetWidth,
                       'y': top + rowHeight * 0.5,
-                      'vx': this.snap == 'left' ? -Math.cos(this.frame.angle) : Math.cos(this.frame.angle),
+                      'vx': Math.cos(this.frame.angle) * snap,
                       'vy': Math.sin(this.frame.angle),
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};

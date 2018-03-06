@@ -55,6 +55,7 @@ class HiveView extends View {
             let inc = numSigs ? 1 / numSigs : 1;
 
             dev.view.toBack();
+            dev.view.attr({'stroke-linecap': 'round'});
             dev.view.animate({'path': [['M', self.mapPane.left,
                                         self.mapPane.top + self.mapPane.height],
                                        ['l', self.mapPane.width * Math.cos(dev.angle),
@@ -63,8 +64,7 @@ class HiveView extends View {
                               'stroke-width': 20,
                               'stroke-opacity': 0.5,
                               'fill': dev.color,
-                              'fill-opacity': 0,
-                              'stroke-linecap': 'round'}, duration, '>');
+                              'fill-opacity': 0}, duration, '>');
             dev.signals.each(function(sig) {
                 if (!sig.view)
                     return;
