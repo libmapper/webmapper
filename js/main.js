@@ -22,6 +22,7 @@ function init() {
     // add the view wrapper
     $('body').append("<div id='container'></div>");
     $('body').append("<div id='status'></div>");
+    $('body').append("<div id='axes'></div>");
     $('body').attr('oncontextmenu',"return false;");     // ?
 
     // init the top menu
@@ -224,44 +225,50 @@ function initViewCommands()
         switch (e.which) {
             case 49:
                 /* 1 */
-                new_view = 'list';
+                new_view = 'chord';
                 break;
             case 50:
                 /* 2 */
-                new_view = 'graph';
+                new_view = 'list';
                 break;
             case 51:
                 /* 3 */
-                new_view = 'canvas';
+                new_view = 'grid';
                 break;
             case 52:
                 /* 4 */
-                new_view = 'grid';
+                new_view = 'canvas';
                 break;
             case 53:
                 /* 5 */
-                new_view = 'hive';
+                new_view = 'graph';
                 break;
             case 54:
                 /* 6 */
-                new_view = 'parallel';
+                new_view = 'hive';
                 break;
             case 55:
                 /* 7 */
-                new_view = 'balloon';
+                new_view = 'parallel';
                 break;
-            case 56:
-                /* 8 */
-                new_view = 'link';
-                break;
-            case 57:
-                /* 9 */
-                new_view = 'chord';
-                break;
+//            case 56:
+//                /* 8 */
+//                new_view = 'link';
+//                break;
+//            case 57:
+//                /* 9 */
+//                new_view = 'chord';
+//                break;
             case 79:
                 if (e.metaKey == true) {
                     e.preventDefault();
                     input.trigger("click");
+                }
+                break;
+            case 48:
+                if (e.metaKey == true) {
+                    e.preventDefault();
+                    view.resetPanZoom();
                 }
                 break;
 //            default:

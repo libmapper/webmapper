@@ -14,7 +14,7 @@ MapProperties.prototype = {
         window.saveLocation = '';        // Where the network will be saved
 
         $(this._container).append(
-            "<div' class='topMenu' style='width:calc(75% - 200px);'>"+
+            "<div' class='topMenu' style='width:calc(75% - 170px);'>"+
                 "<div class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
             "</div>");

@@ -29,7 +29,6 @@ class View {
         this.newMap = null;
 
         this.dragObj = 'map';
-        this.dragging = null;
 
         // normalized table positions & dimensions
         this.leftTableLeft = 0;
@@ -279,15 +278,16 @@ class View {
     setDevHover(dev) {
         let self = this;
         dev.view.hover(
-            function() {
+            function(e) {
                 if (!dev.label) {
                     // show label
                     $('#status').stop(true, false)
-                                .text('name: ' + dev.key
-                                      + '\nsignals: ' + dev.signals.size())
-                                .css({'left': dev.position.x + 20,
-                                      'top': dev.position.y + 70,
+                                .text('Device\n• name: ' + dev.key
+                                      + '\n• signals: ' + dev.signals.size())
+                                .css({'left': e.x + 20,
+                                      'top': e.y,
                                       'opacity': 1});
+                    dev.view.animate({'stroke': 'white'}, 0, 'linear');
                 }
 //                if (self.draggingFrom == null)
 //                    return;
@@ -309,52 +309,75 @@ class View {
 //                self.snappingTo = null;
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
+                dev.view.animate({'stroke': dev.color}, 500, 'linear');
             }
         );
     }
 
-    setDevDrag(sig) {
+    setDevDrag(dev) {
         let self = this;
         dev.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo)
                 $('#container').trigger('map', [self.draggingFrom.key,
                                                 self.snappingTo.key]);
         });
-        sig.view.drag(
-                      function(dx, dy, x, y, event) {
-                      if (self.snappingTo)
-                      return;
-                      if (self.escaped) {
-                      return;
-                      }
-                      x -= self.frame.left;
-                      y -= self.frame.top;
-                      let src = self.draggingFrom.position;
-                      let path = [['M', src.x, src.y],
-                                  ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
-                      if (!self.newMap) {
-                      self.newMap = self.canvas.path(path);
-                      self.newMap.attr({'stroke': 'white',
-                                       'stroke-width': 2,
-                                       'stroke-opacity': 1,
-                                       'arrow-start': 'none',
-                                       'arrow-end': 'block-wide-long'});
-                      }
-                      else
-                      self.newMap.attr({'path': path});
-                      },
-                      function(x, y, event) {
-                      self.escaped = false;
-                      self.draggingFrom = sig;
-                      },
-                      function(x, y, event) {
-                      self.draggingFrom = null;
-                      if (self.newMap) {
-                      self.newMap.remove();
-                      self.newMap = null;
-                      }
-                      }
-                      );
+        dev.view.drag(
+            function(dx, dy, x, y, event) {
+                if (self.snappingTo)
+                    return;
+                if (self.escaped) {
+                    return;
+                }
+                x -= self.frame.left;
+                y -= self.frame.top;
+                let src = self.draggingFrom.position;
+                let path = [['M', src.x, src.y],
+                            ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
+                if (!self.newMap) {
+                    self.newMap = self.canvas.path(path);
+                    self.newMap.attr({'stroke': 'white',
+                                      'stroke-width': 2,
+                                      'stroke-opacity': 1,
+                                      'arrow-start': 'none',
+                                      'arrow-end': 'block-wide-long'});
+                }
+                else
+                    self.newMap.attr({'path': path});
+            },
+            function(x, y, event) {
+                self.escaped = false;
+                self.draggingFrom = sig;
+            },
+            function(x, y, event) {
+                self.draggingFrom = null;
+                if (self.newMap) {
+                    self.newMap.remove();
+                    self.newMap = null;
+                }
+            }
+        );
+    }
+
+    setLinkHover(link) {
+        let self = this;
+        link.view.hover(
+            function(e) {
+                // show label
+                $('#status').stop(true, false)
+                            .text('Link'
+                                  + '\n• source: ' + link.src.key
+                                  + '\n• destination: ' + link.dst.key)
+                            .css({'left': e.x + 20,
+                                  'top': e.y,
+                                  'opacity': 1});
+                link.view.animate({'stroke-width': 7}, 0, 'linear');
+            },
+            function() {
+                $('#status').stop(true, false)
+                            .animate({opacity: 0}, {duration: 2000});
+                link.view.animate({'stroke-width': 5}, 500, 'linear');
+            }
+        );
     }
 
     updateLinks() {
@@ -390,25 +413,26 @@ class View {
                     alpha2 = alpha1;
                 this.attr({'fill': gradient[0]+alpha1+gradient[1]+alpha2+')'});
             }
-            link.view.hover(
-                function() {
-                    link.view.toFront();
-                    link.view.setAlpha(0.5);
-                    this.mousemove(function (e, x) {
-                        let ratio = (x - self.mapPane.left) / self.mapPane.width;
-                        ratio = ratio * 0.25;
-                        link.view.setAlpha(0.5-ratio, 0.25+ratio);
-                    });
-                },
-                function() {
-                    this.unmousemove();
-                    this.setAlpha(0.25);
-            });
-            link.view.unclick().click(function(e, x) {
-                console.log('click');
-                // check if close to table
-                // enable dragging to new device
-            });
+//            link.view.hover(
+//                function() {
+//                    link.view.toFront();
+//                    link.view.setAlpha(0.5);
+//                    this.mousemove(function (e, x) {
+//                        let ratio = (x - self.mapPane.left) / self.mapPane.width;
+//                        ratio = ratio * 0.25;
+//                        link.view.setAlpha(0.5-ratio, 0.25+ratio);
+//                    });
+//                },
+//                function() {
+//                    this.unmousemove();
+//                    this.setAlpha(0.25);
+//            });
+//            link.view.unclick().click(function(e, x) {
+//                console.log('click');
+//                // check if close to table
+//                // enable dragging to new device
+//            });
+            self.setLinkHover(link);
         });
     }
 
@@ -419,17 +443,18 @@ class View {
                 if (!sig.view.label) {
                     // show label
                     let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
-                    let minstring = sig.min != null ? '\nminimum: ' + sig.min : '';
-                    let maxstring = sig.max != null ? '\nmaximum: ' + sig.max : '';
+                    let minstring = sig.min != null ? '\n• minimum: ' + sig.min : '';
+                    let maxstring = sig.max != null ? '\n• maximum: ' + sig.max : '';
                     $('#status').stop(true, false)
-                       .text('name: ' + sig.key
-                             + '\ndirection: ' + sig.direction
-                             + '\ntype: ' + typestring
-                             + '\nunit: ' + sig.unit
+                       .text('Signal\n• name: ' + sig.key
+                             + '\n• direction: ' + sig.direction
+                             + '\n• type: ' + typestring
+                             + '\n• unit: ' + sig.unit
                              + minstring + maxstring)
                        .css({'left': sig.position.x + 20,
                              'top': sig.position.y + 70,
                              'opacity': 1});
+                    sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 if (self.draggingFrom == null)
                     return;
@@ -444,13 +469,14 @@ class View {
                             ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
                              dst.x, dst.y]];
                 let len = Raphael.getTotalLength(path);
-                path = Raphael.getSubpath(path, 10, len - 10);
+                path = Raphael.getSubpath(path, 12, len - 12);
                 self.newMap.attr({'path': path});
             },
             function() {
                 self.snappingTo = null;
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
+                sig.view.animate({'stroke-width': 6}, 500, 'linear');
             }
         );
     }
@@ -522,7 +548,7 @@ class View {
                 }
 
                 if (!sig.view && sig.position) {
-                    let path = circle_path(sig.position.x, sig.position.y, 7);
+                    let path = circle_path(sig.position.x, sig.position.y, 10);
                     sig.view = self.canvas.path(path)
                                           .attr({stroke_opacity: 0,
                                                  fill_opacity: 0});
@@ -540,13 +566,13 @@ class View {
         let pos = sig.position;
         let is_output = sig.direction == 'output';
 
-        let path = circle_path(pos.x, pos.y, is_output ? 7 : 10);
+        let path = circle_path(pos.x, pos.y, 10);
         sig.view.animate({'path': path,
                           'fill': is_output ? 'black' : sig.device.color,
                           'fill-opacity': 1,
                           'stroke': sig.device.color,
                           'stroke-width': 6,
-                          'stroke-opacity': sig.direction == 'output' ? 1 : 0}, duration, '>');
+                          'stroke-opacity': 1}, duration, '>');
     }
 
     drawSignals(duration) {
@@ -558,21 +584,62 @@ class View {
         });
     }
 
+    setMapHover(map) {
+        let self = this;
+        map.view.hover(
+            function(e) {
+                // show label
+                $('#status').stop(true, false)
+                            .text('Map'
+                                  + '\n• source: ' + map.src.key
+                                  + '\n• destination: ' + map.dst.key
+                                  + '\n• mode: ' + map.mode
+                                  + '\n• expression: ' + map.expression)
+                            .css({'left': e.x + 20,
+                                  'top': e.y,
+                                  'opacity': 1});
+                map.view.animate({'stroke-width': 4}, 0, 'linear');
+
+//                if (self.draggingFrom == null)
+//                    return;
+//                else if (map == self.draggingFrom) {
+//                    // don't snap to self
+//                    return;
+//                }
+//                self.snappingTo = map;
+//                let src = self.draggingFrom.position;
+//                let dst = sig.position;
+//                let path = [['M', src.x, src.y],
+//                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
+//                             dst.x, dst.y]];
+//                let len = Raphael.getTotalLength(path);
+//                path = Raphael.getSubpath(path, 10, len - 10);
+//                self.newMap.attr({'path': path});
+            },
+            function() {
+                self.snappingTo = null;
+                $('#status').stop(true, false)
+                            .animate({opacity: 0}, {duration: 2000});
+                map.view.animate({'stroke-width': 2}, 500, 'linear');
+            }
+        );
+    }
+
     updateMaps() {
         let self = this;
         this.database.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
                 let pos = map.src.position;
-                let path = pos ? [['M', pos.x, pos.y], ['l', 0, 0]] : null;
+                let path = pos ? [['M', pos.x, pos.y], ['l', 10, 0]] : null;
                 map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.view.selected ? 'red' : 'white',
                                'fill-opacity': 0,
                                'stroke-width': 2,
-                               'arrow-start': 'none',
-                               'arrow-end': 'block-wide-long'});
+                               'arrow-start': 'none'});
                 map.view.new = true;
+                self.setMapHover(map);
             }
         });
     }
@@ -668,7 +735,9 @@ class View {
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
                                    'stroke': map.view.selected ? 'red' : 'white',
-                                   'stroke-dasharray': map.muted ? '-' : ''})
+                                   'stroke-dasharray': map.muted ? '-' : '',
+                                   'arrow-end': 'block-wide-long'
+                                  })
                             .toFront();
                     return;
                 }
@@ -681,6 +750,7 @@ class View {
                         .toFront();
             }
             else {
+//                map.view.attr({'arrow-end': 'block-wide-long'});
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
                                   'fill-opacity': 0,
@@ -722,8 +792,8 @@ class View {
         this.svgPosY += delta_y * this.svgZoom;
 
         this.canvas.setViewBox(this.svgPosX, this.svgPosY,
-                               this.mapPane.width * this.svgZoom,
-                               this.mapPane.height * this.svgZoom, false);
+                               this.frame.width * this.svgZoom,
+                               this.frame.height * this.svgZoom, false);
         $('#status').stop(true, false)
                     .text('pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']')
                     .css({'left': x + 10,
@@ -764,8 +834,8 @@ class View {
         this.svgPosX += x * zoomDiff;
         this.svgPosY += (y - this.frame.top) * zoomDiff;
         this.canvas.setViewBox(this.svgPosX, this.svgPosY,
-                               this.mapPane.width * newZoom,
-                               this.mapPane.height * newZoom, false);
+                               this.frame.width * newZoom,
+                               this.frame.height * newZoom, false);
 
         $('#status').stop(true, false)
                     .text('zoom: '+(100/newZoom).toFixed(2)+'%')
@@ -775,6 +845,10 @@ class View {
                     .animate({opacity: 0}, {duration: 2000});
 
         this.svgZoom = newZoom;
+    }
+
+    resetPanZoom() {
+        this.canvas.setViewBox(0, 0, this.mapPane.width, this.mapPane.height, false);
     }
 
     filterSignals(direction, text) {

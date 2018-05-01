@@ -99,8 +99,9 @@ class GridView extends View {
         }
         else {
             // draw intersection between tables
-            if (map.view)
+            if (map.view) {
                 map.view.attr({'arrow-end': 'none'});
+            }
             if (src.vx < 0.0001) {
                 return [['M', src.left, dst.y],
                         ['L', src.left + src.width, dst.top],

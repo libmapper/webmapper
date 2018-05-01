@@ -48,7 +48,7 @@ class ParallelView extends View {
                 return;
             dev.view.stop();
             let numSigs = dev.numVisibleSigs - 1;
-            let sigInc = numSigs > 0 ? self.mapPane.height / numSigs : self.mapPane.height;
+            let sigInc = numSigs > 1 ? self.mapPane.height / (numSigs - 1) : self.mapPane.height;
 
             dev.view.toBack();
             let x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
@@ -57,7 +57,7 @@ class ParallelView extends View {
             dev.view.animate({'path': [['M', x, y],
                                        ['l', 0, -self.mapPane.height]],
                               'stroke': dev.color,
-                              'stroke-width': 20,
+                              'stroke-width': 26,
                               'stroke-opacity': 0.5,
                               'fill': dev.color,
                               'fill-opacity': 0}, duration, '>');
@@ -70,7 +70,7 @@ class ParallelView extends View {
                                                    'text-anchor': 'start'
                                                   });
             }
-            dev.view.label.animate({'x': x, 'y': y-20,
+            dev.view.label.animate({'x': x, 'y': y-26,
                                     'opacity': 0.5,
                                     'transform': 'r-90,'+x+','+y,
                                    }, duration, '>');
@@ -79,7 +79,7 @@ class ParallelView extends View {
                     return;
                 // assign position along line
                 sig.position.x = x;
-                sig.position.y = y - sigInc * (sig.index + 0.5);
+                sig.position.y = y - sigInc * (sig.index);
                 self.drawSignal(sig, duration);
             });
         });
@@ -113,7 +113,7 @@ class ParallelView extends View {
 
         // shorten path so it doesn't draw over signals
         let len = Raphael.getTotalLength(path);
-        return Raphael.getSubpath(path, 10, len - 10);
+        return Raphael.getSubpath(path, 12, len - 12);
     }
 
     draw(duration) {

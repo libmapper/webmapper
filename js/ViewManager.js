@@ -194,6 +194,7 @@ function ViewManager(container, database)
                     if (map.view && map.view.selected)
                         $('#container').trigger('unmap', [map.src.key, map.dst.key]);
                 });
+                deselectAllMaps(tables);
                 break;
             case 65:
                 if (e.metaKey == true) { // Select all 'cmd+a'
@@ -219,6 +220,10 @@ function ViewManager(container, database)
 
     this.pan = function(x, y, delta_x, delta_y) {
         view.pan(x, y, delta_x, delta_y);
+    }
+
+    this.resetPanZoom = function() {
+        view.resetPanZoom();
     }
 
     this.filterSignals = function(searchbar, text) {

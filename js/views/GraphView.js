@@ -27,13 +27,18 @@ class GraphView extends View {
         this.resize();
     }
 
+    resize(newFrame) {
+        super.resize(newFrame);
+        $('#axes').stop(true, false)
+                  .text('foooooo')
+                  .css({'left': this.frame.left + 50,
+                        'top': this.frame.top + 50,
+                        'width': this.frame.width - 100,
+                        'height': this.frame.height - 100,
+                        'opacity': 1});
+    }
+
     update() {
-        if (!this.xAxis)
-            this.xAxis = this.canvas.path().attr({'stroke': 'white',
-                                                  'arrow-end': 'block-wide-long'});
-        if (!this.yAxis)
-            this.yAxis = this.canvas.path().attr({'stroke': 'white',
-                                                  'arrow-end': 'block-wide-long'});
         let elements;
         let self = this;
         switch (arguments.length) {
@@ -85,23 +90,17 @@ class GraphView extends View {
 
         // shorten path so it doesn't draw over signals
         let len = Raphael.getTotalLength(path);
-        return Raphael.getSubpath(path, 10, len - 10);
+        return Raphael.getSubpath(path, 12, len - 12);
     }
 
     draw(duration) {
-        this.xAxis.attr({'path': [['M', 50, this.frame.height - 50],
-                                  ['l', this.frame.width - 100, 0]]});
-        this.yAxis.attr({'path': [['M', 50, this.frame.height - 50],
-                                  ['l', 0, -(this.frame.height - 100)]]});
         this.drawSignals(duration);
         this.drawMaps(duration);
     }
 
     cleanup() {
         super.cleanup();
-        this.xAxis.remove();
-        this.xAxis = null;
-        this.yAxis.remove();
-        this.yAxis = null;
+        $('#axes').stop(true, false)
+                  .animate({opacity: 0}, {duration: 2000});
     }
 }

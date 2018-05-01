@@ -29,8 +29,10 @@ class ListView extends View {
             dev.view.unclick().click(function(e) {
                 dev.collapsed ^= 3;
                 self.updateDevices();
-                self.draw(200);
+                self.draw(1000);
             });
+            // change device hover
+            dev.view.unhover();
         });
 
         // remove link svg

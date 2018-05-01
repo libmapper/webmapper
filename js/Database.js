@@ -59,6 +59,7 @@ MapperNodeArray.prototype = {
     },
 
     add : function(obj) {
+//        console.log(this.obj_type+'s.add', obj);
         let key = obj.key;
         if (!key)
             return null;
@@ -151,6 +152,7 @@ MapperEdgeArray.prototype = {
     },
 
     add : function(obj) {
+//        console.log(this.obj_type+'s.add', obj);
         let key = obj.key;
         if (!key)
             return null;

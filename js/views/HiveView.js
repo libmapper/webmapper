@@ -26,6 +26,8 @@ class HiveView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
+        this.aspect = 1;
+
         this.resize();
     }
 
@@ -41,36 +43,70 @@ class HiveView extends View {
         this.mapPane.cy = this.frame.height * 0.5;
 
         this.origin = [this.mapPane.left, this.frame.height - 100];
+        this.aspect = this.mapPane.width / this.mapPane.height;
     }
 
     drawDevices(duration) {
-        console.log('hive.drawDevices');
         let self = this;
+        let listIndex = 0;
         this.database.devices.each(function(dev) {
             if (!dev.view)
                 return;
-                                   console.log('drawing hive devices!');
             dev.view.stop();
             let numSigs = dev.numVisibleSigs;
             let inc = numSigs ? 1 / numSigs : 1;
 
             dev.view.toBack();
             dev.view.attr({'stroke-linecap': 'round'});
-            dev.view.animate({'path': [['M', self.mapPane.left,
-                                        self.mapPane.top + self.mapPane.height],
-                                       ['l', self.mapPane.width * Math.cos(dev.angle),
-                                        self.mapPane.height * Math.sin(dev.angle)]],
+            let path = [];
+            let x = Math.cos(dev.angle) * self.mapPane.width;
+            let y = Math.sin(dev.angle) * self.mapPane.height;
+            if (dev.collapsed) {
+                path = [['M', self.mapPane.right - 200,
+                         self.mapPane.top + listIndex * 20],
+                        ['l', 200, 0]];
+                listIndex++;
+            }
+            else {
+                path = [['M', self.mapPane.left,
+                         self.mapPane.top + self.mapPane.height],
+                        ['l', x, y]]
+            }
+            dev.view.animate({'path': path,
                               'stroke': dev.color,
-                              'stroke-width': 20,
+                              'stroke-width': 26,
                               'stroke-opacity': 0.5,
                               'fill': dev.color,
                               'fill-opacity': 0}, duration, '>');
+            if (!dev.view.label) {
+                dev.view.label = self.canvas.text(0, 0, dev.name)
+                                            .attr({'opacity': 0,
+                                                   'pointer-events': 'none',
+                                                   'font-size': 24,
+                                                   'fill': 'white',
+                                                   'text-anchor': 'end'
+                                                  });
+//                                   .translate(endPoint[0], endPoint[1])
+//                                   .rotate(Raphael.deg(dev.angle), endPoint[0], endPoint[1]);
+
+            }
+            let angle = Raphael.deg(Math.atan(y / x));
+                                   console.log('using angle', angle, 'for device', dev.name);
+            x = 50;
+            y += self.frame.height;
+            dev.view.label.animate({'opacity': 0.5,
+                                    'transform': 't'+x+','+y+'r'+angle
+                                   }, duration, '>');
             dev.signals.each(function(sig) {
                 if (!sig.view)
                     return;
+                if (dev.collapsed) {
+                    remove_object_svg(sig);
+                    return;
+                }
                 // assign position along line
-                sig.position.x = self.mapPane.left + self.mapPane.width * inc * (sig.index + 1) * Math.cos(dev.angle);
-                sig.position.y = self.mapPane.top + self.mapPane.height + self.mapPane.height * inc * (sig.index + 1) * Math.sin(dev.angle);
+                sig.position.x = self.mapPane.left + self.mapPane.width * inc * (sig.index + 2) * Math.cos(dev.angle);
+                sig.position.y = self.mapPane.top + self.mapPane.height + self.mapPane.height * inc * (sig.index + 2) * Math.sin(dev.angle);
                 self.drawSignal(sig, duration);
             });
         });
@@ -111,7 +147,7 @@ class HiveView extends View {
 
         // shorten path so it doesn't draw over signals
         let len = Raphael.getTotalLength(path);
-        return Raphael.getSubpath(path, 10, len - 10);
+        return Raphael.getSubpath(path, 12, len - 12);
     }
 
     draw(duration) {
@@ -120,7 +156,6 @@ class HiveView extends View {
     }
 
     update() {
-        console.log('hive.update()');
         let elements;
         switch (arguments.length) {
             case 0:
@@ -134,11 +169,21 @@ class HiveView extends View {
                 break;
         }
         if (elements.indexOf('devices') >= 0) {
-            let dev_num = this.database.devices.size();
+            let dev_num = this.database.devices.reduce(function(temp, dev) {
+                let uncollapsed = dev.collapsed ? 0 : 1;
+                return temp ? temp + uncollapsed : uncollapsed;
+            });
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
             let angleInc = (Math.PI * -0.5) / dev_num;
+            let hiveIndex = 0;
+            let listIndex = 0;
             this.updateDevices(function(dev) {
-                dev.angle = dev.index * angleInc;
+                if (dev.collapsed)
+                    listIndex++;
+                else {
+                    dev.angle = hiveIndex * angleInc;
+                    hiveIndex++;
+                }
             });
         }
         if (elements.indexOf('maps') >= 0)

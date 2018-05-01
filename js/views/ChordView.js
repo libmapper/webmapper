@@ -25,26 +25,26 @@ class ChordView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
-        this.radius = 125;
+        this.radius = 150;
 
         this.resize();
 
         this.onlineDevs = 0;
         this.offlineDevs = 0;
 
-        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy, "Online")
+        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy, "Active")
                                       .attr({'font-size': 32,
                                              'opacity': 1,
                                              'fill': 'white',
                                              'x': this.frame.width * 0.25,
-                                             'y': this.mapPane.cy + 170});
+                                             'y': this.mapPane.cy + 210});
         this.onlineTitle.node.setAttribute('pointer-events', 'none');
-        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "Offline")
+        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "File: tester.json")
                                        .attr({'font-size': 32,
                                               'opacity': 1,
                                               'fill': 'white',
                                               'x': this.frame.width * 0.75,
-                                              'y': this.mapPane.cy + 170});
+                                              'y': this.mapPane.cy + 210});
         this.offlineTitle.node.setAttribute('pointer-events', 'none');
 
         this.file = null;
@@ -101,7 +101,50 @@ class ChordView extends View {
                                                    });
             }
             self.setDevHover(dev);
+            self.setDevDrag(dev);
         });
+    }
+
+    setDevDrag(dev) {
+        let self = this;
+        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
+        let offline = (dev.status == 'offline');
+        let angleInc = offline ? offlineInc : onlineInc;
+        let halfAngleWidth = angleInc * 0.5 - 0.02;
+        let cx;
+        let cy = self.mapPane.cy;
+        let angle = dev.index * angleInc;
+        let a = angle - halfAngleWidth;
+        let startPos = [Math.cos(a), Math.sin(a)];
+        a = angle + halfAngleWidth;
+        let stopPos = [Math.cos(a), Math.sin(a)];
+        dev.view.drag(
+            function(dx, dy, x, y, event) {
+                x -= self.frame.left;
+                y -= self.frame.top;
+                if (x > self.mapPane.cx) {
+                    cx = self.frame.width * 0.75;
+                }
+                else {
+                    cx = self.frame.width * 0.25
+                }
+                let diffx = x - cx;
+                let diffy = y - cy;
+                let r = Math.sqrt(diffx * diffx + diffy * diffy);
+                let path = [['M', cx + startPos[0] * r, cy + startPos[1] * r],
+                            ['A', r, r, angleInc, 0, 1, cx + stopPos[0] * r, cy + stopPos[1] * r]];
+                dev.view.stop().animate({'path': path}, 20, 'linear');
+            },
+            function(x, y, event) {
+                self.escaped = false;
+                self.draggingFrom = dev;
+            },
+            function(x, y, event) {
+                self.draggingFrom = null;
+                // TODO: apply link edits?
+            }
+        );
     }
 
     drawDevices(duration) {
@@ -117,11 +160,16 @@ class ChordView extends View {
             dev.view.stop();
             let offline = (dev.status == 'offline');
             let angleInc = offline ? offlineInc : onlineInc;
+            let halfAngleWidth = angleInc * 0.5 - 0.02;
             let cx = self.frame.width * (offline ? 0.75 : 0.25);
-            let startAngle = dev.index * angleInc;
-            let stopAngle = (dev.index + 1) * angleInc - 0.05;
-            let startPos = [Math.cos(startAngle), Math.sin(startAngle)];
-            let stopPos = [Math.cos(stopAngle), Math.sin(stopAngle)];
+            let angle = dev.index * angleInc;
+
+            // TODO: draw +/- angleWidth around dev angle (dev easier to find/animate to later)
+
+            let a = angle - halfAngleWidth;
+            let startPos = [Math.cos(a), Math.sin(a)];
+            a = angle + halfAngleWidth;
+            let stopPos = [Math.cos(a), Math.sin(a)];
 //            let path = [['M', cx + startPos[0] * ri, cy + startPos[1] * ri],
 //                        ['L', cx + startPos[0] * ro, cy + startPos[1] * ro],
 //                        ['A', ro, ro, angleInc, 0, 1, cx + stopPos[0] * ro, cy + stopPos[1] * ro],
@@ -137,7 +185,7 @@ class ChordView extends View {
             dev.view.attr({'stroke-linecap': 'butt'});
             dev.view.animate({'path': path,
                               'fill-opacity': 0,
-                              'stroke-opacity': 1,
+                              'stroke-opacity': offline ? 0.5 : 1,
                               'stroke-width': 40,
                              }, duration, '>');
         });
@@ -163,16 +211,24 @@ class ChordView extends View {
                 dst.src_indices.push(src.src_index);
                 dst.src_indices.sort();
             }
-            if (link.view)
-                return;
-            let angle = (src.index + 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
             let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
-            console.log('x', x, link.status);
-            let srcPos = [x + Math.cos(angle) * r,
-                          self.frame.cy + Math.sin(angle) * r];
-            console.log('link.addingview');
-            link.view = self.canvas.path([['M', srcPos[0], srcPos[1]],
-                                          ['l', 0, 0]]);
+            if (!link.view) {
+                let angle = (src.index + 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
+                let srcPos = [x + Math.cos(angle) * r,
+                              self.frame.cy + Math.sin(angle) * r];
+                console.log('link.addingview');
+                link.view = self.canvas.path([['M', srcPos[0], srcPos[1]],
+                                              ['l', 0, 0]]);
+            }
+            if (!link.view.startPoint) {
+                link.view.startPoint = self.canvas.path([['M', x, self.frame.cy],
+                                                         ['l', 0, 0]]);
+            }
+            if (!link.view.stopPoint) {
+                link.view.stopPoint = self.canvas.path([['M', x, self.frame.cy],
+                                                        ['l', 0, 0]]);
+            }
+            self.setLinkHover(link);
         });
     }
 
@@ -188,6 +244,7 @@ class ChordView extends View {
         let r = this.radius - 19;
         let onlineInc = Math.PI * 2.0 / this.onlineDevs;
         let offlineInc = Math.PI * 2.0 / this.offlineDevs;
+        let endPointRadius = 12;
 
         this.database.links.each(function(link) {
             if (!link.view)
@@ -196,8 +253,8 @@ class ChordView extends View {
 
             let src = link.src;
             let dst = link.dst;
-            let srcAngle = (src.index + 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
-            let dstAngle = (dst.index + 0.67) * (dst.status == 'offline' ? offlineInc : onlineInc);
+            let srcAngle = (src.index - 0.33) * (src.status == 'offline' ? offlineInc : onlineInc);
+            let dstAngle = (dst.index + 0.33) * (dst.status == 'offline' ? offlineInc : onlineInc);
             let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
             let srcPos = [x + Math.cos(srcAngle) * r, cy + Math.sin(srcAngle) * r];
             let dstPos = [x + Math.cos(dstAngle) * r, cy + Math.sin(dstAngle) * r];
@@ -205,9 +262,25 @@ class ChordView extends View {
                         ['S', x, cy, dstPos[0], dstPos[1]]];
             link.view.animate({'path': path,
                                'stroke': src.color,
-                               'stroke-width': 6,
-                               'stroke-opacity': 1}, duration, '>')
-                     .attr({'arrow-end': 'block-wide-long'});
+                               'stroke-width': 5,
+                               'stroke-opacity': 1}, duration, '>');
+            path = [['M', srcPos[0] + endPointRadius * 0.65,
+                     srcPos[1] + endPointRadius * -0.65],
+                    ['a', endPointRadius, endPointRadius, 0, 1, 0, 0.001, 0.001],
+                    ['z']]
+            link.view.startPoint.animate({'path': path,
+                                          'fill': src.color,
+                                          'stroke-opacity': 0});
+            path = [['M', dstPos[0] + endPointRadius * 0.65,
+                    dstPos[1] + endPointRadius * -0.65],
+                    ['a', endPointRadius, endPointRadius, 0, 1, 0, 0.001, 0.001],
+                    ['z']]
+            link.view.stopPoint.animate({'path': path,
+                                         'fill': src.color,
+                                         'stroke': 'white',
+                                         'stroke-opacity': 0});
+//                     .attr({'arrow-start': 'diamond-wide-long'});
+//            link.view.start.animate({'path'});
 //            let x = self.frame.width * (link.status == 'offline' ? 0.75 : 0.25);
 //            let srcInc = (src.status == 'offline') ? offlineInc : onlineInc;
 //            let dstInc = (dst.status == 'offline') ? offlineInc : onlineInc;
@@ -254,9 +327,9 @@ class ChordView extends View {
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
             if (this.onlineTitle)
-                this.onlineTitle.attr({'text': 'Online ('+this.onlineDevs+' devices)'});
+                this.onlineTitle.attr({'text': 'Active\n('+this.onlineDevs+' devices)'});
             if (this.offlineTitle)
-                this.offlineTitle.attr({'text': 'Offline ('+this.offlineDevs+' devices)'});
+                this.offlineTitle.attr({'text': 'tester.json\n('+this.offlineDevs+' devices)'});
         }
         if (elements.indexOf('links') >= 0)
             this.updateLinks();
@@ -279,6 +352,14 @@ class ChordView extends View {
             this.onlineTitle.remove();
         if (this.offlineTitle)
             this.offlineTitle.remove();
+        database.links.each(function(link) {
+            if (!link.view)
+                return;
+            if (link.view.startPoint)
+                link.view.startPoint.remove();
+            if (link.view.stopPoint)
+                link.view.stopPoint.remove();
+        });
 
         // clean up any objects created only for this view
     }

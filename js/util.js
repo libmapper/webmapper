@@ -359,6 +359,22 @@ function remove_object_svg(obj, duration) {
                                duration, 'linear', function() { this.remove(); });
         obj.view.label = null;
     }
+    if (obj.view.startPoint) {
+        obj.view.startPoint.stop();
+        obj.view.startPoint.unhover();
+        obj.view.startPoint.undrag();
+        obj.view.startPoint.animate({'opacity': 0},
+                                    duration, 'linear', function() { this.remove(); });
+        obj.view.startPoint = null;
+    }
+    if (obj.view.stopPoint) {
+        obj.view.stopPoint.stop();
+        obj.view.stopPoint.unhover();
+        obj.view.stopPoint.undrag();
+        obj.view.stopPoint.animate({'opacity': 0},
+                                   duration, 'linear', function() { this.remove(); });
+        obj.view.stopPoint = null;
+    }
     obj.view.stop();
     obj.view.unhover();
     obj.view.undrag();
