@@ -174,6 +174,8 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 L = chr(126)+chr((len(s)>>8)&0xFF)+chr(len(s)&0xFF)
             else:
                 print '[ws] message too long! (TODO extended-length msgs)'
+                print s
+                return
             self.wfile.write(opcode+L)
             self.wfile.write(s)
             self.wfile.flush()
