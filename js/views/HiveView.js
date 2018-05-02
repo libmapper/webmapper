@@ -6,6 +6,7 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database) {
+        console.log('constructing hive view');
         super('hive', frame, null, canvas, database);
 
         // hide tables
@@ -86,17 +87,15 @@ class HiveView extends View {
                                                    'fill': 'white',
                                                    'text-anchor': 'end'
                                                   });
-//                                   .translate(endPoint[0], endPoint[1])
-//                                   .rotate(Raphael.deg(dev.angle), endPoint[0], endPoint[1]);
 
             }
             let angle = Raphael.deg(Math.atan(y / x));
-                                   console.log('using angle', angle, 'for device', dev.name);
-            x = 50;
-            y += self.frame.height;
+            x += self.mapPane.left;
+            y += self.frame.height - self.mapPane.top - 30;
             dev.view.label.animate({'opacity': 0.5,
-                                    'transform': 't'+x+','+y+'r'+angle
+                                    'transform': 't'+x+','+y+'r'+angle+',0,30'
                                    }, duration, '>');
+
             dev.signals.each(function(sig) {
                 if (!sig.view)
                     return;
@@ -184,6 +183,7 @@ class HiveView extends View {
                     dev.angle = hiveIndex * angleInc;
                     hiveIndex++;
                 }
+                return false;
             });
         }
         if (elements.indexOf('maps') >= 0)

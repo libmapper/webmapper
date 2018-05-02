@@ -21,6 +21,13 @@ class CanvasView extends View {
                 if (!sig.canvas_object)
                     remove_object_svg(sig);
             });
+            if (!dev.view)
+                return;
+            // remove device labels
+            if (dev.view.label) {
+                dev.view.label.remove();
+                dev.view.label = null;
+            }
         });
 
         this.resize(null, 1000);

@@ -25,6 +25,11 @@ class ListView extends View {
 
             if (!dev.view)
                 return;
+            // remove device labels
+            if (dev.view.label) {
+                dev.view.label.remove();
+                dev.view.label = null;
+            }
             // change device click
             dev.view.unclick().click(function(e) {
                 dev.collapsed ^= 3;

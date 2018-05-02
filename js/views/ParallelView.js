@@ -6,7 +6,7 @@
 
 class ParallelView extends View {
     constructor(frame, tables, canvas, database) {
-        super('hive', frame, null, canvas, database);
+        super('parallel', frame, null, canvas, database);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
@@ -67,12 +67,12 @@ class ParallelView extends View {
                                                    'pointer-events': 'none',
                                                    'font-size': 24,
                                                    'fill': 'white',
-                                                   'text-anchor': 'start'
+                                                   'text-anchor': 'end'
                                                   });
             }
-            dev.view.label.animate({'x': x, 'y': y-26,
-                                    'opacity': 0.5,
-                                    'transform': 'r-90,'+x+','+y,
+            let labely = y - self.mapPane.height - 30;
+            dev.view.label.animate({'opacity': 0.5,
+                                    'transform': 't'+x+','+labely+'r-90,0,30'
                                    }, duration, '>');
             dev.signals.each(function(sig) {
                 if (!sig.view)

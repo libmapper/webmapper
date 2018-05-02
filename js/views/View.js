@@ -282,8 +282,14 @@ class View {
                 if (!dev.label) {
                     // show label
                     $('#status').stop(true, false)
-                                .text('Device\n• name: ' + dev.key
-                                      + '\n• signals: ' + dev.signals.size())
+                                .empty()
+                                .append("<table class=infoTable>"+
+                                            "<tbody>"+
+                                                "<tr><th colspan='2'>Device</th></tr>"+
+                                                "<tr><td>name</td><td>"+dev.key+"</td></tr>"+
+                                                "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
+                                            "</tbody>"+
+                                        "</table>")
                                 .css({'left': e.x + 20,
                                       'top': e.y,
                                       'opacity': 1});
@@ -364,9 +370,14 @@ class View {
             function(e) {
                 // show label
                 $('#status').stop(true, false)
-                            .text('Link'
-                                  + '\n• source: ' + link.src.key
-                                  + '\n• destination: ' + link.dst.key)
+                            .empty()
+                            .append("<table class=infoTable>"+
+                                        "<tbody>"+
+                                            "<tr><th colspan='2'>Link</th></tr>"+
+                                            "<tr><td>source</td><td>"+link.src.key+"</td></tr>"+
+                                            "<tr><td>destination</td><td>"+link.dst.key+"</td></tr>"+
+                                        "</tbody>"+
+                                    "</table>")
                             .css({'left': e.x + 20,
                                   'top': e.y,
                                   'opacity': 1});
@@ -375,7 +386,7 @@ class View {
             function() {
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
-                link.view.animate({'stroke-width': 5}, 500, 'linear');
+                link.view.animate({'stroke-width': 5}, 0, 'linear');
             }
         );
     }
@@ -443,17 +454,24 @@ class View {
                 if (!sig.view.label) {
                     // show label
                     let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
-                    let minstring = sig.min != null ? '\n• minimum: ' + sig.min : '';
-                    let maxstring = sig.max != null ? '\n• maximum: ' + sig.max : '';
+                    let minstring = sig.min != null ? sig.min : '';
+                    let maxstring = sig.max != null ? sig.max : '';
                     $('#status').stop(true, false)
-                       .text('Signal\n• name: ' + sig.key
-                             + '\n• direction: ' + sig.direction
-                             + '\n• type: ' + typestring
-                             + '\n• unit: ' + sig.unit
-                             + minstring + maxstring)
-                       .css({'left': sig.position.x + 20,
-                             'top': sig.position.y + 70,
-                             'opacity': 1});
+                                .empty()
+                                .append("<table class=infoTable>"+
+                                            "<tbody>"+
+                                                "<tr><th colspan='2'>Signal</th></tr>"+
+                                                   "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
+                                                   "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
+                                        "<tr><td>type</td><td>"+typestring+"</td></tr>"+
+                                        "<tr><td>unit</td><td>"+sig.unit+"</td></tr>"+
+                                        "<tr><td>minimum</td><td>"+minstring+"</td></tr>"+
+                                        "<tr><td>maximum</td><td>"+maxstring+"</td></tr>"+
+                                           "</tbody>"+
+                                        "</table>")
+                                .css({'left': sig.position.x + 20,
+                                      'top': sig.position.y + 70,
+                                      'opacity': 1});
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 if (self.draggingFrom == null)
@@ -476,7 +494,7 @@ class View {
                 self.snappingTo = null;
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
-                sig.view.animate({'stroke-width': 6}, 500, 'linear');
+                sig.view.animate({'stroke-width': 6}, 50, 'linear');
             }
         );
     }
@@ -590,11 +608,16 @@ class View {
             function(e) {
                 // show label
                 $('#status').stop(true, false)
-                            .text('Map'
-                                  + '\n• source: ' + map.src.key
-                                  + '\n• destination: ' + map.dst.key
-                                  + '\n• mode: ' + map.mode
-                                  + '\n• expression: ' + map.expression)
+                            .empty()
+                            .append("<table class=infoTable>"+
+                                        "<tbody>"+
+                                            "<tr><th colspan='2'>Map</th></tr>"+
+                                                "<tr><td>source</td><td>"+map.src.key+"</td></tr>"+
+                                                "<tr><td>destination</td><td>"+map.dst.key+"</td></tr>"+
+                                                "<tr><td>mode</td><td>"+map.mode+"</td></tr>"+
+                                                "<tr><td>expression</td><td>"+map.expression+"</td></tr>"+
+                                        "</tbody>"+
+                                    "</table>")
                             .css({'left': e.x + 20,
                                   'top': e.y,
                                   'opacity': 1});
@@ -620,7 +643,7 @@ class View {
                 self.snappingTo = null;
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
-                map.view.animate({'stroke-width': 2}, 500, 'linear');
+                map.view.animate({'stroke-width': 2}, 50, 'linear');
             }
         );
     }
@@ -848,7 +871,10 @@ class View {
     }
 
     resetPanZoom() {
-        this.canvas.setViewBox(0, 0, this.mapPane.width, this.mapPane.height, false);
+        this.canvas.setViewBox(0, 0, this.frame.width, this.frame.height, false);
+        this.svgZoom = 1;
+        this.svgPosX = 0;
+        this.svgPosY = 0;
     }
 
     filterSignals(direction, text) {
