@@ -123,18 +123,23 @@ class ChordView extends View {
             function(dx, dy, x, y, event) {
                 x -= self.frame.left;
                 y -= self.frame.top;
-                if (x > self.mapPane.cx) {
-                    cx = self.frame.width * 0.75;
-                }
-                else {
-                    cx = self.frame.width * 0.25
-                }
-                let diffx = x - cx;
-                let diffy = y - cy;
-                let r = Math.sqrt(diffx * diffx + diffy * diffy);
-                let path = [['M', cx + startPos[0] * r, cy + startPos[1] * r],
-                            ['A', r, r, angleInc, 0, 1, cx + stopPos[0] * r, cy + stopPos[1] * r]];
-                dev.view.stop().animate({'path': path}, 20, 'linear');
+//                if (x > self.mapPane.cx) {
+//                    cx = self.frame.width * 0.75;
+//                }
+//                else {
+//                    cx = self.frame.width * 0.25
+//                }
+//                let diffx = x - cx;
+//                let diffy = y - cy;
+//                let r = Math.sqrt(diffx * diffx + diffy * diffy);
+//                if (r < self.radius)
+//                    r = self.radius;
+//                let path = [['M', cx + startPos[0] * r, cy + startPos[1] * r],
+//                            ['A', r, r, angleInc, 0, 1, cx + stopPos[0] * r, cy + stopPos[1] * r]];
+//                dev.view.stop().animate({'path': path}, 20, 'linear');
+                let bbox = dev.view.getBBox();
+                dev.view.stop().translate(x - bbox.x - bbox.width * 0.5,
+                                          y - bbox.y - bbox.height * 0.5);
             },
             function(x, y, event) {
                 self.escaped = false;

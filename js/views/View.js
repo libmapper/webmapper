@@ -281,11 +281,13 @@ class View {
             function(e) {
                 if (!dev.label) {
                     // show label
+                    let status = dev.status;
+                    status = status.charAt(0).toUpperCase() + status.slice(1);
                     $('#status').stop(true, false)
                                 .empty()
                                 .append("<table class=infoTable>"+
                                             "<tbody>"+
-                                                "<tr><th colspan='2'>Device</th></tr>"+
+                                                "<tr><th colspan='2'>"+status+" Device</th></tr>"+
                                                 "<tr><td>name</td><td>"+dev.key+"</td></tr>"+
                                                 "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
                                             "</tbody>"+
@@ -453,6 +455,8 @@ class View {
             function() {
                 if (!sig.view.label) {
                     // show label
+                    let status = sig.device.status;
+                    status = status.charAt(0).toUpperCase() + status.slice(1);
                     let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
                     let minstring = sig.min != null ? sig.min : '';
                     let maxstring = sig.max != null ? sig.max : '';
@@ -460,7 +464,7 @@ class View {
                                 .empty()
                                 .append("<table class=infoTable>"+
                                             "<tbody>"+
-                                                "<tr><th colspan='2'>Signal</th></tr>"+
+                                                "<tr><th colspan='2'>"+status+" Signal</th></tr>"+
                                                    "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
                                                    "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
                                         "<tr><td>type</td><td>"+typestring+"</td></tr>"+
