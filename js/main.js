@@ -141,71 +141,9 @@ function initViewCommands()
     // TODO: add "save as" option
     $('#saveButton').on('click', function(e) {
         e.stopPropagation();
-        let file = { "fileversion": "2.2",
-                     "mapping": { "maps": [] }
-                   };
-
-        database.maps.each(function(map) {
-            if (!map.view)
-                return;
-            let m = {'sources': [], 'destinations': []};
-            let src = {};
-            let dst = {};
-            for (var attr in map) {
-                switch (attr) {
-                    // ignore a few properties
-                    case 'view':
-                    case 'status':
-                    case 'key':
-                        break;
-                    case 'src':
-                        src.name = map.src.key;
-                        break;
-                    case 'dst':
-                        dst.name = map.dst.key;
-                    case 'expression':
-                        // need to replace x and y variables with signal references
-                        // TODO: better regexp to avoid conflicts with user vars
-                        let expr = map.expression;
-                        expr = expr.replace(/y\[/g, "dst[");
-                        expr = expr.replace(/y\s*=/g, "dst=");
-                        expr = expr.replace(/x\[/g, "src[");
-                        expr = expr.replace(/\bx(?!\w)/g, "src[0]");
-                        m.expression = expr;
-                        break;
-                    case 'process_location':
-                        let loc = map[attr];
-                        if (loc == 1)
-                            m.process_location = 'source';
-                        else if (loc == 2)
-                            m.process_location = 'destination';
-                        break;
-                    default:
-                        if (!map.hasOwnProperty(attr))
-                            break;
-                        if (attr.startsWith('src_')) {
-                            let key = attr.slice(4);
-                            if (key == 'min' || key == 'max')
-                                src[key + 'imum'] = map[attr];
-                            else
-                                src[key] = map[attr];
-                        }
-                        else if (attr.startsWith('dst_')) {
-                            let key = attr.slice(4);
-                            if (key == 'min' || key == 'max')
-                                dst[key + 'imum'] = map[attr];
-                            else
-                                dst[key] = map[attr];
-                        }
-                        else
-                            m[attr] = map[attr];
-                        break;
-                }
-            }
-            m.sources.push(src);
-            m.destinations.push(dst);
-            file.mapping.maps.push(m);
-        });
+        let file = database.exportFile();
+        if (!file)
+            return;
 
         let link = document.createElement('a');
         let blob = new Blob([JSON.stringify(file, null, '\t')]);

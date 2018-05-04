@@ -22,20 +22,7 @@ class GridView extends View {
         this.database.devices.each(function(dev) {
             // remove signal svg
             dev.signals.each(remove_object_svg);
-
-            if (!dev.view)
-                return;
-            // remove device labels
-            if (dev.view.label) {
-                dev.view.label.remove();
-                dev.view.label = null;
-            }
-            // change device click
-            dev.view.unclick().click(function(e) {
-                dev.collapsed ^= 3;
-                self.updateDevices();
-                self.draw(200);
-            });
+            remove_object_svg(dev);
         });
 
         // remove link svg
@@ -56,8 +43,8 @@ class GridView extends View {
             this.frame = newFrame;
 
         let self = this;
-        this.tables.left.adjust(0, 180, 200, this.frame.height - 180, 0, duration);
-        this.tables.right.adjust(180, 200, 200, this.frame.width - 180,
+        this.tables.left.adjust(0, 0, this.frame.width, this.frame.height - 180, 0, duration);
+        this.tables.right.adjust(180, this.frame.height, this.frame.height, this.frame.width - 180,
                                  -Math.PI * 0.5, duration,
                                  function() {self.draw(1000)});
         this.mapPane.left = 200;
@@ -123,7 +110,7 @@ class GridView extends View {
     }
 
     draw(duration) {
-        this.drawDevices(duration);
+//        this.drawDevices(duration);
         this.drawMaps(duration);
     }
 

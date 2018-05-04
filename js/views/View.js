@@ -277,26 +277,28 @@ class View {
 
     setDevHover(dev) {
         let self = this;
-        dev.view.hover(
+        let hovered = false;
+        dev.view.unhover().hover(
             function(e) {
-                if (!dev.label) {
+                if (self.draggingFrom)
+                    return;
+                if (!hovered && !dev.label) {
                     // show label
-                    let status = dev.status;
-                    status = status.charAt(0).toUpperCase() + status.slice(1);
                     $('#status').stop(true, false)
                                 .empty()
                                 .append("<table class=infoTable>"+
                                             "<tbody>"+
-                                                "<tr><th colspan='2'>"+status+" Device</th></tr>"+
-                                                "<tr><td>name</td><td>"+dev.key+"</td></tr>"+
+                                                "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
+                                                "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
                                                 "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
                                             "</tbody>"+
                                         "</table>")
                                 .css({'left': e.x + 20,
                                       'top': e.y,
                                       'opacity': 1});
-                    dev.view.animate({'stroke': 'white'}, 0, 'linear');
+                    dev.view.toFront().animate({'stroke-width': 50}, 0, 'linear');
                 }
+                hovered = true;
 //                if (self.draggingFrom == null)
 //                    return;
 //                else if (dev == self.draggingFrom) {
@@ -315,9 +317,12 @@ class View {
             },
             function() {
 //                self.snappingTo = null;
-                $('#status').stop(true, false)
-                            .animate({opacity: 0}, {duration: 2000});
-                dev.view.animate({'stroke': dev.color}, 500, 'linear');
+                if (!self.draggingFrom) {
+                    $('#status').stop(true, false)
+                                .animate({opacity: 0}, {duration: 2000});
+                    dev.view.animate({'stroke-width': 40}, 500, 'linear');
+                           hovered = false;
+                }
             }
         );
     }
@@ -329,7 +334,7 @@ class View {
                 $('#container').trigger('map', [self.draggingFrom.key,
                                                 self.snappingTo.key]);
         });
-        dev.view.drag(
+        dev.view.undrag().drag(
             function(dx, dy, x, y, event) {
                 if (self.snappingTo)
                     return;
@@ -368,7 +373,7 @@ class View {
 
     setLinkHover(link) {
         let self = this;
-        link.view.hover(
+        link.view.unhover().hover(
             function(e) {
                 // show label
                 $('#status').stop(true, false)
@@ -383,12 +388,14 @@ class View {
                             .css({'left': e.x + 20,
                                   'top': e.y,
                                   'opacity': 1});
-                link.view.animate({'stroke-width': 7}, 0, 'linear');
+                link.view.toFront().animate({'fill-opacity': 0.75}, 0, 'linear');
+                link.src.view.toFront();
+                link.dst.view.toFront();
             },
             function() {
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
-                link.view.animate({'stroke-width': 5}, 0, 'linear');
+                link.view.animate({'fill-opacity': 0.5}, 0, 'linear');
             }
         );
     }
@@ -451,12 +458,10 @@ class View {
 
     setSigHover(sig) {
         let self = this;
-        sig.view.hover(
+        sig.view.unhover().hover(
             function() {
                 if (!sig.view.label) {
                     // show label
-                    let status = sig.device.status;
-                    status = status.charAt(0).toUpperCase() + status.slice(1);
                     let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
                     let minstring = sig.min != null ? sig.min : '';
                     let maxstring = sig.max != null ? sig.max : '';
@@ -464,7 +469,7 @@ class View {
                                 .empty()
                                 .append("<table class=infoTable>"+
                                             "<tbody>"+
-                                                "<tr><th colspan='2'>"+status+" Signal</th></tr>"+
+                                                "<tr><th colspan='2'>"+sig.device.status+" signal</th></tr>"+
                                                    "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
                                                    "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
                                         "<tr><td>type</td><td>"+typestring+"</td></tr>"+
@@ -510,7 +515,7 @@ class View {
                 $('#container').trigger('map', [self.draggingFrom.key,
                                                 self.snappingTo.key]);
         });
-        sig.view.drag(
+        sig.view.undrag().drag(
             function(dx, dy, x, y, event) {
                 if (self.snappingTo)
                     return;

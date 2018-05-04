@@ -312,7 +312,11 @@ function MapperDatabase() {
                 return;
             }
 
-            let link_key = src.device.name + '->' + dst.device.name;
+            let link_key;
+            if (src.device.name < dst.device.name)
+                link_key = src.device.name + '<->' + dst.device.name;
+            else
+                link_key = dst.device.name + '<->' + src.device.name;
             let link = this.links.find(link_key);
             if (!link) {
                 link = this.links.add({'key': link_key,
@@ -320,14 +324,14 @@ function MapperDatabase() {
                                        'dst': dst.device,
                                        'maps': [map.key],
                                        'status': map.status});
-                if (src.device.links_out)
-                    src.device.links_out.push(link_key);
+                if (src.device.links)
+                    src.device.links.push(link_key);
                 else
-                    src.device.links_out = [link_key];
-                if (dst.device.links_in)
-                    dst.device.links_in.push(link_key);
+                    src.device.links = [link_key];
+                if (dst.device.links)
+                    dst.device.links.push(link_key);
                 else
-                    dst.device.links_in = [link_key];
+                    dst.device.links = [link_key];
             }
             else if (!link.maps.includes(map.key))
                 link.maps.push(map.key);
@@ -417,10 +421,12 @@ function MapperDatabase() {
                 console.log("error parsing signal name", name);
                 return null;
             }
-            name[0] = self.fileCounter+'_'+name[0];
-            let dev = self.devices.add({'key': name[0],
+//            name[0] = self.fileCounter+':'+name[0];
+            let dev = self.devices.add({'key': self.fileCounter+':'+name[0],
                                         'name': name[0],
-                                        'status': 'offline'});
+                                        'status': 'offline',
+                                        'file': self.fileCounter
+                                       });
             obj.key = name.join('/');
             obj.status = 'offline';
             obj.device = dev;
@@ -498,6 +504,83 @@ function MapperDatabase() {
                 this.links.cb_func('modified', 'link', link);
             }
         }
+    }
+
+    this.exportFile = function() {
+        let file = { "fileversion": "2.2",
+            "mapping": { "maps": [] }
+        };
+        let numMaps = 0;
+
+        this.maps.each(function(map) {
+            // currently only includes maps with views
+            if (!map.view)
+                return;
+            let m = {'sources': [], 'destinations': []};
+            let src = {};
+            let dst = {};
+            for (var attr in map) {
+                switch (attr) {
+                    // ignore a few properties
+                    case 'view':
+                    case 'status':
+                    case 'key':
+                        break;
+                    case 'src':
+                        src.name = map.src.key;
+                        src.direction = map.src.direction;
+                        break;
+                    case 'dst':
+                        dst.name = map.dst.key;
+                        dst.direction = map.dst.direction;
+                        break;
+                    case 'expression':
+                        // need to replace x and y variables with signal references
+                        // TODO: better regexp to avoid conflicts with user vars
+                        let expr = map.expression;
+                        expr = expr.replace(/y\[/g, "dst[");
+                        expr = expr.replace(/y\s*=/g, "dst=");
+                        expr = expr.replace(/x\[/g, "src[");
+                        expr = expr.replace(/\bx(?!\w)/g, "src[0]");
+                        m.expression = expr;
+                        break;
+                    case 'process_location':
+                        let loc = map[attr];
+                        if (loc == 1)
+                            m.process_location = 'source';
+                        else if (loc == 2)
+                            m.process_location = 'destination';
+                        break;
+                    default:
+                        if (!map.hasOwnProperty(attr))
+                            break;
+                        if (attr.startsWith('src_')) {
+                            let key = attr.slice(4);
+                            if (key == 'min' || key == 'max')
+                                src[key + 'imum'] = map[attr];
+                            else
+                                src[key] = map[attr];
+                        }
+                        else if (attr.startsWith('dst_')) {
+                            let key = attr.slice(4);
+                            if (key == 'min' || key == 'max')
+                                dst[key + 'imum'] = map[attr];
+                            else
+                                dst[key] = map[attr];
+                        }
+                        else
+                            m[attr] = map[attr];
+                        break;
+                }
+            }
+            m.sources.push(src);
+            m.destinations.push(dst);
+            file.mapping.maps.push(m);
+            numMaps++;
+        });
+        if (!numMaps)
+            alert("No maps to save!");
+        return numMaps ? file : null;
     }
 
     // delete handlers in case of refresh

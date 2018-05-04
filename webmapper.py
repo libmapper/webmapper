@@ -96,6 +96,12 @@ def map_props(map):
         props['process_location'] = 'source'
     else:
         props['process_location'] = 'destination'
+    if props['protocol'] == mapper.PROTO_UDP:
+        props['protocol'] = 'udp'
+    elif props['protocol'] == mapper.PROTO_TCP:
+        props['protocol'] = 'tcp'
+    else:
+        del props['protocol']
     props['status'] = 'active'
     del props['is_local']
     del props['id']

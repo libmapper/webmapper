@@ -538,8 +538,8 @@ class Table {
 
             let devname = (collapseAll || (dev.collapsed & collapse_bit)
                            ? ' ▶ ' : '▼  ') + dev.name;
-            $(tbody).append("<tr class='device' id="+dev.name+"><th colspan='2'>"+
-                            devname+" ("+num_dev_sigs+" "+title.toLowerCase()+")"+
+
+            $(tbody).append("<tr class='device' style='background: "+dev.color+"44' id="+dev.name+"><th colspan='2'>"+devname+" ("+num_dev_sigs+" signals)"+
                             "</th></tr>");
             let even = false;
             for (var i in sigs) {
