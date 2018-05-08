@@ -291,6 +291,7 @@ class View {
                                                 "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
                                                 "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
                                                 "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
+                                                "<tr><td>angle</td><td>"+dev.view.pstart.angle+"</td></tr>"+
                                             "</tbody>"+
                                         "</table>")
                                 .css({'left': e.x + 20,
@@ -321,7 +322,7 @@ class View {
                     $('#status').stop(true, false)
                                 .animate({opacity: 0}, {duration: 2000});
                     dev.view.animate({'stroke-width': 40}, 500, 'linear');
-                           hovered = false;
+                    hovered = false;
                 }
             }
         );
@@ -388,14 +389,14 @@ class View {
                             .css({'left': e.x + 20,
                                   'top': e.y,
                                   'opacity': 1});
-                link.view.toFront().animate({'fill-opacity': 0.75}, 0, 'linear');
-                link.src.view.toFront();
-                link.dst.view.toFront();
+                link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
+                link.src.view.toFront()
+                link.dst.view.toFront()
             },
             function() {
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
-                link.view.animate({'fill-opacity': 0.5}, 0, 'linear');
+                link.view.animate({'stroke-width': 0}, 0, 'linear');
             }
         );
     }

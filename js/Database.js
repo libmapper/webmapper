@@ -331,7 +331,7 @@ function MapperDatabase() {
                 if (dst.device.links)
                     dst.device.links.push(link_key);
                 else
-                    dst.device.links = [link_key];
+                    dst.device.links_in = [link_key];
             }
             else if (!link.maps.includes(map.key))
                 link.maps.push(map.key);
@@ -345,7 +345,11 @@ function MapperDatabase() {
         let record = this.maps.find(map.key);
         if (!record)
             return;
-        let link_key = record.src.device.name + '->' + record.dst.device.name;
+        let link_key;
+        if (map.src.device.name < mapdst.device.name)
+            link_key = map.src.device.name + '<->' + map.dst.device.name;
+        else
+            link_key = map.dst.device.name + '<->' + map.src.device.name;
         let link = this.links.find(link_key);
         if (link) {
             let index = link.maps.indexOf(record.key);
@@ -479,7 +483,11 @@ function MapperDatabase() {
             this.maps.add(map);
 
             // may need to also add link
-            let link_key = src.device.name + '->' + dst.device.name;
+            let link_key;
+            if (src.device.name < dst.device.name)
+                link_key = src.device.name + '<->' + dst.device.name;
+            else
+                link_key = dst.device.name + '<->' + src.device.name;
             let link = this.links.find(link_key);
             if (!link) {
                 console.log('database:file:adding link', link_key);
