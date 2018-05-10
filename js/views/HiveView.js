@@ -6,7 +6,6 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database) {
-        console.log('constructing hive view');
         super('hive', frame, null, canvas, database);
 
         // hide tables

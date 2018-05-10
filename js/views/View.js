@@ -291,7 +291,7 @@ class View {
                                                 "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
                                                 "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
                                                 "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
-                                                "<tr><td>angle</td><td>"+dev.view.pstart.angle+"</td></tr>"+
+                                                "<tr><td>angle</td><td>"+((dev.view.pstart.angle + dev.view.pstop.angle) * 0.5)+"</td></tr>"+
                                             "</tbody>"+
                                         "</table>")
                                 .css({'left': e.x + 20,
@@ -335,7 +335,8 @@ class View {
                 $('#container').trigger('map', [self.draggingFrom.key,
                                                 self.snappingTo.key]);
         });
-        dev.view.undrag().drag(
+        dev.view.undrag();
+        dev.view.drag(
             function(dx, dy, x, y, event) {
                 if (self.snappingTo)
                     return;
@@ -516,7 +517,8 @@ class View {
                 $('#container').trigger('map', [self.draggingFrom.key,
                                                 self.snappingTo.key]);
         });
-        sig.view.undrag().drag(
+        sig.view.undrag();
+        sig.view.drag(
             function(dx, dy, x, y, event) {
                 if (self.snappingTo)
                     return;

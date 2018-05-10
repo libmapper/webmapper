@@ -313,15 +313,18 @@ function MapperDatabase() {
             }
 
             let link_key;
+            let rev = false;
             if (src.device.name < dst.device.name)
                 link_key = src.device.name + '<->' + dst.device.name;
-            else
+            else {
                 link_key = dst.device.name + '<->' + src.device.name;
+                rev = true;
+            }
             let link = this.links.find(link_key);
             if (!link) {
                 link = this.links.add({'key': link_key,
-                                       'src': src.device,
-                                       'dst': dst.device,
+                                       'src': rev ? dst.device : src.device,
+                                       'dst': rev ? src.device : dst.device,
                                        'maps': [map.key],
                                        'status': map.status});
                 if (src.device.links)
@@ -342,17 +345,17 @@ function MapperDatabase() {
         }
     }
     this.del_map = function(cmd, map) {
-        let record = this.maps.find(map.key);
-        if (!record)
+        map = this.maps.find(map.key);
+        if (!map)
             return;
         let link_key;
-        if (map.src.device.name < mapdst.device.name)
+        if (map.src.device.name < map.dst.device.name)
             link_key = map.src.device.name + '<->' + map.dst.device.name;
         else
             link_key = map.dst.device.name + '<->' + map.src.device.name;
         let link = this.links.find(link_key);
         if (link) {
-            let index = link.maps.indexOf(record.key);
+            let index = link.maps.indexOf(map.key);
             if (index > -1)
                 link.maps.splice(index, 1);
             if (link.maps.length == 0) {
@@ -484,26 +487,29 @@ function MapperDatabase() {
 
             // may need to also add link
             let link_key;
+            let rev = false;
             if (src.device.name < dst.device.name)
                 link_key = src.device.name + '<->' + dst.device.name;
-            else
+            else {
                 link_key = dst.device.name + '<->' + src.device.name;
+                rev = true;
+            }
             let link = this.links.find(link_key);
             if (!link) {
                 console.log('database:file:adding link', link_key);
                 link = this.links.add({'key': link_key,
-                                      'src': src.device,
-                                      'dst': dst.device,
-                                      'maps': [map.key],
-                                      'status': 'offline'});
-                if (src.device.links_out)
-                    src.device.links_out.push(link_key);
+                                       'src': rev ? dst.device : src.device,
+                                       'dst': rev ? src.device : dst.device,
+                                       'maps': [map.key],
+                                       'status': 'offline'});
+                if (src.device.links)
+                    src.device.links.push(link_key);
                 else
-                    src.device.links_out = [link_key];
-                if (dst.device.links_in)
-                    dst.device.links_in.push(link_key);
+                    src.device.links = [link_key];
+                if (dst.device.links)
+                    dst.device.links.push(link_key);
                 else
-                    dst.device.links_in = [link_key];
+                    dst.device.links = [link_key];
             }
             else if (!link.maps.includes(map.key))
                 link.maps.push(map.key);

@@ -427,3 +427,21 @@ function deselectAllMaps(tables) {
     if (updated)
         $('#container').trigger("updateMapProperties");
 }
+
+function polarDiff(angle1, angle2, fullscale = Math.PI * 2.0) {
+    let halfscale = fullscale * 0.5;
+    let diff = angle1 - angle2;
+    while (diff > halfscale)
+        diff -= fullscale;
+    while (diff < -halfscale)
+        diff += fullscale;
+    return diff;
+}
+
+function polarMean(angle1, angle2, fullscale = Math.PI * 2.0) {
+    let halfscale = fullscale * 0.5;
+    let mean = (angle1 + angle2) * 0.5;
+    if (Math.abs(angle1 - angle2) > halfscale)
+        mean += halfscale;
+    return mean;
+}
