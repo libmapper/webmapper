@@ -334,7 +334,7 @@ function MapperDatabase() {
                 if (dst.device.links)
                     dst.device.links.push(link_key);
                 else
-                    dst.device.links_in = [link_key];
+                    dst.device.links = [link_key];
             }
             else if (!link.maps.includes(map.key))
                 link.maps.push(map.key);
@@ -359,12 +359,12 @@ function MapperDatabase() {
             if (index > -1)
                 link.maps.splice(index, 1);
             if (link.maps.length == 0) {
-                index = link.src.links_out.indexOf(link_key);
+                index = link.src.links.indexOf(link_key);
                 if (index > -1)
-                    link.src.links_out.splice(index, 1);
-                index = link.dst.links_in.indexOf(link_key);
+                    link.src.links.splice(index, 1);
+                index = link.dst.links.indexOf(link_key);
                 if (index > -1)
-                    link.dst.links_in.splice(index, 1);
+                    link.dst.links.splice(index, 1);
                 this.links.remove(link);
             }
         }
@@ -496,7 +496,6 @@ function MapperDatabase() {
             }
             let link = this.links.find(link_key);
             if (!link) {
-                console.log('database:file:adding link', link_key);
                 link = this.links.add({'key': link_key,
                                        'src': rev ? dst.device : src.device,
                                        'dst': rev ? src.device : dst.device,

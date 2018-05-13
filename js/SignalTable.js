@@ -66,7 +66,7 @@ class Table {
         else {
             $(this.div).append(
                 "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div id="+this.id+"Title style='float: left; position:relative; width:100%; text-align: center'>"+
+                    "<div id="+this.id+"Title style='float: left; position:relative; width:100%; padding-left:20px; padding-right:20px'>"+
                         "<strong>"+this.title+"</strong>"+
                     "</div>"+
                 "</div>"+
@@ -129,11 +129,13 @@ class Table {
                 'transform-origin': 'top left',
                 'WebkitTransform': 'rotate(' + self.frame.angle + 'rad)',
                 '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
-                'transform': 'rotate(' + self.frame.angle + 'rad)'
+                'transform': 'rotate(' + self.frame.angle + 'rad)',
+                'text-align': self.frame.angle ? 'right' : 'left'
             });
             if (func)
                 func();
         }});
+        $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
     }
 
     filterByName(string) {

@@ -25,6 +25,9 @@ class ChordView extends View {
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
 
+        this.onlineInc = Math.PI * 0.5;
+        this.offlineInc = Math.PI * 0.5;
+
         this.radius = Math.min(frame.width, frame.height) * 0.25;
 
         this.onlineDevs = 0;
@@ -82,31 +85,39 @@ class ChordView extends View {
             else
                 self.onlineDevs++;
         });
+        if (this.onlineDevs > 0)
+            this.onlineInc = Math.PI * 2.0 / this.onlineDevs;
+        else
+            this.onlineInc = 0;
+        if (this.offlineDevs > 0)
+            this.offlineInc = Math.PI * 2.0 / this.offlineDevs;
+        else
+            this.offlineInc = 0;
+
         let onlineIndex = 0;
         let offlineIndex = 0;
-        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
-        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
-        if (offlineInc > onlineInc)
-            offlineInc = onlineInc;
+
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
         this.database.devices.each(function(dev) {
+            let staged = false;
             let offline = (dev.status == 'offline');
 
-            let r = self.radius + (offline ? 50 : 0);
+            let r = self.radius + (staged ? 60 : 0);
 
             if (offline)
                 dev.index = offlineIndex++;
             else
                 dev.index = onlineIndex++;
-            let angleInc = offline ? offlineInc : onlineInc;
+            let angleInc = offline ? self.offlineInc : self.onlineInc;
+            let x = cx * (offline ? 1.5 : 0.5);
             let angle = dev.index * angleInc;
             let pstart = {'angle': angle,
-                          'x': cx + Math.cos(angle) * r,
+                          'x': x + Math.cos(angle) * r,
                           'y': cy + Math.sin(angle) * r};
-            angle += angleInc - 0.02;
+            angle += angleInc * 0.9;
             let pstop = {'angle': angle,
-                         'x': cx + Math.cos(angle) * r,
+                         'x': x + Math.cos(angle) * r,
                          'y': cy + Math.sin(angle) * r};
 
             if (!dev.view) {
@@ -130,53 +141,90 @@ class ChordView extends View {
     }
 
     setDevDrag(dev) {
-        // use angle from cursor to [cx,cy] to drag dev view around circle
-        // snap to online devices
-        // dragging inside online radius causes dev to stick to other device
         // when both sides are snapped, create maps
         // ensure can undo!
         let self = this;
-        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
-        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
         let offline = (dev.status == 'offline');
-        let angleInc = offline ? offlineInc : onlineInc;
-        let halfAngleWidth = angleInc * 0.5 - 0.02;
-        let cx;
+        let cx = self.mapPane.cx;
         let cy = self.mapPane.cy;
-        let angle = dev.index * angleInc;
-        let startPos = [Math.cos(angle), Math.sin(angle)];
-        angle += angleInc - 0.02;
-        let stopPos = [Math.cos(angle), Math.sin(angle)];
+        let lastAngle = null;
+        let r, cx2, angleInc, angle;
+        dev.view.mouseup(function() {
+            if (self.draggingFrom && self.snappingTo) {
+                dev.staged = self.snappingTo;
+                dev.status = 'staged';
+            }
+            else {
+                // return to original position
+                r = self.radius;
+                cx2 = cx * 1.5;
+                angleInc = self.offlineInc;
+                angle = dev.index * angleInc;
+                self.snappingTo = null;
+                dev.view.pstart = {'angle': angle,
+                                   'x': cx2 + Math.cos(angle) * r,
+                                   'y': cy + Math.sin(angle) * r};
+                angle += angleInc * 0.9;
+                dev.view.pstop = {'angle': angle,
+                                  'x': cx2 + Math.cos(angle) * r,
+                                  'y': cy + Math.sin(angle) * r};
+                self.drawDevice(dev, 500, self);
+                for (var i in dev.links) {
+                    let link = self.database.links.find(dev.links[i]);
+                    if (link)
+                        self.drawLink(link, 500, self);
+                }
+            }
+            self.draggingFrom = self.snappingTo = null;
+            if (dev.status == 'staged')
+                dev.status = 'offline';
+        });
+        dev.view.undrag();
         dev.view.drag(
             function(dx, dy, x, y, event) {
                 x -= self.frame.left;
                 y -= self.frame.top;
-                let bbox = dev.view.getBBox();
-                dev.view.translate(x - bbox.x - bbox.width * 0.5,
-                                   y - bbox.y - bbox.height * 0.5);
-                $('#status').stop(true, false)
-                            .css({'left': x + 20,
-                                  'top': y});
+
+                if (x > self.frame.cx) {
+                    r = self.radius;
+                    cx2 = cx * 1.5;
+                    angleInc = self.offlineInc;
+                    angle = dev.index * angleInc;
+                    self.snappingTo = null;
+                }
+                else {
+                    // calculate new angle
+                    r = self.radius + (self.snappingTo ? 40 : 50);
+                    cx2 = cx * 0.5;
+                    angleInc = self.onlineInc;
+                    angle = Math.atan2(y - cy, x - cx2);
+                    angle = Math.round(angle / angleInc) * angleInc;
+                }
+                if (angle == lastAngle)
+                    return;
+
+                dev.view.pstart = {'angle': angle,
+                                   'x': cx2 + Math.cos(angle) * r,
+                                   'y': cy + Math.sin(angle) * r};
+                angle += angleInc * 0.9;
+                dev.view.pstop = {'angle': angle,
+                                  'x': cx2 + Math.cos(angle) * r,
+                                  'y': cy + Math.sin(angle) * r};
+                self.drawDevice(dev, 500, self);
+                for (var i in dev.links) {
+                    let link = self.database.links.find(dev.links[i]);
+                    if (link)
+                        self.drawLink(link, 500, self);
+                }
+                lastAngle = angle;
             },
             function(x, y, event) {
                 dev.escaped = false;
                 self.draggingFrom = dev;
-                dev.view.toFront()
-                        .animate({'path': circle_path(x, y, 30),
-                                  'stroke-width': 1,
-                                  'fill': dev.color,
-                                  'fill-opacity': 1
-                                 }, 1000, 'linear');
             },
             function(x, y, event) {
                 self.draggingFrom = null;
-                dev.view.animate({'path': dev.view.path,
-                                  'stroke-width': 40,
-                                  'fill-opacity': 0,
-                                  'transform': 't0,0r0'
-                                 }, 1000, 'linear');
-                $('#status').stop(true, false)
-                            .animate({opacity: 0}, {duration: 500});
+                lastAngle = null;
                 // TODO: redraw device
                 // TODO: reset translation attribute
                 // TODO: apply link edits?
@@ -184,31 +232,41 @@ class ChordView extends View {
         );
     }
 
+    drawDevice(dev, duration, self) {
+        if (!dev.view)
+            return;
+        dev.view.stop();
+        let staged = false;
+        let r = self.radius;
+        let angleInc;
+        if (dev.status == 'offline') {
+            if (dev.draggingFrom) {
+                r += 50;
+                angleInc = self.onlineInc;
+            }
+            else
+                angleInc = self.offlineInc;
+        }
+        else {
+            angleInc = self.onlineInc;
+        }
+
+        dev.view.path = [['M', dev.view.pstart.x, dev.view.pstart.y],
+                         ['A', r, r, angleInc, 0, 1,
+                          dev.view.pstop.x, dev.view.pstop.y]];
+        dev.view.attr({'stroke-linecap': 'butt'});
+        dev.view.animate({'path': dev.view.path,
+                          'fill-opacity': 0,
+                          'stroke-opacity': 1,
+                          'stroke-width': 40,
+                          'transform': 't0,0r0'
+                         }, duration, '>');
+    }
+
     drawDevices(duration) {
         let self = this;
-        let cy = this.mapPane.cy;
-        let lastPos = [1, 0];
-        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
-        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
-        if (offlineInc > onlineInc)
-            offlineInc = onlineInc;
         this.database.devices.each(function(dev) {
-            if (!dev.view)
-                return;
-            dev.view.stop();
-            let offline = (dev.status == 'offline');
-            let r = self.radius + (offline ? 50 : 0);
-            let angleInc = offline ? offlineInc : onlineInc;
-
-            dev.view.path = [['M', dev.view.pstart.x, dev.view.pstart.y],
-                             ['A', r, r, angleInc, 0, 1,
-                              dev.view.pstop.x, dev.view.pstop.y]];
-            dev.view.attr({'stroke-linecap': 'butt'});
-            dev.view.animate({'path': dev.view.path,
-                              'fill-opacity': 0,
-                              'stroke-opacity': 1,
-                              'stroke-width': 40,
-                             }, duration, '>');
+            self.drawDevice(dev, duration, self);
         });
     }
 
@@ -285,24 +343,35 @@ class ChordView extends View {
         let src = link.src;
         let dst = link.dst;
 
-        let offline = src.status == 'offline' || dst.status == 'offline';
-        let r = self.radius + (offline ? 50 : 0);
+        if (!src.view || !dst.view)
+            return;
 
-        let cx = self.mapPane.cx;
+        let cx;
         let cy = self.mapPane.cy;
-
-        let onlineInc = Math.PI * 2.0 / this.onlineDevs;
-        let offlineInc = Math.PI * 2.0 / this.offlineDevs;
-        if (offlineInc > onlineInc)
-            offlineInc = onlineInc;
-        let angleInc = offline ? offlineInc : onlineInc;
+        let angleInc;
+        let r = self.radius;
+        let offline = src.status == 'offline';
+        if (src.staged) {
+            r += 40;
+            cx = self.mapPane.cx * 0.5;
+            angleInc = self.onlineInc;
+            src = src.staged;
+        }
+        else {
+            if (src == self.draggingFrom) {
+                r += self.snappingTo ? 40 : 50;
+            }
+//            cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
+            angleInc = offline ? self.offlineInc : self.onlineInc;
+        }
+        cx = self.frame.cx * (src.view.pstart.x < self.frame.cx ? 0.5 : 1.5);
 
         let srcAngleInc = angleInc / src.link_angles.length;
         let srcStartAngle = src.view.pstart.angle;
         let srcStopAngle;
         if (src.link_angles.length > 1) {
-            srcStartAngle += srcAngleInc * link.src_index;
-            srcStopAngle = srcStartAngle + srcAngleInc - 0.02;
+            srcStartAngle += srcAngleInc * link.src_index * 0.9;
+            srcStopAngle = srcStartAngle + srcAngleInc * 0.9;
         }
         else
             srcStopAngle = link.src.view.pstop.angle;
@@ -312,12 +381,29 @@ class ChordView extends View {
         let srcStopPos = [cx + Math.cos(srcStopAngle) * r,
                           cy + Math.sin(srcStopAngle) * r];
 
+        r = self.radius;
+        offline = dst.status == 'offline' && dst != self.draggingFrom;
+        if (dst.staged) {
+            r += 40;
+            cx = self.mapPane.cx * 0.5;
+            angleInc = self.onlineInc;
+            dst = dst.staged;
+        }
+        else {
+            if (dst == self.draggingFrom) {
+                r += self.snappingTo ? 40 : 50;
+            }
+            cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
+            angleInc = offline ? self.offlineInc : self.onlineInc;
+        }
+        cx = self.frame.cx * (dst.view.pstart.x < self.frame.cx ? 0.5 : 1.5);
+
         let dstAngleInc = angleInc / dst.link_angles.length;
         let dstStartAngle = dst.view.pstart.angle;
         let dstStopAngle;
         if (dst.link_angles.length > 1) {
-            dstStartAngle += dstAngleInc * link.dst_index;
-            dstStopAngle = dstStartAngle + dstAngleInc - 0.02;
+            dstStartAngle += dstAngleInc * link.dst_index * 0.9;
+            dstStopAngle = dstStartAngle + dstAngleInc * 0.9;
         }
         else
             dstStopAngle = dst.view.pstop.angle;
@@ -340,17 +426,14 @@ class ChordView extends View {
         if (midAngle < 0)
             midAngle += 360;
 
-        let colorString;
-        if (offline)
-            colorString = 'rgba(255, 255, 255, 0.25)';
-        else {
-            let rgb = Raphael.getRGB(link.src.color);
-            let srcColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
-            rgb = Raphael.getRGB(link.dst.color);
-            let dstColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
-            colorString = midAngle+'-'+srcColor+'-'+dstColor;
-        }
-        console.log(colorString);
+        let rgb = Raphael.getRGB(link.src.color);
+        let srcColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
+        rgb = Raphael.getRGB(link.dst.color);
+        let dstColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
+        let fillString = midAngle+'-'+srcColor+'-'+dstColor;
+
+//        if (self.draggingFrom)
+//            cx = self.mapPane.cx;
 
         let path = [];
         path.push(['M', srcStartPos[0], srcStartPos[1]],
@@ -359,21 +442,9 @@ class ChordView extends View {
         path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
         path.push(['Q', cx, cy, srcStartPos[0], srcStartPos[1]]);
         path.push(['Z']);
-//        let r2 = r + Raphael.deg(diff);
-//        path.push(['M', srcStartPos[0], srcStartPos[1]],
-//                  ['A', r, r, srcStopAngle - srcStartAngle, 0, 1, srcStopPos[0], srcStopPos[1]]);
-//        path.push(['C', cx + Math.cos(srcStopAngle) * r2, cy + Math.sin(srcStopAngle) * r2,
-//                   cx + Math.cos(dstStartAngle) * r2, cy + Math.sin(dstStartAngle) * r2,
-//                   dstStartPos[0], dstStartPos[1]]);
-//        path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
-//        path.push(['C', cx + Math.cos(dstStopAngle) * r2, cy + Math.sin(dstStartAngle) * r2,
-//                   cx + Math.cos(srcStartAngle) * r2, cy + Math.sin(srcStartAngle) * r2,
-//                   srcStartPos[0], srcStartPos[1]]);
-//        path.push(['Z']);
-
 
         link.view.toBack().attr({'stroke-width': 0,
-                                 'fill': colorString
+                                 'fill': fillString
                                 })
                           .animate({'path': path}, duration, '>');
 

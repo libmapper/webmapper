@@ -455,11 +455,12 @@ tbody {
 .tableDiv th {
     cursor: pointer;
     font-weight: inherit;
-    text-align: left;
+/*    text-align: left;*/
     border-top: 0px;
     border-left: 0px;
     font-size: 10pt;
     padding-left: 10px;
+    padding-right: 10px;
 }
 
 .invisible {
@@ -473,6 +474,7 @@ tbody {
 
 .displayTable td {
     padding-left: 20px;
+    padding-right: 20px;
 }
 
 /*****************/

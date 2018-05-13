@@ -278,10 +278,9 @@ class View {
     setDevHover(dev) {
         let self = this;
         let hovered = false;
-        dev.view.unhover().hover(
+        dev.view.unhover();
+        dev.view.hover(
             function(e) {
-                if (self.draggingFrom)
-                    return;
                 if (!hovered && !dev.label) {
                     // show label
                     $('#status').stop(true, false)
@@ -300,24 +299,16 @@ class View {
                     dev.view.toFront().animate({'stroke-width': 50}, 0, 'linear');
                 }
                 hovered = true;
-//                if (self.draggingFrom == null)
-//                    return;
-//                else if (dev == self.draggingFrom) {
-//                    // don't snap to self
-//                    return;
-//                }
-//                self.snappingTo = dev;
-//                let src = self.draggingFrom.position;
-//                let dst = dev.position;
-//                let path = [['M', src.x, src.y],
-//                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
-//                             dst.x, dst.y]];
-//                let len = Raphael.getTotalLength(path);
-//                path = Raphael.getSubpath(path, 10, len - 10);
-//                self.newMap.attr({'path': path});
+                if (self.draggingFrom == null)
+                    return;
+                else if (dev == self.draggingFrom) {
+                    // don't snap to self
+                    return;
+                }
+                self.snappingTo = dev;
             },
             function() {
-//                self.snappingTo = null;
+                self.snappingTo = null;
                 if (!self.draggingFrom) {
                     $('#status').stop(true, false)
                                 .animate({opacity: 0}, {duration: 2000});
@@ -328,61 +319,17 @@ class View {
         );
     }
 
-    setDevDrag(dev) {
-        let self = this;
-        dev.view.mouseup(function() {
-            if (self.draggingFrom && self.snappingTo)
-                $('#container').trigger('map', [self.draggingFrom.key,
-                                                self.snappingTo.key]);
-        });
-        dev.view.undrag();
-        dev.view.drag(
-            function(dx, dy, x, y, event) {
-                if (self.snappingTo)
-                    return;
-                if (self.escaped) {
-                    return;
-                }
-                x -= self.frame.left;
-                y -= self.frame.top;
-                let src = self.draggingFrom.position;
-                let path = [['M', src.x, src.y],
-                            ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
-                if (!self.newMap) {
-                    self.newMap = self.canvas.path(path);
-                    self.newMap.attr({'stroke': 'white',
-                                      'stroke-width': 2,
-                                      'stroke-opacity': 1,
-                                      'arrow-start': 'none',
-                                      'arrow-end': 'block-wide-long'});
-                }
-                else
-                    self.newMap.attr({'path': path});
-            },
-            function(x, y, event) {
-                self.escaped = false;
-                self.draggingFrom = sig;
-            },
-            function(x, y, event) {
-                self.draggingFrom = null;
-                if (self.newMap) {
-                    self.newMap.remove();
-                    self.newMap = null;
-                }
-            }
-        );
-    }
-
     setLinkHover(link) {
         let self = this;
-        link.view.unhover().hover(
+        link.view.unhover();
+        link.view.hover(
             function(e) {
                 // show label
                 $('#status').stop(true, false)
                             .empty()
                             .append("<table class=infoTable>"+
                                         "<tbody>"+
-                                            "<tr><th colspan='2'>Link</th></tr>"+
+                                            "<tr><th colspan='2'>"+link.status+" link</th></tr>"+
                                             "<tr><td>source</td><td>"+link.src.key+"</td></tr>"+
                                             "<tr><td>destination</td><td>"+link.dst.key+"</td></tr>"+
                                         "</tbody>"+
@@ -391,8 +338,12 @@ class View {
                                   'top': e.y,
                                   'opacity': 1});
                 link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
-                link.src.view.toFront()
-                link.dst.view.toFront()
+                link.src.view.toFront();
+                if (link.src.staged)
+                    link.src.staged.view.toFront();
+                link.dst.view.toFront();
+                if (link.dst.staged)
+                    link.dst.staged.view.toFront();
             },
             function() {
                 $('#status').stop(true, false)
@@ -435,32 +386,14 @@ class View {
                     alpha2 = alpha1;
                 this.attr({'fill': gradient[0]+alpha1+gradient[1]+alpha2+')'});
             }
-//            link.view.hover(
-//                function() {
-//                    link.view.toFront();
-//                    link.view.setAlpha(0.5);
-//                    this.mousemove(function (e, x) {
-//                        let ratio = (x - self.mapPane.left) / self.mapPane.width;
-//                        ratio = ratio * 0.25;
-//                        link.view.setAlpha(0.5-ratio, 0.25+ratio);
-//                    });
-//                },
-//                function() {
-//                    this.unmousemove();
-//                    this.setAlpha(0.25);
-//            });
-//            link.view.unclick().click(function(e, x) {
-//                console.log('click');
-//                // check if close to table
-//                // enable dragging to new device
-//            });
             self.setLinkHover(link);
         });
     }
 
     setSigHover(sig) {
         let self = this;
-        sig.view.unhover().hover(
+        sig.view.unhover();
+        sig.view.hover(
             function() {
                 if (!sig.view.label) {
                     // show label
@@ -616,6 +549,7 @@ class View {
 
     setMapHover(map) {
         let self = this;
+        map.view.unhover();
         map.view.hover(
             function(e) {
                 // show label

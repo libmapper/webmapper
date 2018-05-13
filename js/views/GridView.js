@@ -43,7 +43,7 @@ class GridView extends View {
             this.frame = newFrame;
 
         let self = this;
-        this.tables.left.adjust(0, 0, this.frame.width, this.frame.height - 180, 0, duration);
+        this.tables.left.adjust(0, 180, this.frame.width, this.frame.height - 180, 0, duration);
         this.tables.right.adjust(180, this.frame.height, this.frame.height, this.frame.width - 180,
                                  -Math.PI * 0.5, duration,
                                  function() {self.draw(1000)});
