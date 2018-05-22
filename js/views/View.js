@@ -22,6 +22,7 @@ class View {
         this.srcregexp = null;
         this.dstregexp = null;
 
+        this.hoverDev = null;
         this.draggingFrom = null;
         this.snappingTo = null;
         this.escaped = false;
@@ -281,7 +282,7 @@ class View {
         dev.view.unhover();
         dev.view.hover(
             function(e) {
-                if (!hovered && !dev.label) {
+                if (!hovered && !dev.view.label) {
                     // show label
                     $('#status').stop(true, false)
                                 .empty()
@@ -296,9 +297,13 @@ class View {
                                 .css({'left': e.x + 20,
                                       'top': e.y,
                                       'opacity': 1});
-                    dev.view.toFront().animate({'stroke-width': 50}, 0, 'linear');
+                    if (self.type == 'chord')
+                        dev.view.toFront()
+                    dev.view.animate({'stroke-width': 50}, 0, 'linear');
                 }
                 hovered = true;
+                self.hoverDev = dev;
+                console.log('set hoverDev to', self.hoverDev);
                 if (self.draggingFrom == null)
                     return;
                 else if (dev == self.draggingFrom) {
@@ -315,6 +320,8 @@ class View {
                     dev.view.animate({'stroke-width': 40}, 500, 'linear');
                     hovered = false;
                 }
+                self.hoverDev = null;
+                console.log('set hoverDev to', self.hoverDev);
             }
         );
     }
@@ -418,6 +425,8 @@ class View {
                                       'opacity': 1});
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
+                self.hoverDev = sig.device;
+                console.log('set hoverDev to', self.hoverDev);
                 if (self.draggingFrom == null)
                     return;
                 else if (sig == self.draggingFrom) {
@@ -439,6 +448,8 @@ class View {
                 $('#status').stop(true, false)
                             .animate({opacity: 0}, {duration: 2000});
                 sig.view.animate({'stroke-width': 6}, 50, 'linear');
+                self.hoverDev = null;
+                console.log('set hoverDev to', self.hoverDev);
             }
         );
     }
@@ -613,7 +624,7 @@ class View {
         });
     }
 
-    mapPath(map) {
+    getMapPath(map) {
         let self = this;
         function tableRow(sig) {
             if (self.tables && sig.tableIndices) {
@@ -629,6 +640,8 @@ class View {
              * curve using the signal spacing for calculating control points. */
             if (src.vx == dst.vx) {
                 // same table
+                if (map.view)
+                    map.view.attr({'arrow-end': 'block-wide-long'});
                 if (src.x == dst.x) {
                     // signals are inline vertically
                     let ctlx = Math.abs(src.y - dst.y) * 0.5 * src.vx + src.x;
@@ -644,18 +657,25 @@ class View {
             }
             else if (src.vy != dst.vy) {
                 // draw intersection between tables
-                return ((src.x > dst.x)
-                        ? [['M', src.left, dst.y],
-                           ['L', src.left + src.width, dst.top],
-                           ['l', 0, dst.height],
-                           ['Z']]
-                        : [['M', dst.x, src.top],
-                           ['L', dst.left, src.top + src.height],
-                           ['l', dst.width, 0],
-                           ['Z']]);
+                if (map.view)
+                    map.view.attr({'arrow-end': 'none'});
+                if (src.vx < 0.0001) {
+                    return [['M', src.left, dst.y],
+                            ['L', src.left + src.width, dst.top],
+                            ['l', 0, dst.height],
+                            ['Z']];
+                }
+                else {
+                    return [['M', dst.x, src.top],
+                            ['L', dst.left, src.top + src.height],
+                            ['l', dst.width, 0],
+                            ['Z']]
+                }
             }
             else {
                 // draw bezier curve between signal tables
+                if (map.view)
+                    map.view.attr({'arrow-end': 'block-wide-long'});
                 let mpx = (src.x + dst.x) * 0.5;
                 return [['M', src.x, src.y],
                         ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
@@ -691,7 +711,16 @@ class View {
             }
             map.view.stop();
 
-            let path = self.mapPath(map);
+            let path = self.getMapPath(map);
+            if (self.shortenPaths) {
+                // shorten path so it doesn't draw over signals
+                let len = Raphael.getTotalLength(path);
+                path = Raphael.getSubpath(path, self.shortenPaths,
+                                          len - self.shortenPaths);
+            }
+
+            let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
+            let color = map.view.selected ? 'red' : 'white';
             if (!path) {
                 console.log('problem generating path for map', map);
                 return;
@@ -703,8 +732,10 @@ class View {
                     // draw map directly
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
-                                   'stroke': map.view.selected ? 'red' : 'white',
+                                   'stroke': color,
                                    'stroke-dasharray': map.muted ? '-' : '',
+                                   'fill-opacity': fill,
+                                   'fill': color,
                                    'arrow-end': 'block-wide-long'
                                   })
                             .toFront();
@@ -722,9 +753,10 @@ class View {
 //                map.view.attr({'arrow-end': 'block-wide-long'});
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
-                                  'fill-opacity': 0,
+                                  'fill-opacity': fill,
+                                  'fill': color,
                                   'stroke-width': 2,
-                                  'stroke': map.view.selected ? 'red' : 'white'},
+                                  'stroke': color},
                                  duration, '>')
                         .toFront();
             }
@@ -741,8 +773,8 @@ class View {
         y -= this.frame.top;
         let index, updated = false;
         for (index in this.tables) {
-            updated = this.tables[index].pan(delta_x, delta_y, x, y);
-            if (updated)
+            updated |= this.tables[index].pan(delta_x, delta_y, x, y);
+            if (updated && this.type != 'grid')
                 break;
         }
         if (updated == false) {
@@ -776,8 +808,8 @@ class View {
         y -= this.frame.top;
         let index, updated = false;
         for (index in this.tables) {
-            updated = this.tables[index].zoom(delta, x, y, true);
-            if (updated != null)
+            updated |= this.tables[index].zoom(delta, x, y, true);
+            if (updated != null && this.type != 'grid')
                 break;
         }
         if (updated == null) {

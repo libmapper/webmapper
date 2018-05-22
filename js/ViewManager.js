@@ -62,6 +62,9 @@ function ViewManager(container, database)
             case 'chord':
                 view = new ChordView(frame, tables, canvas, database);
                 break;
+            case 'console':
+                view = new ConsoleView(frame, tables, canvas, database);
+                break;
             case 'list':
             default:
                 view = new ListView(frame, tables, canvas, database);

@@ -291,6 +291,7 @@ def handler_page(out, args):
 
 <script type="text/javascript" src="includes/jquery-2.0.3.min.js"></script> <!-- JQuery -->
 <script type="text/javascript" src="includes/jquery-ui-1.10.0.custom.js"></script> <!-- JQuery UI -->
+<script type="text/javascript" src="includes/jquery.terminal.min.js"></script>
 <script type="text/javascript" src="includes/json2.js"></script> <!-- JSON -->
 <script type="text/javascript" src="includes/raphael.min.js"></script>
 
@@ -305,6 +306,7 @@ def handler_page(out, args):
 <script type="text/javascript" src="js/views/BalloonView.js"></script>
 <script type="text/javascript" src="js/views/CanvasView.js"></script>
 <script type="text/javascript" src="js/views/ChordView.js"></script>
+<script type="text/javascript" src="js/views/ConsoleView.js"></script>
 <script type="text/javascript" src="js/views/GraphView.js"></script>
 <script type="text/javascript" src="js/views/GridView.js"></script>
 <script type="text/javascript" src="js/views/HiveView.js"></script>
@@ -321,6 +323,7 @@ def handler_page(out, args):
 
 <link rel="stylesheet" type="text/css" href="css/style.css"></link>
 <link type="text/css" rel="stylesheet" href="includes/jquery.qtip.custom/jquery.qtip.min.css" /> <!-- qTip CSS -->
+<link rel="stylesheet" type="text/css" href="css/jquery.terminal.min.css"></link>
 <script type="text/javascript" src="includes/jquery.qtip.custom/jquery.qtip.min.js"></script> <!-- qTip -->
 
 

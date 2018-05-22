@@ -159,6 +159,9 @@ function initViewCommands()
     });
 
     $('body').on('keydown.list', function(e) {
+        if (e.metaKey != true)
+            return;
+
         let new_view = null;
         switch (e.which) {
             case 49:
@@ -189,25 +192,17 @@ function initViewCommands()
                 /* 7 */
                 new_view = 'parallel';
                 break;
-//            case 56:
-//                /* 8 */
-//                new_view = 'link';
-//                break;
-//            case 57:
-//                /* 9 */
-//                new_view = 'chord';
-//                break;
+            case 56:
+                /* 8 */
+                new_view = 'console';
+                break;
             case 79:
-                if (e.metaKey == true) {
-                    e.preventDefault();
-                    input.trigger("click");
-                }
+                e.preventDefault();
+                input.trigger("click");
                 break;
             case 48:
-                if (e.metaKey == true) {
-                    e.preventDefault();
-                    view.resetPanZoom();
-                }
+                e.preventDefault();
+                view.resetPanZoom();
                 break;
 //            default:
 //                console.log('key:', e.which);

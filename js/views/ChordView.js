@@ -185,7 +185,7 @@ class ChordView extends View {
                 x -= self.frame.left;
                 y -= self.frame.top;
 
-                if (x > self.frame.cx) {
+                if (x > self.mapPane.cx) {
                     r = self.radius;
                     cx2 = cx * 1.5;
                     angleInc = self.offlineInc;
@@ -349,7 +349,7 @@ class ChordView extends View {
         let cx;
         let cy = self.mapPane.cy;
         let angleInc;
-        let r = self.radius;
+        let r = self.radius - 19;
         let offline = src.status == 'offline';
         if (src.staged) {
             r += 40;
@@ -364,14 +364,14 @@ class ChordView extends View {
 //            cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
             angleInc = offline ? self.offlineInc : self.onlineInc;
         }
-        cx = self.frame.cx * (src.view.pstart.x < self.frame.cx ? 0.5 : 1.5);
+        cx = self.mapPane.cx * (src.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
-        let srcAngleInc = angleInc / src.link_angles.length;
+        let srcAngleInc = angleInc / src.link_angles.length * 0.9;
         let srcStartAngle = src.view.pstart.angle;
         let srcStopAngle;
         if (src.link_angles.length > 1) {
-            srcStartAngle += srcAngleInc * link.src_index * 0.9;
-            srcStopAngle = srcStartAngle + srcAngleInc * 0.9;
+            srcStartAngle += srcAngleInc * link.src_index * 1.05;
+            srcStopAngle = srcStartAngle + srcAngleInc * 0.9523809524;
         }
         else
             srcStopAngle = link.src.view.pstop.angle;
@@ -381,7 +381,7 @@ class ChordView extends View {
         let srcStopPos = [cx + Math.cos(srcStopAngle) * r,
                           cy + Math.sin(srcStopAngle) * r];
 
-        r = self.radius;
+        r = self.radius - 19;
         offline = dst.status == 'offline' && dst != self.draggingFrom;
         if (dst.staged) {
             r += 40;
@@ -396,14 +396,14 @@ class ChordView extends View {
             cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
             angleInc = offline ? self.offlineInc : self.onlineInc;
         }
-        cx = self.frame.cx * (dst.view.pstart.x < self.frame.cx ? 0.5 : 1.5);
+        cx = self.mapPane.cx * (dst.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
-        let dstAngleInc = angleInc / dst.link_angles.length;
+        let dstAngleInc = angleInc / dst.link_angles.length * 0.9;
         let dstStartAngle = dst.view.pstart.angle;
         let dstStopAngle;
         if (dst.link_angles.length > 1) {
-            dstStartAngle += dstAngleInc * link.dst_index * 0.9;
-            dstStopAngle = dstStartAngle + dstAngleInc * 0.9;
+            dstStartAngle += dstAngleInc * link.dst_index * 1.05;
+            dstStopAngle = dstStartAngle + dstAngleInc * 0.9523809524;
         }
         else
             dstStopAngle = dst.view.pstop.angle;
