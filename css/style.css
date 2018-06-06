@@ -428,7 +428,7 @@ input.expression {
 /* The table areas */
 .tableDiv {
     position: absolute;
-    overflow: auto;
+    overflow: visible;
     width: 40%;
     height: 100%;
     border-bottom: 0;

@@ -43,10 +43,12 @@ class GridView extends View {
             this.frame = newFrame;
 
         let self = this;
-        this.tables.left.adjust(0, 180, this.frame.width, this.frame.height - 180, 0, duration);
-        this.tables.right.adjust(180, this.frame.height, this.frame.height, this.frame.width - 180,
+        this.tables.left.adjust(0, 180, 200, this.frame.height - 180, 0, duration,
+                                null, 0, this.frame.width);
+        this.tables.right.adjust(180, 200, 200, this.frame.width - 180,
                                  -Math.PI * 0.5, duration,
-                                 function() {self.draw(1000)});
+                                 function() {self.draw(1000)},
+                                 200-this.frame.height, this.frame.height);
         this.mapPane.left = 200;
         this.mapPane.width = this.frame.width - 200;
         this.mapPane.top = 200;
@@ -55,59 +57,6 @@ class GridView extends View {
         this.mapPane.cy = this.mapPane.top + this.mapPane.height * 0.5;
         this.draw();
     }
-
-//    getMapPath(map) {
-//        let self = this;
-//        function tableRow(sig) {
-//            if (self.tables && sig.tableIndices) {
-//                let table = self.tables[sig.tableIndices[0].table];
-//                return table.getRowFromIndex(sig.tableIndices[0].index);
-//            }
-//            return null;
-//        }
-//        let src = tableRow(map.src);
-//        let dst = tableRow(map.dst);
-//        if (!src || !dst)
-//            return;
-//
-//        /* If src and dst are from same table we will always draw a bezier
-//         * curve using the signal spacing for calculating control points. */
-//        if (src.vx == dst.vx) {
-//            // same table
-//            if (map.view)
-//                map.view.attr({'arrow-end': 'block-wide-long'});
-//            if (src.x == dst.x) {
-//                // signals are inline vertically
-//                let ctlx = Math.abs(src.y - dst.y) * 0.5 * src.vx + src.x;
-//                return [['M', src.x, src.y],
-//                        ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
-//            }
-//            else {
-//                // signals are inline horizontally
-//                let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
-//                return [['M', src.x, src.y],
-//                        ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
-//            }
-//        }
-//        else {
-//            // draw intersection between tables
-//            if (map.view) {
-//                map.view.attr({'arrow-end': 'none'});
-//            }
-//            if (src.vx < 0.0001) {
-//                return [['M', src.left, dst.y],
-//                        ['L', src.left + src.width, dst.top],
-//                        ['l', 0, dst.height],
-//                        ['Z']];
-//            }
-//            else {
-//                return [['M', dst.x, src.top],
-//                        ['L', dst.left, src.top + src.height],
-//                        ['l', dst.width, 0],
-//                        ['Z']]
-//            }
-//        }
-//    }
 
     draw(duration) {
 //        this.drawDevices(duration);

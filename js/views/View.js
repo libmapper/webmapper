@@ -773,8 +773,8 @@ class View {
         y -= this.frame.top;
         let index, updated = false;
         for (index in this.tables) {
-            updated |= this.tables[index].pan(delta_x, delta_y, x, y);
-            if (updated && this.type != 'grid')
+            updated = this.tables[index].pan(delta_x, delta_y, x, y);
+            if (updated)
                 break;
         }
         if (updated == false) {
@@ -808,8 +808,8 @@ class View {
         y -= this.frame.top;
         let index, updated = false;
         for (index in this.tables) {
-            updated |= this.tables[index].zoom(delta, x, y, true);
-            if (updated != null && this.type != 'grid')
+            updated = this.tables[index].zoom(delta, x, y, true);
+            if (updated != null)
                 break;
         }
         if (updated == null) {

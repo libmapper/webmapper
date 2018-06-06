@@ -84,7 +84,7 @@ class Table {
         });
     }
 
-    adjust(left, top, width, height, angle, duration, func) {
+    adjust(left, top, width, height, angle, duration, func, innerLeft, innerWidth) {
         // stop any current animations
         $('#'+this.id).stop(true, false);
 
@@ -131,6 +131,13 @@ class Table {
                 '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
                 'transform': 'rotate(' + self.frame.angle + 'rad)',
                 'text-align': self.frame.angle ? 'right' : 'left'
+            });
+
+            $('#' + self.id + 'Scroller').css({
+                'left': innerLeft ? innerLeft : 0,
+                'top': 0,
+                'width': innerWidth ? innerWidth : '100%',
+                'height': '100%',
             });
             if (func)
                 func();
@@ -213,9 +220,9 @@ class Table {
                         'right': left + row.offsetWidth,
                         'top': top,
                         'bottom': top + rowHeight,
-                        'width': row.offsetWidth,
+                        'width': this.frame.width,
                         'height': rowHeight,
-                        'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                        'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                         'y': top + rowHeight * 0.5,
                         'vx': Math.cos(this.frame.angle) * snap,
                         'vy': Math.sin(this.frame.angle),

@@ -121,7 +121,7 @@ class ChordView extends View {
                          'y': cy + Math.sin(angle) * r};
 
             if (!dev.view) {
-                let path = [['M', pstart.x, pstart.y]];
+                let path = [['M', x, cy]];
                 dev.view = self.canvas.path().attr({'path': path,
                                                     'stroke': dev.color,
                                                     'fill-opacity': 0,

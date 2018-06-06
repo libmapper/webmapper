@@ -56,16 +56,15 @@ class ParallelView extends View {
                          'fill-opacity': 0}, duration, '>');
         if (!dev.view.label) {
             dev.view.label = self.canvas.text(0, 0, dev.name)
-            .attr({'opacity': 0,
-                  'pointer-events': 'none',
-                  'font-size': 24,
-                  'fill': 'white',
-                  'text-anchor': 'end'
-                  });
+                                        .attr({'opacity': 0,
+                                               'pointer-events': 'none',
+                                               'font-size': 24,
+                                               'fill': 'white',
+                                               'text-anchor': 'end'});
         }
         let labely = y - height - 30;
         dev.view.label.animate({'opacity': 0.5,
-                               'transform': 't'+x+','+labely+'r-90,0,30'
+                                'transform': 't'+x+','+labely+'r-90,0,30'
                                }, duration, '>');
         dev.signals.each(function(sig) {
                          if (!sig.view)
