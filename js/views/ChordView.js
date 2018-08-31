@@ -366,12 +366,13 @@ class ChordView extends View {
         }
         cx = self.mapPane.cx * (src.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
-        let srcAngleInc = angleInc / src.link_angles.length * 0.9;
+        // we will be inserting spaces between links equal to (arclength * 0.1)
+        let srcAngleInc = angleInc / (src.link_angles.length * 1.1 - 0.1);
         let srcStartAngle = src.view.pstart.angle;
         let srcStopAngle;
         if (src.link_angles.length > 1) {
-            srcStartAngle += srcAngleInc * link.src_index * 1.05;
-            srcStopAngle = srcStartAngle + srcAngleInc * 0.9523809524;
+            srcStartAngle += srcAngleInc * link.src_index * 1.1;
+            srcStopAngle = srcStartAngle + srcAngleInc;
         }
         else
             srcStopAngle = link.src.view.pstop.angle;
@@ -403,7 +404,7 @@ class ChordView extends View {
         let dstStopAngle;
         if (dst.link_angles.length > 1) {
             dstStartAngle += dstAngleInc * link.dst_index * 1.05;
-            dstStopAngle = dstStartAngle + dstAngleInc * 0.9523809524;
+            dstStopAngle = dstStartAngle + dstAngleInc * 0.95238;
         }
         else
             dstStopAngle = dst.view.pstop.angle;

@@ -96,24 +96,30 @@ Lines representing inter-signal maps may be drawn between the signals on each si
 
 We have explored several alternative visualization and interaction techniques, which allow more informed and flexible interaction with the mapping network. Crucially, we believe that there is no need for a single “correct” user interface; rather, different network representations and interaction approaches may be useful to different users, for different mapping tasks, or at different times.
 
-**Webmapper** currently includes seven different views. Following is a brief description of each view, including any view-specific interactions. For each, the shortcut key is displayed as `N`, followed by the view's icon representation in the view selector widget.
+**Webmapper** currently includes seven different views. Following is a brief description of each view, including any view-specific interactions. For each, the shortcut key is displayed as `Command-N`, followed by the view's icon representation in the view selector widget.
 
-### `1` <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view
+### <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view (file staging view) `Command-1`
+
+Status: development
+
+This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and overlay add a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
+
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/chord.png">
+
+### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view `Command-2`
 
 The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/list.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/list.png">
 
-### `2` <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view
+### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view `Command-3`
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/graph.png">
+In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
-#### View-specific interactions
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/grid.png">
 
-* choosing axes
-* switch axis polarity
 
-### `3` <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view
+### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view `Command-4`
 
 The canvas view is loosely modeled after the UI for the application ICon (Input Configurator) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
@@ -126,43 +132,27 @@ The canvas view is loosely modeled after the UI for the application ICon (Input 
 * Drag a canvas object to the grey 'trash' area in the bottom right to remove it from the canvas.
 * Click and drag the right or left edges of a canvas object to create a map. Drop the other end of the map on the desired signal.
 
-### `4` <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view
+### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view `Command-5`
 
-In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
-
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/grid.png">
-
-### `5` <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view
-
-In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
-
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/hive.png">
-
-### `6` <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel plot view
-
-### `7` <img style="padding:0px;vertical-align:middle" src="./images/balloon_icon_black.png" width="25px"> Balloon plot view
-
-Balloon plot is brand new and has not yet been thoroughly tested.
-
-quote some text from Vijay's thesis
-
-<img style="padding:0px" src="./images/screenshots/balloon.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/graph.png">
 
 #### View-specific interactions
 
-* click a signal group to expand it and view its children
-* click outside a balloon to collapse the current signal group and view the next-higher level
+* choosing axes
+* switch axis polarity
 
-### `8` <img style="padding:0px;vertical-align:middle" src="./images/link_icon_black.png" width="25px"> Link view (file staging view)
+### <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view `Command-6`
 
-This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and overlay a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
+In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load1.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/hive.png">
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
+### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel plot view `Command-7`
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/load2.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/parallel.png">
 
-### `9` <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view (file staging view)
+### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view `Command-8`
+
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/console.png">
 
 ## Working Offline

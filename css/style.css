@@ -331,6 +331,10 @@ form {
     background-image: url(/images/chord_icon_white.png);
 }
 
+#consoleButton {
+    background-image: url(/images/console_icon_white.png);
+}
+
 .signalControl {
     z-index: 1;
     position: relative;

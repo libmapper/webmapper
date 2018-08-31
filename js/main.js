@@ -133,6 +133,9 @@ function initViewCommands()
             case "chordButton":
                 view.switch_view("chord");
                 break;
+            case "consoleButton":
+                view.switch_view("console");
+                break;
         }
         $('.viewButton').removeClass("viewButtonsel");
         $(this).addClass("viewButtonsel");

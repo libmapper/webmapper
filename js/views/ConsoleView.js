@@ -236,7 +236,7 @@ class ConsoleView extends View {
         this.database.maps.each(function(map) {
             let string = "<li>"+map.src.key+" -> "+map.dst.key;
             for (var key in map) {
-                if (key == 'src' || key == 'dst')
+                if (key == 'src' || key == 'dst' || key == 'key' || key == 'view')
                     continue;
                 string += ", @"+key+": "+map[key];
             }
