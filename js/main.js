@@ -104,26 +104,6 @@ function initMonitorCommands() {
  */
 function initViewCommands()
 {
-    // TODO: add "save as" option
-    $('#saveButton').on('click', function(e) {
-        e.stopPropagation();
-        let file = database.exportFile();
-        if (!file)
-            return;
-
-        let link = document.createElement('a');
-        let blob = new Blob([JSON.stringify(file, null, '\t')]);
-        let url = URL.createObjectURL(blob);
-        link.href = url;
-        link.setAttribute('download', 'mapping.json');
-        link.click();
-    });
-
-    $('#loadButton').click(function(e) {
-        e.stopPropagation();
-        input.trigger("click"); // open dialog
-    });
-
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true)
             return;
