@@ -9,7 +9,8 @@ class ChordView extends View {
         super('chord', frame, null, canvas, database);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
+                           frame.height, 0, 1000);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
 
         this.database.devices.each(function(dev) {
@@ -111,7 +112,7 @@ class ChordView extends View {
                 dev.index = onlineIndex++;
             let angleInc = offline ? self.offlineInc : self.onlineInc;
             let x = cx * (offline ? 1.5 : 0.5);
-            let angle = dev.index * angleInc;
+            let angle = dev.index * angleInc - angleInc * 0.45;
             let pstart = {'angle': angle,
                           'x': x + Math.cos(angle) * r,
                           'y': cy + Math.sin(angle) * r};
@@ -254,8 +255,8 @@ class ChordView extends View {
         dev.view.path = [['M', dev.view.pstart.x, dev.view.pstart.y],
                          ['A', r, r, angleInc, 0, 1,
                           dev.view.pstop.x, dev.view.pstop.y]];
-        dev.view.attr({'stroke-linecap': 'butt'});
-        dev.view.animate({'path': dev.view.path,
+        dev.view.attr({'stroke-linecap': 'butt'})
+                .animate({'path': dev.view.path,
                           'fill-opacity': 0,
                           'stroke-opacity': 1,
                           'stroke-width': 40,
@@ -316,9 +317,24 @@ class ChordView extends View {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
-                link.view = self.canvas.path([['M', src.view.pstart.x,
-                                               src.view.pstart.y],
-                                              ['l', 0, 0]]);
+                let r = self.radius;
+                let angleInc;
+                if (src.status == 'offline') {
+                    if (src.draggingFrom) {
+                        r += 50;
+                        angleInc = self.onlineInc;
+                    }
+                    else
+                        angleInc = self.offlineInc;
+                }
+                else {
+                    angleInc = self.onlineInc;
+                }
+                let path = [['M', src.view.pstart.x, src.view.pstart.y],
+                            ['A', r, r, angleInc, 0, 1,
+                             src.view.pstop.x, src.view.pstop.y],
+                            ['Z']];
+                link.view = self.canvas.path(path);
             }
             link.src_index = (src.link_angles.length
                               ? src.link_angles.indexOf(dst.view.pstart.angle)
@@ -498,10 +514,7 @@ class ChordView extends View {
         database.links.each(function(link) {
             if (!link.view)
                 return;
-            if (link.view.startPoint)
-                link.view.startPoint.remove();
-            if (link.view.stopPoint)
-                link.view.stopPoint.remove();
+            remove_object_svg(link, 200);
         });
 
         // clean up any objects created only for this view
