@@ -147,6 +147,14 @@ class ParallelView extends View {
         }
         if (elements.indexOf('devices') >= 0)
             this.updateDevices();
+        if (elements.indexOf('signals') >= 0) {
+            this.updateSignals(function(sig) {
+                if (!sig.position)
+                    sig.position = position(null, null, self.frame);
+                return false;
+            });
+        }
+
         if (elements.indexOf('maps') >= 0)
             this.updateMaps();
         this.draw(1000);

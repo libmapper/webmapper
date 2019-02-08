@@ -893,7 +893,7 @@ class View {
             }
         }
         else {
-            if (direction == 'src')
+            if (direction == 'output')
                 this.srcregexp = text ? new RegExp(text, 'i') : null;
             else
                 this.dstregexp = text ? new RegExp(text, 'i') : null;
