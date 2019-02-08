@@ -24,7 +24,8 @@ function init() {
 
     // init the top menu
     $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"));
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
+                                  database);
     saverLoader.init();
     viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
     viewSelector.init();
@@ -202,7 +203,7 @@ function initViewCommands()
                 break;
             case 79:
                 e.preventDefault();
-                input.trigger("click");
+                saverLoader.openDialog();
                 break;
             case 48:
                 e.preventDefault();

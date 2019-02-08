@@ -1,9 +1,54 @@
 function SaverLoader(container, database) {
+    let _self = this;
     this._container = container;
-    this.database = database;
+    this._database = database;
+    this.input = $(document.createElement("input"));
+    this.input.attr("type", "file");
+    this.input.on('change', function(e) {
+        var f = e.target.files[0];
+        let reader = new FileReader();
+        reader.onload = (function(file) {
+            return function(e) {
+                let parsed = tryParseJSON(e.target.result);
+                if (!parsed || !parsed.fileversion || !parsed.mapping) {
+                    console.log("error: invalid file");
+                    reader.abort();
+                    return;
+                }
+                if (parsed.fileversion == "2.2") {
+                    if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
+                        console.log("error: no maps in file");
+                        reader.abort();
+                        return;
+                    }
+                }
+                else if (parsed.fileversion == "2.1") {
+                    if (   !parsed.mapping.connections
+                        || !parsed.mapping.connections.length) {
+                        console.log("error: no maps in file");
+                        reader.abort();
+                        return;
+                    }
+                }
+                else {
+                    console.log("error: unsupported fileversion",
+                                parsed.fileversion);
+                    reader.abort();
+                    return;
+                }
+                _self._database.loadFile(parsed);
+                view.switch_view("chord");
+            };
+        })(f);
+        reader.readAsText(f);
+    });
 }
 
 SaverLoader.prototype = {
+    openDialog : function() {
+        this.input.trigger("click");
+    },
+
     // Initialize the Top Menu Bar Component
     init : function() {
         var _self = this;   // to pass to context of THIS to event handlers
@@ -16,5 +61,25 @@ SaverLoader.prototype = {
                     "<div id='loadButton'>Open</div>"+
                 "</div>"+
             "</div>");
+     
+        // TODO: add "save as" option
+        $('#saveButton').on('click', function(e) {
+            e.stopPropagation();
+            let file = _self._database.exportFile();
+            if (!file)
+                return;
+
+            let link = document.createElement('a');
+            let blob = new Blob([JSON.stringify(file, null, '\t')]);
+            let url = URL.createObjectURL(blob);
+            link.href = url;
+            link.setAttribute('download', 'mapping.json');
+            link.click();
+        });
+
+        $('#loadButton').click(function(e) {
+            e.stopPropagation();
+            _self.openDialog();
+        });
     },
 };
