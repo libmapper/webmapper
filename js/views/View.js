@@ -614,7 +614,7 @@ class View {
                 let path = pos ? [['M', pos.x, pos.y], ['l', 10, 0]] : null;
                 map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
-                               'stroke': map.view.selected ? 'red' : 'white',
+                               'stroke': map.selected ? 'red' : 'white',
                                'fill-opacity': 0,
                                'stroke-width': 2,
                                'arrow-start': 'none'});
@@ -720,7 +720,7 @@ class View {
             }
 
             let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let color = map.view.selected ? 'red' : 'white';
+            let color = map.selected ? 'red' : 'white';
             if (!path) {
                 console.log('problem generating path for map', map);
                 return;

@@ -131,7 +131,7 @@ MapProperties.prototype = {
     },
 
     selected : function(map) {
-        return map.view && map.view.selected;
+        return map.selected;
     },
 
     updateMapProperties : function() {

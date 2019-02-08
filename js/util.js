@@ -391,18 +391,19 @@ function position(x, y, frame) {
 function select_all_maps() {
     let updated = false;
     database.maps.each(function(map) {
-        if (!map.view || map.view.selected)
+        if (!map.selected)
             return;
-        if (map.view.attr('stroke-opacity') > 0) {
-            map.view.animate({'stroke': 'red'}, 50);
-            map.view.selected = true;
-            updated = true;
+        if (map.view && !map.selected) {
+            if (map.view.attr('stroke-opacity') > 0) {
+                map.view.animate({'stroke': 'red'}, 50);
+                updated = true;
+            }
+            if (map.view.attr('fill-opacity') > 0) {
+                map.view.animate({'fill': 'red'}, 50);
+                updated = true;
+            }
         }
-        if (map.view.attr('fill-opacity') > 0) {
-            map.view.animate({'fill': 'red'}, 50);
-            map.view.selected = true;
-            updated = true;
-        }
+        map.selected = true;
     });
     if (updated)
         $('#container').trigger("updateMapProperties");
@@ -418,11 +419,11 @@ function deselectAllMaps(tables) {
 
     let updated = false;
     database.maps.each(function(map) {
-        if (map.view && map.view.selected) {
+        if (map.view && map.selected) {
             map.view.animate({'stroke': 'white', 'fill': 'white'}, 50);
-            map.view.selected = false;
             updated = true;
         }
+        map.selected = false;
     });
     if (updated)
         $('#container').trigger("updateMapProperties");
