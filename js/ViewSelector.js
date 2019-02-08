@@ -28,39 +28,39 @@ ViewSelector.prototype = {
                 "</div>"+
             "</div>");
 
-    $('.viewButton').on("mousedown", function(e) {
-        switch ($(this)[0].id) {
-            case "listButton":
-                view.switch_view("list");
-                break;
-            case "canvasButton":
-                view.switch_view("canvas");
-                break;
-            case "graphButton":
-                view.switch_view("graph");
-                break;
-            case "gridButton":
-                view.switch_view("grid");
-                break;
-            case "hiveButton":
-                view.switch_view("hive");
-                break;
-            case "parallelButton":
-                view.switch_view("parallel");
-                break;
-            case "balloonButton":
-                view.switch_view("balloon");
-                break;
-            case "linkButton":
-                view.switch_view("link");
-                break;
-            case "chordButton":
-                view.switch_view("chord");
-                break;
-            case "consoleButton":
-                view.switch_view("console");
-                break;
-        }
-    });
+        $('.viewButton').on("mousedown", function(e) {
+            switch ($(this)[0].id) {
+                case "listButton":
+                    view.switch_view("list");
+                    break;
+                case "canvasButton":
+                    view.switch_view("canvas");
+                    break;
+                case "graphButton":
+                    view.switch_view("graph");
+                    break;
+                case "gridButton":
+                    view.switch_view("grid");
+                    break;
+                case "hiveButton":
+                    view.switch_view("hive");
+                    break;
+                case "parallelButton":
+                    view.switch_view("parallel");
+                    break;
+                case "balloonButton":
+                    view.switch_view("balloon");
+                    break;
+                case "linkButton":
+                    view.switch_view("link");
+                    break;
+                case "chordButton":
+                    view.switch_view("chord");
+                    break;
+                case "consoleButton":
+                    view.switch_view("console");
+                    break;
+            }
+        });
     },
 };
