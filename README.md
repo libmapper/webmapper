@@ -102,7 +102,7 @@ We have explored several alternative visualization and interaction techniques, w
 
 Status: development
 
-This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and overlay add a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
+This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and add a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/chord.png">
 
@@ -121,7 +121,7 @@ In this view, `source` signals are listed along the left side of a grid, while `
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view `Command-4`
 
-The canvas view is loosely modeled after the UI for the application ICon (Input Configurator) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
+The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)](http://inputconf.sourceforge.net/) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/canvas.png">
 
@@ -147,7 +147,7 @@ In this view, each device is given its own axis arranged radially. Signals belon
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/hive.png">
 
-### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel plot view `Command-7`
+### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view `Command-7`
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/parallel.png">
 
