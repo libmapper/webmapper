@@ -137,7 +137,7 @@ class Table {
                 'left': innerLeft ? innerLeft : 0,
                 'top': 0,
                 'width': innerWidth ? innerWidth : '100%',
-                'height': '100%',
+                'height': self.frame.height - 20,
             });
             if (func)
                 func();
@@ -390,20 +390,22 @@ class Table {
     adjustRowHeight() {
         // adjust row heights to fill table
         let natRowHeight = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (natRowHeight > 18) {
+        if (natRowHeight > 16) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
         let rowHeight = natRowHeight * this.zoomed;
-        if (rowHeight < 18) {
-            rowHeight = 18;
+        if (rowHeight < 16) {
+            rowHeight = 16;
             this.zoomed = rowHeight / natRowHeight;
         }
         let changed = (Math.round(rowHeight) != Math.round(this.rowHeight));
-        this.rowHeight = rowHeight;
-        if (changed)
-            $("#"+this.id+' tbody tr').css('height', this.rowHeight+'px');
+        if (changed) {
+            this.rowHeight = $("#"+this.id+' tbody tr')
+                                .css('height', rowHeight+'px')
+                                .height();
+        }
         return changed;
     }
 
