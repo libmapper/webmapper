@@ -105,63 +105,6 @@ function initMonitorCommands() {
  */
 function initViewCommands()
 {
-    $('.viewButton').on("mousedown", function(e) {
-        switch ($(this)[0].id) {
-            case "listButton":
-                view.switch_view("list");
-                break;
-            case "canvasButton":
-                view.switch_view("canvas");
-                break;
-            case "graphButton":
-                view.switch_view("graph");
-                break;
-            case "gridButton":
-                view.switch_view("grid");
-                break;
-            case "hiveButton":
-                view.switch_view("hive");
-                break;
-            case "parallelButton":
-                view.switch_view("parallel");
-                break;
-            case "balloonButton":
-                view.switch_view("balloon");
-                break;
-            case "linkButton":
-                view.switch_view("link");
-                break;
-            case "chordButton":
-                view.switch_view("chord");
-                break;
-            case "consoleButton":
-                view.switch_view("console");
-                break;
-        }
-        $('.viewButton').removeClass("viewButtonsel");
-        $(this).addClass("viewButtonsel");
-    });
-
-    // TODO: add "save as" option
-    $('#saveButton').on('click', function(e) {
-        e.stopPropagation();
-        let file = database.exportFile();
-        if (!file)
-            return;
-
-        let link = document.createElement('a');
-        let blob = new Blob([JSON.stringify(file, null, '\t')]);
-        let url = URL.createObjectURL(blob);
-        link.href = url;
-        link.setAttribute('download', 'mapping.json');
-        link.click();
-    });
-
-    $('#loadButton').click(function(e) {
-        e.stopPropagation();
-        input.trigger("click"); // open dialog
-    });
-
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true)
             return;
@@ -213,8 +156,6 @@ function initViewCommands()
         }
         if (new_view) {
             view.switch_view(new_view);
-            $('.viewButton').removeClass("viewButtonsel");
-            $('#'+new_view+'Button').addClass("viewButtonsel");
         }
     });
 
@@ -252,13 +193,6 @@ function initViewCommands()
             });
         }
         wheeling = true;
-    });
-
-    // Search function boxes
-    $('#srcSearch, #dstSearch').on('input', function(e) {
-        e.stopPropagation();
-        let id = e.currentTarget.id;
-        view.filterSignals(id, $('#'+id).val());
     });
 
     // from list view
