@@ -194,13 +194,6 @@ function initViewCommands()
         wheeling = true;
     });
 
-    // Search function boxes
-    $('#srcSearch, #dstSearch').on('input', function(e) {
-        e.stopPropagation();
-        let id = e.currentTarget.id;
-        view.filterSignals(id, $('#'+id).val());
-    });
-
     // from list view
     // requests links and maps from the selected device (tab)
     $("#container").on("tab", function(e, tab){

@@ -22,5 +22,11 @@ SignalFilter.prototype = {
                     "</div>"+
                 "</div>"+
             "</div>");
+        
+        $('#srcSearch, #dstSearch').on('input', function(e) {
+            e.stopPropagation();
+            let id = e.currentTarget.id;
+            view.filterSignals(id, $('#'+id).val());
+        });
     },
 };
