@@ -12,7 +12,7 @@ ViewSelector.prototype = {
                 "<div class='topMenuTitle'><strong>VIEW</strong></div>"+
                 "<div class='topMenuContainer' style='padding:0px'>"+
                     "<div>"+
-                        "<div id='chordButton' class='viewButton viewButtonsel'></div>"+
+                        "<div id='chordButton' class='viewButton'></div>"+
                         "<div id='listButton' class='viewButton'></div>"+
                         "<div id='gridButton' class='viewButton'></div>"+
                         "<div id='canvasButton' class='viewButton'></div>"+
@@ -61,8 +61,6 @@ ViewSelector.prototype = {
                 view.switch_view("console");
                 break;
         }
-        $('.viewButton').removeClass("viewButtonsel");
-        $(this).addClass("viewButtonsel");
     });
     },
 };

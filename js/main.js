@@ -175,8 +175,6 @@ function initViewCommands()
         }
         if (new_view) {
             view.switch_view(new_view);
-            $('.viewButton').removeClass("viewButtonsel");
-            $('#'+new_view+'Button').addClass("viewButtonsel");
         }
     });
 

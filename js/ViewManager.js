@@ -72,6 +72,11 @@ function ViewManager(container, database)
         }
 
         view.update();
+
+        // unhighlight all view select buttons
+        $('.viewButton').removeClass("viewButtonsel");
+        // highlight the select button for the new view
+        $('#'+viewType+'Button').addClass("viewButtonsel");
     }
 
     resize_elements = function(duration) {
