@@ -118,7 +118,7 @@ class View {
 
     updateDevices(func) {
         for (var i in this.tables)
-            this.tables[i].update(this.frame.height);
+            this.tables[i].update();
 
         let self = this;
         let devIndex = 0;

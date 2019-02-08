@@ -143,6 +143,7 @@ class Table {
                 func();
         }});
         $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
+        this.targetHeight = height - 20;
     }
 
     filterByName(string) {
