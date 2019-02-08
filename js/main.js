@@ -1,10 +1,7 @@
 "use strict";
 var database = new MapperDatabase();
 
-var view;                       // holds the current view object
-var viewIndex;                  // index of current view
-var viewData = new Array(3);    // data specific to the view, change 3 the number of views
-
+var view;
 var mapProperties;
 var devFilter;
 var saverLoader;
@@ -66,7 +63,11 @@ function init() {
         function() {
             switch (index) {
             case 0:
-                switch_mode('new');
+                $('#container').empty();
+                view = new ViewManager(document.getElementById('container'), database);
+                view.init();
+                view.on_resize();
+                mapProperties.clearMapProperties();
                 command.start();
                 command.send('refresh');
                 command.send('get_networks');
@@ -377,46 +378,6 @@ function initMapPropertiesCommands()
 function refresh_all() {
     database.clearAll();
     command.send('refresh');
-}
-
-/**
- * Called by the view selector to change the current view
- */
-function switch_mode(newMode)
-{
-    if (view) {
-        // save view settings
-        if (typeof view.save_view_settings == 'function')
-            viewData[viewIndex] = view.save_view_settings();
-        
-        // tell the view to cleanup (ex: removing event listeners)
-        view.cleanup();
-    }
-    
-    $('#container').empty();
-    switch (newMode) {
-        case 'classic':
-            view = new listView(database);
-            viewIndex = 0;
-            view.init();
-            break;
-        case 'new':
-            view = new ViewManager(document.getElementById('container'), database);
-            viewIndex = 3;
-            view.init();
-            view.on_resize();
-            break;
-        default:
-            //console.log(newMode);
-    }
-
-//    // load view settings (if any)
-//    if (viewData[viewIndex]) {
-//        if (typeof view.load_view_settings == 'function')
-//            view.load_view_settings(viewData[viewIndex]);
-//    }
-
-    mapProperties.clearMapProperties();
 }
 
 function select_obj(obj) {
