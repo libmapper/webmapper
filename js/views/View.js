@@ -990,10 +990,14 @@ class View {
                     for (index in self.tables) {
                         // check if cursor is within snapping range
                         dst = self.tables[index].getRowFromPosition(x, y, 0.2);
-                        if (dst) {
-                            dst_table = self.tables[index];
-                            break;
+                        if (!dst) continue;
+                        if (dst.id == src.id) {
+                            console.log("destination of newmap == source");
+                            dst = null;
+                            continue;
                         }
+                        dst_table = self.tables[index];
+                        break;
                     }
 
                     if (src_table == dst_table) {
