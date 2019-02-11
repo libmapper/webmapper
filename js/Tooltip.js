@@ -34,9 +34,9 @@ class Tooltip {
     static _makeInfoTable(h, d) {
         var header = "<tr><th colspan='2'>" + h + "</th></tr>";
         var data = '';
-        for (key in d) {
+        for (var key in d) {
             if (!d.hasOwnProperty(key)) continue;
-            data += "<tr><td>"key+"</td><td>"+d[key]+"</td></tr>";
+            data += "<tr><td>"+key+"</td><td>"+d[key]+"</td></tr>";
         }
         return "<table class=infoTable><tbody>"+header+data+"</tbody>";
     }
