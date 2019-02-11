@@ -137,6 +137,20 @@ class ConsoleView extends View {
                             }
                             $('#TopMenuWrapper').trigger('setMap', [msg]);
                             break;
+                        case 'ls':
+                            if (command.length == 2) {
+                            let dev = null;
+                            dev = self.database.devices.find(command[1]);
+                                if (dev) {
+                                    let echo = this.echo;
+                                    echo('device '+dev.name+' has '+
+                                         dev.signals.size()+' signals:');
+                                    let index = 0;
+                                    dev.signals.each(function(sig) {
+                                        echo(' '+(++index)+'. <signal> '+sig.key);
+                                    });
+                                }
+                            }
                         case 'devices':
                         case 'devs':
                             let index = 0;

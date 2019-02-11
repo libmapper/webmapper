@@ -25,7 +25,8 @@ function init() {
 
     // init the top menu
     $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"));
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
+                                  database);
     saverLoader.init();
     viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
     viewSelector.init();
@@ -147,7 +148,7 @@ function initViewCommands()
                 break;
             case 79:
                 e.preventDefault();
-                input.trigger("click");
+                saverLoader.fileOpenDialog();
                 break;
             case 48:
                 e.preventDefault();
@@ -256,46 +257,6 @@ function initViewCommands()
         mapProperties.updateSaveLocation(view.get_save_location());
     });
 
-    input = $(document.createElement("input"));
-    input.attr("type", "file");
-    input.on('change', function(e) {
-        var f = e.target.files[0];
-        let reader = new FileReader();
-        reader.onload = (function(file) {
-            return function(e) {
-                let parsed = tryParseJSON(e.target.result);
-                if (!parsed || !parsed.fileversion || !parsed.mapping) {
-                    console.log("error: invalid file");
-                    reader.abort();
-                    return;
-                }
-                if (parsed.fileversion == "2.2") {
-                    if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
-                        console.log("error: no maps in file");
-                        reader.abort();
-                        return;
-                    }
-                }
-                else if (parsed.fileversion == "2.1") {
-                    if (   !parsed.mapping.connections
-                        || !parsed.mapping.connections.length) {
-                        console.log("error: no maps in file");
-                        reader.abort();
-                        return;
-                    }
-                }
-                else {
-                    console.log("error: unsupported fileversion",
-                                parsed.fileversion);
-                    reader.abort();
-                    return;
-                }
-                database.loadFile(parsed);
-                view.switch_view("chord");
-            };
-        })(f);
-        reader.readAsText(f);
-    });
 }
 
 function initMapPropertiesCommands()

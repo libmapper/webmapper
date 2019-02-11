@@ -42,17 +42,17 @@ If the browser doesn't open, open it manually and type "localhost:#####" into th
 
 ### Saving and loading:
 
-<img style="padding:0px;vertical-align:middle" src="./images/screenshots/file_io.png">
+<img style="padding:0px;vertical-align:middle" src="./doc/screenshots/file_io.png">
 
 Recent versions of Webmapper have added a new functionality called *map staging*. While the previous naïve approach loaded saved maps against all of the device names in the current tab, loading a file now switches to a new view showing only devices and network links. The file is parsed to retrieve the number of devices involved, and an interactive object is displayed allowing the user to assign device representations from the file to devices that are active on the network. Once the devices have been assigned, clicking on the central file representation launches an attempt to recreate the saved maps.
 
 ### Searching/filtering signals
 
-<img style="padding:0px;vertical-align:middle" src="./images/screenshots/signal_filter.png">
+<img style="padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
 
 ### Editing map properties
 
-<img style="padding:0px;vertical-align:middle" src="./images/screenshots/map_properties.png">
+<img style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
 
 If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s):
 
@@ -92,7 +92,7 @@ Lines representing inter-signal maps may be drawn between the signals on each si
 
 ## Views:
 
-<img style="padding:0px;vertical-align:middle" src="./images/screenshots/view_selector.png">
+<img style="padding:0px;vertical-align:middle" src="./doc/screenshots/view_selector.png">
 
 We have explored several alternative visualization and interaction techniques, which allow more informed and flexible interaction with the mapping network. Crucially, we believe that there is no need for a single “correct” user interface; rather, different network representations and interaction approaches may be useful to different users, for different mapping tasks, or at different times.
 
@@ -104,26 +104,26 @@ Status: development
 
 This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and add a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/chord.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/chord.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view `Command-2`
 
 The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/list.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/list.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view `Command-3`
 
 In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/grid.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/grid.png">
 
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view `Command-4`
 
 The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)](http://inputconf.sourceforge.net/) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/canvas.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/canvas.png">
 
 #### View-specific interactions
 
@@ -134,7 +134,7 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view `Command-5`
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/graph.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/graph.png">
 
 #### View-specific interactions
 
@@ -145,14 +145,16 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 
 In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/hive.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/hive.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view `Command-7`
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/parallel.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/parallel.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view `Command-8`
 
-<img style="padding:0px;box-shadow:0 4px 8px 0" src="./images/screenshots/dark/console.png">
+<img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/console.png">
 
 ## Working Offline
+
+Status: planning
