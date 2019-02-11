@@ -187,6 +187,13 @@ class HiveView extends View {
                 return false;
             });
         }
+        if (elements.indexOf('signals') >= 0) {
+            this.updateSignals(function(sig) {
+                if (!sig.position)
+                    sig.position = position(null, null, self.frame);
+                return false;
+            });
+        }
         if (elements.indexOf('maps') >= 0)
             this.updateMaps();
         this.draw(1000);

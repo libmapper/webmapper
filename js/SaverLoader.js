@@ -1,5 +1,5 @@
 function SaverLoader(container, database) {
-    let _self = this;
+    let self = this;
     this._container = container;
     this._database = database;
     this.input = $(document.createElement("input"));
@@ -36,7 +36,7 @@ function SaverLoader(container, database) {
                     reader.abort();
                     return;
                 }
-                _self._database.loadFile(parsed);
+                self._database.loadFile(parsed);
                 view.switch_view("chord");
             };
         })(f);
@@ -51,7 +51,7 @@ SaverLoader.prototype = {
 
     // Initialize the Top Menu Bar Component
     init : function() {
-        var _self = this;   // to pass to context of THIS to event handlers
+        var self = this;   // to pass context of THIS to event handlers
 
         $(this._container).append(
             "<div id='saverLoaderDiv' class='topMenu' style='width:75px;'>"+
@@ -65,7 +65,7 @@ SaverLoader.prototype = {
         // TODO: add "save as" option
         $('#saveButton').on('click', function(e) {
             e.stopPropagation();
-            let file = _self._database.exportFile();
+            let file = self._database.exportFile();
             if (!file)
                 return;
 
@@ -79,7 +79,7 @@ SaverLoader.prototype = {
 
         $('#loadButton').click(function(e) {
             e.stopPropagation();
-            _self.openDialog();
+            self.openDialog();
         });
     },
 };

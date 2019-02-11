@@ -63,7 +63,7 @@ thead, #networkMenu {
     background: #EEE;
 }
 
-.calibratesel {
+.calibratesel, .setlinearsel {
     background-color: #9CC2CF;
 }
 
@@ -225,7 +225,7 @@ form {
     top: 0px;
 }
 
-.calibrate {
+.calibrate, .setlinear {
     cursor: pointer;
 }
 
@@ -456,7 +456,7 @@ tbody {
 }
 
 /* Rows and headers */
-.tableDiv th {
+.tableDiv th, td {
     cursor: pointer;
     font-weight: inherit;
 /*    text-align: left;*/
@@ -465,6 +465,8 @@ tbody {
     font-size: 10pt;
     padding-left: 10px;
     padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 .invisible {
@@ -474,6 +476,8 @@ tbody {
 .displayTable tr td {
     vertical-align: middle;
     cursor: default;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 .displayTable td {
@@ -485,7 +489,7 @@ tbody {
 
 #status {
     padding: 4px 6px 4px 6px;
-    vertical-align: middle;
+/*    vertical-align: middle;*/
     position: absolute;
 /*    text-align: left;*/
     color: white;
@@ -506,6 +510,7 @@ table.infoTable tr td {
     padding-left: 5px;
     padding-right: 5px;
     padding-top: 2px;
+    overflow: hidden;
 }
 
 table.infoTable tr td:first-child {
@@ -602,4 +607,12 @@ table.infoTable tr td:first-child {
 .disabled {
     opacity: 0.5 !important;
     pointer-events: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0px;
+    padding: 0;
+    font-weight: bold;
+    -webkit-font-smoothing: antialiased;
+    cursor: text;
 }

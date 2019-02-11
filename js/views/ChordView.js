@@ -101,10 +101,8 @@ class ChordView extends View {
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
         this.database.devices.each(function(dev) {
-            let staged = false;
             let offline = (dev.status == 'offline');
-
-            let r = self.radius + (staged ? 60 : 0);
+            let r = self.radius;
 
             if (offline)
                 dev.index = offlineIndex++;
@@ -112,7 +110,7 @@ class ChordView extends View {
                 dev.index = onlineIndex++;
             let angleInc = offline ? self.offlineInc : self.onlineInc;
             let x = cx * (offline ? 1.5 : 0.5);
-            let angle = dev.index * angleInc - angleInc * 0.45;
+            let angle = (dev.index - 0.45) * angleInc;
             let pstart = {'angle': angle,
                           'x': x + Math.cos(angle) * r,
                           'y': cy + Math.sin(angle) * r};
@@ -133,6 +131,7 @@ class ChordView extends View {
             }
             dev.view.pstart = pstart;
             dev.view.pstop = pstop;
+            dev.view.radius = r;
 
             self.setDevHover(dev);
             if (offline)
@@ -160,7 +159,7 @@ class ChordView extends View {
                 r = self.radius;
                 cx2 = cx * 1.5;
                 angleInc = self.offlineInc;
-                angle = dev.index * angleInc;
+                angle = (dev.index - 0.45) * angleInc;
                 self.snappingTo = null;
                 dev.view.pstart = {'angle': angle,
                                    'x': cx2 + Math.cos(angle) * r,
@@ -169,6 +168,7 @@ class ChordView extends View {
                 dev.view.pstop = {'angle': angle,
                                   'x': cx2 + Math.cos(angle) * r,
                                   'y': cy + Math.sin(angle) * r};
+                dev.view.radius = r;
                 self.drawDevice(dev, 500, self);
                 for (var i in dev.links) {
                     let link = self.database.links.find(dev.links[i]);
@@ -190,7 +190,7 @@ class ChordView extends View {
                     r = self.radius;
                     cx2 = cx * 1.5;
                     angleInc = self.offlineInc;
-                    angle = dev.index * angleInc;
+                    angle = (dev.index - 0.45) * angleInc;
                     self.snappingTo = null;
                 }
                 else {
@@ -199,7 +199,7 @@ class ChordView extends View {
                     cx2 = cx * 0.5;
                     angleInc = self.onlineInc;
                     angle = Math.atan2(y - cy, x - cx2);
-                    angle = Math.round(angle / angleInc) * angleInc;
+                    angle = (Math.round(angle / angleInc) - 0.45) * angleInc;
                 }
                 if (angle == lastAngle)
                     return;
@@ -211,6 +211,7 @@ class ChordView extends View {
                 dev.view.pstop = {'angle': angle,
                                   'x': cx2 + Math.cos(angle) * r,
                                   'y': cy + Math.sin(angle) * r};
+                dev.view.radius = r;
                 self.drawDevice(dev, 500, self);
                 for (var i in dev.links) {
                     let link = self.database.links.find(dev.links[i]);
@@ -238,13 +239,11 @@ class ChordView extends View {
             return;
         dev.view.stop();
         let staged = false;
-        let r = self.radius;
+        let r = dev.view.radius;
         let angleInc;
         if (dev.status == 'offline') {
-            if (dev.draggingFrom) {
-                r += 50;
+            if (dev.draggingFrom)
                 angleInc = self.onlineInc;
-            }
             else
                 angleInc = self.offlineInc;
         }
