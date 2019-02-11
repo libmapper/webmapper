@@ -36,6 +36,10 @@ class GridView extends View {
 
         this.update();
         this.resize(null, 1000);
+
+        // move svg canvas to front
+        $('#svgDiv').css('position', 'relative');
+        $('#svgDiv').css('z-index', 2);
     }
 
     resize(newFrame, duration) {
@@ -86,6 +90,9 @@ class GridView extends View {
 
     cleanup() {
         super.cleanup();
+
+        // move svg canvas to back
+        $('#svgDiv').css('z-index', 0);
 
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {

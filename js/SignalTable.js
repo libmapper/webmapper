@@ -313,6 +313,8 @@ class Table {
 
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
+        if (row[0].className == 'device')
+            return;
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
         let output;
