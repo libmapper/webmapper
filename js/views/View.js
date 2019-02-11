@@ -118,7 +118,7 @@ class View {
 
     updateDevices(func) {
         for (var i in this.tables)
-            this.tables[i].update(this.frame.height);
+            this.tables[i].update();
 
         let self = this;
         let devIndex = 0;
@@ -205,11 +205,13 @@ class View {
             if (dev.tableIndices.length == 1) {
                 let row = dev.tableIndices[0];
                 let pos = self.tables[row.table].getRowFromIndex(row.index);
-                path = [['M', pos.left, pos.top],
-                        ['l', pos.width, 0],
-                        ['l', 0, pos.height],
-                        ['l', -pos.width, 0],
-                        ['Z']];
+                if (pos) {
+                    path = [['M', pos.left, pos.top],
+                            ['l', pos.width, 0],
+                            ['l', 0, pos.height],
+                            ['l', -pos.width, 0],
+                            ['Z']];
+                }
             }
             else if (self.tables.right.snap == 'left') {
                 let lrow = null, rrow = null;
@@ -291,7 +293,7 @@ class View {
                                                 "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
                                                 "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
                                                 "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
-                                                "<tr><td>angle</td><td>"+((dev.view.pstart.angle + dev.view.pstop.angle) * 0.5)+"</td></tr>"+
+//                                                "<tr><td>angle</td><td>"+((dev.view.pstart.angle + dev.view.pstop.angle) * 0.5)+"</td></tr>"+
                                             "</tbody>"+
                                         "</table>")
                                 .css({'left': e.x + 20,
@@ -404,7 +406,22 @@ class View {
             function() {
                 if (!sig.view.label) {
                     // show label
-                    let typestring = sig.length > 1 ? sig.type+'['+sig.length+']' : sig.type;
+                    let type;
+                    switch (sig.type) {
+                        case 'i':
+                            type = 'int';
+                            break;
+                        case 'f':
+                            type = 'float';
+                            break;
+                        case 'd':
+                            type = 'double';
+                            break;
+                        default:
+                            type = '?';
+                            break;
+                    }
+                    let typestring = sig.length > 1 ? type+'['+sig.length+']' : type;
                     let minstring = sig.min != null ? sig.min : '';
                     let maxstring = sig.max != null ? sig.max : '';
                     $('#status').stop(true, false)
@@ -420,8 +437,8 @@ class View {
                                         "<tr><td>maximum</td><td>"+maxstring+"</td></tr>"+
                                            "</tbody>"+
                                         "</table>")
-                                .css({'left': sig.position.x + 20,
-                                      'top': sig.position.y + 70,
+                                .css({'left': sig.position.x + 20 - self.svgPosX,
+                                      'top': sig.position.y + 70 - self.svgPosY,
                                       'opacity': 1});
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
@@ -656,19 +673,25 @@ class View {
                 }
             }
             else if (src.vy != dst.vy) {
+                // constrain positions to pane to indicate offscreen maps
+                // todo: make function
+                if (src.x < this.leftTableLeft) {
+                    // constrain to bounds
+                    // display a white dot
+                }
                 // draw intersection between tables
                 if (map.view)
                     map.view.attr({'arrow-end': 'none'});
                 if (src.vx < 0.0001) {
-                    return [['M', src.left, dst.y],
-                            ['L', src.left + src.width, dst.top],
-                            ['l', 0, dst.height],
+                    return [['M', src.left + 2, dst.y],
+                            ['L', src.left + src.width - 2, dst.top + 2],
+                            ['l', 0, dst.height - 2],
                             ['Z']];
                 }
                 else {
-                    return [['M', dst.x, src.top],
-                            ['L', dst.left, src.top + src.height],
-                            ['l', dst.width, 0],
+                    return [['M', dst.x, src.top + 2],
+                            ['L', dst.left + 2, src.top + src.height - 2],
+                            ['l', dst.width - 2, 0],
                             ['Z']]
                 }
             }
@@ -870,7 +893,7 @@ class View {
             }
         }
         else {
-            if (direction == 'src')
+            if (direction == 'output')
                 this.srcregexp = text ? new RegExp(text, 'i') : null;
             else
                 this.dstregexp = text ? new RegExp(text, 'i') : null;
@@ -1014,9 +1037,9 @@ class View {
                     if (dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
-                                        'dst': self.database.find_signal(dst.id),
-                                        'key': src.id + '->' + dst.id,
-                                        'status': 'staged'});
+                                                'dst': self.database.find_signal(dst.id),
+                                                'key': src.id + '->' + dst.id,
+                                                'status': 'staged'});
                     }
                     // clear table highlights
                     self.tables.left.highlightRow(null, true);

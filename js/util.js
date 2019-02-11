@@ -391,7 +391,7 @@ function position(x, y, frame) {
 function select_all_maps() {
     let updated = false;
     database.maps.each(function(map) {
-        if (!map.selected)
+        if (map.selected)
             return;
         if (map.view && !map.selected) {
             if (map.view.attr('stroke-opacity') > 0) {
