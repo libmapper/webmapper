@@ -94,6 +94,8 @@ function ViewManager(container, database)
         database.clear_callbacks();
         database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
+                // remove maps immediately to avoid svg arrow animation bug
+                if (type == 'map') remove_object_svg(obj, 1); 
                 remove_object_svg(obj);
                 return;
             }
