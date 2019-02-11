@@ -7,6 +7,7 @@ function ViewManager(container, database, tooltip)
     let frame = null;
     let canvas = null;
     let tables = { 'left': null, 'right': null };
+    this.tooltip = tooltip;
 
     let duration = 1000;
 
@@ -199,11 +200,13 @@ function ViewManager(container, database, tooltip)
                 }
                 /* delete */
                 // do not allow 'delete' key to unmpa in console view
-                if (view.type == 'console')
-                    break;
+                if (view.type == 'console') break;
                 database.maps.each(function(map) {
                     if (map.selected)
+                    {
                         $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                        tooltip.hide();
+                    }
                 });
                 deselectAllMaps(tables);
                 break;
