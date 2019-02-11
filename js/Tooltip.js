@@ -6,10 +6,10 @@ class Tooltip {
         this._div = $('#tooltip');
     }
 
-    show(html, x, y) {
+    showTable(header, data, x, y) {
         this._div.stop(true, false)
                  .empty()
-                 .append(html)
+                 .append(Tooltip._makeInfoTable(header, data))
                  .css({'left': x + 20,
                        'top': y,
                        'opacity': 1});
@@ -31,4 +31,13 @@ class Tooltip {
                  .animate({opacity: 0}, {duration: 2000});
     }
 
+    static _makeInfoTable(h, d) {
+        var header = "<tr><th colspan='2'>" + h + "</th></tr>";
+        var data = '';
+        for (key in d) {
+            if (!d.hasOwnProperty(key)) continue;
+            data += "<tr><td>"key+"</td><td>"+d[key]+"</td></tr>";
+        }
+        return "<table class=infoTable><tbody>"+header+data+"</tbody>";
+    }
 }

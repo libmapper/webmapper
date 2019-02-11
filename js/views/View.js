@@ -286,13 +286,11 @@ class View {
         dev.view.hover(
             function(e) {
                 if (!hovered && !dev.view.label) {
-                    self.tooltip.show("<table class=infoTable>"+
-                                    "<tbody>"+
-                                        "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
-                                        "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
-                                        "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
-                                    "</tbody>"+
-                                "</table>", e.x, e.y);
+                    self.tooltip.showTable(
+                        dev.status+" device", {
+                            name: dev.name,
+                            signals: dev.signals.size()
+                        }, e.x, e.y);
                     if (self.type == 'chord')
                         dev.view.toFront()
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
@@ -326,13 +324,11 @@ class View {
         link.view.unhover();
         link.view.hover(
             function(e) {
-                self.tooltip.show("<table class=infoTable>"+
-                            "<tbody>"+
-                                "<tr><th colspan='2'>"+link.status+" link</th></tr>"+
-                                "<tr><td>source</td><td>"+link.src.key+"</td></tr>"+
-                                "<tr><td>destination</td><td>"+link.dst.key+"</td></tr>"+
-                            "</tbody>"+
-                        "</table>", e.x, e.y);
+                self.tooltip.showTable(
+                    link.status+" link", {
+                        source: link.src.key,
+                        destination: link.dst.key
+                    }, e.x, e.y);
                 link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
                 link.src.view.toFront();
                 if (link.src.staged)
@@ -410,17 +406,15 @@ class View {
                     let typestring = sig.length > 1 ? type+'['+sig.length+']' : type;
                     let minstring = sig.min != null ? sig.min : '';
                     let maxstring = sig.max != null ? sig.max : '';
-                    self.tooltip.show("<table class=infoTable>"+
-                                "<tbody>"+
-                                    "<tr><th colspan='2'>"+sig.device.status+" signal</th></tr>"+
-                                        "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
-                                        "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
-                            "<tr><td>type</td><td>"+typestring+"</td></tr>"+
-                            "<tr><td>unit</td><td>"+sig.unit+"</td></tr>"+
-                            "<tr><td>minimum</td><td>"+minstring+"</td></tr>"+
-                            "<tr><td>maximum</td><td>"+maxstring+"</td></tr>"+
-                                "</tbody>"+
-                            "</table>", sig.position.x, sig.position.y);
+                    self.tooltip.showTable(
+                        sig.device.status+" signal", {
+                            name: sig.key,
+                            direction: sig.direction,
+                            type: typestring,
+                            unit: sig.unit,
+                            minimum: minstring,
+                            maximum: maxstring,
+                        }, sig.position.x, sig.position.y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
@@ -560,15 +554,13 @@ class View {
         map.view.unhover();
         map.view.hover(
             function(e) {
-                self.tooltip.show("<table class=infoTable>"+
-                            "<tbody>"+
-                                "<tr><th colspan='2'>Map</th></tr>"+
-                                    "<tr><td>source</td><td>"+map.src.key+"</td></tr>"+
-                                    "<tr><td>destination</td><td>"+map.dst.key+"</td></tr>"+
-                                    "<tr><td>mode</td><td>"+map.mode+"</td></tr>"+
-                                    "<tr><td>expression</td><td>"+map.expression+"</td></tr>"+
-                            "</tbody>"+
-                        "</table>", e.x, e.y);
+                self.tooltip.showTable(
+                    "Map", {
+                        source: map.src.key,
+                        destination: map.dst.key,
+                        mode: map.mode,
+                        expression: map.expression,
+                    }, e.x, e.y);
                 map.view.animate({'stroke-width': 4}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
@@ -953,14 +945,10 @@ class View {
                     for (index in self.tables) {
                         // check if cursor is within snapping range
                         dst = self.tables[index].getRowFromPosition(x, y, 0.2);
-                        if (!dst) continue;
-                        if (dst.id == src.id) {
-                            console.log("destination of newmap == source");
-                            dst = null;
-                            continue;
+                        if (dst) {
+                            dst_table = self.tables[index];
+                            break;
                         }
-                        dst_table = self.tables[index];
-                        break;
                     }
 
                     if (src_table == dst_table) {
