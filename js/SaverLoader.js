@@ -1,4 +1,5 @@
 function SaverLoader(container, database) {
+    var self = this;   // to pass context of THIS to event handlers
     this._container = container;
     this._database = database;
     this.input = $(document.createElement("input"));
@@ -50,8 +51,7 @@ SaverLoader.prototype = {
 
     // Initialize the Top Menu Bar Component
     init : function() {
-        var self = this;   // to pass context of THIS to event handlers
-
+        let self = this;   // to pass context of THIS to event handlers
         $(this._container).append(
             "<div id='saverLoaderDiv' class='topMenu' style='width:75px;'>"+
                 "<div class='topMenuTitle'><strong>FILE</strong></div>"+
