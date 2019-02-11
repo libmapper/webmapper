@@ -5,8 +5,8 @@
 'use strict';
 
 class ConsoleView extends View {
-    constructor(frame, tables, canvas, database) {
-        super('console', frame, null, canvas, database);
+    constructor(frame, tables, canvas, database, tooltip) {
+        super('console', frame, null, canvas, database, tooltip);
 
         // hide left table
         tables.left.adjust(0, 0, 0, frame.height, 0, 1000);

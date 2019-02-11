@@ -6,6 +6,7 @@ var mapProperties;
 var devFilter;
 var saverLoader;
 var viewSelector;
+var tooltip;
 
 var input;
 
@@ -34,6 +35,7 @@ function init() {
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
                                       database);
     mapProperties.init();
+    tooltip = new Tooltip();
 
     // init controller
     initMonitorCommands();
@@ -64,7 +66,7 @@ function init() {
             switch (index) {
             case 0:
                 $('#container').empty();
-                view = new ViewManager(document.getElementById('container'), database);
+                view = new ViewManager(document.getElementById('container'), database, tooltip);
                 view.init();
                 view.on_resize();
                 mapProperties.clearMapProperties();

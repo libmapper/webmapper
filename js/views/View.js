@@ -12,12 +12,13 @@
 'use strict';
 
 class View {
-    constructor(type, frame, tables, canvas, database) {
+    constructor(type, frame, tables, canvas, database, tooltip) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
         this.canvas = canvas;
         this.database = database;
+        this.tooltip = tooltip;
 
         this.srcregexp = null;
         this.dstregexp = null;
@@ -64,7 +65,7 @@ class View {
         this.yAxis = null;
 
         this.canvas.setViewBox(0, 0, frame.width, frame.height, false);
-        $('#status').text('');
+        this.tooltip.hide(true);
 
         // remove tableIndices from last view
         let self = this;
@@ -285,20 +286,13 @@ class View {
         dev.view.hover(
             function(e) {
                 if (!hovered && !dev.view.label) {
-                    // show label
-                    $('#status').stop(true, false)
-                                .empty()
-                                .append("<table class=infoTable>"+
-                                            "<tbody>"+
-                                                "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
-                                                "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
-                                                "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
-//                                                "<tr><td>angle</td><td>"+((dev.view.pstart.angle + dev.view.pstop.angle) * 0.5)+"</td></tr>"+
-                                            "</tbody>"+
-                                        "</table>")
-                                .css({'left': e.x + 20,
-                                      'top': e.y,
-                                      'opacity': 1});
+                    self.tooltip.show("<table class=infoTable>"+
+                                    "<tbody>"+
+                                        "<tr><th colspan='2'>"+dev.status+" device</th></tr>"+
+                                        "<tr><td>name</td><td>"+dev.name+"</td></tr>"+
+                                        "<tr><td>signals</td><td>"+dev.signals.size()+"</td></tr>"+
+                                    "</tbody>"+
+                                "</table>", e.x, e.y);
                     if (self.type == 'chord')
                         dev.view.toFront()
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
@@ -317,8 +311,7 @@ class View {
             function() {
                 self.snappingTo = null;
                 if (!self.draggingFrom) {
-                    $('#status').stop(true, false)
-                                .animate({opacity: 0}, {duration: 2000});
+                    self.tooltip.hide();
                     dev.view.animate({'stroke-width': 40}, 500, 'linear');
                     hovered = false;
                 }
@@ -333,19 +326,13 @@ class View {
         link.view.unhover();
         link.view.hover(
             function(e) {
-                // show label
-                $('#status').stop(true, false)
-                            .empty()
-                            .append("<table class=infoTable>"+
-                                        "<tbody>"+
-                                            "<tr><th colspan='2'>"+link.status+" link</th></tr>"+
-                                            "<tr><td>source</td><td>"+link.src.key+"</td></tr>"+
-                                            "<tr><td>destination</td><td>"+link.dst.key+"</td></tr>"+
-                                        "</tbody>"+
-                                    "</table>")
-                            .css({'left': e.x + 20,
-                                  'top': e.y,
-                                  'opacity': 1});
+                self.tooltip.show("<table class=infoTable>"+
+                            "<tbody>"+
+                                "<tr><th colspan='2'>"+link.status+" link</th></tr>"+
+                                "<tr><td>source</td><td>"+link.src.key+"</td></tr>"+
+                                "<tr><td>destination</td><td>"+link.dst.key+"</td></tr>"+
+                            "</tbody>"+
+                        "</table>", e.x, e.y);
                 link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
                 link.src.view.toFront();
                 if (link.src.staged)
@@ -355,8 +342,7 @@ class View {
                     link.dst.staged.view.toFront();
             },
             function() {
-                $('#status').stop(true, false)
-                            .animate({opacity: 0}, {duration: 2000});
+                self.tooltip.hide();
                 link.view.animate({'stroke-width': 0}, 0, 'linear');
             }
         );
@@ -424,22 +410,17 @@ class View {
                     let typestring = sig.length > 1 ? type+'['+sig.length+']' : type;
                     let minstring = sig.min != null ? sig.min : '';
                     let maxstring = sig.max != null ? sig.max : '';
-                    $('#status').stop(true, false)
-                                .empty()
-                                .append("<table class=infoTable>"+
-                                            "<tbody>"+
-                                                "<tr><th colspan='2'>"+sig.device.status+" signal</th></tr>"+
-                                                   "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
-                                                   "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
-                                        "<tr><td>type</td><td>"+typestring+"</td></tr>"+
-                                        "<tr><td>unit</td><td>"+sig.unit+"</td></tr>"+
-                                        "<tr><td>minimum</td><td>"+minstring+"</td></tr>"+
-                                        "<tr><td>maximum</td><td>"+maxstring+"</td></tr>"+
-                                           "</tbody>"+
-                                        "</table>")
-                                .css({'left': sig.position.x + 20 - self.svgPosX,
-                                      'top': sig.position.y + 70 - self.svgPosY,
-                                      'opacity': 1});
+                    self.tooltip.show("<table class=infoTable>"+
+                                "<tbody>"+
+                                    "<tr><th colspan='2'>"+sig.device.status+" signal</th></tr>"+
+                                        "<tr><td>name</td><td>"+sig.key+"</td></tr>"+
+                                        "<tr><td>direction</td><td>"+sig.direction+"</td></tr>"+
+                            "<tr><td>type</td><td>"+typestring+"</td></tr>"+
+                            "<tr><td>unit</td><td>"+sig.unit+"</td></tr>"+
+                            "<tr><td>minimum</td><td>"+minstring+"</td></tr>"+
+                            "<tr><td>maximum</td><td>"+maxstring+"</td></tr>"+
+                                "</tbody>"+
+                            "</table>", sig.position.x, sig.position.y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
@@ -462,8 +443,7 @@ class View {
             },
             function() {
                 self.snappingTo = null;
-                $('#status').stop(true, false)
-                            .animate({opacity: 0}, {duration: 2000});
+                self.tooltip.hide();
                 sig.view.animate({'stroke-width': 6}, 50, 'linear');
                 self.hoverDev = null;
                 console.log('set hoverDev to', self.hoverDev);
@@ -580,21 +560,15 @@ class View {
         map.view.unhover();
         map.view.hover(
             function(e) {
-                // show label
-                $('#status').stop(true, false)
-                            .empty()
-                            .append("<table class=infoTable>"+
-                                        "<tbody>"+
-                                            "<tr><th colspan='2'>Map</th></tr>"+
-                                                "<tr><td>source</td><td>"+map.src.key+"</td></tr>"+
-                                                "<tr><td>destination</td><td>"+map.dst.key+"</td></tr>"+
-                                                "<tr><td>mode</td><td>"+map.mode+"</td></tr>"+
-                                                "<tr><td>expression</td><td>"+map.expression+"</td></tr>"+
-                                        "</tbody>"+
-                                    "</table>")
-                            .css({'left': e.x + 20,
-                                  'top': e.y,
-                                  'opacity': 1});
+                self.tooltip.show("<table class=infoTable>"+
+                            "<tbody>"+
+                                "<tr><th colspan='2'>Map</th></tr>"+
+                                    "<tr><td>source</td><td>"+map.src.key+"</td></tr>"+
+                                    "<tr><td>destination</td><td>"+map.dst.key+"</td></tr>"+
+                                    "<tr><td>mode</td><td>"+map.mode+"</td></tr>"+
+                                    "<tr><td>expression</td><td>"+map.expression+"</td></tr>"+
+                            "</tbody>"+
+                        "</table>", e.x, e.y);
                 map.view.animate({'stroke-width': 4}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
@@ -615,8 +589,7 @@ class View {
             },
             function() {
                 self.snappingTo = null;
-                $('#status').stop(true, false)
-                            .animate({opacity: 0}, {duration: 2000});
+                self.tooltip.hide();
                 map.view.animate({'stroke-width': 2}, 50, 'linear');
             }
         );
@@ -818,12 +791,9 @@ class View {
         this.canvas.setViewBox(this.svgPosX, this.svgPosY,
                                this.frame.width * this.svgZoom,
                                this.frame.height * this.svgZoom, false);
-        $('#status').stop(true, false)
-                    .text('pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']')
-                    .css({'left': x + 10,
-                          'top': y + 60,
-                          'opacity': 1})
-                    .animate({opacity: 0}, {duration: 2000});
+        this.tooltip.showBrief(
+            'pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']', 
+            x, y);
     }
 
     tableZoom(x, y, delta) {
@@ -860,14 +830,7 @@ class View {
         this.canvas.setViewBox(this.svgPosX, this.svgPosY,
                                this.frame.width * newZoom,
                                this.frame.height * newZoom, false);
-
-        $('#status').stop(true, false)
-                    .text('zoom: '+(100/newZoom).toFixed(2)+'%')
-                    .css({'left': x + 10,
-                          'top': y + 60,
-                          'opacity': 1})
-                    .animate({opacity: 0}, {duration: 2000});
-
+        this.tooltip.showBrief( 'zoom: '+(100/newZoom).toFixed(2)+'%', x, y);
         this.svgZoom = newZoom;
     }
 
