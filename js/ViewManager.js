@@ -2,11 +2,12 @@
 //         ViewManager Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function ViewManager(container, database)
+function ViewManager(container, database, tooltip)
 {
     let frame = null;
     let canvas = null;
     let tables = { 'left': null, 'right': null };
+    this.tooltip = tooltip;
 
     let duration = 1000;
 
@@ -39,35 +40,35 @@ function ViewManager(container, database)
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, tables, canvas, database);
+                view = new BalloonView(frame, tables, canvas, database, tooltip);
                 break;
             case 'canvas':
-                view = new CanvasView(frame, tables, canvas, database);
+                view = new CanvasView(frame, tables, canvas, database, tooltip);
                 break;
             case 'graph':
-                view = new GraphView(frame, tables, canvas, database);
+                view = new GraphView(frame, tables, canvas, database, tooltip);
                 break;
             case 'grid':
-                view = new GridView(frame, tables, canvas, database);
+                view = new GridView(frame, tables, canvas, database, tooltip);
                 break;
             case 'parallel':
-                view = new ParallelView(frame, tables, canvas, database);
+                view = new ParallelView(frame, tables, canvas, database, tooltip);
                 break;
             case 'hive':
-                view = new HiveView(frame, tables, canvas, database);
+                view = new HiveView(frame, tables, canvas, database, tooltip);
                 break;
             case 'link':
-                view = new LinkView(frame, tables, canvas, database);
+                view = new LinkView(frame, tables, canvas, database, tooltip);
                 break;
             case 'chord':
-                view = new ChordView(frame, tables, canvas, database);
+                view = new ChordView(frame, tables, canvas, database, tooltip);
                 break;
             case 'console':
-                view = new ConsoleView(frame, tables, canvas, database);
+                view = new ConsoleView(frame, tables, canvas, database, tooltip);
                 break;
             case 'list':
             default:
-                view = new ListView(frame, tables, canvas, database);
+                view = new ListView(frame, tables, canvas, database, tooltip);
                 break;
         }
 
@@ -199,11 +200,13 @@ function ViewManager(container, database)
                 }
                 /* delete */
                 // do not allow 'delete' key to unmpa in console view
-                if (view.type == 'console')
-                    break;
+                if (view.type == 'console') break;
                 database.maps.each(function(map) {
                     if (map.selected)
+                    {
                         $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                        tooltip.hide();
+                    }
                 });
                 deselectAllMaps(tables);
                 break;

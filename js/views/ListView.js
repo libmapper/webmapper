@@ -5,9 +5,9 @@
 'use strict';
 
 class ListView extends View {
-    constructor(frame, tables, canvas, database) {
+    constructor(frame, tables, canvas, database, tooltip) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database);
+              canvas, database, tooltip);
 
         // set left table properties
         this.tables.left.filterByDirection('output');

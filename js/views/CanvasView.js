@@ -5,8 +5,8 @@
 'use strict';
 
 class CanvasView extends View {
-    constructor(frame, tables, canvas, database) {
-        super('canvas', frame, {'left': tables.left}, canvas, database);
+    constructor(frame, tables, canvas, database, tooltip) {
+        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip);
 
         // set left table properties
         this.tables.left.filterByDirection('both');

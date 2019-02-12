@@ -487,7 +487,7 @@ tbody {
 
 /*****************/
 
-#status {
+#tooltip {
     padding: 4px 6px 4px 6px;
 /*    vertical-align: middle;*/
     position: absolute;
@@ -499,7 +499,7 @@ tbody {
     white-space: pre-line;
 }
 
-table.infoTable {
+#table.infoTable {
     border-collapse: collapse;
 }
 
