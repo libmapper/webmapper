@@ -288,8 +288,9 @@ function initViewCommands()
                     reader.abort();
                     return;
                 }
-                database.loadFile(parsed);
-                view.switch_view("chord");
+                //database.loadFile(parsed);
+                database.loadFileSimple(parsed);
+                //view.switch_view("chord");
             };
         })(f);
         reader.readAsText(f);
