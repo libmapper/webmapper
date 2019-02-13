@@ -310,27 +310,30 @@ class Table {
             case 'left':
                 if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.1;
                 break;
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.9;
                 break;
             case 'bottom':
                 if (y > this.frame.top + this.frame.height * (1 + snapRatio))
                     return;
-                y = this.div[0].offsetTop + 50;
+                y = this.div[0].offsetTop + 5;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
                 return;
         }
+        console.log("looking for td at", x, y);
 
         let td = document.elementFromPoint(x, y);
+        console.log("td", td);
         let row = $(td).parents('tr');
-        if (row[0].className == 'device')
-            return;
+        console.log("row", row);
+//        if (row[0].className == 'device')
+//            return;
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
         let output;
@@ -594,82 +597,80 @@ class Table {
                 return a < b ? -1 : (a > b ? 1 : 0);
             });
 
+            function print_tree(foo, indent) {
+                let spaces = "";
+                for (i = 0; i < indent; i++)
+                    spaces += " ";
+                for (var i in foo.branches) {
+                    let leaf = "";
+                    if (foo.branches[i].leaf)
+                        leaf = "*";
+                    console.log(spaces, i, leaf, foo.branches[i].num_branches);
+                    print_tree(foo.branches[i], indent+2);
+                }
+            }
+
             // build a tree
-            var tree = {};
+            var tree = {"branches": {}, "num_branches": 0};
             for (var i in sigs) {
                 let sig = sigs[i];
                 var t = tree;
                 let tokens = sig.id.split('/');
                 if (tokens.length > max_depth)
                     max_depth = tokens.length;
+                let len = tokens.length;
                 for (var j in tokens) {
-                    if (t[tokens[j]] == null)
-                        t[tokens[j]] = {};
-                    t = t[tokens[j]];
-                }
-            }
-
-            function print_tree(foo, indent) {
-                let spaces = "";
-                for (i = 0; i < indent; i++)
-                    spaces += " ";
-                for (var i in foo) {
-                    console.log(spaces, i);
-                    print_tree(foo[i], indent+2);
+                    let b = t.branches;
+                    if (b[tokens[j]] == null)
+                        b[tokens[j]] = {"branches": {}, "num_branches": 0};
+                    t.num_branches += 1;
+                    t = b[tokens[j]];
+                    // store signal metadata in leaves
+                    if (j == len - 1) {
+                        t.leaf = sigs[i];
+                        t.num_branches += 1;
+                    }
                 }
             }
 //            print_tree(tree, 0);
 
-            function count_nodes(tree) {
-                let count = 0;
-                for (var i in tree) {
-                    count += count_nodes(tree[i]);
-                }
-                if (!count)
-                    count = 1;
-                return count;
-            }
-
             function add_tree(t, tds, target, depth) {
-                let added = 0;
-                for (var i in t) {
-                    // find count
-                    let count = count_nodes(t[i]);
-                    if (count <= 1)
-                        count = 1;
-                    if (added)
-                        add_tree(t[i], [[count, i]], target, depth + 1);
-                    else {
-                        if (!tds)
-                            tds = [[count, i]];
-                        else
-                            tds.push([count, i]);
-                        add_tree(t[i], tds, target, depth + 1);
-                    }
-                    added += 1;
-                }
-                if (added == 0) {
-                    let line = "";
-                    let len = tds.length;
-                    if (_self.location != 'left')
-                        tds = tds.reverse();
-                    for (var i in tds) {
-                        line += "<td style='background: "+dev.color+"44'";
-                        if (i == len - 1 && depth < max_depth)
-                            line += " colspan="+(max_depth-depth+1)+">"+tds[i][1]+"</td>";
-                        else {
-                            line += " rowspan="+tds[i][0]+">";
-                            if (tds[i][0] > 4)
-                                line += "<div class=tall>"+tds[i][1]+"</div>";
-                            else
-                                line += tds[i][1];
-                            line += "</td>";
+                let first = true;
+                for (var i in t.branches) {
+                    let b = t.branches[i];
+                    if (!tds || !first)
+                        tds = [[b.num_branches, i]];
+                    else
+                        tds.push([b.num_branches, i]);
+                    if (b.leaf) {
+                        if (_self.location != "left")
+                            tds = tds.reverse();
+                        let line = "";
+                        let len = tds.length;
+                        for (var j in tds) {
+                            let expand = j == len -1;
+                            if (_self.location != "left")
+                                expand = 0;
+                            line += "<td style='background: "+dev.color+"44'";
+                            if (expand && depth < max_depth)
+                                line += " colspan="+(max_depth-depth)+">"+tds[j][1]+"</td>";
+                            else {
+                                line += " rowspan="+tds[j][0]+">";
+                                if (tds[j][0] > 4)
+                                    line += "<div class=tall>"+tds[j][1]+"</div>";
+                                else
+                                    line += tds[j][1];
+                                line += "</td>";
+                            }
                         }
+                        console.log("<tr>"+line+"</tr>");
+                        target.append("<tr id="+b.leaf[0].replace('/', '\\/')+">"+line+"</tr>");
+                        tds = [[b.num_branches - 1, i]];
                     }
-                    target.append("<tr>"+line+"</tr>");
+                    add_tree(b, tds, target, depth + 1);
+                    first = false;
                 }
             }
-
             add_tree(tree, [], $(_self.tbody), 0);
 
             if (!_self.collapseAll && !(dev.collapsed & collapse_bit))
