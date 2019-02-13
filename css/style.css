@@ -68,7 +68,7 @@ thead, #networkMenu {
 }
 
 /* tertiary highlight selection */
-.displayTable tr.even {
+.displayTable tr.even > td {
     background: rgba(0, 0, 0, 0.1);
 }
 
@@ -77,6 +77,38 @@ thead, #networkMenu {
 }
 
 .displayTable tr:hover {
+}
+
+.displayTable tr, td {
+    overflow: hidden;
+    padding-left: 2px;
+    border: 2px solid transparent;
+}
+
+.displayTable td.device {
+    font-size: 20pt;
+    padding: 0px;
+    position: relative;
+    width: 20px;
+/*    left: -30px;*/
+}
+
+#leftTable .displayTable div.tall {
+    writing-mode: vertical-rl;
+    -webkit-text-orientation: mixed;
+}
+
+#rightTable .displayTable div.tall {
+    writing-mode: vertical-rl;
+    -webkit-text-orientation: mixed;
+}
+
+#leftTable .displayTable td.device > div {
+    transform: rotate(270deg);
+}
+
+#rightTable .displayTable td.device {
+    transform: rotate(90deg);
 }
 
 /* others */

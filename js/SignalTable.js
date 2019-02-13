@@ -4,6 +4,7 @@
 class Table {
     constructor(container, location, frame, database) {
         this.database = database;
+        this.location = location;
         this.id = location + 'Table';
         this.detail = true;
         this.direction = null;
@@ -44,26 +45,34 @@ class Table {
         // Create the skeleton for the table within the div
         // TODO: move div properties to css
         if (this.detail) {
+            let colwidths = [10, 65, 25];
+            if (this.location != 'left')
+                colwidths = [65, 25, 10];
             $(this.div).append(
                 "<div style='height:20px; position:relative; width:100%;'>"+
-                    "<div id="+this.id+"Title style='float:left; position:relative; width:75%; padding-left:10px'>"+
+                               "<div style='width: "+colwidths[0]+"'> </div>"+
+                    "<div id="+this.id+"Title style='float:left; position:relative; width:"+colwidths[1]+"%; padding-left:10px'>"+
                         "<strong>"+this.title+"</strong>"+
                     "</div>"+
-                    "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
+                    "<div style='float:left; position:relative; width:"+colwidths[2]+"%; padding-left:20px'>"+
                         "<strong>TYPE</strong>"+
                     "</div>"+
                 "</div>"+
                 "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
-                    "<table class='displayTable'>"+
-                        "<colgroup>"+
-                            "<col style='width:75%'>"+
-                            "<col style='width:25%'>"+
-                        "</colgroup>"+
+                    "<table class='displayTable "+this.location+"'>"+
+//                        "<colgroup>"+
+//                            "<col style='width:"+colwidths[0]+"%'>"+
+//                            "<col style='width:"+colwidths[1]+"%'>"+
+//                            "<col style='width:"+colwidths[2]+"%'>"+
+//                        "</colgroup>"+
                         "<tbody></tbody>"+
                     "</table>"+
                 "</div>");
         }
         else {
+            let colwidths = ["50px", "150px", "calc(100%-200px)"];
+            if (this.location != 'left')
+                colwidths = colwidths.reverse();
             $(this.div).append(
                 "<div style='height: 20px; position:relative; width:100%'>"+
                     "<div id="+this.id+"Title style='float: left; position:relative; width:100%; padding-left:20px; padding-right:20px'>"+
@@ -71,7 +80,12 @@ class Table {
                     "</div>"+
                 "</div>"+
                 "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
-                    "<table class='displayTable'>"+
+                    "<table class='displayTable "+this.location+"'>"+
+//                        "<colgroup>"+
+//                            "<col style='width:"+colwidths[0]+"'>"+
+//                            "<col style='width:"+colwidths[1]+"'>"+
+//                            "<col style='width:"+colwidths[2]+"'>"+
+//                        "</colgroup>"+
                         "<tbody></tbody>"+
                     "</table>"+
                 "</div>");
@@ -469,14 +483,9 @@ class Table {
         }
 
         $(this.tbody).empty();
-        let tbody = this.tbody;
+        let _self = this;
         let num_devs = 0;
         let num_sigs = 0;
-        let dir = this.direction;
-        let id = this.id;
-        let detail = this.detail;
-        let regexp = this.regexp;
-        let collapseAll = this.collapseAll;
         let collapse_bit;
         switch (this.snap) {
             case 'right':
@@ -491,9 +500,11 @@ class Table {
         }
         let title = this.title;
 
+        var max_depth = 0;
+
         this.database.devices.each(function(dev) {
-            if (dir == 'output' && dev.num_outputs < 1) return;
-            else if (dir == 'input' && dev.num_inputs < 1) return;
+            if (_self.direction == 'output' && dev.num_outputs < 1) return;
+            else if (_self.direction == 'input' && dev.num_inputs < 1) return;
 
             let num_dev_sigs = 0;
             let sigs = [];
@@ -550,8 +561,8 @@ class Table {
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
 
                 sigs.push({
-                    id: sig.key.replace('/', '\\/'), 
-                    name: (sig.direction == 'input') ? '→'+name : name+'→',
+                    id: sig.key,
+                    name: name,
                     unit: typelen+unit, 
                     direction: sig.direction
                 });
@@ -561,13 +572,13 @@ class Table {
 
             dev.signals.each(function(sig) {
                 // todo: check for filters
-                if (dir) {
-                    if (sig.direction != dir) 
+                if (_self.direction) {
+                    if (sig.direction != _self.direction) 
                         return ignore(sig);
                 }
                 if (sig.canvas_object)
                     return ignore(sig);
-                if (regexp && !regexp.test(sig.key))
+                if (_self.regexp && !_self.regexp.test(sig.key))
                     return hide(sig);
                 add(sig);
             });
@@ -576,36 +587,92 @@ class Table {
             if (num_dev_sigs <= 0)
                 devinvisible = ' invisible';
 
-            let devname = (collapseAll || (dev.collapsed & collapse_bit)
-                           ? ' ▶ ' : '▼  ') + dev.name;
-
-            $(tbody).append("<tr class='device"+devinvisible+ 
-                "' style='background: "+dev.color+"44' "+ 
-                "id="+dev.name+"><th colspan='2'>"+devname+
-                " ("+num_dev_sigs+" signals)"+ "</th></tr>");
-            let even = false;
-
-            sigs.sort((a,b) => {
-                if (a.name < b.name) return -1;
-                else if (a.name > b.name) return 1;
-                else return 0;
+            // sort signals by key (for now)
+            sigs.sort(function(a, b) {
+                a = a.name;
+                b = b.name;
+                return a < b ? -1 : (a > b ? 1 : 0);
             });
 
+            // build a tree
+            var tree = {};
             for (var i in sigs) {
                 let sig = sigs[i];
-                let new_row = "<tr class='"+sig.direction;
-                if (even)
-                    new_row += " even";
-                if (collapseAll || (dev.collapsed & collapse_bit) || devinvisible || sig.invisible)
-                    new_row += " invisible";
-                new_row += "' id="+sig.id+"><td>"+sig.name+"</td>";
-                if (detail)
-                    new_row += "<td>"+sig.unit+"</td>";
-                new_row += "</tr>";
-                $(tbody).append(new_row);
-                even = !even;
+                var t = tree;
+                let tokens = sig.id.split('/');
+                if (tokens.length > max_depth)
+                    max_depth = tokens.length;
+                for (var j in tokens) {
+                    if (t[tokens[j]] == null)
+                        t[tokens[j]] = {};
+                    t = t[tokens[j]];
+                }
             }
-            if (!collapseAll && !(dev.collapsed & collapse_bit))
+
+            function print_tree(foo, indent) {
+                let spaces = "";
+                for (i = 0; i < indent; i++)
+                    spaces += " ";
+                for (var i in foo) {
+                    console.log(spaces, i);
+                    print_tree(foo[i], indent+2);
+                }
+            }
+//            print_tree(tree, 0);
+
+            function count_nodes(tree) {
+                let count = 0;
+                for (var i in tree) {
+                    count += count_nodes(tree[i]);
+                }
+                if (!count)
+                    count = 1;
+                return count;
+            }
+
+            function add_tree(t, tds, target, depth) {
+                let added = 0;
+                for (var i in t) {
+                    // find count
+                    let count = count_nodes(t[i]);
+                    if (count <= 1)
+                        count = 1;
+                    if (added)
+                        add_tree(t[i], [[count, i]], target, depth + 1);
+                    else {
+                        if (!tds)
+                            tds = [[count, i]];
+                        else
+                            tds.push([count, i]);
+                        add_tree(t[i], tds, target, depth + 1);
+                    }
+                    added += 1;
+                }
+                if (added == 0) {
+                    let line = "";
+                    let len = tds.length;
+                    if (_self.location != 'left')
+                        tds = tds.reverse();
+                    for (var i in tds) {
+                        line += "<td style='background: "+dev.color+"44'";
+                        if (i == len - 1 && depth < max_depth)
+                            line += " colspan="+(max_depth-depth+1)+">"+tds[i][1]+"</td>";
+                        else {
+                            line += " rowspan="+tds[i][0]+">";
+                            if (tds[i][0] > 4)
+                                line += "<div class=tall>"+tds[i][1]+"</div>";
+                            else
+                                line += tds[i][1];
+                            line += "</td>";
+                        }
+                    }
+                    target.append("<tr>"+line+"</tr>");
+                }
+            }
+
+            add_tree(tree, [], $(_self.tbody), 0);
+
+            if (!_self.collapseAll && !(dev.collapsed & collapse_bit))
                 num_sigs += num_dev_sigs;
             num_devs += 1;
         });
