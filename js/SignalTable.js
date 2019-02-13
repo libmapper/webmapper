@@ -540,11 +540,17 @@ class Table {
                         type = '?';
                         break;
                 }
+
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
-                let ioname = (sig.direction == 'input') ? '→'+name : name+'→';
 
-                sigs.push([sig.key.replace('/', '\\/'), ioname, typelen+unit, sig.direction]);
+                sigs.push({
+                    id: sig.key.replace('/', '\\/'), 
+                    name: (sig.direction == 'input') ? '→'+name : name+'→',
+                    unit: typelen+unit, 
+                    direction: sig.direction
+                });
+
                 num_dev_sigs += 1;
             });
             if (num_dev_sigs <= 0)
@@ -556,15 +562,23 @@ class Table {
             $(tbody).append("<tr class='device' style='background: "+dev.color+"44' id="+dev.name+"><th colspan='2'>"+devname+" ("+num_dev_sigs+" signals)"+
                             "</th></tr>");
             let even = false;
+
+            sigs.sort((a,b) => {
+                if (a.name < b.name) return -1;
+                else if (a.name > b.name) return 1;
+                else return 0;
+            });
+
             for (var i in sigs) {
-                let new_row = "<tr class='"+sigs[i][3];
+                let sig = sigs[i];
+                let new_row = "<tr class='"+sig.direction;
                 if (even)
                     new_row += " even";
                 if (collapseAll || (dev.collapsed & collapse_bit))
                     new_row += " invisible";
-                new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
+                new_row += "' id="+sig.id+"><td>"+sig.name+"</td>";
                 if (detail)
-                    new_row += "<td>"+sigs[i][2]+"</td>";
+                    new_row += "<td>"+sig.unit+"</td>";
                 new_row += "</tr>";
                 $(tbody).append(new_row);
                 even = !even;

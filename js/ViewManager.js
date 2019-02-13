@@ -88,7 +88,7 @@ function ViewManager(container, database, tooltip)
         canvas_pan = [0, 0];
         canvas.setViewBox(0, 0, frame.width * canvas_zoom,
                           frame.height * canvas_zoom, false);
-        $('#status').text('');
+        this.tooltip.hide();
     }
 
     add_database_callbacks = function() {
@@ -201,7 +201,7 @@ function ViewManager(container, database, tooltip)
                     e.preventDefault();
                 }
                 /* delete */
-                // do not allow 'delete' key to unmpa in console view
+                // do not allow 'delete' key to unmap in console view
                 if (view.type == 'console') break;
                 database.maps.each(function(map) {
                     if (map.selected)
@@ -276,8 +276,7 @@ function ViewManager(container, database, tooltip)
                     updated = select_obj(map);
                 }
             });
-            if (updated)
-                $('#container').trigger("updateMapProperties");
+            if (updated) $('#container').trigger("updateMapProperties");
 
             let stop = false;
             // Moving about the canvas
