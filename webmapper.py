@@ -174,6 +174,7 @@ def on_map(map, action):
         server.send_command("del_map", map_props(map))
 
 def set_map_properties(props):
+    print 'incoming expression: ', props['expression']
     # todo: check for convergent maps, only release selected
     maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
     map = maps.next()
@@ -322,7 +323,7 @@ def new_map(args):
     else:
         print 'created map: ', args[0], ' -> ', args[1]
     if len(args) > 2 and type(args[2]) is dict:
-        map.set_properties(args[2])
+        set_map_properties(args[2]) #map.set_properties doesn't seem to work
     map.push()
 
 def release_map(args):

@@ -690,15 +690,14 @@ function MapperDatabase() {
             delete map.destinations;
             map.src = src;
             map.dst = dst;
-            map.status = 'offline';
+            //map.status = 'offline'; //
             if (map.expression) {
                 // fix expression
                 // TODO: better regexp to avoid conflicts with user vars
                 map.expression = map.expression.replace(/src/g, "x");
                 map.expression = map.expression.replace(/dst/g, "y");
             }
-            console.log("loaded map src: ", src, " dst: ", dst);
-            $('#container').trigger('map', [src, dst]);
+            $('#container').trigger('map', [src, dst, map]);
             //this.maps.add(map);
 
         }
