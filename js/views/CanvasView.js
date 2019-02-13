@@ -11,6 +11,7 @@ class CanvasView extends View {
         // set left table properties
         this.tables.left.filterByDirection('both');
         this.tables.left.showDetail(true);
+        this.tables.left.expand = false;
 
         // hide right table
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);

@@ -81,8 +81,19 @@ thead, #networkMenu {
 
 .displayTable tr, td {
     overflow: hidden;
-    padding-left: 2px;
-    border: 2px solid transparent;
+/*    padding-left: 2px;*/
+/*    border: 2px solid transparent;*/
+}
+
+#leftTable .displayTable td {
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
+    text-align: right;
+}
+
+#rightTable .displayTable td {
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
 }
 
 .displayTable td.device {
@@ -94,8 +105,10 @@ thead, #networkMenu {
 }
 
 #leftTable .displayTable div.tall {
+    transform: rotate(180deg);
     writing-mode: vertical-rl;
     -webkit-text-orientation: mixed;
+    white-space: nowrap;
 }
 
 #rightTable .displayTable div.tall {
@@ -513,8 +526,9 @@ tbody {
 }
 
 .displayTable td {
-    padding-left: 20px;
-    padding-right: 20px;
+/*    padding-left: 20px;*/
+/*    padding-right: 20px;*/
+    white-space: nowrap;
 }
 
 /*****************/

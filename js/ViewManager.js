@@ -118,8 +118,8 @@ function ViewManager(container, database, tooltip)
     };
 
     function add_display_tables() {
-        tables.left  = new Table($('#container')[0], 'left', frame, database);
-        tables.right = new Table($('#container')[0], 'right', frame, database);
+        tables.left  = new SignalTable($('#container')[0], 'left', frame, database);
+        tables.right = new SignalTable($('#container')[0], 'right', frame, database);
     }
 
     function add_canvas() {
