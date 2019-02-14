@@ -606,17 +606,18 @@ class View {
         });
     }
 
+    _tableRow(sig) {
+        if (this.tables && sig.tableIndices) {
+            let table = this.tables[sig.tableIndices[0].table];
+            return table.getRowFromName(sig.key);
+        }
+        return null;
+    }
+
     getMapPath(map) {
         let self = this;
-        function tableRow(sig) {
-            if (self.tables && sig.tableIndices) {
-                let table = self.tables[sig.tableIndices[0].table];
-                return table.getRowFromName(sig.key);
-            }
-            return null;
-        }
-        let src = tableRow(map.src);
-        let dst = tableRow(map.dst);
+        let src = this._tableRow(map.src);
+        let dst = this._tableRow(map.dst);
         if (src && dst) {
             /* If src and dst are from same table we will always draw a bezier
              * curve using the signal spacing for calculating control points. */
@@ -626,9 +627,7 @@ class View {
                     map.view.attr({'arrow-end': 'block-wide-long'});
                 if (src.x == dst.x) {
                     // signals are inline vertically
-                    let ctlx = Math.abs(src.y - dst.y) * 0.5 * src.vx + src.x;
-                    return [['M', src.x, src.y],
-                            ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+                    return MapPath.sameTable(src, dst);
                 }
                 else {
                     // signals are inline horizontally
@@ -957,14 +956,7 @@ class View {
 
                     if (src_table == dst_table) {
                         // draw smooth path from table to self
-                        let dist = Math.abs(src.x - dst.x) + Math.abs(src.y - dst.y) * 0.5;
-                        path = [['M', src.x, src.y],
-                                ['C',
-                                 src.x + src.vx * dist,
-                                 src.y + src.vy * dist,
-                                 dst.x + dst.vx * dist,
-                                 dst.y + dst.vy * dist,
-                                 dst.x, dst.y]];
+                        path = MapPath.sameTable(src, dst);
                     }
                     else if (dst) {
                         // draw bezier curve connecting src and dst
@@ -1021,3 +1013,18 @@ class View {
         $('.tableDiv').off('mousedown');
     }
 }
+
+class MapPath {
+    constructor() {}
+
+    static sameTable(srcrow, dstrow) {
+        let wh = $(window).height();
+        let vert = Math.abs(srcrow.y - dstrow.y);
+        let scale = vert / wh;
+        if (scale > 1) scale = 1;
+        let ctlx = 500 * scale * 0.5 * srcrow.vx + srcrow.x + 20;
+        return [['M', srcrow.x, srcrow.y],
+                ['C', ctlx, srcrow.y, ctlx, dstrow.y, dstrow.x, dstrow.y]];
+    }
+}
+
