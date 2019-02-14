@@ -154,6 +154,7 @@ class Table {
             new RegExp(this.filterstring, 'i') : 
             new RegExp('.*');
         this.update();
+        return true;
     }
 
     filterByDirection(dir) {
@@ -491,19 +492,22 @@ class Table {
         let title = this.title;
 
         this.database.devices.each(function(dev) {
+            if (dir == 'output' && dev.num_outputs < 1) return;
+            else if (dir == 'input' && dev.num_inputs < 1) return;
+
             let num_dev_sigs = 0;
             let sigs = [];
-            dev.signals.each(function(sig) {
-                // todo: check for filters
-                if (dir) {
-                    if (sig.direction != dir)
-                        return;
-                }
-                if (sig.canvas_object)
-                    return;
-                if (regexp && !regexp.test(sig.key))
-                    return;
 
+            function hide(sig) {
+                sigs.push({
+                    id: sig.key.replace('/', '\\/'), 
+                    invisible: true
+                });
+            }
+
+            function ignore(sig) {}
+
+            function add(sig) {
                 let name = sig.name.replace(/\,/g, '<wbr>/');
                 let min = sig.min;
                 if (typeof(min) == 'object') {
@@ -553,15 +557,32 @@ class Table {
                 });
 
                 num_dev_sigs += 1;
+            }
+
+            dev.signals.each(function(sig) {
+                // todo: check for filters
+                if (dir) {
+                    if (sig.direction != dir) 
+                        return ignore(sig);
+                }
+                if (sig.canvas_object)
+                    return ignore(sig);
+                if (regexp && !regexp.test(sig.key))
+                    return hide(sig);
+                add(sig);
             });
+
+            let devinvisible = '';
             if (num_dev_sigs <= 0)
-                return;
+                devinvisible = ' invisible';
 
             let devname = (collapseAll || (dev.collapsed & collapse_bit)
                            ? ' ▶ ' : '▼  ') + dev.name;
 
-            $(tbody).append("<tr class='device' style='background: "+dev.color+"44' id="+dev.name+"><th colspan='2'>"+devname+" ("+num_dev_sigs+" signals)"+
-                            "</th></tr>");
+            $(tbody).append("<tr class='device"+devinvisible+ 
+                "' style='background: "+dev.color+"44' "+ 
+                "id="+dev.name+"><th colspan='2'>"+devname+
+                " ("+num_dev_sigs+" signals)"+ "</th></tr>");
             let even = false;
 
             sigs.sort((a,b) => {
@@ -575,7 +596,7 @@ class Table {
                 let new_row = "<tr class='"+sig.direction;
                 if (even)
                     new_row += " even";
-                if (collapseAll || (dev.collapsed & collapse_bit))
+                if (collapseAll || (dev.collapsed & collapse_bit) || devinvisible || sig.invisible)
                     new_row += " invisible";
                 new_row += "' id="+sig.id+"><td>"+sig.name+"</td>";
                 if (detail)

@@ -189,7 +189,7 @@ class View {
                     dev.collapsed ^= 3;
                     // TODO: hide signals
                     self.updateDevices();
-                    self.draw(200);
+                    self.draw(0);
                 });
             }
         });
@@ -611,7 +611,7 @@ class View {
         function tableRow(sig) {
             if (self.tables && sig.tableIndices) {
                 let table = self.tables[sig.tableIndices[0].table];
-                return table.getRowFromIndex(sig.tableIndices[0].index);
+                return table.getRowFromName(sig.key);
             }
             return null;
         }
@@ -844,7 +844,7 @@ class View {
             }
             if (updated) {
                 this.update('signals');
-                this.draw(1000);
+                this.draw(0);
             }
         }
         else {
@@ -853,7 +853,7 @@ class View {
             else
                 this.dstregexp = text ? new RegExp(text, 'i') : null;
             this.update('signals');
-            this.draw(1000);
+            this.draw(0);
         }
     }
 
@@ -906,7 +906,7 @@ class View {
                         return;
                     }
                     self.updateDevices();
-                    self.draw(200);
+                    self.draw(0);
                 }
                 return;
             }
