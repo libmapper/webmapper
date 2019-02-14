@@ -14,7 +14,7 @@ class CanvasView extends View {
         this.tables.left.expand = false;
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         // remove device and unused signal svg
         this.database.devices.each(function(dev) {
