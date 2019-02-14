@@ -46,7 +46,6 @@ class Tooltip {
 
     _hPosition(x, offset) {
         let width = this._div.width();
-        console.log('width: '+width);
         let space = $(window).width() - x;
         if (space - width <= this.margin + offset) return x - offset - width; 
         else return x + offset;
@@ -54,7 +53,6 @@ class Tooltip {
 
     _vPosition(y, offset) {
         let height = this._div.height();
-        console.log('height: '+height);
         let space = $(window).height() - y;
         if (space - height <= this.margin + offset) return y - height - offset;
         else return y + offset;
