@@ -115,7 +115,7 @@ class SignalTable {
             });
 
             if (innerLeft != null && innerWidth != null) {
-            $('#' + self.id + 'Scroller').css({
+                $('#' + self.id + 'Scroller').css({
                     'left': innerLeft ? innerLeft : 0,
                     'top': 0,
                     'width': innerWidth ? innerWidth : '100%',
@@ -233,8 +233,8 @@ class SignalTable {
                         return null;
                 }
                 if (this.snap == 'bottom') {
-                    let left = j * rowHeight - this.scrolled;
-                    let top = row.offsetLeft - this.frame.top;
+                    let left = j * rowHeight - this.scrolled + this.frame.left + 20;
+                    let top = this.frame.top - this.frame.width;
                     return {'left': left,
                             'top': top,
                             'width': rowHeight,
@@ -249,7 +249,7 @@ class SignalTable {
                 }
                 else {
                     let left = row.offsetLeft + this.div[0].offsetLeft;
-                    let top = j * rowHeight - this.scrolled + 20;
+                    let top = j * rowHeight - this.scrolled + 20 + this.frame.top;
                     let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
                             'top': top,

@@ -617,7 +617,7 @@ class View {
         function tableRow(sig) {
             if (self.tables && sig.tableIndices) {
                 let table = self.tables[sig.tableIndices[0].table];
-                return table.getRowFromName(sig.key);
+                return table.getRowFromIndex(sig.tableIndices[0].index);
             }
             return null;
         }
