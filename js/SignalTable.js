@@ -150,9 +150,10 @@ class Table {
         if (this.filterstring == string)
             return;
         this.filterstring = string;
-        this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
-        if (this.regexp)
-            this.update();
+        this.regexp = string ? 
+            new RegExp(this.filterstring, 'i') : 
+            new RegExp('.*');
+        this.update();
     }
 
     filterByDirection(dir) {
