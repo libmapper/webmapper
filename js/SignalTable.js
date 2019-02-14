@@ -295,7 +295,6 @@ class SignalTable {
                 console.log("unknown table snap property", this.snap);
                 return;
         }
-        console.log("looking for td at", x, y);
 
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
