@@ -14,13 +14,15 @@ class Tooltip {
                  .css({})
                  .css({'left': this._hPosition(x, 20),
                        'top': this._vPosition(y, 0),
-                       'opacity': 1});
+                       'opacity': 1,
+                       'z-index': 10});
     }
 
     hide(immediate) {
         var dur = 200;
         if (immediate) dur = 0;
         this._div.animate({opacity: 0}, {duration: dur});
+        this._div.css({'z-index': -10});
     }
 
     showBrief(line, x, y) {

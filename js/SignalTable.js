@@ -295,14 +295,10 @@ class SignalTable {
                 console.log("unknown table snap property", this.snap);
                 return;
         }
-//        console.log("looking for td at", x, y);
+        console.log("looking for td at", x, y);
 
         let td = document.elementFromPoint(x, y);
-//        console.log("td", td);
         let row = $(td).parents('tr');
-//        console.log("row", row);
-//        if (row[0].className == 'device')
-//            return;
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
         let output;
@@ -645,7 +641,7 @@ class SignalTable {
                             line += "</td>";
                         }
                     }
-                    target.append("<tr style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('/', '\\/')+">"+line+"</tr>");
+                    target.append("<tr style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
                     tds = [[b.num_branches - 1, i]];
                 }
                 add_tree(b, tds, target, depth + 1);
