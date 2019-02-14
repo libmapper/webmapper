@@ -615,26 +615,14 @@ class View {
     }
 
     getMapPath(map) {
-        let self = this;
         let src = this._tableRow(map.src);
         let dst = this._tableRow(map.dst);
         if (src && dst) {
-            /* If src and dst are from same table we will always draw a bezier
-             * curve using the signal spacing for calculating control points. */
             if (src.vx == dst.vx) {
                 // same table
-                if (map.view)
-                    map.view.attr({'arrow-end': 'block-wide-long'});
-                if (src.x == dst.x) {
-                    // signals are inline vertically
-                    return MapPath.sameTable(src, dst);
-                }
-                else {
-                    // signals are inline horizontally
-                    let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
-                    return [['M', src.x, src.y],
-                            ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
-                }
+                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+                if (src.x == dst.x) return MapPath.sameTable(src, dst, this.mapPane);
+                else return MapPath.horizontal(src, dst); 
             }
             else if (src.vy != dst.vy) {
                 // constrain positions to pane to indicate offscreen maps
@@ -644,8 +632,7 @@ class View {
                     // display a white dot
                 }
                 // draw intersection between tables
-                if (map.view)
-                    map.view.attr({'arrow-end': 'none'});
+                if (map.view) map.view.attr({'arrow-end': 'none'});
                 if (src.vx < 0.0001) {
                     return [['M', src.left + 2, dst.y],
                             ['L', src.left + src.width - 2, dst.top + 2],
@@ -661,11 +648,8 @@ class View {
             }
             else {
                 // draw bezier curve between signal tables
-                if (map.view)
-                    map.view.attr({'arrow-end': 'block-wide-long'});
-                let mpx = (src.x + dst.x) * 0.5;
-                return [['M', src.x, src.y],
-                        ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+                return MapPath.betweenTables(src, dst);
             }
         }
         if (!src)
@@ -956,17 +940,11 @@ class View {
 
                     if (src_table == dst_table) {
                         // draw smooth path from table to self
-                        path = MapPath.sameTable(src, dst);
+                        path = MapPath.sameTable(src, dst, self.mapPane);
                     }
                     else if (dst) {
                         // draw bezier curve connecting src and dst
-                        path = [['M', src.x, src.y],
-                                ['C',
-                                 src.x + src.vx * self.mapPane.width * 0.5,
-                                 src.y + src.vy * self.mapPane.height * 0.5,
-                                 dst.x + dst.vx * self.mapPane.width * 0.5,
-                                 dst.y + dst.vy * self.mapPane.height * 0.5,
-                                 dst.x, dst.y]];
+                        path = MapPath.betweenTables(src, dst);
                     }
                     else {
                         // draw smooth path connecting src to cursor
@@ -1017,14 +995,27 @@ class View {
 class MapPath {
     constructor() {}
 
-    static sameTable(srcrow, dstrow) {
-        let wh = $(window).height();
+    static betweenTables(src, dst) {
+        let mpx = (src.x + dst.x) * 0.5;
+        return [['M', src.x, src.y],
+                ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+    }
+
+    static sameTable(srcrow, dstrow, mapPane) {
+        // signals are part of the same table
         let vert = Math.abs(srcrow.y - dstrow.y);
-        let scale = vert / wh;
+        let scale = vert / mapPane.height;
         if (scale > 1) scale = 1;
-        let ctlx = 500 * scale * 0.5 * srcrow.vx + srcrow.x + 20;
+        let ctlx = scale * 0.85 * mapPane.width + srcrow.x + 20;
         return [['M', srcrow.x, srcrow.y],
                 ['C', ctlx, srcrow.y, ctlx, dstrow.y, dstrow.x, dstrow.y]];
+    }
+
+    static horizontal(src, dst) {
+        // signals are inline horizontally
+        let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
+        return [['M', src.x, src.y],
+                ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }
 
