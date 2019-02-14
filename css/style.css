@@ -68,15 +68,60 @@ thead, #networkMenu {
 }
 
 /* tertiary highlight selection */
-.displayTable tr.even {
+.displayTable tr.even > td {
     background: rgba(0, 0, 0, 0.1);
 }
 
-.trsel, tr.even.trsel {
+.trsel td.leaf {
     background: rgb(104,202,255);
 }
 
 .displayTable tr:hover {
+}
+
+.displayTable tr, td {
+    overflow: hidden;
+/*    padding-left: 2px;*/
+/*    border: 2px solid transparent;*/
+}
+
+#leftTable .displayTable td {
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
+    text-align: right;
+}
+
+#rightTable .displayTable td {
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.displayTable td.device {
+    font-size: 20pt;
+    padding: 0px;
+    position: relative;
+    width: 20px;
+/*    left: -30px;*/
+}
+
+#leftTable .displayTable div.tall {
+    transform: rotate(180deg);
+    writing-mode: vertical-rl;
+    -webkit-text-orientation: mixed;
+    white-space: nowrap;
+}
+
+#rightTable .displayTable div.tall {
+    writing-mode: vertical-rl;
+    -webkit-text-orientation: mixed;
+}
+
+#leftTable .displayTable td.device > div {
+    transform: rotate(270deg);
+}
+
+#rightTable .displayTable td.device {
+    transform: rotate(90deg);
 }
 
 /* others */
@@ -481,8 +526,9 @@ tbody {
 }
 
 .displayTable td {
-    padding-left: 20px;
-    padding-right: 20px;
+/*    padding-left: 20px;*/
+/*    padding-right: 20px;*/
+    white-space: nowrap;
 }
 
 /*****************/

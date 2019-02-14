@@ -10,13 +10,15 @@ class GridView extends View {
               canvas, database, tooltip);
 
         // set left table properties
-        tables.left.filterByDirection('output');
-        tables.left.showDetail(false);
+        this.tables.left.filterByDirection('output');
+        this.tables.left.showDetail(false);
+        this.tables.left.expand = true;
 
         // set right table properties
         this.tables.right.snap = 'bottom';
         this.tables.right.filterByDirection('input');
         this.tables.right.showDetail(false);
+        this.tables.right.expand = true;
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -34,6 +36,9 @@ class GridView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
+        this.leftExpandWidth = 200;
+        this.rightExpandWidth = 200;
+
         this.update();
         this.resize(null, 1000);
 
@@ -47,16 +52,20 @@ class GridView extends View {
             this.frame = newFrame;
 
         let self = this;
-        this.tables.left.adjust(0, 180, 200, this.frame.height - 180, 0, duration,
-                                null, 0, this.frame.width);
-        this.tables.right.adjust(180, 200, 200, this.frame.width - 180,
+        this.tables.left.adjust(0, this.rightExpandWidth-20, this.leftExpandWidth,
+                                this.frame.height - this.rightExpandWidth + 20,
+                                0, duration, null, 0, this.frame.width);
+        this.tables.right.adjust(this.leftExpandWidth-20, this.rightExpandWidth,
+                                 this.rightExpandWidth,
+                                 this.frame.width - this.leftExpandWidth + 20,
                                  -Math.PI * 0.5, duration,
                                  function() {self.draw(1000)},
-                                 200-this.frame.height, this.frame.height);
-        this.mapPane.left = 200;
-        this.mapPane.width = this.frame.width - 200;
-        this.mapPane.top = 200;
-        this.mapPane.height = this.frame.height - 200;
+                                 this.rightExpandWidth-this.frame.height,
+                                 this.frame.height);
+        this.mapPane.left = this.leftExpandWidth;
+        this.mapPane.width = this.frame.width - this.leftExpandWidth;
+        this.mapPane.top = this.rightExpandWidth;
+        this.mapPane.height = this.frame.height - this.rightExpandWidth;
         this.mapPane.cx = this.mapPane.left + this.mapPane.width * 0.5;
         this.mapPane.cy = this.mapPane.top + this.mapPane.height * 0.5;
         this.draw();
@@ -82,6 +91,17 @@ class GridView extends View {
         }
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
+            let updated = false;
+            if (this.tables.left.expandWidth != this.leftExpandWidth) {
+                this.leftExpandWidth = this.tables.left.expandWidth;
+                updated = true;
+            }
+            if (this.tables.right.expandWidth != this.rightExpandWidth) {
+                this.rightExpandWidth = this.tables.right.expandWidth;
+                updated = true;
+            }
+            if (updated)
+                this.resize(null, 1000);
         }
         if (elements.indexOf('maps') >= 0)
             this.updateMaps();

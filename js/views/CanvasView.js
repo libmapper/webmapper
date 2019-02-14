@@ -11,9 +11,10 @@ class CanvasView extends View {
         // set left table properties
         this.tables.left.filterByDirection('both');
         this.tables.left.showDetail(true);
+        this.tables.left.expand = false;
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         // remove device and unused signal svg
         this.database.devices.each(function(dev) {

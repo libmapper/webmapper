@@ -9,8 +9,8 @@ class HiveView extends View {
         super('hive', frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         // start with signals at origin
         this.database.devices.each(function(dev) {

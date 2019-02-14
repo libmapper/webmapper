@@ -9,8 +9,8 @@ class GraphView extends View {
         super('graph', frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         // remove associated svg elements for devices
         this.database.devices.each(remove_object_svg);

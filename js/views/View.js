@@ -291,8 +291,14 @@ class View {
                             name: dev.name,
                             signals: dev.signals.size()
                         }, e.x, e.y);
-                    if (self.type == 'chord')
-                        dev.view.toFront()
+                    if (self.type == 'chord') {
+                        dev.view.toFront();
+                        // also move associated  links to front
+                        self.database.links.each(function(link) {
+                            if (link.view && (link.src == dev || link.dst == dev))
+                                link.view.toFront();
+                        });
+                    }
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
                 }
                 hovered = true;
