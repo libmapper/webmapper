@@ -8,34 +8,31 @@ var saverLoader;
 var viewSelector;
 var tooltip;
 
-var input;
-
 window.onload = init;           // Kick things off
 
 /* The main program. */
 function init() {
+    // suppress right click context menu
+    $('body').attr('oncontextmenu',"return false;");     
+
     // add the top menu wrapper
     $('body').append("<div class=propertiesDiv id='TopMenuWrapper'></div>");
 
     // add the view wrapper
     $('body').append("<div id='container'></div>");
     $('body').append("<div id='axes'></div>");
-    $('body').attr('oncontextmenu',"return false;");     // ?
+
+    // init the view
+    $('#container').empty();
+    tooltip = new Tooltip();
+    view = new ViewManager(document.getElementById('container'), database, tooltip);
 
     // init the top menu
     $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
-                                  database);
-    saverLoader.init();
-    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
-    viewSelector.init();
-    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
-                                 database);
-    devFilter.init();
-    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
-                                      database);
-    mapProperties.init();
-    tooltip = new Tooltip();
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"), database, view);
+    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"), view);
+    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), database, view);
+    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), database, view);
 
     // init controller
     initMonitorCommands();
@@ -65,9 +62,6 @@ function init() {
         function() {
             switch (index) {
             case 0:
-                $('#container').empty();
-                view = new ViewManager(document.getElementById('container'), database, tooltip);
-                view.init();
                 view.on_resize();
                 mapProperties.clearMapProperties();
                 command.start();

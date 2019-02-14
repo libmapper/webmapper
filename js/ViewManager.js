@@ -18,7 +18,7 @@ function ViewManager(container, database, tooltip)
     var dstregexp = null;
 
     let view = null;
-
+    
     this.draw = function() {
         //
     };
@@ -128,24 +128,6 @@ function ViewManager(container, database, tooltip)
             "</div>");
         canvas = Raphael($('#svgDiv')[0], '100%', '100%');
     };
-
-    this.init = function() {
-        // remove all previous DOM elements
-        $(container).empty();
-
-        frame = fullOffset($(container)[0]);
-
-        add_canvas();
-        add_display_tables();
-
-        this.switch_view('chord');
-
-        selection_handlers();
-
-        add_database_callbacks();
-        database.devices.each(function(dev) { update_devices(dev, 'added'); });
-        database.maps.each(function(map) { update_maps(map, 'added'); });
-    }
 
     function update_devices(dev, event) {
         if (event == 'added' && !dev.view) {
@@ -318,4 +300,15 @@ function ViewManager(container, database, tooltip)
         frame = fullOffset($(container)[0]);
         resize_elements(0);
     }
+    
+    // remove all previous DOM elements
+    $(container).empty();
+    frame = fullOffset($(container)[0]);
+    add_canvas();
+    add_display_tables();
+    this.switch_view('chord');
+    selection_handlers();
+    add_database_callbacks();
+    database.devices.each(function(dev) { update_devices(dev, 'added'); });
+    database.maps.each(function(map) { update_maps(map, 'added'); });
 }
