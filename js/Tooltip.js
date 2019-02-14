@@ -4,14 +4,16 @@ class Tooltip {
     constructor() {
         $('body').append("<div id='tooltip'></div>");
         this._div = $('#tooltip');
+        this.margin = 20;
     }
 
     showTable(header, data, x, y) {
         this._div.stop(true, false)
                  .empty()
                  .append(Tooltip._makeInfoTable(header, data))
-                 .css({'left': x + 20,
-                       'top': y,
+                 .css({})
+                 .css({'left': this._hPosition(x, 20),
+                       'top': this._vPosition(y, 0),
                        'opacity': 1});
     }
 
@@ -25,8 +27,9 @@ class Tooltip {
         this._div.stop(true, false)
                  .empty()
                  .text(line)
-                 .css({'left': x + 10,
-                       'top': y + 60,
+                 .css({})
+                 .css({'left': this._hPosition(x, 10),
+                       'top': this._vPosition(y, 60),
                        'opacity': 1})
                  .animate({opacity: 0}, {duration: 2000});
     }
@@ -40,4 +43,22 @@ class Tooltip {
         }
         return "<table class=infoTable><tbody>"+header+data+"</tbody>";
     }
+
+    _hPosition(x, offset) {
+        let width = this._div.width();
+        console.log('width: '+width);
+        let space = $(window).width() - x;
+        if (space - width <= this.margin + offset) return x - offset - width; 
+        else return x + offset;
+    }
+
+    _vPosition(y, offset) {
+        let height = this._div.height();
+        console.log('height: '+height);
+        let space = $(window).height() - y;
+        if (space - height <= this.margin + offset) return y - height - offset;
+        else return y + offset;
+    }
+
+
 }
