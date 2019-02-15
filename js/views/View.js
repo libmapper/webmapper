@@ -689,7 +689,7 @@ class View {
             if (!map.view)
                 return;
             if (map.hidden) {
-                map.view.attr({'stroke-opacity': 0, 'arrow-end': 'none'}, duration, '>');
+                map.view.hide();
                 return;
             }
             map.view.stop();
@@ -705,11 +705,12 @@ class View {
             let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
             let color = map.selected ? 'red' : 'white';
             if (!path) {
-                map.view.attr({'stroke-opacity': 0, 'arrow-end': 'none'});
+                map.view.hide();
                 return;
             }
 
             if (map.view.new) {
+                map.view.show();
                 map.view.new = false;
                 if (map.status == "staged") {
                     // draw map directly
@@ -733,7 +734,7 @@ class View {
                         .toFront();
             }
             else {
-//                map.view.attr({'arrow-end': 'block-wide-long'});
+                map.view.show();
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
                                   'fill-opacity': fill,
