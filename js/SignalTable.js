@@ -240,9 +240,9 @@ class SignalTable {
                             'width': rowHeight,
                             'height': row.offsetWidth,
                             'x': left + rowHeight * 0.5,
-                            'y': top + row.offsetWidth,
+                            'y': top + this.frame.width,
                             'vx': Math.cos(this.frame.angle),
-                            'vy': Math.sin(this.frame.angle),
+                            'vy': -Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
                             'index': j};
@@ -255,7 +255,7 @@ class SignalTable {
                             'top': top,
                             'width': row.offsetWidth,
                             'height': rowHeight,
-                            'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                            'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                             'y': top + rowHeight * 0.5,
                             'vx': Math.cos(this.frame.angle) * snap,
                             'vy': Math.sin(this.frame.angle),
@@ -309,9 +309,9 @@ class SignalTable {
                       'width': rowHeight,
                       'height': row.offsetWidth,
                       'x': left + rowHeight * 0.5,
-                      'y': top + row.offsetWidth,
+                      'y': top + this.frame.width,
                       'vx': Math.cos(this.frame.angle),
-                      'vy': Math.sin(this.frame.angle),
+                      'vy': -Math.sin(this.frame.angle),
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
