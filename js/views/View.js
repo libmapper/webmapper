@@ -474,7 +474,7 @@ class View {
                 if (!self.newMap) {
                     self.newMap = self.canvas.path(path);
                     self.newMap.attr({'stroke': 'white',
-                                      'stroke-width': 2,
+                                      'stroke-width': MapPath.strokeWidth,
                                       'stroke-opacity': 1,
                                       'arrow-start': 'none',
                                       'arrow-end': 'block-wide-long'});
@@ -567,7 +567,7 @@ class View {
                         mode: map.mode,
                         expression: map.expression,
                     }, e.x, e.y);
-                map.view.animate({'stroke-width': 4}, 0, 'linear');
+                map.view.animate({'stroke-width': MapPath.boldStrokeWidth}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
 //                    return;
@@ -588,7 +588,7 @@ class View {
             function() {
                 self.snappingTo = null;
                 self.tooltip.hide();
-                map.view.animate({'stroke-width': 2}, 50, 'linear');
+                map.view.animate({'stroke-width': MapPath.strokeWidth}, 50, 'linear');
             }
         );
     }
@@ -604,8 +604,8 @@ class View {
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.selected ? 'red' : 'white',
                                'fill-opacity': 0,
-                               'stroke-width': 2,
-                               'arrow-start': 'none'});
+                               'stroke-width': MapPath.strokeWidth,
+                               'rrow-start': 'none'});
                 map.view.new = true;
                 self.setMapHover(map);
             }
@@ -739,7 +739,7 @@ class View {
                                   'stroke-opacity': 1.0,
                                   'fill-opacity': fill,
                                   'fill': color,
-                                  'stroke-width': 2,
+                                  'stroke-width': MapPath.strokeWidth,
                                   'stroke': color},
                                  duration, '>')
                         .toFront();
@@ -918,7 +918,7 @@ class View {
                                          .attr({'fill-opacity': 0,
                                                 'stroke': 'white',
                                                 'stroke-opacity': 1,
-                                                'stroke-width': 2});
+                                                'stroke-width': MapPath.strokeWidth});
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -1034,4 +1034,7 @@ class MapPath {
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }
+
+MapPath.strokeWidth = 4;
+MapPath.boldStrokeWidth = 8;
 
