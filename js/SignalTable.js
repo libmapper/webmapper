@@ -549,9 +549,9 @@ class SignalTable {
                 let sig = sigs[i];
                 var t = tree;
                 let tokens = sig.id.split('/');
-                if (tokens.length > max_depth)
-                    max_depth = tokens.length;
                 let len = tokens.length;
+                if (len > max_depth)
+                    max_depth = len;
                 for (var j in tokens) {
                     let b = t.branches;
                     if (b[tokens[j]] == null)
@@ -579,6 +579,8 @@ class SignalTable {
             orderedtree.branches[key] = tree.branches[key];
         });
 
+        let devRowType = 'odd';
+        let sigRowType = 'odd';
         function add_tree(t, tds, target, depth) {
             let first = true;
             for (var i in t.branches) {
@@ -597,15 +599,16 @@ class SignalTable {
                         if (_self.location != "left")
                             leaf = j == 0;
                         if (leaf && _self.expand && _self.location == "right")
-                            line += "<td width=100%></td>";
+                            line += "<td class='"+sigRowType+"' width=100%></td>";
                         line += "<td";
                         if (leaf) {
-                            line += " class=leaf";
+                            line += " class='leaf "+sigRowType+"'";
                             if (depth < max_depth)
                                 line += " colspan="+(max_depth-depth);
                             line += ">"+tds[j][1]+" ("+b.leaf.unit+")</td>";
                             if (_self.expand && _self.location == "left")
-                                line += "<td width=100%></td>";
+                                line += "<td class='"+sigRowType+"' width=100%></td>";
+                            sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
                         }
                         else {
                             line += " rowspan="+tds[j][0]+">";
@@ -616,10 +619,12 @@ class SignalTable {
                             line += "</td>";
                         }
                     }
-                    target.append("<tr style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
+                    target.append("<tr class='"+devRowType+"' style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
                     tds = [[b.num_branches - 1, i]];
                 }
                 add_tree(b, tds, target, depth + 1);
+                if (depth == 0)
+                    devRowType = (devRowType == 'odd') ? 'even' : 'odd';
                 first = false;
             }
         }
