@@ -34,8 +34,8 @@ class SaverLoader {
                         reader.abort();
                         return;
                     }
-                    database.loadFile(parsed);
-                    view.switch_view("chord");
+                    database.loadFileSimple(parsed); //naive loading for now
+                    //view.switch_view("chord");
                 };
             })(f);
             reader.readAsText(f);
