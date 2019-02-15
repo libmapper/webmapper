@@ -316,15 +316,18 @@ def find_sig(fullname):
         print 'error: could not find device', dev
 
 def new_map(args):
-    map = mapper.map(find_sig(args[0]), find_sig(args[1]))
-    if not map:
-        print 'error: failed to create map', args[0], "->", args[1]
-        return;
+    if find_sig(args[0]) and find_sig(args[1]):
+        map = mapper.map(find_sig(args[0]), find_sig(args[1]))
+        if not map:
+            print 'error: failed to create map', args[0], "->", args[1]
+            return;
+        else:
+            print 'created map: ', args[0], ' -> ', args[1]
+        if len(args) > 2 and type(args[2]) is dict:
+            set_map_properties(args[2]) #map.set_properties doesn't seem to work
+        map.push()
     else:
-        print 'created map: ', args[0], ' -> ', args[1]
-    if len(args) > 2 and type(args[2]) is dict:
-        set_map_properties(args[2]) #map.set_properties doesn't seem to work
-    map.push()
+       print args[0], ' and ', args[1], ' not found on network!'
 
 def release_map(args):
     # todo: check for convergent maps, only release selected
