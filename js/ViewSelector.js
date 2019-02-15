@@ -1,13 +1,6 @@
-function ViewSelector(container) {
-    this._container = container;
-}
-
-ViewSelector.prototype = {
-    // Initialize the Top Menu Bar Component
-    init : function() {
-        var _self = this;   // to pass to context of THIS to event handlers
-
-        $(this._container).append(
+class ViewSelector {
+    constructor(container, view) {
+        $(container).append(
             "<div id='viewSelectorDiv' class='topMenu' style='width:150px;'>"+
                 "<div class='topMenuTitle'><strong>VIEW</strong></div>"+
                 "<div class='topMenuContainer' style='padding:0px'>"+
@@ -62,5 +55,5 @@ ViewSelector.prototype = {
                     break;
             }
         });
-    },
-};
+    }
+}

@@ -5,18 +5,20 @@
 'use strict';
 
 class ListView extends View {
-    constructor(frame, tables, canvas, database) {
+    constructor(frame, tables, canvas, database, tooltip) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database);
+              canvas, database, tooltip);
 
         // set left table properties
         this.tables.left.filterByDirection('output');
         this.tables.left.showDetail(true);
+        this.tables.left.expand = false;
 
         // set right table properties
         this.tables.right.snap = 'left';
         this.tables.right.filterByDirection('input');
         this.tables.right.showDetail(true);
+        this.tables.right.expand = false;
 
         let self = this;
         this.database.devices.each(function(dev) {

@@ -6,34 +6,33 @@ var mapProperties;
 var devFilter;
 var saverLoader;
 var viewSelector;
-
-var input;
+var tooltip;
 
 window.onload = init;           // Kick things off
 
 /* The main program. */
 function init() {
+    // suppress right click context menu
+    $('body').attr('oncontextmenu',"return false;");     
+
     // add the top menu wrapper
     $('body').append("<div class=propertiesDiv id='TopMenuWrapper'></div>");
 
     // add the view wrapper
     $('body').append("<div id='container'></div>");
-    $('body').append("<div id='status'></div>");
     $('body').append("<div id='axes'></div>");
-    $('body').attr('oncontextmenu',"return false;");     // ?
+
+    // init the view
+    $('#container').empty();
+    tooltip = new Tooltip();
+    view = new ViewManager(document.getElementById('container'), database, tooltip);
 
     // init the top menu
     $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"));
-    saverLoader.init();
-    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"));
-    viewSelector.init();
-    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
-                                 database);
-    devFilter.init();
-    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
-                                      database);
-    mapProperties.init();
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"), database, view);
+    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"), view);
+    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), database, view);
+    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), database, view);
 
     // init controller
     initMonitorCommands();
@@ -63,9 +62,6 @@ function init() {
         function() {
             switch (index) {
             case 0:
-                $('#container').empty();
-                view = new ViewManager(document.getElementById('container'), database);
-                view.init();
                 view.on_resize();
                 mapProperties.clearMapProperties();
                 command.start();
@@ -145,7 +141,7 @@ function initViewCommands()
                 break;
             case 79:
                 e.preventDefault();
-                input.trigger("click");
+                saverLoader.fileOpenDialog();
                 break;
             case 48:
                 e.preventDefault();
@@ -254,47 +250,6 @@ function initViewCommands()
         mapProperties.updateSaveLocation(view.get_save_location());
     });
 
-    input = $(document.createElement("input"));
-    input.attr("type", "file");
-    input.on('change', function(e) {
-        var f = e.target.files[0];
-        let reader = new FileReader();
-        reader.onload = (function(file) {
-            return function(e) {
-                let parsed = tryParseJSON(e.target.result);
-                if (!parsed || !parsed.fileversion || !parsed.mapping) {
-                    console.log("error: invalid file");
-                    reader.abort();
-                    return;
-                }
-                if (parsed.fileversion == "2.2") {
-                    if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
-                        console.log("error: no maps in file");
-                        reader.abort();
-                        return;
-                    }
-                }
-                else if (parsed.fileversion == "2.1") {
-                    if (   !parsed.mapping.connections
-                        || !parsed.mapping.connections.length) {
-                        console.log("error: no maps in file");
-                        reader.abort();
-                        return;
-                    }
-                }
-                else {
-                    console.log("error: unsupported fileversion",
-                                parsed.fileversion);
-                    reader.abort();
-                    return;
-                }
-                //database.loadFile(parsed);
-                database.loadFileSimple(parsed);
-                //view.switch_view("chord");
-            };
-        })(f);
-        reader.readAsText(f);
-    });
 }
 
 function initMapPropertiesCommands()

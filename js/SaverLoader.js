@@ -1,14 +1,47 @@
-function SaverLoader(container, database) {
-    this._container = container;
-    this.database = database;
-}
+class SaverLoader {
+    constructor(container, database, view) {
+        this.input = $(document.createElement("input"));
+        this.input.attr("type", "file");
+        this.input.on('change', function(e) {
+            var f = e.target.files[0];
+            let reader = new FileReader();
+            reader.onload = (function(file) {
+                return function(e) {
+                    let parsed = tryParseJSON(e.target.result);
+                    if (!parsed || !parsed.fileversion || !parsed.mapping) {
+                        console.log("error: invalid file");
+                        reader.abort();
+                        return;
+                    }
+                    if (parsed.fileversion == "2.2") {
+                        if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
+                            console.log("error: no maps in file");
+                            reader.abort();
+                            return;
+                        }
+                    }
+                    else if (parsed.fileversion == "2.1") {
+                        if (   !parsed.mapping.connections
+                            || !parsed.mapping.connections.length) {
+                            console.log("error: no maps in file");
+                            reader.abort();
+                            return;
+                        }
+                    }
+                    else {
+                        console.log("error: unsupported fileversion",
+                                    parsed.fileversion);
+                        reader.abort();
+                        return;
+                    }
+                    database.loadFile(parsed);
+                    view.switch_view("chord");
+                };
+            })(f);
+            reader.readAsText(f);
+        });
 
-SaverLoader.prototype = {
-    // Initialize the Top Menu Bar Component
-    init : function() {
-        var _self = this;   // to pass to context of THIS to event handlers
-
-        $(this._container).append(
+        $(container).append(
             "<div id='saverLoaderDiv' class='topMenu' style='width:75px;'>"+
                 "<div class='topMenuTitle'><strong>FILE</strong></div>"+
                 "<div class='topMenuContainer'>"+
@@ -32,9 +65,14 @@ SaverLoader.prototype = {
             link.click();
         });
 
+        var self = this;
         $('#loadButton').click(function(e) {
             e.stopPropagation();
-            input.trigger("click"); // open dialog
+            self.fileOpenDialog();
         });
-    },
-};
+    }
+
+    fileOpenDialog() {
+        this.input.trigger("click");
+    }
+}

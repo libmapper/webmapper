@@ -1,25 +1,18 @@
-function MapProperties(container, database) {
-    this._container = container;
-    this.database = database;
-    this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
-    this.mapModes = ["Linear", "Expression"];
-    this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
-}
+class MapProperties {
+    constructor(container, database, view) {
+        this.container = container;
+        this.database = database;
+        this.view = view;
+        this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
+        this.mapModes = ["Linear", "Expression"];
+        this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
 
-MapProperties.prototype = {
-    // Initialize the Top Menu Bar Component
-    init : function() {
-        var _self = this;   // to pass to context of THIS to event handlers
-
-        window.saveLocation = '';        // Where the network will be saved
-
-        $(this._container).append(
+        $(this.container).append(
             "<div' class='topMenu' style='width:calc(75% - 170px);'>"+
                 "<div class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
             "</div>");
 
-        //Add the mode controls
         $('#mapPropsDiv').append(
             "<div style='width:50%'>"+
                 "<div id='modes' class='signalControl disabled' style='width:100%; padding-bottom:5px;'>Mode: </div>"+
@@ -28,7 +21,8 @@ MapProperties.prototype = {
                 "</div>"+
             "</div>"+
             "<div id='ranges' style='width:50%'></div>");
-
+        
+        //Add the mode controls
         for (var m in this.mapModes) {
             $('#modes').append(
                 "<div class='mode' id='mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
@@ -59,14 +53,14 @@ MapProperties.prototype = {
 //                "<div id='dstCalibrate' class='calibrate' type='button'>Calib</div>"+
             "</div>");
 
-        this.addHandlers();
-    },
+        this._addHandlers();
+    }
 
-    addHandlers : function() {
-        var _self = this;
+    _addHandlers() {
+        var self = this;
 
         $('#networkSelection').on('change', function(e) {
-            $(this._container).trigger("selectNetwork", e.currentTarget.value);
+            $(this.container).trigger("selectNetwork", e.currentTarget.value);
         });
 
         //The expression and range input handlers
@@ -74,7 +68,7 @@ MapProperties.prototype = {
             keydown: function(e) {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
-                    _self.setMapProperty($(this).attr('id').split(' ')[0],
+                    self.setMapProperty($(this).attr('id').split(' ')[0],
                                          this.value);
                 }
             },
@@ -84,30 +78,30 @@ MapProperties.prototype = {
         //For the mode buttons
         $('.topMenu').on("click", '.mode', function(e) {
             e.stopPropagation();
-            _self.setMapProperty("mode", e.currentTarget.innerHTML);
+            self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
         $('.boundary').on('click', function(e) {
-            _self.on_boundary(e, _self);
+            self.on_boundary(e, self);
         });
 
         $('.rangeSwitch').click(function(e) {
             e.stopPropagation();
-            _self.setMapProperty(e.currentTarget.id, null);
+            self.setMapProperty(e.currentTarget.id, null);
         });
 
         $('.calibrate').click(function(e) {
             e.stopPropagation();
-            _self.setMapProperty(e.currentTarget.id, null);
+            self.setMapProperty(e.currentTarget.id, null);
         });
 
         $('body').on('keydown', function(e) {
             if (e.which == 77)
-                _self.setMapProperty("muted", null);
+                self.setMapProperty("muted", null);
         });
-    },
+    }
 
-    updateNetworkInterfaces : function() {
+    updateNetworkInterfaces() {
         $('#networkSelection').children('*').remove();
         for (var i in this.database.networkInterfaces.available) {
             let iface = this.database.networkInterfaces.available[i];
@@ -116,10 +110,10 @@ MapProperties.prototype = {
             else
                 $('#networkSelection').append("<option value='"+iface+"'>"+iface+"</option>");
         }
-    },
+    }
 
     // clears and disables the map properties bar
-    clearMapProperties : function() {
+    clearMapProperties() {
         $('.mode').removeClass('modesel');
         $('.topMenu input').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
@@ -128,13 +122,13 @@ MapProperties.prototype = {
         $('.calibrate').removeClass('calibratesel');
         $('.expression').removeClass('waiting');
         $('.ranges').children('*').removeClass('waiting');
-    },
+    }
 
-    selected : function(map) {
+    selected(map) {
         return map.selected;
-    },
+    }
 
-    updateMapProperties : function() {
+    updateMapProperties() {
         this.clearMapProperties();
 
         var mode = null;
@@ -247,18 +241,18 @@ MapProperties.prototype = {
             this.set_boundary($("#boundaryMin"), dst_bound_min, 0);
         if (dst_bound_max != null)
             this.set_boundary($("#boundaryMax"), dst_bound_max, 1);
-    },
+    }
 
     // object with arguments for the map
-    updateMapPropertiesFor : function(key) {
+    updateMapPropertiesFor(key) {
         // check if map is selected
         var map = this.database.maps.find(key);
         if (this.selected(map))
             this.updateMapProperties();
-    },
+    }
 
-    setMapProperty : function(key, value) {
-        let container = $(this._container);
+    setMapProperty(key, value) {
+        let container = $(this.container);
         let modes = this.mapModeCommands;
         this.database.maps.filter(this.selected).each(function(map) {
             if (map[key] == value || map[key] == parseFloat(value))
@@ -329,10 +323,10 @@ MapProperties.prototype = {
             // send the command, should receive a /mapped message after.
             container.trigger("setMap", [msg]);
         });
-    },
+    }
 
-    on_load : function() {
-        var _self = this;
+    on_load() {
+        var self = this;
 
         //A quick fix for now to get #container out of the way of the load dialogs
         var body = document.getElementsByTagName('body')[0];
@@ -359,7 +353,7 @@ MapProperties.prototype = {
 //            var t = $(iframe.contentDocument.body).text();
 //            if (t.search('Success:') == -1 && t.search('Error:') == -1)
 //                return;
-            _self.notify($(iframe.contentDocument.body).text());
+            self.notify($(iframe.contentDocument.body).text());
             $(l).remove();
             body.removeChild(iframe);
         };
@@ -379,7 +373,7 @@ MapProperties.prototype = {
             form.appendChild(fn);
 
             // The devices currently in focused
-            var devs = view.get_focused_devices();
+            var devs = self.view.get_focused_devices();
 
             // Split them into sources and destinations
             var srcdevs = [];
@@ -409,9 +403,9 @@ MapProperties.prototype = {
             form.submit();
         };
         return false;
-    },
+    }
 
-    on_boundary : function(e, _self) {
+    on_boundary(e, self) {
         var boundaryMode = null;
         for (var i in this.boundaryIcons) {
             if ($(e.currentTarget).hasClass("boundary"+this.boundaryIcons[i])) {
@@ -449,12 +443,12 @@ MapProperties.prototype = {
                 break;
         }
         if (boundaryMode != null)
-            _self.setMapProperty(is_max ? "dst_bound_max" : 'dst_bound_min',
+            self.setMapProperty(is_max ? "dst_bound_max" : 'dst_bound_min',
                                  boundaryMode);
         e.stopPropagation();
-    },
+    }
 
-    notify : function(msg) {
+    notify(msg) {
         var li = document.createElement('li');
         li.className = 'notification';
         li.innerHTML = msg;
@@ -462,9 +456,9 @@ MapProperties.prototype = {
         setTimeout(function() {
             $(li).fadeOut('slow', function() { $(li).remove();});
         }, 5000);
-    },
+    }
 
-    set_boundary : function (boundaryElement, value, ismax) {
+    set_boundary(boundaryElement, value, ismax) {
         for (var i in this.boundaryIcons)
             boundaryElement.removeClass("boundary"+this.boundaryIcons[i]);
 
@@ -483,13 +477,13 @@ MapProperties.prototype = {
         else if (value != null) {
             boundaryElement.addClass('boundary'+value);
         }
-    },
+    }
 
     /**
      * Updates the save/loading functions based on the view's state
      * currently set up for the list view only
      */
-    updateSaveLocation : function(location) {
+    updateSaveLocation(location) {
         // get the save location
         if (location) {
             window.saveLocation = location;
@@ -510,4 +504,4 @@ MapProperties.prototype = {
             $('#saveButton, #loadButton').removeClass('disabled');
         }
     }
-};
+}

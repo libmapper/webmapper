@@ -5,13 +5,13 @@
 'use strict';
 
 class ChordView extends View {
-    constructor(frame, tables, canvas, database) {
-        super('chord', frame, null, canvas, database);
+    constructor(frame, tables, canvas, database, tooltip) {
+        super('chord', frame, null, canvas, database, tooltip);
 
         // hide tables
         tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
-                           frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+                           frame.height, 0, 1000, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         this.database.devices.each(function(dev) {
             // remove device labels (if any)

@@ -1,13 +1,15 @@
 'use strict';
 
 // An object for the overall display
-class Table {
+class SignalTable {
     constructor(container, location, frame, database) {
         this.database = database;
+        this.location = location;
         this.id = location + 'Table';
         this.detail = true;
         this.direction = null;
         this.snap = 'right';
+        this.expand = false;
         this.scrolled = 0;
         this.zoomed = 1;
 
@@ -19,6 +21,7 @@ class Table {
         this.num_sigs = 0;
 
         this.collapseAll = false;
+        this.expandWidth = 0;
 
         this.title = 'SIGNALS';
 
@@ -43,39 +46,17 @@ class Table {
 
         // Create the skeleton for the table within the div
         // TODO: move div properties to css
-        if (this.detail) {
-            $(this.div).append(
-                "<div style='height:20px; position:relative; width:100%;'>"+
-                    "<div id="+this.id+"Title style='float:left; position:relative; width:75%; padding-left:10px'>"+
-                        "<strong>"+this.title+"</strong>"+
-                    "</div>"+
-                    "<div style='float:left; position:relative; width:25%; padding-left:20px'>"+
-                        "<strong>TYPE</strong>"+
-                    "</div>"+
+        $(this.div).append(
+            "<div style='height: 20px; position:relative; width:100%'>"+
+                "<div id="+this.id+"Title style='text-align:center; position:relative; width:100%; padding-left:20px; padding-right:20px'>"+
+                    "<strong>"+this.title+"</strong>"+
                 "</div>"+
-                "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
-                    "<table class='displayTable'>"+
-                        "<colgroup>"+
-                            "<col style='width:75%'>"+
-                            "<col style='width:25%'>"+
-                        "</colgroup>"+
-                        "<tbody></tbody>"+
-                    "</table>"+
-                "</div>");
-        }
-        else {
-            $(this.div).append(
-                "<div style='height: 20px; position:relative; width:100%'>"+
-                    "<div id="+this.id+"Title style='float: left; position:relative; width:100%; padding-left:20px; padding-right:20px'>"+
-                        "<strong>"+this.title+"</strong>"+
-                    "</div>"+
-                "</div>"+
-                "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
-                    "<table class='displayTable'>"+
-                        "<tbody></tbody>"+
-                    "</table>"+
-                "</div>");
-        }
+            "</div>"+
+            "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
+                "<table class='displayTable "+this.location+"'>"+
+                    "<tbody></tbody>"+
+                "</table>"+
+            "</div>");
         this.table = $("#"+this.id+" .displayTable")[0];
         this.tbody = $("#"+this.id+" .displayTable tbody")[0];
 
@@ -133,12 +114,14 @@ class Table {
                 'text-align': self.frame.angle ? 'right' : 'left'
             });
 
-            $('#' + self.id + 'Scroller').css({
-                'left': innerLeft ? innerLeft : 0,
-                'top': 0,
-                'width': innerWidth ? innerWidth : '100%',
-                'height': self.frame.height - 20,
-            });
+            if (innerLeft != null && innerWidth != null) {
+                $('#' + self.id + 'Scroller').css({
+                    'left': innerLeft ? innerLeft : 0,
+                    'top': 0,
+                    'width': innerWidth ? innerWidth : '100%',
+                    'height': self.frame.height - 20,
+                });
+            }
             if (func)
                 func();
         }});
@@ -150,9 +133,11 @@ class Table {
         if (this.filterstring == string)
             return;
         this.filterstring = string;
-        this.regexp = string ? new RegExp(this.filterstring, 'i') : null;
-        if (this.regexp)
-            this.update();
+        this.regexp = string ? 
+            new RegExp(this.filterstring, 'i') : 
+            new RegExp('.*');
+        this.update();
+        return true;
     }
 
     filterByDirection(dir) {
@@ -160,13 +145,13 @@ class Table {
             this.direction = (dir == 'both') ? null : dir;
         switch (dir) {
             case 'output':
-                dir = 'SOURCES';
+                dir = 'SRC';
                 break;
             case 'input':
-                dir = 'DESTINATIONS';
+                dir = 'DST';
                 break;
             default:
-                dir = 'SIGNALS';
+                dir = 'SIGS';
                 break;
         }
         $('#'+this.id+'Title>strong').text(dir);
@@ -196,7 +181,7 @@ class Table {
                 continue;
             }
             if (this.snap == 'bottom') {
-                let left = j * rowHeight - this.scrolled + 200;
+                let left = j * rowHeight - this.scrolled + this.frame.left + 20;
                 let top = this.frame.top - this.frame.width;
                 return {'left': left,
                         'right': left + rowHeight,
@@ -248,8 +233,8 @@ class Table {
                         return null;
                 }
                 if (this.snap == 'bottom') {
-                    let left = j * rowHeight - this.scrolled;
-                    let top = row.offsetLeft - this.frame.top;
+                    let left = j * rowHeight - this.scrolled + this.frame.left + 20;
+                    let top = this.frame.top - this.frame.width;
                     return {'left': left,
                             'top': top,
                             'width': rowHeight,
@@ -264,7 +249,7 @@ class Table {
                 }
                 else {
                     let left = row.offsetLeft + this.div[0].offsetLeft;
-                    let top = j * rowHeight - this.scrolled + 20;
+                    let top = j * rowHeight - this.scrolled + 20 + this.frame.top;
                     let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
                             'top': top,
@@ -294,17 +279,17 @@ class Table {
             case 'left':
                 if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.1;
                 break;
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.5;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.9;
                 break;
             case 'bottom':
                 if (y > this.frame.top + this.frame.height * (1 + snapRatio))
                     return;
-                y = this.div[0].offsetTop + 50;
+                y = this.div[0].offsetTop + 5;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
@@ -313,8 +298,6 @@ class Table {
 
         let td = document.elementFromPoint(x, y);
         let row = $(td).parents('tr');
-        if (row[0].className == 'device')
-            return;
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
         let output;
@@ -393,14 +376,14 @@ class Table {
     adjustRowHeight() {
         // adjust row heights to fill table
         let natRowHeight = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (natRowHeight > 16) {
+        if (natRowHeight > 17) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
         let rowHeight = natRowHeight * this.zoomed;
-        if (rowHeight < 16) {
-            rowHeight = 16;
+        if (rowHeight < 17) {
+            rowHeight = 17;
             this.zoomed = rowHeight / natRowHeight;
         }
         let changed = (Math.round(rowHeight) != Math.round(this.rowHeight));
@@ -467,14 +450,9 @@ class Table {
         }
 
         $(this.tbody).empty();
-        let tbody = this.tbody;
+        let _self = this;
         let num_devs = 0;
         let num_sigs = 0;
-        let dir = this.direction;
-        let id = this.id;
-        let detail = this.detail;
-        let regexp = this.regexp;
-        let collapseAll = this.collapseAll;
         let collapse_bit;
         switch (this.snap) {
             case 'right':
@@ -489,20 +467,25 @@ class Table {
         }
         let title = this.title;
 
+        var max_depth = 0;
+        var tree = {"branches": {}, "num_branches": 0};
         this.database.devices.each(function(dev) {
+            if (_self.direction == 'output' && dev.num_outputs < 1) return;
+            else if (_self.direction == 'input' && dev.num_inputs < 1) return;
+
             let num_dev_sigs = 0;
             let sigs = [];
-            dev.signals.each(function(sig) {
-                // todo: check for filters
-                if (dir) {
-                    if (sig.direction != dir)
-                        return;
-                }
-                if (sig.canvas_object)
-                    return;
-                if (regexp && !regexp.test(sig.key))
-                    return;
 
+            function hide(sig) {
+                sigs.push({
+                    id: sig.key.replace('/', '\\/'), 
+                    invisible: true
+                });
+            }
+
+            function ignore(sig) {}
+
+            function add(sig) {
                 let name = sig.name.replace(/\,/g, '<wbr>/');
                 let min = sig.min;
                 if (typeof(min) == 'object') {
@@ -540,39 +523,146 @@ class Table {
                         type = '?';
                         break;
                 }
+
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
-                let ioname = (sig.direction == 'input') ? '→'+name : name+'→';
 
-                sigs.push([sig.key.replace('/', '\\/'), ioname, typelen+unit, sig.direction]);
+                sigs.push({
+                    id: sig.key,
+                    name: name,
+                    unit: typelen+unit, 
+                    direction: sig.direction,
+                    color: dev.color
+                });
+
                 num_dev_sigs += 1;
-            });
-            if (num_dev_sigs <= 0)
-                return;
-
-            let devname = (collapseAll || (dev.collapsed & collapse_bit)
-                           ? ' ▶ ' : '▼  ') + dev.name;
-
-            $(tbody).append("<tr class='device' style='background: "+dev.color+"44' id="+dev.name+"><th colspan='2'>"+devname+" ("+num_dev_sigs+" signals)"+
-                            "</th></tr>");
-            let even = false;
-            for (var i in sigs) {
-                let new_row = "<tr class='"+sigs[i][3];
-                if (even)
-                    new_row += " even";
-                if (collapseAll || (dev.collapsed & collapse_bit))
-                    new_row += " invisible";
-                new_row += "' id="+sigs[i][0]+"><td>"+sigs[i][1]+"</td>";
-                if (detail)
-                    new_row += "<td>"+sigs[i][2]+"</td>";
-                new_row += "</tr>";
-                $(tbody).append(new_row);
-                even = !even;
             }
-            if (!collapseAll && !(dev.collapsed & collapse_bit))
+
+            dev.signals.each(function(sig) {
+                // todo: check for filters
+                if (_self.direction) {
+                    if (sig.direction != _self.direction) 
+                        return ignore(sig);
+                }
+                if (sig.canvas_object)
+                    return ignore(sig);
+                if (_self.regexp && !_self.regexp.test(sig.key))
+                    return hide(sig);
+                add(sig);
+            });
+
+            let devinvisible = '';
+            if (num_dev_sigs <= 0)
+                devinvisible = ' invisible';
+
+            // sort signals by key (for now)
+            sigs.sort(function(a, b) {
+                a = a.name;
+                b = b.name;
+                return a < b ? -1 : (a > b ? 1 : 0);
+            });
+
+            function print_tree(foo, indent) {
+                let spaces = "";
+                for (i = 0; i < indent; i++)
+                    spaces += " ";
+                for (var i in foo.branches) {
+                    let leaf = "";
+                    if (foo.branches[i].leaf)
+                        leaf = "*";
+                    console.log(spaces, i, leaf, foo.branches[i].num_branches);
+                    print_tree(foo.branches[i], indent+2);
+                }
+            }
+
+            // add device and signals to the tree
+            for (var i in sigs) {
+                let sig = sigs[i];
+                var t = tree;
+                let tokens = sig.id.split('/');
+                if (tokens.length > max_depth)
+                    max_depth = tokens.length;
+                let len = tokens.length;
+                for (var j in tokens) {
+                    let b = t.branches;
+                    if (b[tokens[j]] == null)
+                        b[tokens[j]] = {"branches": {}, "num_branches": 0};
+                    t.num_branches += 1;
+                    t = b[tokens[j]];
+                    // store signal metadata in leaves
+                    if (j == len - 1) {
+                        t.leaf = sig;
+                        t.num_branches += 1;
+                    }
+                }
+            }
+//            print_tree(tree, 0);
+
+            if (!_self.collapseAll && !(dev.collapsed & collapse_bit))
                 num_sigs += num_dev_sigs;
             num_devs += 1;
         });
+
+        function add_tree(t, tds, target, depth) {
+            let first = true;
+            for (var i in t.branches) {
+                let b = t.branches[i];
+                if (!tds || !first)
+                    tds = [[b.num_branches, i]];
+                else
+                    tds.push([b.num_branches, i]);
+                if (b.leaf) {
+                    if (_self.location != "left")
+                        tds = tds.reverse();
+                    let line = "";
+                    let len = tds.length;
+                    for (var j in tds) {
+                        let leaf = j == len -1;
+                        if (_self.location != "left")
+                            leaf = j == 0;
+                        if (leaf && _self.expand && _self.location == "right")
+                            line += "<td width=100%></td>";
+                        line += "<td";
+                        if (leaf) {
+                            line += " class=leaf";
+                            if (depth < max_depth)
+                                line += " colspan="+(max_depth-depth);
+                            line += ">"+tds[j][1]+" ("+b.leaf.unit+")</td>";
+                            if (_self.expand && _self.location == "left")
+                                line += "<td width=100%></td>";
+                        }
+                        else {
+                            line += " rowspan="+tds[j][0]+">";
+                            if (tds[j][0] > 4)
+                                line += "<div class=tall>"+tds[j][1]+"</div>";
+                            else
+                                line += tds[j][1];
+                            line += "</td>";
+                        }
+                    }
+                    target.append("<tr style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
+                    tds = [[b.num_branches - 1, i]];
+                }
+                add_tree(b, tds, target, depth + 1);
+                first = false;
+            }
+        }
+        add_tree(tree, [], $(this.tbody), 0);
+
+        if (this.expand) {
+            let tr = $(this.tbody).children('tr')[0];
+            let tds = $(tr).children('td');
+            if (this.location == 'left') {
+                let td = tds[tds.length - 2];
+                this.expandWidth = td.offsetLeft + td.offsetWidth;
+            }
+            else {
+                this.expandWidth = 0;
+                for (var i = 1; i < tds.length; i++)
+                    this.expandWidth += tds[i].offsetWidth;
+            }
+        }
+
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
         this.adjustRowHeight();

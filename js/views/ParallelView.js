@@ -5,12 +5,12 @@
 'use strict';
 
 class ParallelView extends View {
-    constructor(frame, tables, canvas, database) {
-        super('parallel', frame, null, canvas, database);
+    constructor(frame, tables, canvas, database, tooltip) {
+        super('parallel', frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
         // remove link svg
         this.database.links.each(remove_object_svg);

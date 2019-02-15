@@ -2,11 +2,12 @@
 //         ViewManager Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function ViewManager(container, database)
+function ViewManager(container, database, tooltip)
 {
     let frame = null;
     let canvas = null;
     let tables = { 'left': null, 'right': null };
+    this.tooltip = tooltip;
 
     let duration = 1000;
 
@@ -17,7 +18,7 @@ function ViewManager(container, database)
     var dstregexp = null;
 
     let view = null;
-
+    
     this.draw = function() {
         //
     };
@@ -39,35 +40,35 @@ function ViewManager(container, database)
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, tables, canvas, database);
+                view = new BalloonView(frame, tables, canvas, database, tooltip);
                 break;
             case 'canvas':
-                view = new CanvasView(frame, tables, canvas, database);
+                view = new CanvasView(frame, tables, canvas, database, tooltip);
                 break;
             case 'graph':
-                view = new GraphView(frame, tables, canvas, database);
+                view = new GraphView(frame, tables, canvas, database, tooltip);
                 break;
             case 'grid':
-                view = new GridView(frame, tables, canvas, database);
+                view = new GridView(frame, tables, canvas, database, tooltip);
                 break;
             case 'parallel':
-                view = new ParallelView(frame, tables, canvas, database);
+                view = new ParallelView(frame, tables, canvas, database, tooltip);
                 break;
             case 'hive':
-                view = new HiveView(frame, tables, canvas, database);
+                view = new HiveView(frame, tables, canvas, database, tooltip);
                 break;
             case 'link':
-                view = new LinkView(frame, tables, canvas, database);
+                view = new LinkView(frame, tables, canvas, database, tooltip);
                 break;
             case 'chord':
-                view = new ChordView(frame, tables, canvas, database);
+                view = new ChordView(frame, tables, canvas, database, tooltip);
                 break;
             case 'console':
-                view = new ConsoleView(frame, tables, canvas, database);
+                view = new ConsoleView(frame, tables, canvas, database, tooltip);
                 break;
             case 'list':
             default:
-                view = new ListView(frame, tables, canvas, database);
+                view = new ListView(frame, tables, canvas, database, tooltip);
                 break;
         }
 
@@ -87,13 +88,15 @@ function ViewManager(container, database)
         canvas_pan = [0, 0];
         canvas.setViewBox(0, 0, frame.width * canvas_zoom,
                           frame.height * canvas_zoom, false);
-        $('#status').text('');
+        this.tooltip.hide();
     }
 
     add_database_callbacks = function() {
         database.clear_callbacks();
         database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
+                // remove maps immediately to avoid svg arrow animation bug
+                if (type == 'map') remove_object_svg(obj, 1); 
                 remove_object_svg(obj);
                 return;
             }
@@ -115,8 +118,8 @@ function ViewManager(container, database)
     };
 
     function add_display_tables() {
-        tables.left  = new Table($('#container')[0], 'left', frame, database);
-        tables.right = new Table($('#container')[0], 'right', frame, database);
+        tables.left  = new SignalTable($('#container')[0], 'left', frame, database);
+        tables.right = new SignalTable($('#container')[0], 'right', frame, database);
     }
 
     function add_canvas() {
@@ -125,24 +128,6 @@ function ViewManager(container, database)
             "</div>");
         canvas = Raphael($('#svgDiv')[0], '100%', '100%');
     };
-
-    this.init = function() {
-        // remove all previous DOM elements
-        $(container).empty();
-
-        frame = fullOffset($(container)[0]);
-
-        add_canvas();
-        add_display_tables();
-
-        this.switch_view('chord');
-
-        selection_handlers();
-
-        add_database_callbacks();
-        database.devices.each(function(dev) { update_devices(dev, 'added'); });
-        database.maps.each(function(map) { update_maps(map, 'added'); });
-    }
 
     function update_devices(dev, event) {
         if (event == 'added' && !dev.view) {
@@ -198,12 +183,14 @@ function ViewManager(container, database)
                     e.preventDefault();
                 }
                 /* delete */
-                // do not allow 'delete' key to unmpa in console view
-                if (view.type == 'console')
-                    break;
+                // do not allow 'delete' key to unmap in console view
+                if (view.type == 'console') break;
                 database.maps.each(function(map) {
                     if (map.selected)
+                    {
                         $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                        tooltip.hide();
+                    }
                 });
                 deselectAllMaps(tables);
                 break;
@@ -271,8 +258,7 @@ function ViewManager(container, database)
                     updated = select_obj(map);
                 }
             });
-            if (updated)
-                $('#container').trigger("updateMapProperties");
+            if (updated) $('#container').trigger("updateMapProperties");
 
             let stop = false;
             // Moving about the canvas
@@ -314,4 +300,15 @@ function ViewManager(container, database)
         frame = fullOffset($(container)[0]);
         resize_elements(0);
     }
+    
+    // remove all previous DOM elements
+    $(container).empty();
+    frame = fullOffset($(container)[0]);
+    add_canvas();
+    add_display_tables();
+    this.switch_view('chord');
+    selection_handlers();
+    add_database_callbacks();
+    database.devices.each(function(dev) { update_devices(dev, 'added'); });
+    database.maps.each(function(map) { update_maps(map, 'added'); });
 }
