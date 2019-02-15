@@ -621,6 +621,11 @@ class View {
     }
 
     getMapPath(map) {
+        if (this.tables) return this._getMapPathForTables(map);
+        else return this._getMapPathForSigNodes(map);
+    }
+
+    _getMapPathForTables(map) {
         let src = this._tableRow(map.src);
         let dst = this._tableRow(map.dst);
         if (src && dst) {
@@ -658,10 +663,11 @@ class View {
                 return MapPath.betweenTables(src, dst);
             }
         }
-        if (!src)
-            src = map.src.position
-        if (!dst)
-            dst = map.dst.position;
+    }
+
+    _getMapPathForSigNodes(map) {
+        let src = map.src.position
+        let dst = map.dst.position;
         if (!src || !dst)
             return null;
 
@@ -683,7 +689,7 @@ class View {
             if (!map.view)
                 return;
             if (map.hidden) {
-                map.view.attr({'stroke-opacity': 0}, duration, '>');
+                map.view.attr({'stroke-opacity': 0, 'arrow-end': 'none'}, duration, '>');
                 return;
             }
             map.view.stop();
@@ -699,7 +705,7 @@ class View {
             let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
             let color = map.selected ? 'red' : 'white';
             if (!path) {
-                console.log('problem generating path for map', map);
+                map.view.attr({'stroke-opacity': 0, 'arrow-end': 'none'});
                 return;
             }
 

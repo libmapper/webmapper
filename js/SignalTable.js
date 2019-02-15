@@ -443,12 +443,6 @@ class SignalTable {
         if (targetHeight)
             this.targetHeight = targetHeight - 20; // headers
 
-        // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
-        function toFixed_alt(value, precision) {
-            var power = Math.pow(10, precision || 0);
-            return String(Math.round(value * power) / power);
-        }
-
         $(this.tbody).empty();
         let _self = this;
         let num_devs = 0;
@@ -487,27 +481,6 @@ class SignalTable {
 
             function add(sig) {
                 let name = sig.name.replace(/\,/g, '<wbr>/');
-                let min = sig.min;
-                if (typeof(min) == 'object') {
-                    for (i in min)
-                        min[i] = toFixed_alt(min[i], 4);
-                }
-                else if (typeof(min) == 'number')
-                    min = toFixed_alt(min, 4);
-                min = String(min).replace(/\,/g, '<wbr>, ');
-                if (min.indexOf(',') >= 0)
-                    min = '[ ' + min + ' ]';
-
-                let max = sig.max;
-                if (typeof(max) == 'object') {
-                    for (i in max)
-                        max[i] = toFixed_alt(max[i], 4);
-                }
-                else if (typeof(max) == 'number')
-                    max = toFixed_alt(max, 4);
-                max = String(max).replace(/\,/g, '<wbr>, ');
-                if (max.indexOf(',') >= 0)
-                    max = '[ ' + max + ' ]';
                 let type;
                 switch (sig.type) {
                     case 'i':
@@ -550,10 +523,6 @@ class SignalTable {
                     return hide(sig);
                 add(sig);
             });
-
-            let devinvisible = '';
-            if (num_dev_sigs <= 0)
-                devinvisible = ' invisible';
 
             // sort signals by key (for now)
             sigs.sort(function(a, b) {
@@ -602,6 +571,13 @@ class SignalTable {
                 num_sigs += num_dev_sigs;
             num_devs += 1;
         });
+        
+        // sort branches of tree by key (for now)
+        // https://stackoverflow.com/questions/5467129/sort-javascript-object-by-key
+        let orderedtree = {"branches": {}, "num_branches": tree.num_branches};
+        Object.keys(tree.branches).sort().forEach(function(key) {
+            orderedtree.branches[key] = tree.branches[key];
+        });
 
         function add_tree(t, tds, target, depth) {
             let first = true;
@@ -611,7 +587,7 @@ class SignalTable {
                     tds = [[b.num_branches, i]];
                 else
                     tds.push([b.num_branches, i]);
-                if (b.leaf) {
+                if (b.leaf && !b.leaf.invisible) {
                     if (_self.location != "left")
                         tds = tds.reverse();
                     let line = "";
@@ -647,7 +623,7 @@ class SignalTable {
                 first = false;
             }
         }
-        add_tree(tree, [], $(this.tbody), 0);
+        add_tree(orderedtree, [], $(this.tbody), 0);
 
         if (this.expand) {
             let tr = $(this.tbody).children('tr')[0];
