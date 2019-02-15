@@ -168,13 +168,15 @@ class MapperHTTPServer(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_websocket_8(self):
         def send_string(s):
             opcode = chr((1<<7)|1) # FIN + text
-            if len(s)<126:
-                L = chr(len(s))
-            elif len(s)>=126 and len(s)<65536:
-                L = chr(126)+chr((len(s)>>8)&0xFF)+chr(len(s)&0xFF)
+            l = len(s)
+            if l < 126:
+                L = chr(l)
+            elif l < 0x7FFF:
+                L = chr(126)+chr((l>>8)&0xFF)+chr(l&0xFF)
+            elif l < 0xFFFFFF:
+                L = chr(127)+chr(0)+chr(0)+chr(0)+chr(0)+chr((l>>24)&0xFF)+chr((l>>16)&0xFF)+chr((l>>8)&0xFF)+chr(l&0xFF)
             else:
-                print '[ws] message too long! (TODO extended-length msgs)'
-                print s
+                print 'trying to send', l, 'bytes in websocket, failing'
                 return
             self.wfile.write(opcode+L)
             self.wfile.write(s)
