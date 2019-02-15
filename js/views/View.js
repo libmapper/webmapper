@@ -1015,10 +1015,13 @@ class MapPath {
 
     static sameTable(srcrow, dstrow, mapPane) {
         // signals are part of the same table
-        let vert = Math.abs(srcrow.y - dstrow.y);
+        let diff = srcrow.y - dstrow.y
+        let vert = Math.abs(diff);
         let scale = vert / mapPane.height;
         if (scale > 1) scale = 1;
-        let ctlx = scale * 0.85 * mapPane.width + srcrow.x + 20;
+        let ctlx = scale * 0.85 * mapPane.width;
+        if (diff > 0) ctlx = ctlx + srcrow.x + 20;
+        else ctlx = srcrow.x - 20 - ctlx;
         return [['M', srcrow.x, srcrow.y],
                 ['C', ctlx, srcrow.y, ctlx, dstrow.y, dstrow.x, dstrow.y]];
     }
