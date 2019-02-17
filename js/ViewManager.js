@@ -4,6 +4,8 @@
 
 function ViewManager(container, database, tooltip)
 {
+    let self = this;
+    
     let frame = null;
     let canvas = null;
     let tables = { 'left': null, 'right': null };
@@ -17,62 +19,62 @@ function ViewManager(container, database, tooltip)
     var srcregexp = null;
     var dstregexp = null;
 
-    let view = null;
+    this.view = null;
     
     this.draw = function() {
         //
     };
 
     this.loadFile = function(file) {
-        if (view && view.type() == 'chord')
-            view.stageFile(file);
+        if (this.view && this.view.type() == 'chord')
+            this.view.stageFile(file);
     }
 
     this.switch_view = function(viewType) {
-        if (view) {
-            if (view.type == viewType) {
+        if (this.view) {
+            if (this.view.type == viewType) {
                 // already on correct view
                 return;
             }
             // call cleanup for previous view
-            view.cleanup();
+            this.view.cleanup();
         }
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, tables, canvas, database, tooltip);
+                this.view = new BalloonView(frame, tables, canvas, database, tooltip);
                 break;
             case 'canvas':
-                view = new CanvasView(frame, tables, canvas, database, tooltip);
+                this.view = new CanvasView(frame, tables, canvas, database, tooltip);
                 break;
             case 'graph':
-                view = new GraphView(frame, tables, canvas, database, tooltip);
+                this.view = new GraphView(frame, tables, canvas, database, tooltip);
                 break;
             case 'grid':
-                view = new GridView(frame, tables, canvas, database, tooltip);
+                this.view = new GridView(frame, tables, canvas, database, tooltip);
                 break;
             case 'parallel':
-                view = new ParallelView(frame, tables, canvas, database, tooltip);
+                this.view = new ParallelView(frame, tables, canvas, database, tooltip);
                 break;
             case 'hive':
-                view = new HiveView(frame, tables, canvas, database, tooltip);
+                this.view = new HiveView(frame, tables, canvas, database, tooltip);
                 break;
             case 'link':
-                view = new LinkView(frame, tables, canvas, database, tooltip);
+                this.view = new LinkView(frame, tables, canvas, database, tooltip);
                 break;
             case 'chord':
-                view = new ChordView(frame, tables, canvas, database, tooltip);
+                this.view = new ChordView(frame, tables, canvas, database, tooltip);
                 break;
             case 'console':
-                view = new ConsoleView(frame, tables, canvas, database, tooltip);
+                this.view = new ConsoleView(frame, tables, canvas, database, tooltip);
                 break;
             case 'list':
             default:
-                view = new ListView(frame, tables, canvas, database, tooltip);
+                this.view = new ListView(frame, tables, canvas, database, tooltip);
                 break;
         }
 
-        view.update();
+        this.view.update();
 
         // unhighlight all view select buttons
         $('.viewButton').removeClass("viewButtonsel");
@@ -81,14 +83,14 @@ function ViewManager(container, database, tooltip)
     }
 
     resize_elements = function(duration) {
-        if (view)
-            view.resize(frame);
+        if (self.view)
+            self.view.resize(frame);
 
         canvas_zoom = 1;
         canvas_pan = [0, 0];
         canvas.setViewBox(0, 0, frame.width * canvas_zoom,
                           frame.height * canvas_zoom, false);
-        this.tooltip.hide();
+        self.tooltip.hide();
     }
 
     add_database_callbacks = function() {
@@ -134,41 +136,41 @@ function ViewManager(container, database, tooltip)
             dev.signals.each(function(sig) {
                 update_signals(sig, 'added', false);
             });
-            view.update('devices');
+            self.view.update('devices');
         }
         else if (event == 'removed')
-            view.update('devices');
+            self.view.update('devices');
     }
 
     function update_signals(sig, event, repaint) {
         if (event == 'added' && !sig.view) {
             sig.position = position(null, null, frame);
             if (repaint)
-                view.update('signals');
+                self.view.update('signals');
         }
         else if (event == 'modified' || event == 'removed')
-            view.update('signals');
+            self.view.update('signals');
     }
 
     function update_links(link, event) {
-        view.update('links');
+        self.view.update('links');
     }
 
     function update_maps(map, event) {
         switch (event) {
             case 'added':
                 if (!map.view)
-                    view.update('maps');
+                    self.view.update('maps');
                 break;
             case 'modified':
                 if (map.view) {
                     if (map.selected)
                         $('#container').trigger("updateMapPropertiesFor", map.key);
-                    view.update('maps');
+                    self.view.update('maps');
                 }
                 break;
             case 'removed':
-                view.update('maps');
+                self.view.update('maps');
                 break;
         }
     }
@@ -184,7 +186,7 @@ function ViewManager(container, database, tooltip)
                 }
                 /* delete */
                 // do not allow 'delete' key to unmap in console view
-                if (view.type == 'console') break;
+                if (self.view.type == 'console') break;
                 database.maps.each(function(map) {
                     if (map.selected)
                     {
@@ -207,32 +209,32 @@ function ViewManager(container, database, tooltip)
                 }
                 break;
             case 27:
-                view.escape();
+                self.view.escape();
                 break;
         }
     });
 
     this.zoom = function(x, y, delta) {
-        view.zoom(x, y, delta);
+        this.view.zoom(x, y, delta);
     }
 
     this.pan = function(x, y, delta_x, delta_y) {
-        view.pan(x, y, delta_x, delta_y);
+        this.view.pan(x, y, delta_x, delta_y);
     }
 
     this.resetPanZoom = function() {
-        view.resetPanZoom();
+        this.view.resetPanZoom();
     }
 
     this.filterSignals = function(searchbar, text) {
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
             srcregexp = text ? new RegExp(text, 'i') : null;
-            view.filterSignals('src', text.length ? text : null);
+            this.view.filterSignals('src', text.length ? text : null);
         }
         else {
             dstregexp = text ? new RegExp(text, 'i') : null;
-            view.filterSignals('dst', text.length ? text : null);
+            this.view.filterSignals('dst', text.length ? text : null);
         }
     }
 
