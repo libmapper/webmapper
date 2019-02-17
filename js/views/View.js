@@ -9,8 +9,6 @@
 // cleanup() // called when view is destroyed
 // type() // returns view type
 
-'use strict';
-
 class View {
     constructor(type, frame, tables, canvas, database, tooltip) {
         this.type = type;

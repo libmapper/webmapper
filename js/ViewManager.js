@@ -46,7 +46,8 @@ class ViewManager
 
     on_resize() {
         this.frame = fullOffset($(this.container)[0]);
-        this._resize_elements(0);
+        this.view.resize(this.frame);
+        this.tooltip.hide();
     }
 
     filterSignals(searchbar, text) {
@@ -116,17 +117,6 @@ class ViewManager
         $('.viewButton').removeClass("viewButtonsel");
         // highlight the select button for the new view
         $('#'+viewType+'Button').addClass("viewButtonsel");
-    }
-
-    _resize_elements(duration) {
-        if (this.view)
-            this.view.resize(this.frame);
-
-        this.canvas_zoom = 1;
-        this.canvas_pan = [0, 0];
-        this.canvas.setViewBox(0, 0, this.frame.width * this.canvas_zoom,
-                          this.frame.height * this.canvas_zoom, false);
-        this.tooltip.hide();
     }
 
     _add_database_callbacks() {
