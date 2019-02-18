@@ -446,3 +446,7 @@ function polarMean(angle1, angle2, fullscale = Math.PI * 2.0) {
         mean += halfscale;
     return mean;
 }
+
+function fuzzyEq(val1, val2, epsilon) {
+    return Math.abs(val1 - val2) < epsilon;
+}

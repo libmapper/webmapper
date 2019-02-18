@@ -9,8 +9,6 @@
 // cleanup() // called when view is destroyed
 // type() // returns view type
 
-'use strict';
-
 class View {
     constructor(type, frame, tables, canvas, database, tooltip) {
         this.type = type;
@@ -632,8 +630,7 @@ class View {
             if (src.vx == dst.vx) {
                 // same table
                 if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                if (src.x == dst.x) return MapPath.sameTable(src, dst, this.mapPane);
-                else return MapPath.horizontal(src, dst); 
+                return MapPath.sameTable(src, dst, this.mapPane);
             }
             else if (src.vy != dst.vy) {
                 // constrain positions to pane to indicate offscreen maps
@@ -1016,20 +1013,31 @@ class MapPath {
 
     static sameTable(srcrow, dstrow, mapPane) {
         // signals are part of the same table
-        let diff = srcrow.y - dstrow.y
-        let vert = Math.abs(diff);
-        let scale = vert / mapPane.height;
-        if (scale > 1) scale = 1;
-        let ctlx = scale * 0.85 * mapPane.width;
-        if (diff > 0) ctlx = ctlx + srcrow.x + 20;
-        else ctlx = srcrow.x - 20 - ctlx;
-        return [['M', srcrow.x, srcrow.y],
-                ['C', ctlx, srcrow.y, ctlx, dstrow.y, dstrow.x, dstrow.y]];
+        if (Math.abs(srcrow.x - dstrow.x) < 1)
+            return this.vertical(srcrow, dstrow, mapPane);
+        else
+            return this.horizontal(srcrow, dstrow, mapPane);
+    }
+
+    static vertical(src, dst, mapPane) {
+        // signals are inline vertically
+        let maxoffset = 200;
+        let offset = Math.abs(src.y - dst.y) * 0.5 * src.vx 
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        let ctlx = offset + src.x;
+        return [ ['M', src.x, src.y]
+               , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
+               ];
     }
 
     static horizontal(src, dst) {
         // signals are inline horizontally
-        let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
+        let maxoffset = 200;
+        let offset = Math.abs(src.x - dst.x) * 0.5 * src.vy 
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        let ctly = offset + src.y;
         return [['M', src.x, src.y],
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
