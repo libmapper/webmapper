@@ -1026,8 +1026,9 @@ class MapPath {
         if (offset > 0 && offset > maxoffset) offset = maxoffset;
         else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
         let ctlx = offset + src.x;
-        return [['M', src.x, src.y],
-                ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+        return [ ['M', src.x, src.y]
+               , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
+               ];
     }
 
     static horizontal(src, dst) {
