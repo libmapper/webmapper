@@ -279,7 +279,7 @@ class ChordView extends View {
         this.database.links.each(function(link) {
             let src = link.src;
             let dst = link.dst;
-            if (!src.view || !dst.view)
+            if (!src.view || !dst.view || src == dst)
                 return;
 
             if (!src.link_angles.includes(dst.view.pstart.angle)) {
@@ -368,7 +368,6 @@ class ChordView extends View {
         let offline = src.status == 'offline';
         if (src.staged) {
             r += 40;
-            cx = self.mapPane.cx * 0.5;
             angleInc = self.onlineInc;
             src = src.staged;
         }
@@ -382,11 +381,11 @@ class ChordView extends View {
         cx = self.mapPane.cx * (src.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
         // we will be inserting spaces between links equal to (arclength * 0.1)
-        let srcAngleInc = angleInc / (src.link_angles.length * 1.1 - 0.1);
+        let srcAngleInc = angleInc / src.link_angles.length * 0.9;
         let srcStartAngle = src.view.pstart.angle;
         let srcStopAngle;
         if (src.link_angles.length > 1) {
-            srcStartAngle += srcAngleInc * link.src_index * 1.1;
+            srcStartAngle += srcAngleInc * link.src_index;
             srcStopAngle = srcStartAngle + srcAngleInc;
         }
         else
@@ -418,8 +417,8 @@ class ChordView extends View {
         let dstStartAngle = dst.view.pstart.angle;
         let dstStopAngle;
         if (dst.link_angles.length > 1) {
-            dstStartAngle += dstAngleInc * link.dst_index * 1.05;
-            dstStopAngle = dstStartAngle + dstAngleInc * 0.95238;
+            dstStartAngle += dstAngleInc * link.dst_index;
+            dstStopAngle = dstStartAngle + dstAngleInc;
         }
         else
             dstStopAngle = dst.view.pstop.angle;
@@ -452,16 +451,24 @@ class ChordView extends View {
 //            cx = self.mapPane.cx;
 
         let path = [];
-        path.push(['M', srcStartPos[0], srcStartPos[1]],
-                  ['A', r, r, srcStopAngle - srcStartAngle, 0, 1, srcStopPos[0], srcStopPos[1]]);
-        path.push(['Q', cx, cy, dstStartPos[0], dstStartPos[1]]);
-        path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
-        path.push(['Q', cx, cy, srcStartPos[0], srcStartPos[1]]);
-        path.push(['Z']);
+        if (src == dst) {
+            path = [['M', (src.view.pstart.x-cx)*1.1+cx, (src.view.pstart.y-cy)*1.1+cy],
+                    ['C', (src.view.pstart.x-cx)*1.5+cx, (src.view.pstart.y-cy)*1.5+cy,
+                     (src.view.pstop.x-cx)*1.5+cx, (src.view.pstop.y-cy)*1.5+cy,
+                     (src.view.pstop.x-cx)*1.1+cx, (src.view.pstop.y-cy)*1.1+cy],
+                    ['Z']];
+        }
+        else {
+            path.push(['M', srcStartPos[0], srcStartPos[1]],
+                      ['A', r, r, srcStopAngle - srcStartAngle, 0, 1, srcStopPos[0], srcStopPos[1]]);
+            path.push(['Q', cx, cy, dstStartPos[0], dstStartPos[1]]);
+            path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
+            path.push(['Q', cx, cy, srcStartPos[0], srcStartPos[1]]);
+            path.push(['Z']);
+        }
 
         link.view.toBack().attr({'stroke-width': 0,
-                                 'fill': fillString
-                                })
+                                 'fill': fillString})
                           .animate({'path': path}, duration, '>');
 
     }
