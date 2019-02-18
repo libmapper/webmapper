@@ -1013,7 +1013,7 @@ class MapPath {
 
     static sameTable(srcrow, dstrow, mapPane) {
         // signals are part of the same table
-        if (srcrow.x == dstrow.x)
+        if (Math.abs(srcrow.x - dstrow.x) < 1)
             return this.vertical(srcrow, dstrow, mapPane);
         else
             return this.horizontal(srcrow, dstrow, mapPane);
@@ -1021,14 +1021,23 @@ class MapPath {
 
     static vertical(src, dst, mapPane) {
         // signals are inline vertically
-        let ctlx = Math.abs(src.y - dst.y) * 0.5 * src.vx + src.x;
-        return [['M', src.x, src.y],
-                ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+        let maxoffset = 200;
+        let offset = Math.abs(src.y - dst.y) * 0.5 * src.vx 
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        let ctlx = offset + src.x;
+        return [ ['M', src.x, src.y]
+               , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
+               ];
     }
 
     static horizontal(src, dst) {
         // signals are inline horizontally
-        let ctly = Math.abs(src.x - dst.x) * 0.5 * src.vy + src.y;
+        let maxoffset = 200;
+        let offset = Math.abs(src.x - dst.x) * 0.5 * src.vy 
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        let ctly = offset + src.y;
         return [['M', src.x, src.y],
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
