@@ -864,10 +864,10 @@ class View {
         // can also drag map to self
         // if tables are orthogonal we can simply drag to 2D space between them
         // if no other table exists, can drag out signal representation
-        $('.tableDiv').on('mousedown', 'tr', function(e) {
+        $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
             self.escaped = false;
 
-            let src_row = this;
+            let src_row = $(this).parent('tr')[0];
             let src_table = null;
             switch ($(src_row).parents('.tableDiv').attr('id')) {
                 case "leftTable":
@@ -902,7 +902,7 @@ class View {
                 return;
             }
 
-            $('svg').one('mouseenter.drawing', function() {
+            $('#svgDiv').one('mouseenter.drawing', function() {
                 deselectAllMaps(self.tables);
                 let id = src_row.id.replace('\\/', '\/');
                 var src = src_table.getRowFromName(id);
@@ -1007,9 +1007,18 @@ class MapPath {
     constructor() {}
 
     static betweenTables(src, dst) {
-        let mpx = (src.x + dst.x) * 0.5;
+        if (Math.abs(src.vx) == Math.abs(dst.vx)) {
+            // tables are parallel
+            let mpx = (src.x + dst.x) * 0.5;
+            return [['M', src.x, src.y],
+                    ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        }
+        let dx = dst.x - src.x;
+        let dy = dst.y - src.y;
+        let vertical = fuzzyEq(src.vy, 0, 0.001);
         return [['M', src.x, src.y],
-                ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+                    ['l', vertical ? dx : 0, vertical ? 0 : dy],
+                    ['L', dst.x, dst.y]];
     }
 
     static sameTable(srcrow, dstrow, mapPane) {

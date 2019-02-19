@@ -221,7 +221,7 @@ class SignalTable {
     }
 
     getRowFromName(name) {
-        let id = name.replace('/', '\\/');
+        let id = name.replace('\/', '\\/');
         let rowHeight = Math.round(this.rowHeight);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
@@ -253,7 +253,7 @@ class SignalTable {
                     let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
                             'top': top,
-                            'width': row.offsetWidth,
+                            'width': this.frame.width,
                             'height': rowHeight,
                             'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                             'y': top + rowHeight * 0.5,
@@ -284,12 +284,13 @@ class SignalTable {
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.9;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 2;
                 break;
             case 'bottom':
-                if (y > this.frame.top + this.frame.height * (1 + snapRatio))
+                let yoffset = $(this.div[0]).offset().top;
+                if (y > yoffset + this.frame.width * (1 + snapRatio))
                     return;
-                y = this.div[0].offsetTop + 5;
+                y = yoffset + this.frame.width - 2;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
@@ -300,10 +301,15 @@ class SignalTable {
         let row = $(td).parents('tr');
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
+        if (!row) {
+            console.log("error retrieving row");
+            return;
+        }
+
         let output;
         if (this.snap == 'bottom') {
-            let left = row.offsetTop - this.scrolled;
-            let top = row.offsetLeft - this.frame.top;
+            let left = row.offsetTop - this.scrolled + this.frame.left + 20;
+            let top = row.offsetLeft;
             output = {'left': left,
                       'top': top,
                       'width': rowHeight,
@@ -317,13 +323,13 @@ class SignalTable {
         }
         else {
             let left = row.offsetLeft + this.div[0].offsetLeft;
-            let top = row.offsetTop - this.scrolled + 20;
+            let top = row.offsetTop - this.scrolled + 20 + this.frame.top;
             let snap = this.snap == 'left' ? -1 : 1;
             output = {'left': left,
                       'top': top,
-                      'width': row.offsetWidth,
+                      'width': this.frame.width,
                       'height': rowHeight,
-                      'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                      'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                       'y': top + rowHeight * 0.5,
                       'vx': Math.cos(this.frame.angle) * snap,
                       'vy': Math.sin(this.frame.angle),

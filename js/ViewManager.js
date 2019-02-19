@@ -79,35 +79,45 @@ class ViewManager
 
         switch (viewType) {
             case 'balloon':
-                this.view = new BalloonView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new BalloonView(this.frame, this.tables, this.canvas,
+                                            this.database, this.tooltip);
                 break;
             case 'canvas':
-                this.view = new CanvasView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new CanvasView(this.frame, this.tables, this.canvas,
+                                           this.database, this.tooltip);
                 break;
             case 'graph':
-                this.view = new GraphView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new GraphView(this.frame, this.tables, this.canvas,
+                                          this.database, this.tooltip);
                 break;
             case 'grid':
-                this.view = new GridView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new GridView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
             case 'parallel':
-                this.view = new ParallelView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new ParallelView(this.frame, this.tables, this.canvas,
+                                             this.database, this.tooltip);
                 break;
             case 'hive':
-                this.view = new HiveView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new HiveView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
             case 'link':
-                this.view = new LinkView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new LinkView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
             case 'chord':
-                this.view = new ChordView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new ChordView(this.frame, this.tables, this.canvas,
+                                          this.database, this.tooltip);
                 break;
             case 'console':
-                this.view = new ConsoleView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new ConsoleView(this.frame, this.tables, this.canvas,
+                                            this.database, this.tooltip);
                 break;
             case 'list':
             default:
-                this.view = new ListView(this.frame, this.tables, this.canvas, this.database, this.tooltip);
+                this.view = new ListView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
         }
 
@@ -153,7 +163,7 @@ class ViewManager
 
     _add_canvas() {
         $('#container').append(
-            "<div id='svgDiv' class='links'>"+
+            "<div id='svgDiv' class='svgDiv'>"+
             "</div>");
         this.canvas = Raphael($('#svgDiv')[0], '100%', '100%');
     };
@@ -204,7 +214,7 @@ class ViewManager
 
     _selection_handlers() {
         let self = this;
-        $('svg').on('mousedown', function(e) {
+        $('#svgDiv').on('mousedown', function(e) {
             if (e.shiftKey == false) {
                 deselectAllMaps(self.tables);
             }
@@ -229,7 +239,7 @@ class ViewManager
 
             let stop = false;
             // Moving about the canvas
-            $('svg').on('mousemove.drawing', function(moveEvent) {
+            $('#svgDiv').on('mousemove.drawing', function(moveEvent) {
                 if (stop == true || escaped == true)
                     return;
 
@@ -256,7 +266,7 @@ class ViewManager
                 x1 = x2;
                 y1 = y2;
             });
-            $('svg').one('mouseup.drawing', function(mouseUpEvent) {
+            $('#svgDiv').one('mouseup.drawing', function(mouseUpEvent) {
                 stop = true;
             });
         });
