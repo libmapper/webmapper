@@ -290,18 +290,17 @@ class View {
                             signals: dev.signals.size()
                         }, e.x, e.y);
                     if (self.type == 'chord') {
-                        dev.view.toFront();
                         // also move associated  links to front
                         self.database.links.each(function(link) {
                             if (link.view && (link.src == dev || link.dst == dev))
                                 link.view.toFront();
                         });
+                        dev.view.toFront();
                     }
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
                 }
                 hovered = true;
                 self.hoverDev = dev;
-                console.log('set hoverDev to', self.hoverDev);
                 if (self.draggingFrom == null)
                     return;
                 else if (dev == self.draggingFrom) {
@@ -318,7 +317,6 @@ class View {
                     hovered = false;
                 }
                 self.hoverDev = null;
-                console.log('set hoverDev to', self.hoverDev);
             }
         );
     }
@@ -422,7 +420,6 @@ class View {
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
-                console.log('set hoverDev to', self.hoverDev);
                 if (self.draggingFrom == null)
                     return;
                 else if (sig == self.draggingFrom) {
@@ -444,7 +441,6 @@ class View {
                 self.tooltip.hide();
                 sig.view.animate({'stroke-width': 6}, 50, 'linear');
                 self.hoverDev = null;
-                console.log('set hoverDev to', self.hoverDev);
             }
         );
     }
@@ -558,13 +554,15 @@ class View {
         map.view.unhover();
         map.view.hover(
             function(e) {
-                self.tooltip.showTable(
-                    "Map", {
-                        source: map.src.key,
-                        destination: map.dst.key,
-                        mode: map.mode,
-                        expression: map.expression,
-                    }, e.x, e.y);
+                if (!self.draggingFrom) {
+                    self.tooltip.showTable(
+                        "Map", {
+                            source: map.src.key,
+                            destination: map.dst.key,
+                            mode: map.mode,
+                            expression: map.expression,
+                        }, e.x, e.y);
+                }
                 map.view.animate({'stroke-width': 4}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
@@ -906,9 +904,10 @@ class View {
 
             $('svg').one('mouseenter.drawing', function() {
                 deselectAllMaps(self.tables);
-
-                var src = src_table.getRowFromName(src_row.id.replace('\\/', '\/'));
+                let id = src_row.id.replace('\\/', '\/');
+                var src = src_table.getRowFromName(id);
                 var dst = null;
+                self.draggingFrom = self.database.find_signal(id);
 
                 self.newMap = self.canvas.path([['M', src.x, src.y],
                                                 ['l', 0, 0]])
@@ -926,6 +925,7 @@ class View {
                     if (self.escaped) {
                         $(document).off('.drawing');
                         $('svg, .displayTable tbody tr').off('.drawing');
+                        self.draggingFrom = null;
                         return;
                     }
 
@@ -983,13 +983,14 @@ class View {
                     // clear table highlights
                     self.tables.left.highlightRow(null, true);
                     self.tables.right.highlightRow(null, true);
-
+                    self.draggingFrom = null;
                     self.newMap.remove();
                     self.newMap = null;
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
                 $(document).off('.drawing');
+                self.draggingFrom = null;
             });
         });
     }
