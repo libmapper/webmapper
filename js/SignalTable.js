@@ -618,7 +618,7 @@ class SignalTable {
                         }
                         else {
                             line += " rowspan="+tds[j][0]+">";
-                            if (tds[j][0] > 4)
+                            if (tds[j][0] >= tds[j][1].length / 2)
                                 line += "<div class=tall>"+tds[j][1]+"</div>";
                             else
                                 line += tds[j][1];
