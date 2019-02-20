@@ -222,6 +222,11 @@ class ViewManager
 
             // cache current mouse position
             let svgPos = fullOffset($('#svgDiv')[0]);
+            if (self.view.type == 'grid') {
+                // svg canvas has hidden offset
+                svgPos.left -= self.view.tables.left.expandWidth;
+                svgPos.top -= self.view.tables.right.expandWidth;
+            }
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
 
