@@ -474,6 +474,7 @@ class View {
                     self.newMap.attr({'stroke': 'white',
                                       'stroke-width': MapPath.strokeWidth,
                                       'stroke-opacity': 1,
+                                      'fill': 'none',
                                       'arrow-start': 'none',
                                       'arrow-end': 'block-wide-long'});
                 }
@@ -601,9 +602,9 @@ class View {
                 map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.selected ? 'red' : 'white',
-                               'fill-opacity': 0,
+                               'fill': 'none',
                                'stroke-width': MapPath.strokeWidth,
-                               'rrow-start': 'none'});
+                               'arrow-start': 'none'});
                 map.view.new = true;
                 self.setMapHover(map);
             }
@@ -699,8 +700,9 @@ class View {
                                           len - self.shortenPaths);
             }
 
-            let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let color = map.selected ? 'red' : 'white';
+            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
+            let stroke_color = map.selected ? 'red' : 'white';
+            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
             if (!path) {
                 map.view.hide();
                 return;
@@ -713,10 +715,10 @@ class View {
                     // draw map directly
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
-                                   'stroke': color,
+                                   'stroke': stroke_color,
                                    'stroke-dasharray': map.muted ? '-' : '',
-                                   'fill-opacity': fill,
-                                   'fill': color,
+                                   'fill-opacity': fill_opacity,
+                                   'fill': fill_color,
                                    'arrow-end': 'block-wide-long'
                                   })
                             .toFront();
@@ -734,10 +736,10 @@ class View {
                 map.view.show();
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
-                                  'fill-opacity': fill,
-                                  'fill': color,
+                                  'fill-opacity': fill_opacity,
+                                  'fill': fill_color,
                                   'stroke-width': MapPath.strokeWidth,
-                                  'stroke': color},
+                                  'stroke': stroke_color},
                                  duration, '>')
                         .toFront();
             }
