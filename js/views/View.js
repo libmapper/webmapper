@@ -28,21 +28,6 @@ class View {
 
         this.newMap = null;
 
-        this.dragObj = 'map';
-
-        // normalized table positions & dimensions
-        this.leftTableLeft = 0;
-        this.leftTableTop = 0;
-        this.leftTableWidth = 0;
-        this.leftTableHeight = 1;
-        this.leftTableAngle = 0;
-
-        this.rightTableLeft = 1;
-        this.rightTableTop = 0;
-        this.rightTableWidth = 0;
-        this.rightTableHeight = 1;
-        this.rightTableAngle = 0;
-
         if (tables) {
             this.setTableDrag();
         }
@@ -632,12 +617,7 @@ class View {
                 return MapPath.sameTable(src, dst, this.mapPane);
             }
             else if (src.vy != dst.vy) {
-                // constrain positions to pane to indicate offscreen maps
-                // todo: make function
-                if (src.x < this.leftTableLeft) {
-                    // constrain to bounds
-                    // display a white dot
-                }
+                // TODO: constrain positions to pane to indicate offscreen maps
                 // draw intersection between tables
                 if (map.view) map.view.attr({'arrow-end': 'none'});
                 if (src.vx < 0.0001) {
@@ -691,6 +671,11 @@ class View {
             map.view.stop();
 
             let path = self.getMapPath(map);
+            if (!path) {
+                map.view.hide();
+                return;
+            }
+
             if (self.shortenPaths) {
                 // shorten path so it doesn't draw over signals
                 let len = Raphael.getTotalLength(path);
@@ -701,11 +686,6 @@ class View {
             let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
             let stroke_color = map.selected ? 'red' : 'white';
             let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
-            if (!path) {
-                map.view.hide();
-                return;
-            }
-
             if (map.view.new) {
                 map.view.show();
                 map.view.new = false;
