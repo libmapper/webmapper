@@ -468,8 +468,9 @@ class View {
                 if (!self.newMap) {
                     self.newMap = self.canvas.path(path);
                     self.newMap.attr({'stroke': 'white',
-                                      'stroke-width': 2,
+                                      'stroke-width': MapPath.strokeWidth,
                                       'stroke-opacity': 1,
+                                      'fill': 'none',
                                       'arrow-start': 'none',
                                       'arrow-end': 'block-wide-long'});
                 }
@@ -563,7 +564,7 @@ class View {
                             expression: map.expression,
                         }, e.x, e.y);
                 }
-                map.view.animate({'stroke-width': 4}, 0, 'linear');
+                map.view.animate({'stroke-width': MapPath.boldStrokeWidth}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
 //                    return;
@@ -584,7 +585,7 @@ class View {
             function() {
                 self.snappingTo = null;
                 self.tooltip.hide();
-                map.view.animate({'stroke-width': 2}, 50, 'linear');
+                map.view.animate({'stroke-width': MapPath.strokeWidth}, 50, 'linear');
             }
         );
     }
@@ -599,8 +600,8 @@ class View {
                 map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.selected ? 'red' : 'white',
-                               'fill-opacity': 0,
-                               'stroke-width': 2,
+                               'fill': 'none',
+                               'stroke-width': MapPath.strokeWidth,
                                'arrow-start': 'none'});
                 map.view.new = true;
                 self.setMapHover(map);
@@ -697,8 +698,9 @@ class View {
                                           len - self.shortenPaths);
             }
 
-            let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let color = map.selected ? 'red' : 'white';
+            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
+            let stroke_color = map.selected ? 'red' : 'white';
+            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
             if (!path) {
                 map.view.hide();
                 return;
@@ -711,10 +713,10 @@ class View {
                     // draw map directly
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
-                                   'stroke': color,
+                                   'stroke': stroke_color,
                                    'stroke-dasharray': map.muted ? '-' : '',
-                                   'fill-opacity': fill,
-                                   'fill': color,
+                                   'fill-opacity': fill_opacity,
+                                   'fill': fill_color,
                                    'arrow-end': 'block-wide-long'
                                   })
                             .toFront();
@@ -732,10 +734,10 @@ class View {
                 map.view.show();
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
-                                  'fill-opacity': fill,
-                                  'fill': color,
-                                  'stroke-width': 2,
-                                  'stroke': color},
+                                  'fill-opacity': fill_opacity,
+                                  'fill': fill_color,
+                                  'stroke-width': MapPath.strokeWidth,
+                                  'stroke': stroke_color},
                                  duration, '>')
                         .toFront();
             }
@@ -914,7 +916,7 @@ class View {
                                          .attr({'fill-opacity': 0,
                                                 'stroke': 'white',
                                                 'stroke-opacity': 1,
-                                                'stroke-width': 2});
+                                                'stroke-width': MapPath.strokeWidth});
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -1052,4 +1054,7 @@ class MapPath {
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }
+
+MapPath.strokeWidth = 4;
+MapPath.boldStrokeWidth = 8;
 
