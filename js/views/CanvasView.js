@@ -11,7 +11,7 @@ class CanvasView extends View {
         // set left table properties
         this.tables.left.filterByDirection('both');
         this.tables.left.showDetail(true);
-        this.tables.left.expand = false;
+        this.tables.left.expand = true;
 
         // hide right table
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
@@ -31,6 +31,7 @@ class CanvasView extends View {
             }
         });
 
+        this.leftExpandWidth = 200;
         this.resize(null, 1000);
     }
 
@@ -39,10 +40,10 @@ class CanvasView extends View {
             this.frame = newFrame;
 
         let self = this;
-        this.tables.left.adjust(0, 0, this.frame.width * 0.25, this.frame.height,
-                                0, duration, function() {self.draw()});
-        this.mapPane.left = this.frame.width * 0.25;
-        this.mapPane.width = this.frame.width * 0.75;
+        this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
+                                0, duration, function() {self.draw()}, 0, 0);
+        this.mapPane.left = this.leftExpandWidth;
+        this.mapPane.width = this.frame.width - this.leftExpandWidth;
         this.mapPane.height = this.frame.height;
         this.mapPane.cx = this.mapPane.left + this.mapPane.width * 0.5;
         this.mapPane.cy = this.frame.height * 0.5;
@@ -291,8 +292,16 @@ class CanvasView extends View {
                 elements = arguments;
                 break;
         }
-        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
+            let updated = false;
+            if (this.tables.left.expandWidth != this.leftExpandWidth) {
+                this.leftExpandWidth = this.tables.left.expandWidth;
+                updated = true;
+            }
+            if (updated)
+                this.resize(null, 1000);
+        }
         if (elements.indexOf('maps') >= 0)
             this.updateMaps();
         this.draw(1000);

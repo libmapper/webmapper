@@ -221,7 +221,7 @@ class SignalTable {
     }
 
     getRowFromName(name) {
-        let id = name.replace('/', '\\/');
+        let id = name.replace('\/', '\\/');
         let rowHeight = Math.round(this.rowHeight);
         let j = 0;
         for (var i = 0, row; row = this.table.rows[i]; i++) {
@@ -240,9 +240,9 @@ class SignalTable {
                             'width': rowHeight,
                             'height': row.offsetWidth,
                             'x': left + rowHeight * 0.5,
-                            'y': top + row.offsetWidth,
+                            'y': top + this.frame.width,
                             'vx': Math.cos(this.frame.angle),
-                            'vy': Math.sin(this.frame.angle),
+                            'vy': -Math.sin(this.frame.angle),
                             'id': row.id.replace('\\/', '\/'),
                             'type': $(row).hasClass('device') ? 'device' : 'signal',
                             'index': j};
@@ -253,9 +253,9 @@ class SignalTable {
                     let snap = this.snap == 'left' ? -1 : 1;
                     return {'left': left,
                             'top': top,
-                            'width': row.offsetWidth,
+                            'width': this.frame.width,
                             'height': rowHeight,
-                            'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                            'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                             'y': top + rowHeight * 0.5,
                             'vx': Math.cos(this.frame.angle) * snap,
                             'vy': Math.sin(this.frame.angle),
@@ -284,12 +284,13 @@ class SignalTable {
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.9;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 2;
                 break;
             case 'bottom':
-                if (y > this.frame.top + this.frame.height * (1 + snapRatio))
+                let yoffset = $(this.div[0]).offset().top;
+                if (y > yoffset + this.frame.width * (1 + snapRatio))
                     return;
-                y = this.div[0].offsetTop + 5;
+                y = yoffset + this.frame.width - 2;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
@@ -300,30 +301,35 @@ class SignalTable {
         let row = $(td).parents('tr');
         let rowHeight = Math.round(this.rowHeight);
         row = row[0];
+        if (!row) {
+            console.log("error retrieving row");
+            return;
+        }
+
         let output;
         if (this.snap == 'bottom') {
-            let left = row.offsetTop - this.scrolled;
-            let top = row.offsetLeft - this.frame.top;
+            let left = row.offsetTop - this.scrolled + this.frame.left + 20;
+            let top = row.offsetLeft;
             output = {'left': left,
                       'top': top,
                       'width': rowHeight,
                       'height': row.offsetWidth,
                       'x': left + rowHeight * 0.5,
-                      'y': top + row.offsetWidth,
+                      'y': top + this.frame.width,
                       'vx': Math.cos(this.frame.angle),
-                      'vy': Math.sin(this.frame.angle),
+                      'vy': -Math.sin(this.frame.angle),
                       'id': row.id.replace('\\/', '\/'),
                       'type': $(row).hasClass('device') ? 'device' : 'signal'};
         }
         else {
             let left = row.offsetLeft + this.div[0].offsetLeft;
-            let top = row.offsetTop - this.scrolled + 20;
+            let top = row.offsetTop - this.scrolled + 20 + this.frame.top;
             let snap = this.snap == 'left' ? -1 : 1;
             output = {'left': left,
                       'top': top,
-                      'width': row.offsetWidth,
+                      'width': this.frame.width,
                       'height': rowHeight,
-                      'x': this.snap == 'left' ? left : left + row.offsetWidth,
+                      'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
                       'y': top + rowHeight * 0.5,
                       'vx': Math.cos(this.frame.angle) * snap,
                       'vy': Math.sin(this.frame.angle),
@@ -443,12 +449,6 @@ class SignalTable {
         if (targetHeight)
             this.targetHeight = targetHeight - 20; // headers
 
-        // http://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
-        function toFixed_alt(value, precision) {
-            var power = Math.pow(10, precision || 0);
-            return String(Math.round(value * power) / power);
-        }
-
         $(this.tbody).empty();
         let _self = this;
         let num_devs = 0;
@@ -487,27 +487,6 @@ class SignalTable {
 
             function add(sig) {
                 let name = sig.name.replace(/\,/g, '<wbr>/');
-                let min = sig.min;
-                if (typeof(min) == 'object') {
-                    for (i in min)
-                        min[i] = toFixed_alt(min[i], 4);
-                }
-                else if (typeof(min) == 'number')
-                    min = toFixed_alt(min, 4);
-                min = String(min).replace(/\,/g, '<wbr>, ');
-                if (min.indexOf(',') >= 0)
-                    min = '[ ' + min + ' ]';
-
-                let max = sig.max;
-                if (typeof(max) == 'object') {
-                    for (i in max)
-                        max[i] = toFixed_alt(max[i], 4);
-                }
-                else if (typeof(max) == 'number')
-                    max = toFixed_alt(max, 4);
-                max = String(max).replace(/\,/g, '<wbr>, ');
-                if (max.indexOf(',') >= 0)
-                    max = '[ ' + max + ' ]';
                 let type;
                 switch (sig.type) {
                     case 'i':
@@ -551,10 +530,6 @@ class SignalTable {
                 add(sig);
             });
 
-            let devinvisible = '';
-            if (num_dev_sigs <= 0)
-                devinvisible = ' invisible';
-
             // sort signals by key (for now)
             sigs.sort(function(a, b) {
                 a = a.name;
@@ -580,9 +555,9 @@ class SignalTable {
                 let sig = sigs[i];
                 var t = tree;
                 let tokens = sig.id.split('/');
-                if (tokens.length > max_depth)
-                    max_depth = tokens.length;
                 let len = tokens.length;
+                if (len > max_depth)
+                    max_depth = len;
                 for (var j in tokens) {
                     let b = t.branches;
                     if (b[tokens[j]] == null)
@@ -602,7 +577,16 @@ class SignalTable {
                 num_sigs += num_dev_sigs;
             num_devs += 1;
         });
+        
+        // sort branches of tree by key (for now)
+        // https://stackoverflow.com/questions/5467129/sort-javascript-object-by-key
+        let orderedtree = {"branches": {}, "num_branches": tree.num_branches};
+        Object.keys(tree.branches).sort().forEach(function(key) {
+            orderedtree.branches[key] = tree.branches[key];
+        });
 
+        let devRowType = 'odd';
+        let sigRowType = 'odd';
         function add_tree(t, tds, target, depth) {
             let first = true;
             for (var i in t.branches) {
@@ -611,7 +595,7 @@ class SignalTable {
                     tds = [[b.num_branches, i]];
                 else
                     tds.push([b.num_branches, i]);
-                if (b.leaf) {
+                if (b.leaf && !b.leaf.invisible) {
                     if (_self.location != "left")
                         tds = tds.reverse();
                     let line = "";
@@ -621,15 +605,16 @@ class SignalTable {
                         if (_self.location != "left")
                             leaf = j == 0;
                         if (leaf && _self.expand && _self.location == "right")
-                            line += "<td width=100%></td>";
+                            line += "<td class='"+sigRowType+"' width=100%></td>";
                         line += "<td";
                         if (leaf) {
-                            line += " class=leaf";
+                            line += " class='leaf "+sigRowType+"'";
                             if (depth < max_depth)
                                 line += " colspan="+(max_depth-depth);
                             line += ">"+tds[j][1]+" ("+b.leaf.unit+")</td>";
                             if (_self.expand && _self.location == "left")
-                                line += "<td width=100%></td>";
+                                line += "<td class='"+sigRowType+"' width=100%></td>";
+                            sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
                         }
                         else {
                             line += " rowspan="+tds[j][0]+">";
@@ -640,14 +625,16 @@ class SignalTable {
                             line += "</td>";
                         }
                     }
-                    target.append("<tr style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
+                    target.append("<tr class='"+devRowType+"' style='background: "+b.leaf.color+"44' id="+b.leaf.id.replace('\/', '\\/')+">"+line+"</tr>");
                     tds = [[b.num_branches - 1, i]];
                 }
                 add_tree(b, tds, target, depth + 1);
+                if (depth == 0)
+                    devRowType = (devRowType == 'odd') ? 'even' : 'odd';
                 first = false;
             }
         }
-        add_tree(tree, [], $(this.tbody), 0);
+        add_tree(orderedtree, [], $(this.tbody), 0);
 
         if (this.expand) {
             let tr = $(this.tbody).children('tr')[0];
