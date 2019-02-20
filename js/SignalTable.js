@@ -352,20 +352,28 @@ class SignalTable {
     pan(dx, dy, x, y) {
         if (!dx && !dy)
             return false;
+        if (x != null && y != null) {
+            // check if position applies to this table
+            if (x < this.frame.left)
+                return false;
+            if (this.snap == 'bottom') {
+                if (x > this.frame.left + this.frame.height)
+                    return false;
+                if (y > this.frame.top || y < this.frame.top - this.frame.width)
+                    return false;
+            }
+            else {
+                if (x > this.frame.left + this.frame.width)
+                    return false;
+                if (y < this.frame.top || y > this.frame.top + this.frame.height)
+                    return false;
+            }
+        }
         if (this.snap == "bottom") {
             // rotated 90deg: invert x and y
             let temp = x;
             x = y;
             y = temp;
-        }
-        if (x != null && y != null) {
-            // check if position applies to this table
-            if (   x < this.div[0].offsetLeft
-                || x > this.div[0].offsetLeft + this.div[0].offsetWidth
-                || y < this.div[0].offsetTop
-                || y > this.div[0].offsetTop + this.div[0].offsetHeight) {
-                return false;
-            }
         }
         let delta = (this.snap == 'bottom') ? dx : dy;
         let new_scroll = this.scrolled + delta;
