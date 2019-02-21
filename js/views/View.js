@@ -954,11 +954,12 @@ class MapPath {
 
     static vertical(src, dst, mapPane) {
         // signals are inline vertically
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.y - dst.y) * 0.5 * src.vx 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctlx = offset + src.x;
+        let offset = Math.abs(src.y - dst.y) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctlx = src.x + offset * src.vx;
         return [ ['M', src.x, src.y]
                , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
                ];
@@ -966,11 +967,12 @@ class MapPath {
 
     static horizontal(src, dst) {
         // signals are inline horizontally
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.x - dst.x) * 0.5 * src.vy 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctly = offset + src.y;
+        let offset = Math.abs(src.x - dst.x) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctly = src.y + offset * src.vy;
         return [['M', src.x, src.y],
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
