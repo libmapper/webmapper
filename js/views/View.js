@@ -65,12 +65,6 @@ class View {
 
         this.sigLabel = null;
 
-        // default to arrowheads on maps
-        this.database.maps.each(function(map) {
-            if (map.view)
-                map.view.attr({'arrow-end': 'block-wide-long'});
-        });
-
         this.update();
     }
 
@@ -452,7 +446,6 @@ class View {
 
     setMapHover(map) {
         let self = this;
-        map.view.unhover();
         map.view.hover(
             function(e) {
                 if (!self.draggingFrom) {
@@ -464,28 +457,12 @@ class View {
                             expression: map.expression,
                         }, e.x, e.y);
                 }
-                map.view.animate({'stroke-width': MapPath.boldStrokeWidth}, 0, 'linear');
-
-//                if (self.draggingFrom == null)
-//                    return;
-//                else if (map == self.draggingFrom) {
-//                    // don't snap to self
-//                    return;
-//                }
-//                self.snappingTo = map;
-//                let src = self.draggingFrom.position;
-//                let dst = sig.position;
-//                let path = [['M', src.x, src.y],
-//                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
-//                             dst.x, dst.y]];
-//                let len = Raphael.getTotalLength(path);
-//                path = Raphael.getSubpath(path, 10, len - 10);
-//                self.newMap.attr({'path': path});
+                map.view.highlight();
             },
             function() {
                 self.snappingTo = null;
                 self.tooltip.hide();
-                map.view.animate({'stroke-width': MapPath.strokeWidth}, 50, 'linear');
+                map.view.unhighlight();
             }
         );
     }
@@ -495,147 +472,81 @@ class View {
         this.database.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
-                let pos = map.src.position;
-                let path = pos ? [['M', pos.x, pos.y], ['l', 10, 0]] : null;
-                map.view = self.canvas.path(path);
-                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
-                               'stroke': map.selected ? 'red' : 'white',
-                               'fill': 'none',
-                               'stroke-width': MapPath.strokeWidth,
-                               'arrow-start': 'none'});
-                map.view.new = true;
+                map.view = new MapPainter(map, self.canvas);
                 self.setMapHover(map);
             }
         });
     }
 
-    _tableRow(sig) {
-        if (this.tables && sig.tableIndices) {
-            let table = this.tables[sig.tableIndices[0].table];
-            return table.getRowFromName(sig.key);
-        }
-        return null;
-    }
+    //_tableRow(sig) {
+    //    if (this.tables && sig.tableIndices) {
+    //        let table = this.tables[sig.tableIndices[0].table];
+    //        return table.getRowFromName(sig.key);
+    //    }
+    //    return null;
+    //}
 
-    getMapPath(map) {
-        if (this.tables) return this._getMapPathForTables(map);
-        else return this._getMapPathForSigNodes(map);
-    }
+    //getMapPath(map) {
+    //    if (this.tables) return this._getMapPathForTables(map);
+    //    else return this._getMapPathForSigNodes(map);
+    //}
 
-    _getMapPathForTables(map) {
-        let src = this._tableRow(map.src);
-        let dst = this._tableRow(map.dst);
-        if (src && dst) {
-            if (src.vx == dst.vx) {
-                // same table
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.sameTable(src, dst, this.mapPane);
-            }
-            else if (src.vy != dst.vy) {
-                // TODO: constrain positions to pane to indicate offscreen maps
-                // draw intersection between tables
-                if (map.view) map.view.attr({'arrow-end': 'none'});
-                if (src.vx < 0.0001) {
-                    return [['M', src.left + 2, dst.y],
-                            ['L', src.left + src.width - 2, dst.top + 2],
-                            ['l', 0, dst.height - 2],
-                            ['Z']];
-                }
-                else {
-                    return [['M', dst.x, src.top + 2],
-                            ['L', dst.left + 2, src.top + src.height - 2],
-                            ['l', dst.width - 2, 0],
-                            ['Z']]
-                }
-            }
-            else {
-                // draw bezier curve between signal tables
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.betweenTables(src, dst);
-            }
-        }
-    }
+    //_getMapPathForTables(map) {
+    //    let src = this._tableRow(map.src);
+    //    let dst = this._tableRow(map.dst);
+    //    if (src && dst) {
+    //        if (src.vx == dst.vx) {
+    //            // same table
+    //            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+    //            return MapPath.sameTable(src, dst, this.mapPane);
+    //        }
+    //        else if (src.vy != dst.vy) {
+    //            // TODO: constrain positions to pane to indicate offscreen maps
+    //            // draw intersection between tables
+    //            if (map.view) map.view.attr({'arrow-end': 'none'});
+    //            if (src.vx < 0.0001) {
+    //                return [['M', src.left + 2, dst.y],
+    //                        ['L', src.left + src.width - 2, dst.top + 2],
+    //                        ['l', 0, dst.height - 2],
+    //                        ['Z']];
+    //            }
+    //            else {
+    //                return [['M', dst.x, src.top + 2],
+    //                        ['L', dst.left + 2, src.top + src.height - 2],
+    //                        ['l', dst.width - 2, 0],
+    //                        ['Z']]
+    //            }
+    //        }
+    //        else {
+    //            // draw bezier curve between signal tables
+    //            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+    //            return MapPath.betweenTables(src, dst);
+    //        }
+    //    }
+    //}
 
-    _getMapPathForSigNodes(map) {
-        let src = map.src.position
-        let dst = map.dst.position;
-        if (!src || !dst)
-            return null;
+    //_getMapPathForSigNodes(map) {
+    //    let src = map.src.position
+    //    let dst = map.dst.position;
+    //    if (!src || !dst)
+    //        return null;
 
-        // calculate midpoint
-        let mpx = (src.x + dst.x) * 0.5;
-        let mpy = (src.y + dst.y) * 0.5;
+    //    // calculate midpoint
+    //    let mpx = (src.x + dst.x) * 0.5;
+    //    let mpy = (src.y + dst.y) * 0.5;
 
-        // inflate midpoint around origin to create a curve
-        mpx = mpx + (mpx - this.origin[0]) * 0.2;
-        mpy = mpy + (mpy - this.origin[1]) * 0.2;
+    //    // inflate midpoint around origin to create a curve
+    //    mpx = mpx + (mpx - this.origin[0]) * 0.2;
+    //    mpy = mpy + (mpy - this.origin[1]) * 0.2;
 
-        return [['M', src.x, src.y],
-                ['S', mpx, mpy, dst.x, dst.y]];
-    }
+    //    return [['M', src.x, src.y],
+    //            ['S', mpx, mpy, dst.x, dst.y]];
+    //}
 
     drawMaps(duration) {
-        let self = this;
         this.database.maps.each(function(map) {
-            if (!map.view)
-                return;
-            if (map.hidden) {
-                map.view.hide();
-                return;
-            }
-            map.view.stop();
-
-            let path = self.getMapPath(map);
-            if (!path) {
-                map.view.hide();
-                return;
-            }
-
-            if (self.shortenPaths) {
-                // shorten path so it doesn't draw over signals
-                let len = Raphael.getTotalLength(path);
-                path = Raphael.getSubpath(path, self.shortenPaths,
-                                          len - self.shortenPaths);
-            }
-
-            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let stroke_color = map.selected ? 'red' : 'white';
-            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
-            if (map.view.new) {
-                map.view.show();
-                map.view.new = false;
-                if (map.status == "staged") {
-                    // draw map directly
-                    map.view.attr({'path': path,
-                                   'stroke-opacity': 0.5,
-                                   'stroke': stroke_color,
-                                   'stroke-dasharray': map.muted ? '-' : '',
-                                   'fill-opacity': fill_opacity,
-                                   'fill': fill_color,
-                                   'arrow-end': 'block-wide-long'
-                                  })
-                            .toFront();
-                    return;
-                }
-                // draw animation following arrow path
-                let len = Raphael.getTotalLength(path);
-                let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
-                map.view.animate({'path': path_mid,
-                                  'stroke-opacity': 1.0},
-                                 duration * 0.5, '>')
-                        .toFront();
-            }
-            else {
-                map.view.show();
-                map.view.animate({'path': path,
-                                  'stroke-opacity': 1.0,
-                                  'fill-opacity': fill_opacity,
-                                  'fill': fill_color,
-                                  'stroke-width': MapPath.strokeWidth,
-                                  'stroke': stroke_color},
-                                 duration, '>')
-                        .toFront();
-            }
+            if (!map.view) return;
+            else map.view.draw();
         });
     }
 

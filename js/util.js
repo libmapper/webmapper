@@ -395,22 +395,11 @@ function position(x, y, frame) {
 function select_all_maps() {
     let updated = false;
     database.maps.each(function(map) {
-        if (map.selected)
-            return;
-        if (map.view && !map.selected) {
-            if (map.view.attr('stroke-opacity') > 0) {
-                map.view.animate({'stroke': 'red'}, 50);
-                updated = true;
-            }
-            if (map.view.attr('fill-opacity') > 0) {
-                map.view.animate({'fill': 'red'}, 50);
-                updated = true;
-            }
-        }
+        if (map.selected) return;
         map.selected = true;
+        updated = true;
     });
-    if (updated)
-        $('#container').trigger("updateMapProperties");
+    if (updated) $('#container').trigger("updateMapProperties");
 }
 
 function deselectAllMaps(tables) {
@@ -423,14 +412,11 @@ function deselectAllMaps(tables) {
 
     let updated = false;
     database.maps.each(function(map) {
-        if (map.view && map.selected) {
-            map.view.animate({'stroke': 'white', 'fill': 'white'}, 50);
-            updated = true;
-        }
+        if (!map.selected) return;
         map.selected = false;
+        updated = true;
     });
-    if (updated)
-        $('#container').trigger("updateMapProperties");
+    if (updated) $('#container').trigger("updateMapProperties");
 }
 
 function polarDiff(angle1, angle2, fullscale = Math.PI * 2.0) {
