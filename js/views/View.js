@@ -144,14 +144,8 @@ class View {
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
             if (self.tables) {
-                dev.tableIndices = self.tableIndices(dev.key);
-                if (!dev.tableIndices) {
-                    remove_object_svg(dev);
                     return;
-                }
             }
-            else
-                dev.tableIndices = null;
 
             if (func && func(dev)) {
                 remove_object_svg(dev);
@@ -178,88 +172,9 @@ class View {
         });
     }
 
-    drawDevices(duration) {
-        let self = this;
-        let cx = this.frame.cx;
-        this.database.devices.each(function(dev) {
-            if (!dev.view || !dev.tableIndices || !dev.tableIndices.length)
-                return;
-            dev.view.stop();
-            let path = null;
-            if (dev.tableIndices.length == 1) {
-                let row = dev.tableIndices[0];
-                let pos = self.tables[row.table].getRowFromIndex(row.index);
-                if (pos) {
-                    path = [['M', pos.left, pos.top],
-                            ['l', pos.width, 0],
-                            ['l', 0, pos.height],
-                            ['l', -pos.width, 0],
-                            ['Z']];
-                }
-            }
-            else if (self.tables.right.snap == 'left') {
-                let lrow = null, rrow = null;
-                let temp = dev.tableIndices[0];
-                if (temp.table == 'left')
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                else
-                    rrow = self.tables.right.getRowFromIndex(temp.index);
-                temp = dev.tableIndices[1];
-                if (temp.table == 'right')
-                    rrow = self.tables.right.getRowFromIndex(temp.index);
-                else
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                if (!lrow || !rrow)
-                    return;
-                // draw curve linking left and right tables
-                path = [['M', lrow.left, lrow.top],
-                        ['l', lrow.width, 0],
-                        ['C', cx, lrow.top, cx, rrow.top, rrow.left, rrow.top],
-                        ['l', rrow.width, 0],
-                        ['l', 0, rrow.height],
-                        ['l', -rrow.width, 0],
-                        ['C', cx, rrow.bottom, cx, lrow.bottom,
-                         lrow.right, lrow.bottom],
-                        ['l', -lrow.width, 0],
-                        ['Z']];
-            }
-            else {
-                let lrow = null, trow = null;
-                let temp = dev.tableIndices[0];
-                if (temp.table == 'left')
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                else
-                    trow = self.tables.right.getRowFromIndex(temp.index);
-                temp = dev.tableIndices[1];
-                if (temp.table == 'right')
-                    trow = self.tables.right.getRowFromIndex(temp.index);
-                else
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                if (!lrow || !trow)
-                    return;
-                // draw "cross" extending from left and top tables
-                path = [['M', lrow.left, lrow.top],
-                        ['L', trow.left, lrow.top],
-                        ['L', trow.left, trow.top],
-                        ['L', trow.right, trow.top],
-                        ['L', trow.right, lrow.top],
-                        ['L', self.frame.right, lrow.top],
-                        ['L', self.frame.right, lrow.bottom],
-                        ['L', trow.right, lrow.bottom],
-                        ['L', trow.right, self.frame.bottom],
-                        ['L', trow.left, self.frame.bottom],
-                        ['L', trow.left, lrow.bottom],
-                        ['L', lrow.left, lrow.bottom],
-                        ['Z']];
-            }
-            if (path) {
-                dev.view.toBack();
-                dev.view.animate({'path': path,
-                                  'fill': dev.color,
-                                  'fill-opacity': 0.5,
-                                  'stroke-opacity': 0}, duration, '>');
-            }
-        });
+    drawDevices() {
+        // don't draw devices or signals by default
+        // e.g. because you're using a signal table
     }
 
     setDevHover(dev) {
