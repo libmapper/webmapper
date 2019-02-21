@@ -169,57 +169,6 @@ class SignalTable {
         return this.rowHeight * this.table.rows.length;
     }
 
-    getRowFromIndex(idx) {
-        let rowHeight = Math.round(this.rowHeight);
-        let j = 0;
-        for (var i = 0, row; row = this.table.rows[i]; i++) {
-            if ($(row).hasClass('invisible')) {
-                continue;
-            }
-            if (j < idx) {
-                ++j;
-                continue;
-            }
-            if (this.snap == 'bottom') {
-                let left = j * rowHeight - this.scrolled + this.frame.left + 20;
-                let top = this.frame.top - this.frame.width;
-                return {'left': left,
-                        'right': left + rowHeight,
-                        'top': top,
-                        'bottom': top + this.frame.width,
-                        'width': rowHeight,
-                        'height': this.frame.width,
-                        'x': left + rowHeight * 0.5,
-                        'y': top + this.frame.width,
-                        'vx': Math.cos(this.frame.angle),
-                        'vy': -Math.sin(this.frame.angle),
-                        'id': row.id,
-                        'even': $(row).hasClass('even'),
-                        'type': $(row).hasClass('device') ? 'device' : 'signal',
-                        'index': j};
-            }
-            else {
-                let left = row.offsetLeft + this.div[0].offsetLeft;
-                let top = j * rowHeight - this.scrolled + 20 + this.frame.top;
-                let snap = this.snap == 'left' ? -1 : 1;
-                return {'left': left,
-                        'right': left + row.offsetWidth,
-                        'top': top,
-                        'bottom': top + rowHeight,
-                        'width': this.frame.width,
-                        'height': rowHeight,
-                        'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
-                        'y': top + rowHeight * 0.5,
-                        'vx': Math.cos(this.frame.angle) * snap,
-                        'vy': Math.sin(this.frame.angle),
-                        'id': row.id,
-                        'even': $(row).hasClass('even'),
-                        'type': $(row).hasClass('device') ? 'device' : 'signal',
-                        'index': j};
-            }
-        }
-    }
-
     getRowFromName(id) {
         let td = $("#"+this.id+" td[id='"+id+"']");
         if (!td.length || $(td).hasClass('invisible'))
