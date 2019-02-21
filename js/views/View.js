@@ -159,7 +159,7 @@ class View {
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
             if (self.tables) {
-                    return;
+                remove_object_svg(dev);
             }
 
             if (func && func(dev)) {
