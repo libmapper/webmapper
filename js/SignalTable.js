@@ -48,12 +48,10 @@ class SignalTable {
         // Create the skeleton for the table within the div
         // TODO: move div properties to css
         $(this.div).append(
-            "<div style='height: 20px; position:relative; width:100%'>"+
-                "<div id="+this.id+"Title style='text-align:center; position:relative; width:100%; padding-left:20px; padding-right:20px'>"+
-                    "<strong>"+this.title+"</strong>"+
-                "</div>"+
+            "<div id="+this.id+"Title class=tableTitle>"+
+                "<strong>"+this.title+"</strong>"+
             "</div>"+
-            "<div id="+this.id+"Scroller style='height:calc(100% - 20px); width:100%; position:relative; overflow:auto'>"+
+            "<div id="+this.id+"Scroller class=tableScroller>"+
                 "<table class='displayTable "+this.location+"'>"+
                     "<tbody></tbody>"+
                 "</table>"+
@@ -153,7 +151,7 @@ class SignalTable {
                 dir = 'DST';
                 break;
             default:
-                dir = 'SIGS';
+                dir = 'SIGNALS';
                 break;
         }
         $('#'+this.id+'Title>strong').text(dir);

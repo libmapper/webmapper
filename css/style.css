@@ -68,6 +68,22 @@ thead, #networkMenu {
     background-color: #9CC2CF;
 }
 
+.tableTitle {
+    text-align: center;
+    position: relative;
+    height: 20px;
+    width: 100%;
+    padding-left: 20px;
+    padding-right:20px'
+}
+
+.tableScroller {
+    height: calc(100% - 20px);
+    width: 100%;
+    position: relative;
+    overflow: auto;
+}
+
 /* tertiary highlight selection */
 .displayTable td.even {
     background: rgba(0, 0, 0, 0.1);
