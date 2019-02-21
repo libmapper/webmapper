@@ -4,7 +4,7 @@
 
 <br/>
 
-- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang
+- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West
 - Email: [dot_mapper@googlegroups.com](mailto:dot_mapper@googlegroups.com)
 - Discussion: [https://groups.google.com/forum/#!forum/dot_mapper](https://groups.google.com/forum/#!forum/dot_mapper)
 - Web: [http://libmapper.org](http://libmapper.org)
@@ -70,18 +70,14 @@ If a map or maps are selected, the *map property editor* becomes active. This pa
         * `Fold` Value continues in opposite direction
         * `Wrap` Value appears as modulus offset at the opposite boundary
 
-### View Independent Interactions
+### Global Commands
 
-Lines representing inter-signal maps may be drawn between the signals on each side, and properties are set by first selecting the map(s) to work on and then setting properties as described above. The GUI contains multiple "tabs": the leftmost tab always displays the network overview (links between devices) and subsequent tabs provide user-configurable representations of desired sub-graphs.
+Lines representing inter-signal maps may be drawn between signals using drag-and-drop, and properties are set by first selecting the map(s) to work on and then setting properties as described above.
 
-* `alt`+`tab` : Change tab to the right
-* `alt`+`shift`+`tab` : Change tab to the left
-* `cmd`+`t` : add new tab
-* `cmd`+`w` : remove existing tab
-* `1`-`9` switch view
+* `cmd`+1`-`8` switch view
 * `cmd`+`o` : open file
 * `cmd`+`s` : save file
-* * `cmd`+`a`: to select all displayed maps
+* `cmd`+`a`: to select all displayed maps
 * `delete` or `backspace`: remove selected maps
 * edit selected maps
 * filter signals
@@ -100,7 +96,7 @@ We have explored several alternative visualization and interaction techniques, w
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view (file staging view) `Command-1`
 
-Status: development
+**Status: development**
 
 This view displays only devices and network links between them. It can be used to gain an overview of the mapping network, and is also used for staging saved mapping configurations onto the currently-active devices. When the `open file` dialog is used, Webmapper will automatically switch to this view and add a graphical representation of the file and its associated devices, enabling the user to choose how to assign each device referenced in the file to a running device.
 
@@ -108,11 +104,15 @@ This view displays only devices and network links between them. It can be used t
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view `Command-2`
 
+**Status: stable**
+
 The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/list.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view `Command-3`
+
+**Status: development**
 
 In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
@@ -120,6 +120,8 @@ In this view, `source` signals are listed along the left side of a grid, while `
 
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view `Command-4`
+
+**Status: development**
 
 The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)](http://inputconf.sourceforge.net/) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
@@ -134,6 +136,8 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view `Command-5`
 
+**Status: prototype**
+
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/graph.png">
 
 #### View-specific interactions
@@ -143,15 +147,21 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view `Command-6`
 
+**Status: development**
+
 In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/hive.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view `Command-7`
 
+**Status: development**
+
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/parallel.png">
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view `Command-8`
+
+**Status: stable**
 
 <img style="padding:0px;box-shadow:0 4px 8px 0" src="./doc/screenshots/console.png">
 
