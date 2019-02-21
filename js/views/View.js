@@ -159,14 +159,8 @@ class View {
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
             if (self.tables) {
-                dev.tableIndices = self.tableIndices(dev.key);
-                if (!dev.tableIndices) {
-                    remove_object_svg(dev);
                     return;
-                }
             }
-            else
-                dev.tableIndices = null;
 
             if (func && func(dev)) {
                 remove_object_svg(dev);
