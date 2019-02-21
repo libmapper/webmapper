@@ -42,6 +42,9 @@ class ListView extends View {
             dev.view.unhover();
         });
 
+        this.tables.left.collapseHandler = function() {self.drawMaps()};
+        this.tables.right.collapseHandler = function() {self.drawMaps};
+
         // remove link svg
         this.database.links.each(remove_object_svg);
 

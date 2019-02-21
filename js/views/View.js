@@ -138,7 +138,7 @@ class View {
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
             if (self.tables) {
-                    return;
+                remove_object_svg(dev);
             }
 
             if (func && func(dev)) {
@@ -478,70 +478,75 @@ class View {
         });
     }
 
-    //_tableRow(sig) {
-    //    if (this.tables && sig.tableIndices) {
-    //        let table = this.tables[sig.tableIndices[0].table];
-    //        return table.getRowFromName(sig.key);
-    //    }
-    //    return null;
-    //}
+    _tableRow(sig) {
+        if (this.tables && sig.tableIndices) {
+            let table = this.tables[sig.tableIndices[0].table];
+            return table.getRowFromName(sig.key);
+        }
+        return null;
+    }
 
-    //getMapPath(map) {
-    //    if (this.tables) return this._getMapPathForTables(map);
-    //    else return this._getMapPathForSigNodes(map);
-    //}
+    getMapPath(map) {
+        if (this.tables) return this._getMapPathForTables(map);
+        else return this._getMapPathForSigNodes(map);
+    }
 
-    //_getMapPathForTables(map) {
-    //    let src = this._tableRow(map.src);
-    //    let dst = this._tableRow(map.dst);
-    //    if (src && dst) {
-    //        if (src.vx == dst.vx) {
-    //            // same table
-    //            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-    //            return MapPath.sameTable(src, dst, this.mapPane);
-    //        }
-    //        else if (src.vy != dst.vy) {
-    //            // TODO: constrain positions to pane to indicate offscreen maps
-    //            // draw intersection between tables
-    //            if (map.view) map.view.attr({'arrow-end': 'none'});
-    //            if (src.vx < 0.0001) {
-    //                return [['M', src.left + 2, dst.y],
-    //                        ['L', src.left + src.width - 2, dst.top + 2],
-    //                        ['l', 0, dst.height - 2],
-    //                        ['Z']];
-    //            }
-    //            else {
-    //                return [['M', dst.x, src.top + 2],
-    //                        ['L', dst.left + 2, src.top + src.height - 2],
-    //                        ['l', dst.width - 2, 0],
-    //                        ['Z']]
-    //            }
-    //        }
-    //        else {
-    //            // draw bezier curve between signal tables
-    //            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-    //            return MapPath.betweenTables(src, dst);
-    //        }
-    //    }
-    //}
+    _getMapPathForTables(map) {
+        let src = this._tableRow(map.src);
+        let dst = this._tableRow(map.dst);
+        if (!src || !dst)
+            return null;
+        if (src.vx == dst.vx) {
+            // same table
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.sameTable(src, dst, this.mapPane);
+        }
+        else if (src.vy != dst.vy) {
+            // constrain positions to pane to indicate offscreen maps
+            // todo: make function
+            if (src.x < this.leftTableLeft) {
+                // constrain to bounds
+                // display a white dot
+            }
+            // draw intersection between tables
+            if (map.view) map.view.attr({'arrow-end': 'none'});
+            if (src.vx < 0.0001) {
+                return [['M', src.left + 2, dst.y],
+                        ['L', src.left + src.width - 2, dst.top + 2],
+                        ['l', 0, dst.height - 2],
+                        ['Z']];
+            }
+            else {
+                return [['M', dst.x, src.top + 2],
+                        ['L', dst.left + 2, src.top + src.height - 2],
+                        ['l', dst.width - 2, 0],
+                        ['Z']]
+            }
+        }
+        else {
+            // draw bezier curve between signal tables
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.betweenTables(src, dst);
+        }
+    }
 
-    //_getMapPathForSigNodes(map) {
-    //    let src = map.src.position
-    //    let dst = map.dst.position;
-    //    if (!src || !dst)
-    //        return null;
+    _getMapPathForSigNodes(map) {
+        let src = map.src.position
+        let dst = map.dst.position;
+        if (!src || !dst)
+            return null;
 
-    //    // calculate midpoint
-    //    let mpx = (src.x + dst.x) * 0.5;
-    //    let mpy = (src.y + dst.y) * 0.5;
+        // calculate midpoint
+        let mpx = (src.x + dst.x) * 0.5;
+        let mpy = (src.y + dst.y) * 0.5;
 
-    //    // inflate midpoint around origin to create a curve
-    //    mpx = mpx + (mpx - this.origin[0]) * 0.2;
-    //    mpy = mpy + (mpy - this.origin[1]) * 0.2;
+        // inflate midpoint around origin to create a curve
+        mpx = mpx + (mpx - this.origin[0]) * 0.2;
+        mpy = mpy + (mpy - this.origin[1]) * 0.2;
 
-    //    return [['M', src.x, src.y],
-    //            ['S', mpx, mpy, dst.x, dst.y]];
-    //}
+        return [['M', src.x, src.y],
+                ['S', mpx, mpy, dst.x, dst.y]];
+    }
 
     drawMaps(duration) {
         this.database.maps.each(function(map) {
@@ -663,6 +668,10 @@ class View {
             this.newMap.remove();
             this.newMap = null;
         }
+        if (this.tables) {
+            for (var index in this.tables)
+                this.tables[index].highlightRow(null, true);
+        }
     }
 
     setTableDrag() {
@@ -781,7 +790,7 @@ class View {
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
-                    if (dst && dst.id) {
+                    if (!self.escaped && dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
                                                 'dst': self.database.find_signal(dst.id),
@@ -792,8 +801,10 @@ class View {
                     self.tables.left.highlightRow(null, true);
                     self.tables.right.highlightRow(null, true);
                     self.draggingFrom = null;
-                    self.newMap.remove();
-                    self.newMap = null;
+                    if (self.newMap) {
+                        self.newMap.remove();
+                        self.newMap = null;
+                    }
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
