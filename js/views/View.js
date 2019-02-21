@@ -50,17 +50,6 @@ class View {
         this.canvas.setViewBox(0, 0, frame.width, frame.height, false);
         this.tooltip.hide(true);
 
-        // remove tableIndices from last view
-        let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
-                if (sig.tableIndices) {
-                    delete sig.tableIndices;
-                    sig.tableIndices = null;
-                }
-            });
-        });
-
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.sigLabel = null;
@@ -84,16 +73,6 @@ class View {
         this.draw(0);
     }
 
-    tableIndices(key, direction) {
-        let rows = [];
-        for (var i in this.tables) {
-            let s = this.tables[i].getRowFromName(key, direction);
-            if (s)
-                rows.push({'table': i, 'index': s.index});
-        }
-        return rows.length ? rows : null;
-    }
-
     updateDevices(func) {
         for (var i in this.tables)
             this.tables[i].update();
@@ -113,12 +92,9 @@ class View {
                 sig.index = sigIndex++;
 
                 if (self.tables) {
-                    // TODO: check if signalRep exists (e.g. canvas view)
-                    sig.tableIndices = self.tableIndices(sig.key, sig.direction);
                     remove_object_svg(sig);
                 }
                 else {
-                    sig.tableIndices = null;
                     if (!sig.view) {
                         sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
                                               .attr({'fill-opacity': 0,
@@ -479,11 +455,13 @@ class View {
     }
 
     _tableRow(sig) {
-        if (this.tables && sig.tableIndices) {
-            let table = this.tables[sig.tableIndices[0].table];
-            return table.getRowFromName(sig.key);
+        let row = null;
+        for (var i in this.tables) {
+            row = this.tables[i].getRowFromName(sig.key);
+            if (row)
+                break;
         }
-        return null;
+        return row;
     }
 
     getMapPath(map) {
@@ -850,11 +828,12 @@ class MapPath {
 
     static vertical(src, dst, mapPane) {
         // signals are inline vertically
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.y - dst.y) * 0.5 * src.vx 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctlx = offset + src.x;
+        let offset = Math.abs(src.y - dst.y) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctlx = src.x + offset * src.vx;
         return [ ['M', src.x, src.y]
                , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
                ];
@@ -862,11 +841,12 @@ class MapPath {
 
     static horizontal(src, dst) {
         // signals are inline horizontally
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.x - dst.x) * 0.5 * src.vy 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctly = offset + src.y;
+        let offset = Math.abs(src.x - dst.x) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctly = src.y + offset * src.vy;
         return [['M', src.x, src.y],
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }

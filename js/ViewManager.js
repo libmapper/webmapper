@@ -102,10 +102,6 @@ class ViewManager
                 this.view = new HiveView(this.frame, this.tables, this.canvas,
                                          this.database, this.tooltip);
                 break;
-            case 'link':
-                this.view = new LinkView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip);
-                break;
             case 'chord':
                 this.view = new ChordView(this.frame, this.tables, this.canvas,
                                           this.database, this.tooltip);
