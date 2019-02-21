@@ -540,39 +540,39 @@ class View {
     _getMapPathForTables(map) {
         let src = this._tableRow(map.src);
         let dst = this._tableRow(map.dst);
-        if (src && dst) {
-            if (src.vx == dst.vx) {
-                // same table
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.sameTable(src, dst, this.mapPane);
+        if (!src || !dst)
+            return null;
+        if (src.vx == dst.vx) {
+            // same table
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.sameTable(src, dst, this.mapPane);
+        }
+        else if (src.vy != dst.vy) {
+            // constrain positions to pane to indicate offscreen maps
+            // todo: make function
+            if (src.x < this.leftTableLeft) {
+                // constrain to bounds
+                // display a white dot
             }
-            else if (src.vy != dst.vy) {
-                // constrain positions to pane to indicate offscreen maps
-                // todo: make function
-                if (src.x < this.leftTableLeft) {
-                    // constrain to bounds
-                    // display a white dot
-                }
-                // draw intersection between tables
-                if (map.view) map.view.attr({'arrow-end': 'none'});
-                if (src.vx < 0.0001) {
-                    return [['M', src.left + 2, dst.y],
-                            ['L', src.left + src.width - 2, dst.top + 2],
-                            ['l', 0, dst.height - 2],
-                            ['Z']];
-                }
-                else {
-                    return [['M', dst.x, src.top + 2],
-                            ['L', dst.left + 2, src.top + src.height - 2],
-                            ['l', dst.width - 2, 0],
-                            ['Z']]
-                }
+            // draw intersection between tables
+            if (map.view) map.view.attr({'arrow-end': 'none'});
+            if (src.vx < 0.0001) {
+                return [['M', src.left + 2, dst.y],
+                        ['L', src.left + src.width - 2, dst.top + 2],
+                        ['l', 0, dst.height - 2],
+                        ['Z']];
             }
             else {
-                // draw bezier curve between signal tables
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.betweenTables(src, dst);
+                return [['M', dst.x, src.top + 2],
+                        ['L', dst.left + 2, src.top + src.height - 2],
+                        ['l', dst.width - 2, 0],
+                        ['Z']]
             }
+        }
+        else {
+            // draw bezier curve between signal tables
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.betweenTables(src, dst);
         }
     }
 
@@ -613,13 +613,13 @@ class View {
                                           len - self.shortenPaths);
             }
 
-            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let stroke_color = map.selected ? 'red' : 'white';
-            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
             if (!path) {
                 map.view.hide();
                 return;
             }
+            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
+            let stroke_color = map.selected ? 'red' : 'white';
+            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
 
             if (map.view.new) {
                 map.view.show();
@@ -772,6 +772,10 @@ class View {
             this.newMap.remove();
             this.newMap = null;
         }
+        if (this.tables) {
+            for (var index in this.tables)
+                this.tables[index].highlightRow(null, true);
+        }
     }
 
     setTableDrag() {
@@ -890,7 +894,7 @@ class View {
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
-                    if (dst && dst.id) {
+                    if (!self.escaped && dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
                                                 'dst': self.database.find_signal(dst.id),
@@ -901,8 +905,10 @@ class View {
                     self.tables.left.highlightRow(null, true);
                     self.tables.right.highlightRow(null, true);
                     self.draggingFrom = null;
-                    self.newMap.remove();
-                    self.newMap = null;
+                    if (self.newMap) {
+                        self.newMap.remove();
+                        self.newMap = null;
+                    }
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
