@@ -11,14 +11,19 @@ class ListView extends View {
 
         // set left table properties
         this.tables.left.filterByDirection('output');
-        this.tables.left.showDetail(true);
-        this.tables.left.expand = false;
 
         // set right table properties
         this.tables.right.snap = 'left';
         this.tables.right.filterByDirection('input');
-        this.tables.right.showDetail(true);
-        this.tables.right.expand = false;
+
+        // set global table properties
+        for (var i in this.tables) {
+            let t = this.tables[i];
+            t.showDetail(true);
+            t.expand = false;
+            t.scrolled = 0;
+            t.zoomed = 1;
+        }
 
         let self = this;
         this.database.devices.each(function(dev) {

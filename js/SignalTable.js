@@ -126,6 +126,7 @@ class SignalTable {
         }});
         $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
         this.targetHeight = height - 20;
+        this.adjustRowHeight();
     }
 
     filterByName(string) {
@@ -169,62 +170,10 @@ class SignalTable {
         return this.rowHeight * this.table.rows.length;
     }
 
-    getRowFromIndex(idx) {
-        let rowHeight = Math.round(this.rowHeight);
-        let j = 0;
-        for (var i = 0, row; row = this.table.rows[i]; i++) {
-            if ($(row).hasClass('invisible')) {
-                continue;
-            }
-            if (j < idx) {
-                ++j;
-                continue;
-            }
-            if (this.snap == 'bottom') {
-                let left = j * rowHeight - this.scrolled + this.frame.left + 20;
-                let top = this.frame.top - this.frame.width;
-                return {'left': left,
-                        'right': left + rowHeight,
-                        'top': top,
-                        'bottom': top + this.frame.width,
-                        'width': rowHeight,
-                        'height': this.frame.width,
-                        'x': left + rowHeight * 0.5,
-                        'y': top + this.frame.width,
-                        'vx': Math.cos(this.frame.angle),
-                        'vy': -Math.sin(this.frame.angle),
-                        'id': row.id,
-                        'even': $(row).hasClass('even'),
-                        'type': $(row).hasClass('device') ? 'device' : 'signal',
-                        'index': j};
-            }
-            else {
-                let left = row.offsetLeft + this.div[0].offsetLeft;
-                let top = j * rowHeight - this.scrolled + 20 + this.frame.top;
-                let snap = this.snap == 'left' ? -1 : 1;
-                return {'left': left,
-                        'right': left + row.offsetWidth,
-                        'top': top,
-                        'bottom': top + rowHeight,
-                        'width': this.frame.width,
-                        'height': rowHeight,
-                        'x': this.snap == 'left' ? this.frame.left : this.frame.left + this.frame.width,
-                        'y': top + rowHeight * 0.5,
-                        'vx': Math.cos(this.frame.angle) * snap,
-                        'vy': Math.sin(this.frame.angle),
-                        'id': row.id,
-                        'even': $(row).hasClass('even'),
-                        'type': $(row).hasClass('device') ? 'device' : 'signal',
-                        'index': j};
-            }
-        }
-    }
-
     getRowFromName(id) {
         let td = $("#"+this.id+" td[id='"+id+"']");
         if (!td.length || $(td).hasClass('invisible'))
             return null;
-        let tr = $(td).parents('tr')[0];
         let pos = $(td).position();
         pos.width = $(td).width();
         pos.height = $(td).height()
@@ -451,7 +400,7 @@ class SignalTable {
     grow() {
         if (this.expand) {
             let tr = $("#"+this.id+" tr")[0];
-            let tds = $(tr).children('td');
+            let tds = $(tr).children('td').not('.invisible');
             if (this.location == 'left') {
                 let td = tds[tds.length - 2];
                 this.expandWidth = td.offsetLeft + td.offsetWidth;
@@ -694,10 +643,10 @@ class SignalTable {
                         b.collapsed = new_state;
                         let id = b.oscpath;
                         // add/remove 'invisible' class from children
-                        let children = $("#"+this.id+" td[id^='"+id+"/']");
+                        let children = $("#"+_self.id+" td[id^='"+id+"/']");
                         let num_leaves = $(children).filter('.leaf').length;
                         // also hide/show <tr> (except first)
-                        children = $(children).add($("#"+this.id+" tr[id^='"+id+"/']").not(":eq(0)"));
+                        children = $(children).add($("#"+_self.id+" tr[id^='"+id+"/']").not(":eq(0)"));
                         let depth = (id.match(/\//g) || []).length;
                         if (new_state) {
                             $(children).addClass('invisible');
@@ -712,7 +661,7 @@ class SignalTable {
                         id = id.split('/');
                         let sel = e.currentTarget;
                         while (id.length) {
-                            num_leaves = $("#"+this.id+" td[id^='"+id.join('/')+"/']")
+                            num_leaves = $("#"+_self.id+" td[id^='"+id.join('/')+"/']")
                                               .filter('.leaf')
                                               .not('.invisible')
                                               .length;
@@ -730,7 +679,7 @@ class SignalTable {
                             }
                             id.pop()
                             if (id.length)
-                                sel = $("#"+this.id+" td[id='"+id.join('/')+"']");
+                                sel = $("#"+_self.id+" td[id='"+id.join('/')+"']");
                         }
                         return true;
                     }
