@@ -46,6 +46,7 @@ body {
 .svgDiv, .tableDiv {
     background: rgba(220, 220, 220, 0.1);
     color: white;
+    overflow: hidden;
 }
 
 /* grays */
@@ -67,13 +68,34 @@ thead, #networkMenu {
     background-color: #9CC2CF;
 }
 
+.tableTitle {
+    text-align: center;
+    position: relative;
+    height: 20px;
+    width: 100%;
+    padding-left: 20px;
+    padding-right:20px'
+}
+
+.tableScroller {
+    height: calc(100% - 20px);
+    width: 100%;
+    position: relative;
+    overflow: auto;
+}
+
 /* tertiary highlight selection */
 .displayTable td.even {
     background: rgba(0, 0, 0, 0.1);
 }
 
-.trsel td.leaf {
-    background: rgb(104,202,255);
+.displayTable td.tdsel {
+    background: rgb(200,200,200);
+    color: black;
+}
+
+td.filler {
+    width: 100%;
 }
 
 .displayTable tr:hover {
@@ -88,12 +110,21 @@ thead, #networkMenu {
 #leftTable .displayTable td {
     border-left: 1px solid black;
     border-bottom: 1px solid black;
+    text-align: left;
+}
+
+#leftTable .displayTable td.leaf {
     text-align: right;
 }
 
 #rightTable .displayTable td {
     border-right: 1px solid black;
     border-bottom: 1px solid black;
+    text-align: right;
+}
+
+#rightTable .displayTable td.leaf {
+    text-align: left;
 }
 
 .displayTable td.device {
@@ -104,14 +135,14 @@ thead, #networkMenu {
 /*    left: -30px;*/
 }
 
-#leftTable .displayTable div.tall {
+#leftTable .displayTable td.tall div {
     transform: rotate(180deg);
     writing-mode: vertical-rl;
     -webkit-text-orientation: mixed;
     white-space: nowrap;
 }
 
-#rightTable .displayTable div.tall {
+#rightTable .displayTable td.tall div {
     writing-mode: vertical-rl;
     -webkit-text-orientation: mixed;
 }
@@ -588,7 +619,7 @@ table.infoTable tr td:first-child {
 
 /*For the SVG area*/
 #svgDiv {
-    overflow: scroll;
+    overflow: hidden;
     position: absolute;
     border-bottom: 0;
     height: 100%;

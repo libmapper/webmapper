@@ -39,12 +39,26 @@ class GridView extends View {
         this.leftExpandWidth = 200;
         this.rightExpandWidth = 200;
 
+        this.tables.left.collapseHandler = function() {
+            if (self.tables.left.expandWidth != self.leftExpandWidth) {
+                self.leftExpandWidth = self.tables.left.expandWidth;
+                self.resize(null, 1000);
+            }
+            self.drawMaps()
+        };
+        this.tables.right.collapseHandler = function() {
+            if (self.tables.right.expandWidth != self.rightExpandWidth) {
+                self.rightExpandWidth = self.tables.right.expandWidth;
+                self.resize(null, 1000);
+            }
+            self.drawMaps()
+        };
+
         this.update();
         this.resize(null, 1000);
 
         // move svg canvas to front
-        $('#svgDiv').css('position', 'relative');
-        $('#svgDiv').css('z-index', 2);
+        $('#svgDiv').css({'position': 'relative', 'z-index': 2});
     }
 
     resize(newFrame, duration) {
@@ -68,6 +82,16 @@ class GridView extends View {
         this.mapPane.height = this.frame.height - this.rightExpandWidth;
         this.mapPane.cx = this.mapPane.left + this.mapPane.width * 0.5;
         this.mapPane.cy = this.mapPane.top + this.mapPane.height * 0.5;
+
+        $('#svgDiv').css({'left': this.mapPane.left,
+                          'top': this.mapPane.top,
+                          'width': this.mapPane.width,
+                          'height': this.mapPane.height});
+        $('svg').css({'left': -this.mapPane.left,
+                      'top': -this.mapPane.top,
+                      'width': this.frame.width,
+                      'height': this.frame.height});
+
         this.draw();
     }
 
@@ -111,8 +135,16 @@ class GridView extends View {
     cleanup() {
         super.cleanup();
 
-        // move svg canvas to back
-        $('#svgDiv').css('z-index', 0);
+        // reposition svg canvas and send to back
+        $('#svgDiv').css({'z-index': 0,
+                          'left': 0,
+                          'top': 0,
+                          'width': this.frame.width,
+                          'height': this.frame.height});
+        $('svg').css({'left': 0,
+                      'top': 0,
+                      'width': this.frame.width,
+                      'height': this.frame.height});
 
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {

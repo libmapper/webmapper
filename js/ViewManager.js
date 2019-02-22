@@ -2,77 +2,122 @@
 //         ViewManager Class            //
 //++++++++++++++++++++++++++++++++++++++//
 
-function ViewManager(container, database, tooltip)
+class ViewManager
 {
-    let frame = null;
-    let canvas = null;
-    let tables = { 'left': null, 'right': null };
-    this.tooltip = tooltip;
+    constructor(container, database, tooltip) {
+        this.container = container;
+        this.frame = fullOffset($(this.container)[0]);
+        this.database = database;
+        this.tables = { 'left': null, 'right': null };
+        this.tooltip = tooltip;
 
-    let duration = 1000;
+        this.canvas_zoom = 1;
+        this.canvas_pan = [0, 0];
 
-    var canvas_zoom = 1;
-    var canvas_pan = [0, 0];
+        this.srcregexp = null;
+        this.dstregexp = null;
 
-    var srcregexp = null;
-    var dstregexp = null;
+        // remove all previous DOM elements
+        $(this.container).empty();
+        this._add_canvas();
+        this._add_display_tables();
+        this._selection_handlers();
+        this._keyboard_handlers();
+        this._add_database_callbacks();
 
-    let view = null;
-    
-    this.draw = function() {
-        //
-    };
+        let self = this;
+        this.database.devices.each(function(dev) { self._update_devices(dev, 'added'); });
+        this.database.maps.each(function(map) { self._update_maps(map, 'added'); });
 
-    this.loadFile = function(file) {
-        if (view && view.type() == 'chord')
-            view.stageFile(file);
+        this.switch_view('chord');
     }
 
-    this.switch_view = function(viewType) {
-        if (view) {
-            if (view.type == viewType) {
+    zoom(x, y, delta) {
+        this.view.zoom(x, y, delta);
+    }
+
+    pan(x, y, delta_x, delta_y) {
+        this.view.pan(x, y, delta_x, delta_y);
+    }
+
+    resetPanZoom() {
+        this.view.resetPanZoom();
+    }
+
+    on_resize() {
+        this.frame = fullOffset($(this.container)[0]);
+        this.view.resize(this.frame);
+        this.tooltip.hide();
+    }
+
+    filterSignals(searchbar, text) {
+        // need to cache regexp here so filtering works across view transitions
+        if (searchbar == 'srcSearch') {
+            this.srcregexp = text ? new RegExp(text, 'i') : null;
+            this.view.filterSignals('src', text.length ? text : null);
+        }
+        else {
+            this.dstregexp = text ? new RegExp(text, 'i') : null;
+            this.view.filterSignals('dst', text.length ? text : null);
+        }
+    }
+
+    loadFile(file) {
+        if (this.view && this.view.type() == 'chord')
+            this.view.stageFile(file);
+    }
+
+    switch_view(viewType) {
+        if (this.view) {
+            if (this.view.type == viewType) {
                 // already on correct view
                 return;
             }
             // call cleanup for previous view
-            view.cleanup();
+            this.view.cleanup();
         }
 
         switch (viewType) {
             case 'balloon':
-                view = new BalloonView(frame, tables, canvas, database, tooltip);
+                this.view = new BalloonView(this.frame, this.tables, this.canvas,
+                                            this.database, this.tooltip);
                 break;
             case 'canvas':
-                view = new CanvasView(frame, tables, canvas, database, tooltip);
+                this.view = new CanvasView(this.frame, this.tables, this.canvas,
+                                           this.database, this.tooltip);
                 break;
             case 'graph':
-                view = new GraphView(frame, tables, canvas, database, tooltip);
+                this.view = new GraphView(this.frame, this.tables, this.canvas,
+                                          this.database, this.tooltip);
                 break;
             case 'grid':
-                view = new GridView(frame, tables, canvas, database, tooltip);
+                this.view = new GridView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
             case 'parallel':
-                view = new ParallelView(frame, tables, canvas, database, tooltip);
+                this.view = new ParallelView(this.frame, this.tables, this.canvas,
+                                             this.database, this.tooltip);
                 break;
             case 'hive':
-                view = new HiveView(frame, tables, canvas, database, tooltip);
-                break;
-            case 'link':
-                view = new LinkView(frame, tables, canvas, database, tooltip);
+                this.view = new HiveView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
             case 'chord':
-                view = new ChordView(frame, tables, canvas, database, tooltip);
+                this.view = new ChordView(this.frame, this.tables, this.canvas,
+                                          this.database, this.tooltip);
                 break;
             case 'console':
-                view = new ConsoleView(frame, tables, canvas, database, tooltip);
+                this.view = new ConsoleView(this.frame, this.tables, this.canvas,
+                                            this.database, this.tooltip);
                 break;
             case 'list':
             default:
-                view = new ListView(frame, tables, canvas, database, tooltip);
+                this.view = new ListView(this.frame, this.tables, this.canvas,
+                                         this.database, this.tooltip);
                 break;
         }
 
-        view.update();
+        this.view.update();
 
         // unhighlight all view select buttons
         $('.viewButton').removeClass("viewButtonsel");
@@ -80,20 +125,10 @@ function ViewManager(container, database, tooltip)
         $('#'+viewType+'Button').addClass("viewButtonsel");
     }
 
-    resize_elements = function(duration) {
-        if (view)
-            view.resize(frame);
-
-        canvas_zoom = 1;
-        canvas_pan = [0, 0];
-        canvas.setViewBox(0, 0, frame.width * canvas_zoom,
-                          frame.height * canvas_zoom, false);
-        this.tooltip.hide();
-    }
-
-    add_database_callbacks = function() {
-        database.clear_callbacks();
-        database.add_callback(function(event, type, obj) {
+    _add_database_callbacks() {
+        let self = this;
+        this.database.clear_callbacks();
+        this.database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
                 // remove maps immediately to avoid svg arrow animation bug
                 if (type == 'map') remove_object_svg(obj, 1); 
@@ -102,155 +137,98 @@ function ViewManager(container, database, tooltip)
             }
             switch (type) {
                 case 'device':
-                    update_devices(obj, event);
+                    self._update_devices(obj, event);
                     break;
                 case 'link':
-                    update_links(obj, event);
+                    self._update_links(obj, event);
                     break;
                 case 'signal':
-                    update_signals(obj, event, true);
+                    self._update_signals(obj, event, true);
                     break;
                 case 'map':
-                    update_maps(obj, event);
+                    self._update_maps(obj, event);
                     break;
             }
         });
     };
 
-    function add_display_tables() {
-        tables.left  = new SignalTable($('#container')[0], 'left', frame, database);
-        tables.right = new SignalTable($('#container')[0], 'right', frame, database);
+    _add_display_tables() {
+        this.tables.left  = new SignalTable($('#container')[0], 'left', this.frame, this.database);
+        this.tables.right = new SignalTable($('#container')[0], 'right', this.frame, this.database);
     }
 
-    function add_canvas() {
+    _add_canvas() {
         $('#container').append(
-            "<div id='svgDiv' class='links'>"+
+            "<div id='svgDiv' class='svgDiv'>"+
             "</div>");
-        canvas = Raphael($('#svgDiv')[0], '100%', '100%');
+        this.canvas = Raphael($('#svgDiv')[0], '100%', '100%');
     };
 
-    function update_devices(dev, event) {
+    _update_devices(dev, event) {
         if (event == 'added' && !dev.view) {
             dev.signals.each(function(sig) {
-                update_signals(sig, 'added', false);
+                this._update_signals(sig, 'added', false);
             });
-            view.update('devices');
+            this.view.update('devices');
         }
         else if (event == 'removed')
-            view.update('devices');
+            this.view.update('devices');
     }
 
-    function update_signals(sig, event, repaint) {
+    _update_signals(sig, event, repaint) {
         if (event == 'added' && !sig.view) {
-            sig.position = position(null, null, frame);
+            sig.position = position(null, null, this.frame);
             if (repaint)
-                view.update('signals');
+                this.view.update('signals');
         }
         else if (event == 'modified' || event == 'removed')
-            view.update('signals');
+            this.view.update('signals');
     }
 
-    function update_links(link, event) {
-        view.update('links');
+    _update_links(link, event) {
+        this.view.update('links');
     }
 
-    function update_maps(map, event) {
+    _update_maps(map, event) {
         switch (event) {
             case 'added':
                 if (!map.view)
-                    view.update('maps');
+                    this.view.update('maps');
                 break;
             case 'modified':
                 if (map.view) {
                     if (map.selected)
                         $('#container').trigger("updateMapPropertiesFor", map.key);
-                    view.update('maps');
+                    this.view.update('maps');
                 }
                 break;
             case 'removed':
-                view.update('maps');
+                this.view.update('maps');
                 break;
         }
     }
 
-    $('body').on('keydown.list', function(e) {
-        switch (e.which) {
-            case 8:
-            case 46:
-                // Prevent the browser from going back a page
-                // but NOT if you're focus is an input and deleting text
-                if (!$(':focus').is('input')) {
-                    e.preventDefault();
-                }
-                /* delete */
-                // do not allow 'delete' key to unmap in console view
-                if (view.type == 'console') break;
-                database.maps.each(function(map) {
-                    if (map.selected)
-                    {
-                        $('#container').trigger('unmap', [map.src.key, map.dst.key]);
-                        tooltip.hide();
-                    }
-                });
-                deselectAllMaps(tables);
-                break;
-            case 65:
-                if (e.metaKey == true) { // Select all 'cmd+a'
-                    e.preventDefault();
-                    select_all_maps();
-                }
-                break;
-            case 65:
-                if (e.metaKey == true) {
-                    e.preventDefault();
-                    console.log('should add tab');
-                }
-                break;
-            case 27:
-                view.escape();
-                break;
-        }
-    });
-
-    this.zoom = function(x, y, delta) {
-        view.zoom(x, y, delta);
-    }
-
-    this.pan = function(x, y, delta_x, delta_y) {
-        view.pan(x, y, delta_x, delta_y);
-    }
-
-    this.resetPanZoom = function() {
-        view.resetPanZoom();
-    }
-
-    this.filterSignals = function(searchbar, text) {
-        // need to cache regexp here so filtering works across view transitions
-        if (searchbar == 'srcSearch') {
-            srcregexp = text ? new RegExp(text, 'i') : null;
-            view.filterSignals('src', text.length ? text : null);
-        }
-        else {
-            dstregexp = text ? new RegExp(text, 'i') : null;
-            view.filterSignals('dst', text.length ? text : null);
-        }
-    }
-
-    function selection_handlers() {
-        $('svg').on('mousedown', function(e) {
+    _selection_handlers() {
+        let self = this;
+        $('#svgDiv').on('mousedown', function(e) {
             if (e.shiftKey == false) {
-                deselectAllMaps(tables);
+                deselectAllMaps(self.tables);
             }
-            escaped = false;
+            var escaped = false;
 
             // cache current mouse position
             let svgPos = fullOffset($('#svgDiv')[0]);
+            if (self.view.type == 'grid') {
+                // svg canvas has hidden offset
+                svgPos.left -= self.view.tables.left.expandWidth;
+                svgPos.top -= self.view.tables.right.expandWidth;
+            }
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
 
             // check for edge intersections around point for 'click' selection
             let updated = false;
-            database.maps.each(function(map) {
+            self.database.maps.each(function(map) {
                 if (!map.view || map.selected)
                     return;
                 if (   edge_intersection(map.view, x1-3, y1-3, x1+3, y1+3)
@@ -262,7 +240,7 @@ function ViewManager(container, database, tooltip)
 
             let stop = false;
             // Moving about the canvas
-            $('svg').on('mousemove.drawing', function(moveEvent) {
+            $('#svgDiv').on('mousemove.drawing', function(moveEvent) {
                 if (stop == true || escaped == true)
                     return;
 
@@ -273,8 +251,8 @@ function ViewManager(container, database, tooltip)
                     return;
 
                 // check for edge intersections for 'cross' selection
-                update = false;
-                database.maps.each(function(map) {
+                updated = false;
+                self.database.maps.each(function(map) {
                     if (!map.view || map.selected)
                         return;
                     if (edge_intersection(map.view, x1, y1, x2, y2)) {
@@ -284,31 +262,56 @@ function ViewManager(container, database, tooltip)
 
                 e.stopPropagation();
 
-                if (updated)
-                    $('#container').trigger("updateMapProperties");
+                if (updated) $('#container').trigger("updateMapProperties");
 
                 x1 = x2;
                 y1 = y2;
             });
-            $('svg').one('mouseup.drawing', function(mouseUpEvent) {
+            $('#svgDiv').one('mouseup.drawing', function(mouseUpEvent) {
                 stop = true;
             });
         });
     }
 
-    this.on_resize = function() {
-        frame = fullOffset($(container)[0]);
-        resize_elements(0);
+    _keyboard_handlers() {
+        let self = this;
+        $('body').on('keydown.list', function(e) {
+            switch (e.which) {
+                case 8:
+                case 46:
+                    // Prevent the browser from going back a page
+                    // but NOT if you're focus is an input and deleting text
+                    if (!$(':focus').is('input')) {
+                        e.preventDefault();
+                    }
+                    /* delete */
+                    // do not allow 'delete' key to unmap in console view
+                    if (self.view.type == 'console') break;
+                    self.database.maps.each(function(map) {
+                        if (map.selected)
+                        {
+                            $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                            self.tooltip.hide();
+                        }
+                    });
+                    deselectAllMaps(self.tables);
+                    break;
+                case 65:
+                    if (e.metaKey == true) { // Select all 'cmd+a'
+                        e.preventDefault();
+                        select_all_maps();
+                    }
+                    break;
+                case 65:
+                    if (e.metaKey == true) {
+                        e.preventDefault();
+                        console.log('should add tab');
+                    }
+                    break;
+                case 27:
+                    self.view.escape();
+                    break;
+            }
+        });
     }
-    
-    // remove all previous DOM elements
-    $(container).empty();
-    frame = fullOffset($(container)[0]);
-    add_canvas();
-    add_display_tables();
-    this.switch_view('chord');
-    selection_handlers();
-    add_database_callbacks();
-    database.devices.each(function(dev) { update_devices(dev, 'added'); });
-    database.maps.each(function(map) { update_maps(map, 'added'); });
 }

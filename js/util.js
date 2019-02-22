@@ -255,10 +255,12 @@ function canvas_bezier(map, table, table_x) {
     }
     else {
         let o = table.getRowFromName(map.src.key);
-        if (!o)
+        if (!o) {
+            console.log("src row not found!", map.src.key);
             return;
+        }
         src_x = table_x;
-        src_y = o.cy;
+        src_y = o.y;
     }
     if (map.dst.canvas_object) {
         let o = map.dst.canvas_object
@@ -269,13 +271,20 @@ function canvas_bezier(map, table, table_x) {
     }
     else {
         let o = table.getRowFromName(map.dst.key);
-        if (!o)
+        if (!o) {
+            console.log("dst row not found!", map.dst.key);
             return;
+        }
         dst_x = table_x;
-        dst_y = o.cy;
+        dst_y = o.y;
     }
-    if (!src_cx && !dst_cx)
-        src_cx = dst_cx = Math.sqrt(Math.abs(src_y - dst_y)) * 2 + table_x;
+    if (!src_cx && !dst_cx) {
+        let maxoffset = 200;
+        let offset = Math.abs(src_y - dst_y) * 0.5;
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        src_cx = dst_cx = offset + src_x;
+    }
     else if (!src_cx)
         src_cx = (src_x + dst_x) * 0.5;
     else if (!dst_cx)
