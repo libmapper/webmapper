@@ -252,7 +252,8 @@ class ChordView extends View {
         }
 
         dev.view.path = [['M', dev.view.pstart.x, dev.view.pstart.y],
-                         ['A', r, r, angleInc, 0, 1,
+                         ['A', r, r, angleInc,
+                          fuzzyEq(angleInc, 6.283, 0.01) ? 1 : 0, 1,
                           dev.view.pstop.x, dev.view.pstop.y]];
         dev.view.attr({'stroke-linecap': 'butt'})
                 .animate({'path': dev.view.path,
@@ -436,27 +437,43 @@ class ChordView extends View {
         if (diff < 0)
             midAngle += Math.PI;
 
-        midAngle = Math.round((Raphael.deg(-midAngle) + 90.0) % 360.0);
+        let midAngleDeg = Math.round((Raphael.deg(-midAngle) + 90.0) % 360.0);
         // gradient string doesn't seem to like negative angles
-        if (midAngle < 0)
-            midAngle += 360;
+        if (midAngleDeg < 0)
+            midAngleDeg += 360;
 
         let rgb = Raphael.getRGB(link.src.color);
         let srcColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
         rgb = Raphael.getRGB(link.dst.color);
         let dstColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
-        let fillString = midAngle+'-'+srcColor+'-'+dstColor;
+        let fillString = midAngleDeg+'-'+srcColor+'-'+dstColor;
 
 //        if (self.draggingFrom)
 //            cx = self.mapPane.cx;
 
         let path = [];
         if (src == dst) {
-            path = [['M', (src.view.pstart.x-cx)*1.1+cx, (src.view.pstart.y-cy)*1.1+cy],
-                    ['C', (src.view.pstart.x-cx)*1.5+cx, (src.view.pstart.y-cy)*1.5+cy,
-                     (src.view.pstop.x-cx)*1.5+cx, (src.view.pstop.y-cy)*1.5+cy,
-                     (src.view.pstop.x-cx)*1.1+cx, (src.view.pstop.y-cy)*1.1+cy],
-                    ['Z']];
+            if (angleInc > 1.1) {
+                angleInc = 1;
+                r = self.radius;
+                angleInc += src.view.pstart.angle;
+                path = [['M', (src.view.pstart.x-cx)*1.1+cx,
+                         (src.view.pstart.y-cy)*1.1+cy],
+                        ['C', (src.view.pstart.x-cx)*1.5+cx,
+                         (src.view.pstart.y-cy)*1.5+cy,
+                         cx + Math.cos(angleInc) * r * 1.5,
+                         cy + Math.sin(angleInc) * r * 1.5,
+                         cx + Math.cos(angleInc) * r * 1.1,
+                         cy + Math.sin(angleInc) * r * 1.1],
+                        ['Z']];
+            }
+            else {
+                path = [['M', (src.view.pstart.x-cx)*1.1+cx, (src.view.pstart.y-cy)*1.1+cy],
+                        ['C', (src.view.pstart.x-cx)*1.5+cx, (src.view.pstart.y-cy)*1.5+cy,
+                         (src.view.pstop.x-cx)*1.5+cx, (src.view.pstop.y-cy)*1.5+cy,
+                         (src.view.pstop.x-cx)*1.1+cx, (src.view.pstop.y-cy)*1.1+cy],
+                        ['Z']];
+            }
         }
         else {
             path.push(['M', srcStartPos[0], srcStartPos[1]],

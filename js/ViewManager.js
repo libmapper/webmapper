@@ -102,10 +102,6 @@ class ViewManager
                 this.view = new HiveView(this.frame, this.tables, this.canvas,
                                          this.database, this.tooltip);
                 break;
-            case 'link':
-                this.view = new LinkView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip);
-                break;
             case 'chord':
                 this.view = new ChordView(this.frame, this.tables, this.canvas,
                                           this.database, this.tooltip);
@@ -222,6 +218,11 @@ class ViewManager
 
             // cache current mouse position
             let svgPos = fullOffset($('#svgDiv')[0]);
+            if (self.view.type == 'grid') {
+                // svg canvas has hidden offset
+                svgPos.left -= self.view.tables.left.expandWidth;
+                svgPos.top -= self.view.tables.right.expandWidth;
+            }
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
 

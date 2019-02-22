@@ -65,17 +65,6 @@ class View {
         this.canvas.setViewBox(0, 0, frame.width, frame.height, false);
         this.tooltip.hide(true);
 
-        // remove tableIndices from last view
-        let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
-                if (sig.tableIndices) {
-                    delete sig.tableIndices;
-                    sig.tableIndices = null;
-                }
-            });
-        });
-
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.sigLabel = null;
@@ -105,16 +94,6 @@ class View {
         this.draw(0);
     }
 
-    tableIndices(key, direction) {
-        let rows = [];
-        for (var i in this.tables) {
-            let s = this.tables[i].getRowFromName(key, direction);
-            if (s)
-                rows.push({'table': i, 'index': s.index});
-        }
-        return rows.length ? rows : null;
-    }
-
     updateDevices(func) {
         for (var i in this.tables)
             this.tables[i].update();
@@ -134,12 +113,9 @@ class View {
                 sig.index = sigIndex++;
 
                 if (self.tables) {
-                    // TODO: check if signalRep exists (e.g. canvas view)
-                    sig.tableIndices = self.tableIndices(sig.key, sig.direction);
                     remove_object_svg(sig);
                 }
                 else {
-                    sig.tableIndices = null;
                     if (!sig.view) {
                         sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
                                               .attr({'fill-opacity': 0,
@@ -159,14 +135,8 @@ class View {
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
             if (self.tables) {
-                dev.tableIndices = self.tableIndices(dev.key);
-                if (!dev.tableIndices) {
-                    remove_object_svg(dev);
-                    return;
-                }
+                remove_object_svg(dev);
             }
-            else
-                dev.tableIndices = null;
 
             if (func && func(dev)) {
                 remove_object_svg(dev);
@@ -193,88 +163,9 @@ class View {
         });
     }
 
-    drawDevices(duration) {
-        let self = this;
-        let cx = this.frame.cx;
-        this.database.devices.each(function(dev) {
-            if (!dev.view || !dev.tableIndices || !dev.tableIndices.length)
-                return;
-            dev.view.stop();
-            let path = null;
-            if (dev.tableIndices.length == 1) {
-                let row = dev.tableIndices[0];
-                let pos = self.tables[row.table].getRowFromIndex(row.index);
-                if (pos) {
-                    path = [['M', pos.left, pos.top],
-                            ['l', pos.width, 0],
-                            ['l', 0, pos.height],
-                            ['l', -pos.width, 0],
-                            ['Z']];
-                }
-            }
-            else if (self.tables.right.snap == 'left') {
-                let lrow = null, rrow = null;
-                let temp = dev.tableIndices[0];
-                if (temp.table == 'left')
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                else
-                    rrow = self.tables.right.getRowFromIndex(temp.index);
-                temp = dev.tableIndices[1];
-                if (temp.table == 'right')
-                    rrow = self.tables.right.getRowFromIndex(temp.index);
-                else
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                if (!lrow || !rrow)
-                    return;
-                // draw curve linking left and right tables
-                path = [['M', lrow.left, lrow.top],
-                        ['l', lrow.width, 0],
-                        ['C', cx, lrow.top, cx, rrow.top, rrow.left, rrow.top],
-                        ['l', rrow.width, 0],
-                        ['l', 0, rrow.height],
-                        ['l', -rrow.width, 0],
-                        ['C', cx, rrow.bottom, cx, lrow.bottom,
-                         lrow.right, lrow.bottom],
-                        ['l', -lrow.width, 0],
-                        ['Z']];
-            }
-            else {
-                let lrow = null, trow = null;
-                let temp = dev.tableIndices[0];
-                if (temp.table == 'left')
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                else
-                    trow = self.tables.right.getRowFromIndex(temp.index);
-                temp = dev.tableIndices[1];
-                if (temp.table == 'right')
-                    trow = self.tables.right.getRowFromIndex(temp.index);
-                else
-                    lrow = self.tables.left.getRowFromIndex(temp.index);
-                if (!lrow || !trow)
-                    return;
-                // draw "cross" extending from left and top tables
-                path = [['M', lrow.left, lrow.top],
-                        ['L', trow.left, lrow.top],
-                        ['L', trow.left, trow.top],
-                        ['L', trow.right, trow.top],
-                        ['L', trow.right, lrow.top],
-                        ['L', self.frame.right, lrow.top],
-                        ['L', self.frame.right, lrow.bottom],
-                        ['L', trow.right, lrow.bottom],
-                        ['L', trow.right, self.frame.bottom],
-                        ['L', trow.left, self.frame.bottom],
-                        ['L', trow.left, lrow.bottom],
-                        ['L', lrow.left, lrow.bottom],
-                        ['Z']];
-            }
-            if (path) {
-                dev.view.toBack();
-                dev.view.animate({'path': path,
-                                  'fill': dev.color,
-                                  'fill-opacity': 0.5,
-                                  'stroke-opacity': 0}, duration, '>');
-            }
-        });
+    drawDevices() {
+        // don't draw devices or signals by default
+        // e.g. because you're using a signal table
     }
 
     setDevHover(dev) {
@@ -468,8 +359,9 @@ class View {
                 if (!self.newMap) {
                     self.newMap = self.canvas.path(path);
                     self.newMap.attr({'stroke': 'white',
-                                      'stroke-width': 2,
+                                      'stroke-width': MapPath.strokeWidth,
                                       'stroke-opacity': 1,
+                                      'fill': 'none',
                                       'arrow-start': 'none',
                                       'arrow-end': 'block-wide-long'});
                 }
@@ -563,7 +455,7 @@ class View {
                             expression: map.expression,
                         }, e.x, e.y);
                 }
-                map.view.animate({'stroke-width': 4}, 0, 'linear');
+                map.view.animate({'stroke-width': MapPath.boldStrokeWidth}, 0, 'linear');
 
 //                if (self.draggingFrom == null)
 //                    return;
@@ -584,7 +476,7 @@ class View {
             function() {
                 self.snappingTo = null;
                 self.tooltip.hide();
-                map.view.animate({'stroke-width': 2}, 50, 'linear');
+                map.view.animate({'stroke-width': MapPath.strokeWidth}, 50, 'linear');
             }
         );
     }
@@ -599,8 +491,8 @@ class View {
                 map.view = self.canvas.path(path);
                 map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
                                'stroke': map.selected ? 'red' : 'white',
-                               'fill-opacity': 0,
-                               'stroke-width': 2,
+                               'fill': 'none',
+                               'stroke-width': MapPath.strokeWidth,
                                'arrow-start': 'none'});
                 map.view.new = true;
                 self.setMapHover(map);
@@ -609,11 +501,13 @@ class View {
     }
 
     _tableRow(sig) {
-        if (this.tables && sig.tableIndices) {
-            let table = this.tables[sig.tableIndices[0].table];
-            return table.getRowFromName(sig.key);
+        let row = null;
+        for (var i in this.tables) {
+            row = this.tables[i].getRowFromName(sig.key);
+            if (row)
+                break;
         }
-        return null;
+        return row;
     }
 
     getMapPath(map) {
@@ -624,39 +518,39 @@ class View {
     _getMapPathForTables(map) {
         let src = this._tableRow(map.src);
         let dst = this._tableRow(map.dst);
-        if (src && dst) {
-            if (src.vx == dst.vx) {
-                // same table
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.sameTable(src, dst, this.mapPane);
+        if (!src || !dst)
+            return null;
+        if (src.vx == dst.vx) {
+            // same table
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.sameTable(src, dst, this.mapPane);
+        }
+        else if (src.vy != dst.vy) {
+            // constrain positions to pane to indicate offscreen maps
+            // todo: make function
+            if (src.x < this.leftTableLeft) {
+                // constrain to bounds
+                // display a white dot
             }
-            else if (src.vy != dst.vy) {
-                // constrain positions to pane to indicate offscreen maps
-                // todo: make function
-                if (src.x < this.leftTableLeft) {
-                    // constrain to bounds
-                    // display a white dot
-                }
-                // draw intersection between tables
-                if (map.view) map.view.attr({'arrow-end': 'none'});
-                if (src.vx < 0.0001) {
-                    return [['M', src.left + 2, dst.y],
-                            ['L', src.left + src.width - 2, dst.top + 2],
-                            ['l', 0, dst.height - 2],
-                            ['Z']];
-                }
-                else {
-                    return [['M', dst.x, src.top + 2],
-                            ['L', dst.left + 2, src.top + src.height - 2],
-                            ['l', dst.width - 2, 0],
-                            ['Z']]
-                }
+            // draw intersection between tables
+            if (map.view) map.view.attr({'arrow-end': 'none'});
+            if (src.vx < 0.0001) {
+                return [['M', src.left + 2, dst.y],
+                        ['L', src.left + src.width - 2, dst.top + 2],
+                        ['l', 0, dst.height - 2],
+                        ['Z']];
             }
             else {
-                // draw bezier curve between signal tables
-                if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
-                return MapPath.betweenTables(src, dst);
+                return [['M', dst.x, src.top + 2],
+                        ['L', dst.left + 2, src.top + src.height - 2],
+                        ['l', dst.width - 2, 0],
+                        ['Z']]
             }
+        }
+        else {
+            // draw bezier curve between signal tables
+            if (map.view) map.view.attr({'arrow-end': 'block-wide-long'});
+            return MapPath.betweenTables(src, dst);
         }
     }
 
@@ -697,12 +591,13 @@ class View {
                                           len - self.shortenPaths);
             }
 
-            let fill = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let color = map.selected ? 'red' : 'white';
             if (!path) {
                 map.view.hide();
                 return;
             }
+            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
+            let stroke_color = map.selected ? 'red' : 'white';
+            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
 
             if (map.view.new) {
                 map.view.show();
@@ -711,10 +606,10 @@ class View {
                     // draw map directly
                     map.view.attr({'path': path,
                                    'stroke-opacity': 0.5,
-                                   'stroke': color,
+                                   'stroke': stroke_color,
                                    'stroke-dasharray': map.muted ? '-' : '',
-                                   'fill-opacity': fill,
-                                   'fill': color,
+                                   'fill-opacity': fill_opacity,
+                                   'fill': fill_color,
                                    'arrow-end': 'block-wide-long'
                                   })
                             .toFront();
@@ -732,10 +627,10 @@ class View {
                 map.view.show();
                 map.view.animate({'path': path,
                                   'stroke-opacity': 1.0,
-                                  'fill-opacity': fill,
-                                  'fill': color,
-                                  'stroke-width': 2,
-                                  'stroke': color},
+                                  'fill-opacity': fill_opacity,
+                                  'fill': fill_color,
+                                  'stroke-width': MapPath.strokeWidth,
+                                  'stroke': stroke_color},
                                  duration, '>')
                         .toFront();
             }
@@ -855,6 +750,10 @@ class View {
             this.newMap.remove();
             this.newMap = null;
         }
+        if (this.tables) {
+            for (var index in this.tables)
+                this.tables[index].highlightRow(null, true);
+        }
     }
 
     setTableDrag() {
@@ -914,7 +813,7 @@ class View {
                                          .attr({'fill-opacity': 0,
                                                 'stroke': 'white',
                                                 'stroke-opacity': 1,
-                                                'stroke-width': 2});
+                                                'stroke-width': MapPath.strokeWidth});
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -973,7 +872,7 @@ class View {
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
-                    if (dst && dst.id) {
+                    if (!self.escaped && dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
                                                 'dst': self.database.find_signal(dst.id),
@@ -984,8 +883,10 @@ class View {
                     self.tables.left.highlightRow(null, true);
                     self.tables.right.highlightRow(null, true);
                     self.draggingFrom = null;
-                    self.newMap.remove();
-                    self.newMap = null;
+                    if (self.newMap) {
+                        self.newMap.remove();
+                        self.newMap = null;
+                    }
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
@@ -1031,11 +932,12 @@ class MapPath {
 
     static vertical(src, dst, mapPane) {
         // signals are inline vertically
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.y - dst.y) * 0.5 * src.vx 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctlx = offset + src.x;
+        let offset = Math.abs(src.y - dst.y) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctlx = src.x + offset * src.vx;
         return [ ['M', src.x, src.y]
                , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
                ];
@@ -1043,13 +945,17 @@ class MapPath {
 
     static horizontal(src, dst) {
         // signals are inline horizontally
+        let minoffset = 30;
         let maxoffset = 200;
-        let offset = Math.abs(src.x - dst.x) * 0.5 * src.vy 
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        let ctly = offset + src.y;
+        let offset = Math.abs(src.x - dst.x) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctly = src.y + offset * src.vy;
         return [['M', src.x, src.y],
                 ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }
+
+MapPath.strokeWidth = 4;
+MapPath.boldStrokeWidth = 8;
 

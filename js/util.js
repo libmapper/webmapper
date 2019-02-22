@@ -278,8 +278,13 @@ function canvas_bezier(map, table, table_x) {
         dst_x = table_x;
         dst_y = o.y;
     }
-    if (!src_cx && !dst_cx)
-        src_cx = dst_cx = Math.abs(Math.abs(src_y - dst_y)) * 0.5 + table_x;
+    if (!src_cx && !dst_cx) {
+        let maxoffset = 200;
+        let offset = Math.abs(src_y - dst_y) * 0.5;
+        if (offset > 0 && offset > maxoffset) offset = maxoffset;
+        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
+        src_cx = dst_cx = offset + src_x;
+    }
     else if (!src_cx)
         src_cx = (src_x + dst_x) * 0.5;
     else if (!dst_cx)
