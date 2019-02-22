@@ -8,6 +8,8 @@ class ChordView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('chord', frame, null, canvas, database, tooltip);
 
+        this.radius = 200;
+
         // hide tables
         tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
                            frame.height, 0, 1000, null, 0, 0);
@@ -28,8 +30,6 @@ class ChordView extends View {
 
         this.onlineInc = Math.PI * 0.5;
         this.offlineInc = Math.PI * 0.5;
-
-        this.radius = Math.min(frame.width, frame.height) * 0.25;
 
         this.onlineDevs = 0;
         this.offlineDevs = 0;
@@ -102,7 +102,7 @@ class ChordView extends View {
         let cy = this.mapPane.cy;
         this.database.devices.each(function(dev) {
             let offline = (dev.status == 'offline');
-            let r = self.radius;
+            let r = self.radius ? self.radius : 0;
 
             if (offline)
                 dev.index = offlineIndex++;
@@ -317,7 +317,7 @@ class ChordView extends View {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
-                let r = self.radius;
+                let r = self.radius ? self.radius : 0;
                 let angleInc;
                 if (src.status == 'offline') {
                     if (src.draggingFrom) {
