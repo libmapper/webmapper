@@ -399,7 +399,7 @@ class SignalTable {
     grow() {
         if (this.expand) {
             let tr = $("#"+this.id+" tr")[0];
-            let tds = $(tr).children('td');
+            let tds = $(tr).children('td').not('.invisible');
             if (this.location == 'left') {
                 let td = tds[tds.length - 2];
                 this.expandWidth = td.offsetLeft + td.offsetWidth;
