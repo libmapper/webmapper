@@ -174,34 +174,36 @@ class SignalTable {
         if (!td.length || $(td).hasClass('invisible'))
             return null;
         let tr = $(td).parents('tr')[0];
-        let pos = $(td).position();
-        pos.width = $(td).width();
-        pos.height = $(td).height()
+        //let pos = $(td).position();
+        //pos.width = $(td).width();
+        //pos.height = $(td).height()
+        td = $(td);
+        let self = this;
         if (this.snap == 'bottom') {
-            pos.left += this.frame.left + 20;
-            return {'left': pos.left,
-                    'top': 0,
-                    'width': pos.height,
-                    'height': this.frame.width,
-                    'x': pos.left + pos.height * 0.5,
-                    'y': this.frame.width,
-                    'vx': Math.cos(this.frame.angle),
-                    'vy': -Math.sin(this.frame.angle),
-                    'id': id};
+            //pos.left += this.frame.left + 20;
+            return {get left(){ return td.position().left + self.frame.left + 20},
+                    top: 0,
+                    get width() {return td.height()},
+                    get height() {return self.frame.width},
+                    get x() {return td.position().left + self.frame.left + 20 + td.height() * 0.5},
+                    get y() {return self.frame.width},
+                    get vx() {return Math.cos(self.frame.angle)},
+                    get vy() {return -Math.sin(self.frame.angle)},
+                    id: id};
         }
         else {
-            pos.top += this.frame.top + 20;
-            pos.left = this.frame.left;
+            //pos.top += this.frame.top + 20;
+            //pos.left = this.frame.left;
             let snap = this.snap == 'left' ? -1 : 1;
-            return {'left': pos.left,
-                    'top': pos.top,
-                    'width': this.frame.width,
-                    'height': pos.height,
-                    'x': this.snap == 'left' ? pos.left : pos.left + this.frame.width,
-                    'y': pos.top + pos.height * 0.5,
-                    'vx': Math.cos(this.frame.angle) * snap,
-                    'vy': -Math.sin(this.frame.angle),
-                    'id': id};
+            return {get left() {return self.frame.left;},
+                    get top() {return td.position().top + self.frame.top + 20;},
+                    get width() {return self.frame.width},
+                    get height() {return td.height();},
+                    get x() {return self.snap == 'left' ? self.frame.left : self.frame.left + self.frame.width},
+                    get y() {return td.position().top + self.frame.top + 20 + td.height() * 0.5},
+                    get vx() {return Math.cos(self.frame.angle) * snap},
+                    get vy() {return -Math.sin(self.frame.angle)},
+                    id: id};
         }
     }
 
@@ -694,8 +696,30 @@ class SignalTable {
             }
         });
 
+        this.setSigPositions();
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
         this.adjustRowHeight();
+    }
+
+    setSigPositions() {
+        let self = this;
+        this.database.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (!self.direction || !(self.direction == sig.direction)) return;
+                let row = self.getRowFromName(sig.key);
+                if (row == null)
+                {
+                    sig.hidden = true;
+                    return;
+                }
+                sig.hidden = false;
+                sig.position = 
+                    {
+                        get x() {return row.x;},
+                        get y() {return row.y;},
+                    }
+            });
+        });
     }
 }
