@@ -14,7 +14,11 @@ class MapPainter {
     // APPEARANCE //////////////////////////////////////////////////////////////
     // Subclasses should override these methods to change the appearance of maps
 
-    // Updates the elements of the pathspecs array
+    // Updates the elements of the pathspecs array based on x,y coordinates of
+    // the sources and destinations referred to by the map. This function will
+    // only be called if the map is in a valid state, i.e. it has at least one
+    // source and one destination with valid positions, so it is not necessary
+    // for subclasses to verify these invariants
     updatePaths()
     {
         // draw a straight line from src to dst
@@ -91,7 +95,8 @@ class MapPainter {
     // Check if this.map has the necessary properties allowing it to be drawn
     _mapIsValid()
     {
-        if (   !this.map.src || !this.map.src.position 
+        if (   !this.map
+            || !this.map.src || !this.map.src.position 
             || !this.map.dst || !this.map.dst.position)
         {
             console.log('error drawing map: map missing src or dst position', this.map);

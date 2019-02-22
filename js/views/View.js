@@ -26,6 +26,7 @@ class View {
         this.snappingTo = null;
         this.escaped = false;
 
+        this.mapPainter = MapPainter;
         this.newMap = null;
 
         if (tables) {
@@ -449,7 +450,7 @@ class View {
         this.database.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
-                map.view = new MapPainter(map, self.canvas);
+                map.view = new self.mapPainter(map, self.canvas);
                 self.setMapHover(map);
             }
         });

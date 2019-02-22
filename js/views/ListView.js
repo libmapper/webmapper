@@ -8,6 +8,7 @@ class ListView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
               canvas, database, tooltip);
+        this.mapPainter = ListMapPainter;
 
         // set left table properties
         this.tables.left.filterByDirection('output');
@@ -110,5 +111,60 @@ class ListView extends View {
                 }
             });
         });
+    }
+}
+
+class ListMapPainter extends MapPainter
+{
+    constructor(map, canvas)
+    {
+        super(map, canvas);
+    }
+
+    updatePaths()
+    {
+        let src = this.map.src.position;
+        let dst = this.map.dst.position;
+
+        let pathspec;
+        if (Math.abs(src.x - dst.x) < 1)
+            pathspec = this.vertical(src, dst);
+        else if (Math.abs(src.y - dst.y) < 1)
+            pathspec = this.horizontal(src, dst);
+        else pathspec = this.betweenTables(src, dst);
+        this.pathspecs[0] = pathspec;
+    }
+
+    betweenTables(src, dst) 
+    {
+        let mpx = (src.x + dst.x) * 0.5;
+        return [['M', src.x, src.y],
+                ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+    }
+
+    vertical(src, dst) 
+    {
+        // signals are inline vertically
+        let minoffset = 30;
+        let maxoffset = 200;
+        let offset = Math.abs(src.y - dst.y) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctlx = src.x + offset * src.vx;
+        return [['M', src.x, src.y], 
+                ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+    }
+
+    horizontal(src, dst) 
+    {
+        // signals are inline horizontally
+        let minoffset = 30;
+        let maxoffset = 200;
+        let offset = Math.abs(src.x - dst.x) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
+        let ctly = src.y + offset * src.vy;
+        return [['M', src.x, src.y],
+                ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }
