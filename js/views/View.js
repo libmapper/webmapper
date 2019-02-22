@@ -533,17 +533,18 @@ class View {
                 // display a white dot
             }
             // draw intersection between tables
-            if (map.view) map.view.attr({'arrow-end': 'none'});
+            if (map.view) map.view.attr({'arrow-end': 'none',
+                                         'stroke-linejoin': 'round'});
             if (src.vx < 0.0001) {
-                return [['M', src.left + 2, dst.y],
-                        ['L', src.left + src.width - 2, dst.top + 2],
-                        ['l', 0, dst.height - 2],
+                return [['M', src.left + MapPath.strokeWidth, dst.y],
+                        ['L', src.left + src.width - MapPath.strokeWidth + 2, dst.top + MapPath.strokeWidth],
+                        ['l', 0, dst.height - MapPath.strokeWidth - 2],
                         ['Z']];
             }
             else {
-                return [['M', dst.x, src.top + 2],
-                        ['L', dst.left + 2, src.top + src.height - 2],
-                        ['l', dst.width - 2, 0],
+                return [['M', dst.x, src.top + MapPath.strokeWidth + 1],
+                        ['L', dst.left + MapPath.strokeWidth, src.top + src.height - MapPath.strokeWidth + 2],
+                        ['l', dst.width - MapPath.strokeWidth - 2, 0],
                         ['Z']]
             }
         }
@@ -918,8 +919,8 @@ class MapPath {
         let dy = dst.y - src.y;
         let vertical = fuzzyEq(src.vy, 0, 0.001);
         return [['M', src.x, src.y],
-                    ['l', vertical ? dx : 0, vertical ? 0 : dy],
-                    ['L', dst.x, dst.y]];
+                ['l', vertical ? dx : 0, vertical ? 0 : dy],
+                ['L', dst.x, dst.y]];
     }
 
     static sameTable(srcrow, dstrow, mapPane) {
@@ -938,9 +939,8 @@ class MapPath {
         if (offset > maxoffset) offset = maxoffset;
         if (offset < minoffset) offset = minoffset;
         let ctlx = src.x + offset * src.vx;
-        return [ ['M', src.x, src.y]
-               , ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]
-               ];
+        return [['M', src.x, src.y],
+                ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
     }
 
     static horizontal(src, dst) {

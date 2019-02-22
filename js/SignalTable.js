@@ -126,6 +126,7 @@ class SignalTable {
         }});
         $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
         this.targetHeight = height - 20;
+        this.adjustRowHeight();
     }
 
     filterByName(string) {
