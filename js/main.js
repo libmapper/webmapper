@@ -274,9 +274,6 @@ function select_obj(obj) {
     if (obj.selected)
         return false;
     obj.selected = true;
-    if (obj.view) {
-        obj.view.animate({'stroke': 'red', 'fill': 'red'}, 50);
-        obj.view.toFront();
-    }
+    obj.view.draw();
     return true;
 }

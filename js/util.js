@@ -402,6 +402,7 @@ function select_all_maps() {
     database.maps.each(function(map) {
         if (map.selected) return;
         map.selected = true;
+        if (map.view) map.view.draw();
         updated = true;
     });
     if (updated) $('#container').trigger("updateMapProperties");
@@ -419,6 +420,7 @@ function deselectAllMaps(tables) {
     database.maps.each(function(map) {
         if (!map.selected) return;
         map.selected = false;
+        if (map.view) map.view.draw();
         updated = true;
     });
     if (updated) $('#container').trigger("updateMapProperties");

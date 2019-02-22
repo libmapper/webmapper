@@ -130,8 +130,7 @@ class ViewManager
         this.database.clear_callbacks();
         this.database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
-                // remove maps immediately to avoid svg arrow animation bug
-                if (type == 'map') remove_object_svg(obj, 1); 
+                if (type == 'map' && obj.view) obj.view.remove();
                 remove_object_svg(obj);
                 return;
             }
@@ -231,8 +230,8 @@ class ViewManager
             self.database.maps.each(function(map) {
                 if (!map.view || map.selected)
                     return;
-                if (   edge_intersection(map.view, x1-3, y1-3, x1+3, y1+3)
-                    || edge_intersection(map.view, x1-3, y1+3, x1+3, y1-3)) {
+                if (   map.view.edge_intersection(x1-3, y1-3, x1+3, y1+3)
+                    || map.view.edge_intersection(x1-3, y1+3, x1+3, y1-3)) {
                     updated = select_obj(map);
                 }
             });
@@ -255,7 +254,7 @@ class ViewManager
                 self.database.maps.each(function(map) {
                     if (!map.view || map.selected)
                         return;
-                    if (edge_intersection(map.view, x1, y1, x2, y2)) {
+                    if (map.view.edge_intersection(x1, y1, x2, y2)) {
                         updated |= select_obj(map);
                     }
                 });

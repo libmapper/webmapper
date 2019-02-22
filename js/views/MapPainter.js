@@ -49,12 +49,10 @@ class MapPainter {
     // OTHER ///////////////////////////////////////////////////////////////////
 
     // Use these methods to set the state of the view
-    show() { this.map.hidden = false; }
-    hide() { this.map.hidden = true; }
-    select() { this.map.selected = true; }
-    unselect() { this.map.selected = false; }
-    highlight() { this._highlight = true; }
-    unhighlight() { this._highlight = false; }
+    show() { this.map.hidden = false; this.draw(); }
+    hide() { this.map.hidden = true; this.draw(); }
+    highlight() { this._highlight = true; this.draw(); }
+    unhighlight() { this._highlight = false; this.draw(); }
 
     // The draw function causes the map view to be updated based on the current
     // state of the map which it refers to. This method should not be overridden
@@ -65,6 +63,30 @@ class MapPainter {
         this.updateAttributes();
         this._setPaths();
     }
+
+    edge_intersection(x1, y1, x2, y2)
+    {
+        let ret = false;
+        for (let i in this.paths)
+        {
+            ret = ret || edge_intersection(this.paths[i], x1, y1, x2, y2);
+        }
+        return ret;
+    }
+
+    remove()
+    {
+        this.paths.forEach(function(path)
+        {
+            path.stop();
+            path.unhover();
+            path.undrag();
+            path.remove();
+            path = null;
+       });
+    }
+
+    stop() {} unhover() {} undrag() {} animate() {} // methods that might get called if the caller doesn't know about the new MapPainter class yet and thinks map.view is a Raphael element
 
     // Check if this.map has the necessary properties allowing it to be drawn
     _mapIsValid()
