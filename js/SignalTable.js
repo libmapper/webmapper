@@ -173,7 +173,6 @@ class SignalTable {
         let td = $("#"+this.id+" td[id='"+id+"']");
         if (!td.length || $(td).hasClass('invisible'))
             return null;
-        let tr = $(td).parents('tr')[0];
         let pos = $(td).position();
         pos.width = $(td).width();
         pos.height = $(td).height()
@@ -643,10 +642,10 @@ class SignalTable {
                         b.collapsed = new_state;
                         let id = b.oscpath;
                         // add/remove 'invisible' class from children
-                        let children = $("#"+this.id+" td[id^='"+id+"/']");
+                        let children = $("#"+_self.id+" td[id^='"+id+"/']");
                         let num_leaves = $(children).filter('.leaf').length;
                         // also hide/show <tr> (except first)
-                        children = $(children).add($("#"+this.id+" tr[id^='"+id+"/']").not(":eq(0)"));
+                        children = $(children).add($("#"+_self.id+" tr[id^='"+id+"/']").not(":eq(0)"));
                         let depth = (id.match(/\//g) || []).length;
                         if (new_state) {
                             $(children).addClass('invisible');
@@ -661,7 +660,7 @@ class SignalTable {
                         id = id.split('/');
                         let sel = e.currentTarget;
                         while (id.length) {
-                            num_leaves = $("#"+this.id+" td[id^='"+id.join('/')+"/']")
+                            num_leaves = $("#"+_self.id+" td[id^='"+id.join('/')+"/']")
                                               .filter('.leaf')
                                               .not('.invisible')
                                               .length;
@@ -679,7 +678,7 @@ class SignalTable {
                             }
                             id.pop()
                             if (id.length)
-                                sel = $("#"+this.id+" td[id='"+id.join('/')+"']");
+                                sel = $("#"+_self.id+" td[id='"+id.join('/')+"']");
                         }
                         return true;
                     }
