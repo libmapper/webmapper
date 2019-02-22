@@ -56,12 +56,12 @@ class MapPainter {
 
     // The draw function causes the map view to be updated based on the current
     // state of the map which it refers to. This method should not be overridden
-    draw() 
+    draw(duration) 
     {
         if (!this._mapIsValid()) return;
         this.updatePaths();
         this.updateAttributes();
-        this._setPaths();
+        this._setPaths(duration);
     }
 
     edge_intersection(x1, y1, x2, y2)
@@ -86,7 +86,7 @@ class MapPainter {
        });
     }
 
-    stop() {} unhover() {} undrag() {} animate() {} // methods that might get called if the caller doesn't know about the new MapPainter class yet and thinks map.view is a Raphael element
+    stop() {} unhover() {} undrag() {} animate() {this.remove()} // methods that might get called if the caller doesn't know about the new MapPainter class yet and thinks map.view is a Raphael element
 
     // Check if this.map has the necessary properties allowing it to be drawn
     _mapIsValid()
@@ -118,7 +118,7 @@ class MapPainter {
     }
 
     // Set the path and other attributes for all the path elements owned by this
-    _setPaths()
+    _setPaths(duration)
     {
         for (var i in this.pathspecs)
         {
@@ -129,11 +129,15 @@ class MapPainter {
             {
                 this.paths[i] = this.canvas.path(pathspec);
                 path = this.paths[i];
+                path.attr(this.attributes);
             }
             else 
             {
+                path.stop();
                 this.attributes['path'] = pathspec;
-                path.attr(this.attributes);
+                if (!duration || duration < 0) path.attr(this.attributes);
+                else path.animate(this.attributes, duration, '>');
+                path.toFront();
             }
             if (this.map.hidden || this.map.src.hidden || this.map.dst.hidden) path.hide();
             else path.show();

@@ -530,7 +530,7 @@ class View {
     drawMaps(duration) {
         this.database.maps.each(function(map) {
             if (!map.view) return;
-            else map.view.draw();
+            else map.view.draw(duration);
         });
     }
 
