@@ -409,6 +409,7 @@ class View {
                           'stroke': sig.device.color,
                           'stroke-width': 6,
                           'stroke-opacity': 1}, duration, '>');
+        if (sig.hidden) sig.view.hide();
     }
 
     drawSignals(duration) {

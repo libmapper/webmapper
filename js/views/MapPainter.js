@@ -103,10 +103,17 @@ class MapPainter {
             // TODO: allow animation
             let pathspec = this.pathspecs[i];
             let path = this.paths[i];
-            if (typeof path === 'undefined') path = this.canvas.path(pathspec);
-            else path.attr({'path': pathspec});
-            path.attr(this.attributes);
-            if (this.map.hidden) path.hide();
+            if (typeof path === 'undefined') 
+            {
+                this.paths[i] = this.canvas.path(pathspec);
+                path = this.paths[i];
+            }
+            else 
+            {
+                this.attributes['path'] = pathspec;
+                path.attr(this.attributes);
+            }
+            if (this.map.hidden || this.map.src.hidden || this.map.dst.hidden) path.hide();
             else path.show();
         }
     }
