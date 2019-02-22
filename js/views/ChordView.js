@@ -511,16 +511,21 @@ class ChordView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
             if (this.onlineTitle)
                 this.onlineTitle.attr({'text': this.onlineDevs+' online devices'});
             if (this.offlineTitle)
                 this.offlineTitle.attr({'text': this.offlineDevs+' offline devices'});
+            updated = true;
         }
-        if (elements.indexOf('links') >= 0)
+        if (elements.indexOf('links') >= 0) {
             this.updateLinks();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     draw(duration) {

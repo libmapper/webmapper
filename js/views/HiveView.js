@@ -168,6 +168,7 @@ class HiveView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
             let dev_num = this.database.devices.reduce(function(temp, dev) {
                 let uncollapsed = dev.collapsed ? 0 : 1;
@@ -186,6 +187,7 @@ class HiveView extends View {
                 }
                 return false;
             });
+            updated = true;
         }
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
@@ -193,10 +195,14 @@ class HiveView extends View {
                     sig.position = position(null, null, self.frame);
                 return false;
             });
+            updated = true;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     cleanup() {

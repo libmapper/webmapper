@@ -101,7 +101,6 @@ class GridView extends View {
     }
 
     draw(duration) {
-//        this.drawDevices(duration);
         this.drawMaps(duration);
     }
 
@@ -118,23 +117,28 @@ class GridView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
-            let updated = false;
+            let grow = false;
             if (this.tables.left.expandWidth != this.leftExpandWidth) {
                 this.leftExpandWidth = this.tables.left.expandWidth;
-                updated = true;
+                grow = true;
             }
             if (this.tables.right.expandWidth != this.rightExpandWidth) {
                 this.rightExpandWidth = this.tables.right.expandWidth;
-                updated = true;
+                grow = true;
             }
-            if (updated)
+            if (grow)
                 this.resize(null, 1000);
+            updated = true;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     cleanup() {

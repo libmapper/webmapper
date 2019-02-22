@@ -1,6 +1,4 @@
-<img style="padding:10px;float:left" src="./images/libmapper_logo_black_512px.png" width="75px">
-
-# Webmapper: a browser-based interface for administration of control-mapping networks
+# <img style="padding:10px;float:left" src="./images/libmapper_logo_black_512px.png" width="75px"> Webmapper: a browser-based interface for administration of control-mapping networks
 
 <br/>
 

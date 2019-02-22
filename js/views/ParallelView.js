@@ -145,19 +145,25 @@ class ParallelView extends View {
                 elements = arguments;
                 break;
         }
-        if (elements.indexOf('devices') >= 0)
+        let updated = false;
+        if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
+            updated = true;
+        }
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
                 if (!sig.position)
                     sig.position = position(null, null, self.frame);
                 return false;
             });
+            updated = true;
         }
-
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     pan(x, y, delta_x, delta_y) {

@@ -74,8 +74,6 @@ class View {
             if (map.view)
                 map.view.attr({'arrow-end': 'block-wide-long'});
         });
-
-        this.update();
     }
 
     resize(newFrame) {
