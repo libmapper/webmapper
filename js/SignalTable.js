@@ -717,7 +717,9 @@ class SignalTable {
                 sig.position = 
                     {
                         get x() {return row.x;},
+                        set x(newx) {delete this.x; this.x = newx;},
                         get y() {return row.y;},
+                        set y(newy) {delete this.y; this.y = newy;},
                     }
             });
         });
