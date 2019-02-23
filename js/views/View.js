@@ -10,7 +10,7 @@
 // type() // returns view type
 
 class View {
-    constructor(type, frame, tables, canvas, database, tooltip) {
+    constructor(type, frame, tables, canvas, database, tooltip, painter) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
@@ -26,7 +26,6 @@ class View {
         this.snappingTo = null;
         this.escaped = false;
 
-        this.mapPainter = MapPainter;
         this.newMap = null;
 
         if (tables) {
@@ -55,6 +54,8 @@ class View {
 
         this.sigLabel = null;
 
+        if (typeof painter === "undefined") this.setMapPainter(MapPainter);
+        else this.setMapPainter(painter)
         this.update();
     }
 
@@ -799,6 +800,21 @@ class View {
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
+    }
+
+    // sets the map painter for the view and converts existing map views to use
+    // the new painter. This should be called rather than setting the mapPainter
+    // property of this manually, which does not update the painter owned by
+    // each map
+    setMapPainter(newpainterclass) {
+        this.mapPainter = newpainterclass;
+        let self = this;
+        this.database.maps.each(function(map) {
+            if (!map.view) return;
+            let newview = new self.mapPainter(map, self.canvas);
+            newview.copy(map.view);
+            map.view = newview;
+        });
     }
 }
 

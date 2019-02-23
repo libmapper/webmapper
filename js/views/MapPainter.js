@@ -7,8 +7,6 @@ class MapPainter {
         this.paths = [];
         this.attributes = {};
         this._highlight = false;
-        this._hidden = false;
-        this.draw();
     }
 
     // APPEARANCE //////////////////////////////////////////////////////////////
@@ -63,6 +61,7 @@ class MapPainter {
     draw(duration) 
     {
         if (!this._mapIsValid()) return;
+        else if (this.stolen) return;
         this.updatePaths();
         this.updateAttributes();
         this._setPaths(duration);
@@ -139,14 +138,22 @@ class MapPainter {
             else 
             {
                 path.stop();
-                this.attributes['path'] = pathspec;
-                if (!duration || duration < 0) path.attr(this.attributes);
-                else path.animate(this.attributes, duration, '>');
+                path.attr(this.attributes);
+                if (!duration || duration < 0) path.attr({path: pathspec});
+                else path.animate({'path': pathspec}, duration, '>');
                 path.toFront();
             }
             if (this.map.hidden || this.map.src.hidden || this.map.dst.hidden) path.hide();
             else path.show();
         }
+    }
+
+    // copy the paths from another painter e.g. before replacing it
+    copy(otherpainter)
+    {
+        this.pathspecs = otherpainter.pathspecs;
+        this.paths = otherpainter.paths;
+        this._highlight = otherpainter._highlight;
     }
 }
 

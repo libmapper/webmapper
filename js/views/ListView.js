@@ -7,8 +7,7 @@
 class ListView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip);
-        this.mapPainter = ListMapPainter;
+              canvas, database, tooltip, ListMapPainter);
 
         // set left table properties
         this.tables.left.filterByDirection('output');
