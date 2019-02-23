@@ -172,8 +172,22 @@ class SignalTable {
 
     getRowFromName(id) {
         let td = $("#"+this.id+" td[id='"+id+"']");
-        if (!td.length || $(td).hasClass('invisible'))
+        if (!td.length)
             return null;
+        if ($(td).hasClass('invisible')) {
+            // find last visible row
+            let tr = $(td).parents('tr')[0];
+            while ($(tr).hasClass('invisible')) {
+                tr = $(tr).prev();
+            }
+            if (!tr.length)
+                return null;
+            td = $(tr).children('td').not('.filler, .invisible');
+            if (this.location == 'left')
+                td = $(td).last();
+            else
+                td = $(td).first();
+        }
         let pos = $(td).position();
         pos.width = $(td).width();
         pos.height = $(td).height()
@@ -630,7 +644,6 @@ class SignalTable {
                 console.log("can't collapse leaves");
                 return;
             }
-            console.log("trying to collapse node",  $(e.currentTarget)[0].id);
 
             // toggle collapse
             function collapse_node(t, a) {
