@@ -177,11 +177,39 @@ class GridMapPainter extends ListMapPainter
         let end = srctodst ? {x: dst.x, y: dst.y < src.y ? dst.y : src.y}
                            : {x: dst.x < src.x ? dst.x : src.x, y: dst.y};
 
-        return [['M', src.x, src.y],
-                ['L', mid.x, mid.y],
-                ['L', end.x, end.y],
-                ['L', mid.x, mid.y]].concat(
-                srctodst ? [['L', mid.x, mid.y + 5], ['L', mid.x, mid.y - 12]]
-                         : [['L', mid.x + 5, mid.y], ['L', mid.x - 12, mid.y]]);
+        this.pathspecs[0] = [['M', src.x, src.y],
+                            ['L', mid.x, mid.y],
+                            ['L', end.x, end.y],
+                            ['L', mid.x, mid.y],
+                            ['Z']];
+
+        if (typeof dst.left === 'undefined') // dst is not a table row
+        {
+            this.pathspecs[1] = null;
+            return;
+        }
+
+        let stroke = this.attributes['stroke-width'];
+        if (srctodst) this.pathspecs[1] = 
+            [['M', dst.x, src.top + stroke + 1],
+             ['L', dst.left + stroke, src.top + src.height - stroke + 2],
+             ['l', dst.width - stroke - 2, 0],
+             ['Z']]
+
+        else this.pathspecs[1] =
+            [['M', src.left + stroke, dst.y],
+             ['L', src.left + src.width - stroke + 2, dst.top + stroke],
+             ['l', 0, dst.height - stroke - 2],
+             ['Z']];
+    }
+
+    updateAttributes()
+    {
+        this._defaultAttributes();
+        this.attributes['arrow-end'] = 'none';
+        this.attributes['stroke-linejoin'] = 'round';
+        this.attributes['stroke-width'] = 2;
+        this.attributes['fill'] = this.map.selected ? 'red' : 'white';
+        this.attributes['fill-opacity'] = '100%';
     }
 }

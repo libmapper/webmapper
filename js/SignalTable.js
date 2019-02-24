@@ -731,6 +731,10 @@ class SignalTable {
                 sig.hidden = false;
                 sig.position = 
                     {
+                        get left() {return row.left;},
+                        set left(nl) {delete this.left; this.left = nl;},
+                        get top() {return row.top;},
+                        set top(nt) {delete this.top; this.top = nt;},
                         get height() {return row.height;},
                         set height(nh) {delete this.height; this.height = nh;},
                         get width() {return row.width;},
