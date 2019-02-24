@@ -23,6 +23,7 @@ class ListView extends View {
             t.expand = false;
             t.scrolled = 0;
             t.zoomed = 1;
+            t.update();
         }
 
         let self = this;
@@ -58,12 +59,12 @@ class ListView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
-        this.resize(null, 1000);
+        this.resize(null, 0);
     }
 
     resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
+        let dontDraw = true;
+        super.resize(newFrame, duration, dontDraw);
 
         let self = this;
         this.tables.left.adjust(0, 0, this.frame.width * 0.4, this.frame.height, 0,
@@ -76,7 +77,7 @@ class ListView extends View {
         this.mapPane.height = this.frame.height;
         this.mapPane.cx = this.frame.width * 0.5;
         this.mapPane.cy = this.frame.height * 0.5;
-        this.draw();
+        this.draw(duration);
     }
 
     draw(duration) {

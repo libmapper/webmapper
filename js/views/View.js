@@ -59,7 +59,7 @@ class View {
         this.update();
     }
 
-    resize(newFrame) {
+    resize(newFrame, duration = 0, dontDraw = false) {
         if (newFrame)
             this.frame = newFrame;
 
@@ -72,7 +72,7 @@ class View {
 
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
-        this.draw(0);
+        if (!dontDraw) this.draw(duration);
     }
 
     updateDevices(func) {
