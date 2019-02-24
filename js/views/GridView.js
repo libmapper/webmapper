@@ -7,7 +7,7 @@
 class GridView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('grid', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip);
+              canvas, database, tooltip, GridMapPainter);
 
         // set left table properties
         this.tables.left.filterByDirection('output');
@@ -154,5 +154,24 @@ class GridView extends View {
                 }
             });
         });
+    }
+}
+
+class GridMapPainter extends ListMapPainter
+{
+    constructor(map, canvas) {super(map, canvas);}
+
+    betweenTables(src, dst)
+    {
+        let dy = dst.y - src.y;
+        let up = dy < 0;
+        let mid = up ? {x: dst.x, y: src.y} : {x: src.x, y: dst.y};
+
+        return [['M', src.x, src.y],
+                ['L', mid.x, mid.y],
+                ['L', dst.x, dst.y],
+                ['L', mid.x, mid.y]].concat(
+                up ? [['L', mid.x, mid.y + 5], ['L', mid.x, mid.y - 12]]
+                   : [['L', mid.x + 5, mid.y], ['L', mid.x - 12, mid.y]]);
     }
 }
