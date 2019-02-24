@@ -172,15 +172,16 @@ class GridMapPainter extends ListMapPainter
 
     betweenTables(src, dst)
     {
-        let dy = dst.y - src.y;
-        let up = dy < 0;
-        let mid = up ? {x: dst.x, y: src.y} : {x: src.x, y: dst.y};
+        let srctodst = src.vx == 1;
+        let mid = srctodst ? {x: dst.x, y: src.y} : {x: src.x, y: dst.y};
+        let end = srctodst ? {x: dst.x, y: dst.y < src.y ? dst.y : src.y}
+                           : {x: dst.x < src.x ? dst.x : src.x, y: dst.y};
 
         return [['M', src.x, src.y],
                 ['L', mid.x, mid.y],
-                ['L', dst.x, dst.y],
+                ['L', end.x, end.y],
                 ['L', mid.x, mid.y]].concat(
-                up ? [['L', mid.x, mid.y + 5], ['L', mid.x, mid.y - 12]]
-                   : [['L', mid.x + 5, mid.y], ['L', mid.x - 12, mid.y]]);
+                srctodst ? [['L', mid.x, mid.y + 5], ['L', mid.x, mid.y - 12]]
+                         : [['L', mid.x + 5, mid.y], ['L', mid.x - 12, mid.y]]);
     }
 }

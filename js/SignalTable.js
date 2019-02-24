@@ -731,10 +731,18 @@ class SignalTable {
                 sig.hidden = false;
                 sig.position = 
                     {
+                        get height() {return row.height;},
+                        set height(nh) {delete this.height; this.height = nh;},
+                        get width() {return row.width;},
+                        set width(nw) {delete this.width; this.width = nw;},
                         get x() {return row.x;},
                         set x(newx) {delete this.x; this.x = newx;},
+                        get vx() {return row.vx;},
+                        set vx(newx) {delete this.vx; this.vx = newx;},
                         get y() {return row.y;},
                         set y(newy) {delete this.y; this.y = newy;},
+                        get vy() {return row.vy;},
+                        set vy(newy) {delete this.vy; this.vy = newy;}
                     }
             });
         });

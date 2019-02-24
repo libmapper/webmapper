@@ -647,7 +647,7 @@ class View {
         this.escaped = true;
         this.draggingFrom = null;
         if (this.newMap) {
-            this.newMap.remove();
+            if (this.newMap.view) this.newMap.view.remove();
             this.newMap = null;
         }
         if (this.tables) {
@@ -708,12 +708,12 @@ class View {
                 var dst = null;
                 self.draggingFrom = self.database.find_signal(id);
 
-                self.newMap = self.canvas.path([['M', src.x, src.y],
-                                                ['l', 0, 0]])
-                                         .attr({'fill-opacity': 0,
-                                                'stroke': 'white',
-                                                'stroke-opacity': 1,
-                                                'stroke-width': MapPath.strokeWidth});
+                self.newMap = 
+                {
+                    get src() {return self.draggingFrom},
+                    'dst': null
+                };
+                self.newMap.view = new self.mapPainter(self.newMap, self.canvas);
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -730,8 +730,8 @@ class View {
 
                     let x = e.pageX;
                     let y = e.pageY;
-                    let path = null;
                     dst = null;
+                    self.newMap.dst = null;
                     let dst_table = null;
 
                     for (index in self.tables) {
@@ -743,31 +743,19 @@ class View {
                             dst = null;
                             continue;
                         }
+                        self.newMap.dst = self.database.find_signal(dst.id);
                         dst_table = self.tables[index];
                         break;
                     }
 
-                    if (src_table == dst_table) {
-                        // draw smooth path from table to self
-                        path = MapPath.sameTable(src, dst, self.mapPane);
+                    if (!self.newMap.dst) {
+                        self.newMap.dst = {position: {'x': x, 'y': y}};
                     }
-                    else if (dst) {
-                        // draw bezier curve connecting src and dst
-                        path = MapPath.betweenTables(src, dst);
-                    }
-                    else {
-                        // draw smooth path connecting src to cursor
-                        path = [['M', src.x, src.y],
-                                ['S',
-                                 src.x + src.vx * self.mapPane.width * 0.5,
-                                 src.y + src.vy * self.mapPane.height * 0.5,
-                                 x - self.frame.left, y - self.frame.top]];
-                    }
+                    self.newMap.view.draw();
+
                     src_table.highlightRow(src, false);
                     if (dst_table)
                         dst_table.highlightRow(dst, false);
-
-                    self.newMap.attr({'path': path});
                 });
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
@@ -784,7 +772,7 @@ class View {
                     self.tables.right.highlightRow(null, true);
                     self.draggingFrom = null;
                     if (self.newMap) {
-                        self.newMap.remove();
+                        self.newMap.view.remove();
                         self.newMap = null;
                     }
                 });
