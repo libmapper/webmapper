@@ -11,14 +11,19 @@ class GridView extends View {
 
         // set left table properties
         this.tables.left.filterByDirection('output');
-        this.tables.left.showDetail(false);
-        this.tables.left.expand = true;
 
         // set right table properties
         this.tables.right.snap = 'bottom';
         this.tables.right.filterByDirection('input');
-        this.tables.right.showDetail(false);
-        this.tables.right.expand = true;
+
+        // set global table properties
+        for (var i in this.tables) {
+            let t = this.tables[i];
+            t.showDetail(false);
+            t.expand = true;
+            t.scrolled = 0;
+            t.zoomed = 1;
+        }
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -96,7 +101,6 @@ class GridView extends View {
     }
 
     draw(duration) {
-//        this.drawDevices(duration);
         this.drawMaps(duration);
     }
 
@@ -113,23 +117,28 @@ class GridView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
-            let updated = false;
+            let grow = false;
             if (this.tables.left.expandWidth != this.leftExpandWidth) {
                 this.leftExpandWidth = this.tables.left.expandWidth;
-                updated = true;
+                grow = true;
             }
             if (this.tables.right.expandWidth != this.rightExpandWidth) {
                 this.rightExpandWidth = this.tables.right.expandWidth;
-                updated = true;
+                grow = true;
             }
-            if (updated)
+            if (grow)
                 this.resize(null, 1000);
+            updated = true;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     cleanup() {

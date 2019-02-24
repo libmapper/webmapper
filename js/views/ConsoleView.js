@@ -351,7 +351,7 @@ class ConsoleView extends View {
         let elements;
         switch (arguments.length) {
             case 0:
-                elements = ['devices', 'signals', 'maps'];
+                elements = ['maps'];
                 break;
             case 1:
                 elements = [arguments[0]];
@@ -360,9 +360,10 @@ class ConsoleView extends View {
                 elements = arguments;
                 break;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            this.draw(1000);
+        }
     }
 
     cleanup() {

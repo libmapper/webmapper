@@ -11,14 +11,19 @@ class ListView extends View {
 
         // set left table properties
         this.tables.left.filterByDirection('output');
-        this.tables.left.showDetail(true);
-        this.tables.left.expand = false;
 
         // set right table properties
         this.tables.right.snap = 'left';
         this.tables.right.filterByDirection('input');
-        this.tables.right.showDetail(true);
-        this.tables.right.expand = false;
+
+        // set global table properties
+        for (var i in this.tables) {
+            let t = this.tables[i];
+            t.showDetail(true);
+            t.expand = false;
+            t.scrolled = 0;
+            t.zoomed = 1;
+        }
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -43,7 +48,7 @@ class ListView extends View {
         });
 
         this.tables.left.collapseHandler = function() {self.drawMaps()};
-        this.tables.right.collapseHandler = function() {self.drawMaps};
+        this.tables.right.collapseHandler = function() {self.drawMaps()};
 
         // remove link svg
         this.database.links.each(remove_object_svg);
@@ -92,11 +97,17 @@ class ListView extends View {
                 elements = arguments;
                 break;
         }
-        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+        let updated = false;
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
-        if (elements.indexOf('maps') >= 0)
+            updated = true;
+        }
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     cleanup() {

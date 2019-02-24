@@ -8,6 +8,8 @@ class ChordView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('chord', frame, null, canvas, database, tooltip);
 
+        this.radius = 200;
+
         // hide tables
         tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
                            frame.height, 0, 1000, null, 0, 0);
@@ -28,8 +30,6 @@ class ChordView extends View {
 
         this.onlineInc = Math.PI * 0.5;
         this.offlineInc = Math.PI * 0.5;
-
-        this.radius = Math.min(frame.width, frame.height) * 0.25;
 
         this.onlineDevs = 0;
         this.offlineDevs = 0;
@@ -102,7 +102,7 @@ class ChordView extends View {
         let cy = this.mapPane.cy;
         this.database.devices.each(function(dev) {
             let offline = (dev.status == 'offline');
-            let r = self.radius;
+            let r = self.radius ? self.radius : 0;
 
             if (offline)
                 dev.index = offlineIndex++;
@@ -317,7 +317,7 @@ class ChordView extends View {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
-                let r = self.radius;
+                let r = self.radius ? self.radius : 0;
                 let angleInc;
                 if (src.status == 'offline') {
                     if (src.draggingFrom) {
@@ -511,16 +511,21 @@ class ChordView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
             if (this.onlineTitle)
                 this.onlineTitle.attr({'text': this.onlineDevs+' online devices'});
             if (this.offlineTitle)
                 this.offlineTitle.attr({'text': this.offlineDevs+' offline devices'});
+            updated = true;
         }
-        if (elements.indexOf('links') >= 0)
+        if (elements.indexOf('links') >= 0) {
             this.updateLinks();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(1000);
     }
 
     draw(duration) {
