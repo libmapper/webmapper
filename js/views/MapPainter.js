@@ -1,11 +1,13 @@
 class MapPainter {
-    constructor(map, canvas) 
+    constructor(map, canvas, frame, database) 
     {
         this.map = map;
         this.canvas = canvas;
+        this.frame = frame;
+        this.database = database;
         this.pathspecs = [];
         this.paths = [];
-        this.attributes = {};
+        this.attributes = [];
         this._highlight = false;
     }
 
@@ -13,17 +15,25 @@ class MapPainter {
     // Subclasses should override these methods to change the appearance of maps
 
     // Updates the elements of the pathspecs array based on x,y coordinates of
-    // the sources and destinations referred to by the map. This function will
-    // only be called if the map is in a valid state, i.e. it has at least one
-    // source and one destination with valid positions, so it is not necessary
-    // for subclasses to verify these invariants
+    // the sources and destinations referred to by the map. This function should
+    // only be called if the map is in a valid state according to the
+    // _mapIsValid() function. See draw().
+
     updatePaths()
     {
-        // draw a straight line from src to dst
+        // draw a curved line from src to dst
         let src = this.map.src.position;
         let dst = this.map.dst.position;
 
-        this.pathspecs[0] = [['M', src.x, src.y], ['L', dst.x, dst.y]]
+        let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
+        let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
+
+        let midpointinflation = 0.2;
+        mid.x = mid.x + (mid.x - origin.x) * midpointinflation;
+        mid.y = mid.y + (mid.y - origin.y) * midpointinflation;
+
+        this.pathspecs[0] = [['M', src.x, src.y],
+                             ['S', mid.x, mid.y, dst.x, dst.y]];
     }
 
     // Updates the properties of the attributes object
@@ -92,6 +102,7 @@ class MapPainter {
     stop() {} unhover() {} undrag() {} animate() {this.remove()} // methods that might get called if the caller doesn't know about the new MapPainter class yet and thinks map.view is a Raphael element
 
     // Check if this.map has the necessary properties allowing it to be drawn
+    // Subclasses could override this method to define custom invariants
     _mapIsValid()
     {
         if (   !this.map
@@ -107,38 +118,55 @@ class MapPainter {
     // Get the default attributes for the appearance of a map. Subclasses can
     // call this method in getAttributes() and then change the defaults in case
     // they wish to use most of the defaults
-    _defaultAttributes()
+    _defaultAttributes(count)
     {
-        // TODO: see if these properties can be moved to CSS
-        this.attributes = 
-        { 'stroke': (this.map.selected ? MapPainter.selectedColor : MapPainter.defaultColor )
-        , 'stroke-dasharray': (this.map.muted ? MapPainter.mutedDashes : MapPainter.defaultDashes)
-        , 'stroke-opacity': (this.map.status == 'staged' ? MapPainter.stagedOpacity : MapPainter.defaultOpacity)
-        , 'stroke-width': (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
-        , 'fill': 'none'
-        , 'arrow-start': 'none'
-        , 'arrow-end': 'block-wide-long'
-        };
+        if (typeof count === 'undefined') count = 1;
+        for (var i = 0; i < count; ++i)
+        {
+            // TODO: see if these properties can be moved to CSS
+            this.attributes[i] = 
+            { 'stroke': (this.map.selected ? MapPainter.selectedColor : MapPainter.defaultColor )
+            , 'stroke-dasharray': (this.map.muted ? MapPainter.mutedDashes : MapPainter.defaultDashes)
+            , 'stroke-opacity': (this.map.status == 'staged' ? MapPainter.stagedOpacity : MapPainter.defaultOpacity)
+            , 'stroke-width': (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
+            , 'fill': 'none'
+            , 'arrow-start': 'none'
+            , 'arrow-end': 'block-wide-long'
+            };
+        }
     }
 
     // Set the path and other attributes for all the path elements owned by this
     _setPaths(duration)
     {
-        for (var i in this.pathspecs)
+        let count = this.pathspecs.length;
+        if (this.paths.length > count) count = this.paths.length;
+        for (let i = 0; i < count; ++i)
         {
             // TODO: allow animation
             let pathspec = this.pathspecs[i];
             let path = this.paths[i];
-            if (typeof path === 'undefined') 
+            let attributes = this.attributes[i];
+
+            if (typeof pathspec === 'undefined' || pathspec === null)
+            {
+                if (typeof path !== 'undefined') path.remove();
+                continue;
+            }
+
+            if (typeof attributes === 'undefined') 
+                attributes = this.attributes[0];
+
+            if (typeof path === 'undefined' || path[0] == null) 
             {
                 this.paths[i] = this.canvas.path(pathspec);
                 path = this.paths[i];
-                path.attr(this.attributes);
+                path.attr(attributes);
             }
             else 
             {
                 path.stop();
-                path.attr(this.attributes);
+                path.attr(attributes);
                 if (!duration || duration < 0) path.attr({path: pathspec});
                 else path.animate({'path': pathspec}, duration, '>');
                 path.toFront();
@@ -151,7 +179,6 @@ class MapPainter {
     // copy the paths from another painter e.g. before replacing it
     copy(otherpainter)
     {
-        this.pathspecs = otherpainter.pathspecs;
         this.paths = otherpainter.paths;
         this._highlight = otherpainter._highlight;
     }

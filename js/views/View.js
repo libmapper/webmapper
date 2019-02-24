@@ -451,7 +451,7 @@ class View {
         this.database.maps.each(function(map) {
             // todo: check if signals are visible
             if (!map.view) {
-                map.view = new self.mapPainter(map, self.canvas);
+                map.view = new self.mapPainter(map, self.canvas, self.frame, self.database);
                 self.setMapHover(map);
             }
         });
@@ -713,7 +713,7 @@ class View {
                     get src() {return self.draggingFrom},
                     'dst': null
                 };
-                self.newMap.view = new self.mapPainter(self.newMap, self.canvas);
+                self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -800,7 +800,7 @@ class View {
         let self = this;
         this.database.maps.each(function(map) {
             if (!map.view) return;
-            let newview = new self.mapPainter(map, self.canvas);
+            let newview = new self.mapPainter(map, self.canvas, self.frame, self.database);
             newview.copy(map.view);
             map.view = newview;
         });

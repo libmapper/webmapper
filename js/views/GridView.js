@@ -60,7 +60,7 @@ class GridView extends View {
         };
 
         this.update();
-        this.resize(null, 1000);
+        this.resize(null, 0);
 
         // move svg canvas to front
         $('#svgDiv').css({'position': 'relative', 'z-index': 2});
@@ -97,7 +97,7 @@ class GridView extends View {
                       'width': this.frame.width,
                       'height': this.frame.height});
 
-        this.draw();
+        this.draw(duration);
     }
 
     draw(duration) {
@@ -189,7 +189,7 @@ class GridMapPainter extends ListMapPainter
             return;
         }
 
-        let stroke = this.attributes['stroke-width'];
+        let stroke = this.attributes[1]['stroke-width'];
         if (srctodst) this.pathspecs[1] = 
             [['M', dst.x, src.top + stroke + 1],
              ['L', dst.left + stroke, src.top + src.height - stroke + 2],
@@ -205,11 +205,17 @@ class GridMapPainter extends ListMapPainter
 
     updateAttributes()
     {
-        this._defaultAttributes();
-        this.attributes['arrow-end'] = 'none';
-        this.attributes['stroke-linejoin'] = 'round';
-        this.attributes['stroke-width'] = 2;
-        this.attributes['fill'] = this.map.selected ? 'red' : 'white';
-        this.attributes['fill-opacity'] = '100%';
+        this._defaultAttributes(2);
+        this.attributes[0]['stroke-width'] = 2;
+
+        this.attributes[1]['arrow-end'] = 'none';
+        this.attributes[1]['stroke-linejoin'] = 'round';
+        this.attributes[1]['fill'] = this.map.selected ? 'red' : 'white';
+        this.attributes[1]['fill-opacity'] = '100%';
+
+        let src = this.map.src.position;
+        let dst = this.map.dst.position;
+        if (src.x == dst.x || src.y == dst.y) return;
+        else this.attributes[0]['arrow-end'] = 'none';
     }
 }
