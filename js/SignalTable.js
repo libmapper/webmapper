@@ -721,7 +721,9 @@ class SignalTable {
         let self = this;
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
-                if (!self.direction || !(self.direction == sig.direction)) return;
+                if (self.direction != null && self.direction != sig.direction) 
+                    return;
+
                 let row = self.getRowFromName(sig.key);
                 if (row == null)
                 {

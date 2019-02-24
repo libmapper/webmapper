@@ -6,7 +6,7 @@
 
 class CanvasView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip);
+        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip, ListMapPainter);
 
         // set left table properties
         this.tables.left.filterByDirection('both');
@@ -15,6 +15,7 @@ class CanvasView extends View {
 
         // hide right table
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        this.tables.left.update();
 
         // remove device and unused signal svg
         this.database.devices.each(function(dev) {
@@ -236,48 +237,48 @@ class CanvasView extends View {
                                duration, '>').toFront();
     }
 
-    drawMaps(duration) {
-        // todo: add optional mapAttachPoint to sig representation
-        // if present, use it instead of table
-        // needs direction
-        let self = this;
-        this.database.maps.each(function(map) {
-            if (!map.view)
-                return;
-            map.view.stop();
-            let path = canvas_bezier(map, self.tables.left, self.mapPane.left);
-            if (!path) {
-                console.log("failed to create bezier path");
-                return;
-            }
-            let color;
-            let len = Raphael.getTotalLength(path) * 0.5;
-            if (map.src.canvas_object && map.dst.canvas_object)
-                color = 'white';
-            else
-                color = 'lightgray';
-            if (map.view.new) {
-                map.view.attr({'path': [['M', path[0][1], path[0][2]],
-                                        ['l', 0, 0]],
-                               'stroke-opacity': 1,
-                               'fill-opacity': 0});
-                let path_mid = Raphael.getSubpath(path, 0, len);
-                map.view.animate({'path': path_mid}, duration * 0.5, '>',
-                                 function() {
-                    map.view.animate({'path': path}, duration * 0.5, '>');
-                });
-                map.view.new = false;
-            }
-            else {
-                map.view.animate({'path': path,
-                                  'stroke-opacity': 1,
-                                  'fill-opacity': 0}, duration, '>');
-            }
-            map.view.attr({'stroke-width': 2,
-                           'arrow-end': 'block-wide-long',
-                           'stroke': color});
-        });
-    }
+    //drawMaps(duration) {
+    //    // todo: add optional mapAttachPoint to sig representation
+    //    // if present, use it instead of table
+    //    // needs direction
+    //    let self = this;
+    //    this.database.maps.each(function(map) {
+    //        if (!map.view)
+    //            return;
+    //        map.view.stop();
+    //        let path = canvas_bezier(map, self.tables.left, self.mapPane.left);
+    //        if (!path) {
+    //            console.log("failed to create bezier path");
+    //            return;
+    //        }
+    //        let color;
+    //        let len = Raphael.getTotalLength(path) * 0.5;
+    //        if (map.src.canvas_object && map.dst.canvas_object)
+    //            color = 'white';
+    //        else
+    //            color = 'lightgray';
+    //        if (map.view.new) {
+    //            map.view.attr({'path': [['M', path[0][1], path[0][2]],
+    //                                    ['l', 0, 0]],
+    //                           'stroke-opacity': 1,
+    //                           'fill-opacity': 0});
+    //            let path_mid = Raphael.getSubpath(path, 0, len);
+    //            map.view.animate({'path': path_mid}, duration * 0.5, '>',
+    //                             function() {
+    //                map.view.animate({'path': path}, duration * 0.5, '>');
+    //            });
+    //            map.view.new = false;
+    //        }
+    //        else {
+    //            map.view.animate({'path': path,
+    //                              'stroke-opacity': 1,
+    //                              'fill-opacity': 0}, duration, '>');
+    //        }
+    //        map.view.attr({'stroke-width': 2,
+    //                       'arrow-end': 'block-wide-long',
+    //                       'stroke': color});
+    //    });
+    //}
 
     update() {
         let elements;
