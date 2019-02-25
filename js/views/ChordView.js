@@ -137,7 +137,7 @@ class ChordView extends View {
             dev.view.radius = r;
 
             if (!dev.view.label) {
-                let midAngle = dev.view.pstart.angle + angleInc * 0.5;
+                let midAngle = dev.view.pstart.angle + angleInc * 0.45;
                 dev.view.label = self.canvas.text(0, 0, dev.name)
                                             .attr({'opacity': 0,
                                                    'pointer-events': 'none',
@@ -286,7 +286,7 @@ class ChordView extends View {
                           'transform': 't0,0r0'
                          }, duration, '>');
 
-        let midAngle = dev.view.pstart.angle + angleInc * 0.5;
+        let midAngle = dev.view.pstart.angle + angleInc * 0.45;
         let x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
         let y = this.mapPane.cy;
         dev.view.label.attr({'text-anchor': 'start'})
@@ -548,7 +548,7 @@ class ChordView extends View {
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
             if (this.onlineTitle)
-                this.onlineTitle.attr({'text': this.onlineDevs+' online devices'});
+                this.onlineTitle.attr({'text': this.onlineDevs+' online devices (click to hide/unhide)'});
             if (this.offlineTitle)
                 this.offlineTitle.attr({'text': this.offlineDevs+' offline devices'});
             updated = true;
