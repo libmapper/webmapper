@@ -102,29 +102,25 @@ class View {
             // update device signals
             let sigIndex = 0;
             dev.signals.each(function(sig) {
+                sig.hidden = (dev.hidden == true);
                 let regexp = sig.direction == 'output' ? self.srcregexp : self.dstregexp;
-                if (regexp && !regexp.test(sig.key)) {
+                if (self.tables || dev.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     return;
                 }
                 sig.index = sigIndex++;
 
-                if (self.tables) {
-                    remove_object_svg(sig);
-                }
-                else {
-                    if (!sig.view) {
-                        sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
-                                              .attr({'fill-opacity': 0,
-                                                     'stroke-opacity': 0});
-                        self.setSigDrag(sig);
-                        self.setSigHover(sig);
-                    }
+                if (!sig.view) {
+                    sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
+                                          .attr({'fill-opacity': 0,
+                                                 'stroke-opacity': 0});
+                    self.setSigDrag(sig);
+                    self.setSigHover(sig);
                 }
             });
             // if no signals visible, hide device also
-            if (!sigIndex) {
+            if (self.tables || dev.hidden || !sigIndex) {
                 remove_object_svg(dev);
                 dev.index = null;
                 return;
@@ -132,9 +128,6 @@ class View {
 
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
-            if (self.tables) {
-                remove_object_svg(dev);
-            }
 
             if (func && func(dev)) {
                 remove_object_svg(dev);
@@ -151,12 +144,6 @@ class View {
                                                     'stroke-opacity': 0,
                                                     'stroke-linecap': 'round'
                                                    });
-                dev.view.click(function(e) {
-                    dev.collapsed ^= 3;
-                    // TODO: hide signals
-                    self.updateDevices();
-                    self.draw(0);
-                });
             }
         });
     }
@@ -172,7 +159,7 @@ class View {
         dev.view.unhover();
         dev.view.hover(
             function(e) {
-                if (!hovered && !dev.view.label) {
+                if (!hovered) {
                     self.tooltip.showTable(
                         dev.status+" device", {
                             name: dev.name,
@@ -187,6 +174,8 @@ class View {
                         dev.view.toFront();
                     }
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
+                    if (dev.view.label)
+                        dev.view.label.toFront();
                 }
                 hovered = true;
                 self.hoverDev = dev;
@@ -222,9 +211,13 @@ class View {
                     }, e.x, e.y);
                 link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
                 link.src.view.toFront();
+                if (link.src.view.label)
+                    link.src.view.label.toFront();
                 if (link.src.staged)
                     link.src.staged.view.toFront();
                 link.dst.view.toFront();
+                if (link.dst.view.label)
+                    link.dst.view.label.toFront();
                 if (link.dst.staged)
                     link.dst.staged.view.toFront();
             },
@@ -390,7 +383,7 @@ class View {
                 // check regexp
                 let regexp = (sig.direction == 'output'
                               ? self.srcregexp : self.dstregexp);
-                if (regexp && !regexp.test(sig.key)) {
+                if (sig.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     sig.position = null;
@@ -433,6 +426,8 @@ class View {
     drawSignals(duration) {
         let self = this;
         this.database.devices.each(function(dev) {
+            if (dev.hidden)
+                return;
             dev.signals.each(function(sig) {
                 self.drawSignal(sig, duration);
             });
@@ -482,7 +477,11 @@ class View {
     updateMaps() {
         let self = this;
         this.database.maps.each(function(map) {
-            // todo: check if signals are visible
+            map.hidden = map.src.hidden || map.dst.hidden;
+            if (map.hidden) {
+                remove_object_svg(map);
+                return;
+            }
             if (!map.view) {
                 let pos = map.src.position;
                 let path = pos ? [['M', pos.x, pos.y], ['l', 10, 0]] : null;

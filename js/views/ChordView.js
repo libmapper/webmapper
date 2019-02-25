@@ -15,10 +15,12 @@ class ChordView extends View {
                            frame.height, 0, 1000, null, 0, 0);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
 
+        let self = this;
         this.database.devices.each(function(dev) {
-            // remove device labels (if any)
-            if (dev.view && dev.view.label)
-                dev.view.label.remove();
+            if (dev.view) {
+                self.setDevClick(dev);
+                self.setDevHover(dev);
+            }
             // remove associated svg elements for signals
             dev.signals.each(function(sig) { remove_object_svg(sig); });
         });
@@ -122,21 +124,41 @@ class ChordView extends View {
             if (!dev.view) {
                 let path = [['M', x, cy]];
                 dev.view = self.canvas.path().attr({'path': path,
-                                                    'stroke': dev.color,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
                                                     'stroke-linecap': 'butt',
                                                     'stroke-width': 0,
                                                    });
+                self.setDevClick(dev);
+                self.setDevHover(dev);
             }
             dev.view.pstart = pstart;
             dev.view.pstop = pstop;
             dev.view.radius = r;
 
-            self.setDevHover(dev);
+            if (!dev.view.label) {
+                let midAngle = dev.view.pstart.angle + angleInc * 0.5;
+                dev.view.label = self.canvas.text(x, cy, dev.name)
+                                            .attr({'opacity': 0,
+                                                   'pointer-events': 'none',
+                                                   'font-size': 24,
+                                                   'fill': 'white',
+                                                   'text-anchor': 'start',
+                                                   'transform': 'r'+Raphael.deg(midAngle)+','+x+','+cy
+                                                  });
+
+                                   }
+
             if (offline)
                 self.setDevDrag(dev);
+        });
+    }
 
+    setDevClick(dev) {
+        let self = this;
+        dev.view.unclick().click(function(e) {
+            dev.hidden = dev.hidden ? false : true;
+            self.draw(0);
         });
     }
 
@@ -257,11 +279,21 @@ class ChordView extends View {
                           dev.view.pstop.x, dev.view.pstop.y]];
         dev.view.attr({'stroke-linecap': 'butt'})
                 .animate({'path': dev.view.path,
+                          'stroke': dev.hidden ? "gray" : dev.color,
                           'fill-opacity': 0,
                           'stroke-opacity': 1,
                           'stroke-width': 40,
                           'transform': 't0,0r0'
                          }, duration, '>');
+
+        let midAngle = dev.view.pstart.angle + angleInc * 0.5;
+        let x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
+        let y = this.mapPane.cy;
+        dev.view.label.animate({'opacity': dev.hidden ? 0.5 : 1.0,
+                                'transform': 'r'+Raphael.deg(midAngle)+','+x+','+y+'t'+(r+25)+',-10'
+                               }, duration, '>');
+        if (midAngle > 3.14)
+            dev.view.label.attr({});
     }
 
     drawDevices(duration) {
@@ -442,9 +474,9 @@ class ChordView extends View {
         if (midAngleDeg < 0)
             midAngleDeg += 360;
 
-        let rgb = Raphael.getRGB(link.src.color);
+        let rgb = Raphael.getRGB(src.hidden ? 'gray' : src.color);
         let srcColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
-        rgb = Raphael.getRGB(link.dst.color);
+        rgb = Raphael.getRGB(dst.hidden ? 'gray' : dst.color);
         let dstColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
         let fillString = midAngleDeg+'-'+srcColor+'-'+dstColor;
 
@@ -543,6 +575,10 @@ class ChordView extends View {
             if (!link.view)
                 return;
             remove_object_svg(link, 200);
+        });
+        database.devices.each(function(dev) {
+            if (dev.view)
+                dev.view.unclick();
         });
 
         // clean up any objects created only for this view

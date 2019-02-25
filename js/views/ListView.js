@@ -37,12 +37,6 @@ class ListView extends View {
                 dev.view.label.remove();
                 dev.view.label = null;
             }
-            // change device click
-            dev.view.unclick().click(function(e) {
-                dev.collapsed ^= 3;
-                self.updateDevices();
-                self.draw(1000);
-            });
             // change device hover
             dev.view.unhover();
         });

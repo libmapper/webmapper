@@ -170,9 +170,10 @@ class HiveView extends View {
         }
         let updated = false;
         if (elements.indexOf('devices') >= 0) {
-            let dev_num = this.database.devices.reduce(function(temp, dev) {
+            let dev_num = this.database.devices.reduce(function(t, dev) {
                 let uncollapsed = dev.collapsed ? 0 : 1;
-                return temp ? temp + uncollapsed : uncollapsed;
+                let unhidden = dev.hidden ? 0 : 1;
+                return uncollapsed && unhidden + (t ? t : 0);
             });
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
             let angleInc = (Math.PI * -0.5) / dev_num;

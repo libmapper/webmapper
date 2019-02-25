@@ -452,6 +452,7 @@ class SignalTable {
         var max_depth = 0;
         var tree = {"branches": {}, "num_leaves": 0};
         this.database.devices.each(function(dev) {
+            if (dev.hidden) return;
             if (_self.direction == 'output' && dev.num_outputs < 1) return;
             else if (_self.direction == 'input' && dev.num_inputs < 1) return;
 

@@ -67,19 +67,22 @@ class ParallelView extends View {
                                 'transform': 't'+x+','+labely+'r-90,0,30'
                                }, duration, '>');
         dev.signals.each(function(sig) {
-                         if (!sig.view)
-                         return;
-                         // assign position along line
-                         sig.position.x = x;
-                         sig.position.y = y - sigInc * (sig.index);
-                         self.drawSignal(sig, duration);
+            if (!sig.view)
+                return;
+            // assign position along line
+            sig.position.x = x;
+            sig.position.y = y - sigInc * (sig.index);
+            self.drawSignal(sig, duration);
         });
     }
 
     drawDevices(duration, dev) {
         let self = this;
 
-        let dev_num = this.database.devices.size();
+        let dev_num = this.database.devices.reduce(function(t, d) {
+            let unhidden = d.hidden ? 0 : 1;
+            return t ? t + unhidden : unhidden;
+        });
         if (dev_num && dev_num > 1)
             dev_num -= 1;
         else
@@ -171,7 +174,6 @@ class ParallelView extends View {
     }
 
     zoom(x, y, delta) {
-        console.log('zoom', x, y, delta);
         // check if cursor is over a device
         if (this.hoverDev) {
             // zoom this device only
