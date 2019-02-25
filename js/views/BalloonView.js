@@ -9,8 +9,8 @@ class BalloonView extends View {
         super(frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         // draw background
         let path = circle_path(frame.left + frame.width * 0.33, frame.cy, 0);
@@ -50,8 +50,8 @@ class BalloonView extends View {
             console.log('moving node', key, 'by', Math.cos(angle) * r,
                         Math.sin(angle) * r, ', radius:', r, ', angle:', angle,
                         ', offset:', offset);
-            node.view.animate({'cx': x, 'cy': y, 'r': r}, 1000, 'linear');
-            node.label.animate({'x': x + r + 5, 'y': y}, 1000, 'linear');
+            node.view.animate({'cx': x, 'cy': y, 'r': r}, 500, 'linear');
+            node.label.animate({'x': x + r + 5, 'y': y}, 500, 'linear');
             if (node.children)
                 adjust_nodes(node.children, x, y, r, depth + 1, rev);
             idx += 1;
@@ -173,7 +173,7 @@ class BalloonView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {

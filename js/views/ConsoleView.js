@@ -9,10 +9,10 @@ class ConsoleView extends View {
         super('console', frame, null, canvas, database, tooltip);
 
         // hide left table
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500);
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -287,7 +287,7 @@ class ConsoleView extends View {
                                "<ol></ol>"+
                                "</div>");
 
-        this.resize(null, 1000);
+        this.resize(null, 500);
     }
 
     resize(newFrame, duration) {
@@ -369,7 +369,7 @@ class ConsoleView extends View {
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-            this.draw(1000);
+            this.draw(500);
         }
     }
 

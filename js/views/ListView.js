@@ -52,7 +52,7 @@ class ListView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
-        this.resize(null, 1000);
+        this.resize(null, 500);
     }
 
     resize(newFrame, duration) {
@@ -101,7 +101,7 @@ class ListView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {

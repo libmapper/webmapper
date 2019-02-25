@@ -47,20 +47,20 @@ class GridView extends View {
         this.tables.left.collapseHandler = function() {
             if (self.tables.left.expandWidth != self.leftExpandWidth) {
                 self.leftExpandWidth = self.tables.left.expandWidth;
-                self.resize(null, 1000);
+                self.resize(null, 500);
             }
             self.drawMaps();
         };
         this.tables.right.collapseHandler = function() {
             if (self.tables.right.expandWidth != self.rightExpandWidth) {
                 self.rightExpandWidth = self.tables.right.expandWidth;
-                self.resize(null, 1000);
+                self.resize(null, 500);
             }
             self.drawMaps();
         };
 
         this.update();
-        this.resize(null, 1000);
+        this.resize(null, 500);
 
         // move svg canvas to front
         $('#svgDiv').css({'position': 'relative', 'z-index': 2});
@@ -78,7 +78,7 @@ class GridView extends View {
                                  this.rightExpandWidth,
                                  this.frame.width - this.leftExpandWidth + 20,
                                  -Math.PI * 0.5, duration,
-                                 function() {self.draw(1000)},
+                                 function() {self.draw(500)},
                                  this.rightExpandWidth-this.frame.height,
                                  this.frame.height);
         this.mapPane.left = this.leftExpandWidth;
@@ -130,7 +130,7 @@ class GridView extends View {
                 grow = true;
             }
             if (grow)
-                this.resize(null, 1000);
+                this.resize(null, 500);
             updated = true;
         }
         if (elements.indexOf('maps') >= 0) {
@@ -138,7 +138,7 @@ class GridView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {

@@ -9,8 +9,8 @@ class ParallelView extends View {
         super('parallel', frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // remove link svg
         this.database.links.each(remove_object_svg);
@@ -167,7 +167,7 @@ class ParallelView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     pan(x, y, delta_x, delta_y) {
