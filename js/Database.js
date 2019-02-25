@@ -661,7 +661,7 @@ function MapperDatabase() {
             
             let src = map.sources[0].name;
             let dst = map.destinations[0].name;
-            console.log(map.sources[0].name,'->');
+            console.log('Map from file:', src,'->',dst);
             if (!src || !dst) {
                 console.log("error adding map from file:", map);
                 continue;
@@ -697,9 +697,23 @@ function MapperDatabase() {
                 map.expression = map.expression.replace(/src/g, "x");
                 map.expression = map.expression.replace(/dst/g, "y");
             }
-            $('#container').trigger('map', [src, dst, map]);
-            //this.maps.add(map);
 
+            src = src.slice(src.indexOf('/'));
+            dst = dst.slice(dst.indexOf('/'));
+            let self = this;
+            this.devices.each(function(d1) {
+                let srcsig = d1.signals.find(d1.name+src);
+                if (!srcsig)
+                    return;
+                let dstsig = null;
+                self.devices.each(function (d2) {
+                    dstsig = d2.signals.find(d2.name+dst);
+                    if (!dstsig)
+                        return;
+                    console.log('  Creating map:', srcsig.key, '->', dstsig.key);
+                    $('#container').trigger('map', [srcsig.key, dstsig.key, map]);
+                });
+            });
         }
     }
 
