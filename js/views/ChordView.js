@@ -297,13 +297,13 @@ class ChordView extends View {
         if (midAngle > Math.PI * 0.5 && midAngle < Math.PI * 1.5) {
             dev.view.label.attr({'text-anchor': 'end'})
                           .animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                    'transform': 'r180,'+x+','+y+'t'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(-r)+',-5'
+                                    'transform': 'r180,'+x+','+y+'t'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(-r-20)+',-5'
                                    }, duration, '>');
         }
         else {
             dev.view.label.attr({'text-anchor': 'start'})
                           .animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                    'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+r+',-5'
+                                    'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(r+20)+',-5'
                                    }, duration, '>');
         }
         if (midAngle > 3.14)
