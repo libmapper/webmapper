@@ -82,6 +82,7 @@ class MapPainter {
         let ret = false;
         for (let i in this.paths)
         {
+            if (this.paths[i] === null) continue;
             ret = ret || edge_intersection(this.paths[i], x1, y1, x2, y2);
         }
         return ret;
@@ -150,7 +151,11 @@ class MapPainter {
 
             if (typeof pathspec === 'undefined' || pathspec === null)
             {
-                if (typeof path !== 'undefined') path.remove();
+                if (typeof path !== 'undefined') 
+                {
+                    path.remove();
+                    delete this.paths[i];
+                }
                 continue;
             }
 
