@@ -63,7 +63,8 @@ class ParallelView extends View {
                                                'text-anchor': 'end'});
         }
         let labely = y - height - 30;
-        dev.view.label.animate({'opacity': 0.5,
+        dev.view.label.attr({'text-anchor': 'end'})
+                      .animate({'opacity': 0.5,
                                 'transform': 't'+x+','+labely+'r-90,0,30'
                                }, duration, '>');
         dev.signals.each(function(sig) {

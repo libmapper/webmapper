@@ -41,14 +41,14 @@ class ChordView extends View {
                                              'opacity': 1,
                                              'fill': 'white',
                                              'x': this.frame.width * 0.25,
-                                             'y': this.frame.height * 0.8});
+                                             'y': this.frame.height - 30});
         this.onlineTitle.node.setAttribute('pointer-events', 'none');
         this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "offline devices")
                                        .attr({'font-size': 32,
                                               'opacity': 1,
                                               'fill': 'white',
                                               'x': this.frame.width * 0.75,
-                                              'y': this.frame.height * 0.8});
+                                              'y': this.frame.height - 30});
         this.offlineTitle.node.setAttribute('pointer-events', 'none');
 
         this.file = null;
@@ -70,9 +70,9 @@ class ChordView extends View {
         this.radius = Math.min(this.frame.width, this.frame.height) * 0.25;
 
         this.onlineTitle.attr({'x': this.frame.width * 0.25,
-                               'y': this.frame.height * 0.8});
+                               'y': this.frame.height - 30});
         this.offlineTitle.attr({'x': this.frame.width * 0.75,
-                                'y': this.frame.height * 0.8});
+                                'y': this.frame.height - 30});
     }
 
     updateDevices() {
@@ -138,13 +138,13 @@ class ChordView extends View {
 
             if (!dev.view.label) {
                 let midAngle = dev.view.pstart.angle + angleInc * 0.5;
-                dev.view.label = self.canvas.text(x, cy, dev.name)
+                dev.view.label = self.canvas.text(0, 0, dev.name)
                                             .attr({'opacity': 0,
                                                    'pointer-events': 'none',
-                                                   'font-size': 24,
+                                                   'font-size': 14,
                                                    'fill': 'white',
                                                    'text-anchor': 'start',
-                                                   'transform': 'r'+Raphael.deg(midAngle)+','+x+','+cy
+                                                   'transform': 'r'+Raphael.deg(midAngle)+'0,0t,'+x+','+cy
                                                   });
 
                                    }
@@ -289,8 +289,9 @@ class ChordView extends View {
         let midAngle = dev.view.pstart.angle + angleInc * 0.5;
         let x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
         let y = this.mapPane.cy;
-        dev.view.label.animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                'transform': 'r'+Raphael.deg(midAngle)+','+x+','+y+'t'+(r+25)+',-10'
+        dev.view.label.attr({'text-anchor': 'start'})
+                      .animate({'opacity': dev.hidden ? 0.5 : 1.0,
+                                'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+r+',-5'
                                }, duration, '>');
         if (midAngle > 3.14)
             dev.view.label.attr({});

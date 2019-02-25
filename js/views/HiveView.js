@@ -93,7 +93,8 @@ class HiveView extends View {
             let angle = Raphael.deg(Math.atan(y / x));
             x += self.mapPane.left;
             y += self.frame.height - self.mapPane.top - 30;
-            dev.view.label.animate({'opacity': 0.5,
+            dev.view.label.attr({'text-anchor': 'end'})
+                          .animate({'opacity': 0.5,
                                     'transform': 't'+x+','+y+'r'+angle+',0,30'
                                    }, duration, '>');
 
