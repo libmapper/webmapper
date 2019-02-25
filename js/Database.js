@@ -246,7 +246,7 @@ function MapperDatabase() {
         });
         let links = this.links;
         links.each(function(link) {
-            if (link.src == dev.name || link.dst == dev.name)
+            if (link.src == dev || link.dst == dev)
                 links.remove(link);
         });
         this.devices.remove(dev);
