@@ -138,12 +138,17 @@ class ChordView extends View {
 
             if (!dev.view.label) {
                 let midAngle = dev.view.pstart.angle + angleInc * 0.45;
+                let anchor = 'start';
+                if (midAngle > Math.PI * 0.5 && midAngle < Math.PI * 1.5) {
+                    midAngle += Math.PI;
+                    anchor = 'end';
+                }
                 dev.view.label = self.canvas.text(0, 0, dev.name)
                                             .attr({'opacity': 0,
                                                    'pointer-events': 'none',
                                                    'font-size': 14,
                                                    'fill': 'white',
-                                                   'text-anchor': 'start',
+                                                   'text-anchor': anchor,
                                                    'transform': 'r'+Raphael.deg(midAngle)+'0,0t,'+x+','+cy
                                                   });
 
@@ -289,10 +294,18 @@ class ChordView extends View {
         let midAngle = dev.view.pstart.angle + angleInc * 0.45;
         let x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
         let y = this.mapPane.cy;
-        dev.view.label.attr({'text-anchor': 'start'})
-                      .animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+r+',-5'
-                               }, duration, '>');
+        if (midAngle > Math.PI * 0.5 && midAngle < Math.PI * 1.5) {
+            dev.view.label.attr({'text-anchor': 'end'})
+                          .animate({'opacity': dev.hidden ? 0.5 : 1.0,
+                                    'transform': 'r180,'+x+','+y+'t'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(-r)+',-5'
+                                   }, duration, '>');
+        }
+        else {
+            dev.view.label.attr({'text-anchor': 'start'})
+                          .animate({'opacity': dev.hidden ? 0.5 : 1.0,
+                                    'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+r+',-5'
+                                   }, duration, '>');
+        }
         if (midAngle > 3.14)
             dev.view.label.attr({});
     }
