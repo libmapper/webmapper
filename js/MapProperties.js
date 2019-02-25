@@ -5,7 +5,7 @@ class MapProperties {
         this.view = view;
         this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
         this.mapModes = ["Linear", "Expression"];
-        this.boundaryIcons = ["None", "Right", "Left", "Mute", "Clamp", "Wrap"];
+        this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
 
         $(this.container).append(
             "<div' class='topMenu' style='width:calc(75% - 170px);'>"+
@@ -44,11 +44,11 @@ class MapProperties {
             "<div id='dstRange' class='range signalControl disabled'>"+
                 "<div style='width:85px'>Dest Range:</div>"+
                 "<div style='width:calc(100% - 120px)'>"+
-                    "<div id='boundaryMin' class='boundary boundaryDown' type='button'></div>"+
+                    "<div id='boundary_min' class='boundary boundary_down' type='button'></div>"+
                     "<input class='range' id='dst_min' style='width:calc(50% - 34px)'></input>"+
                     "<div id='dstRangeSwitch' class='rangeSwitch'></div>"+
                     "<input class='range' id='dst_max' style='width:calc(50% - 34px)'></input>"+
-                    "<div id='boundaryMax' class='boundary boundaryUp' type='button'></div>"+
+                    "<div id='boundary_max' class='boundary boundary_up' type='button'></div>"+
                 "</div>"+
 //                "<div id='dstCalibrate' class='calibrate' type='button'>Calib</div>"+
             "</div>");
@@ -116,7 +116,7 @@ class MapProperties {
     clearMapProperties() {
         $('.mode').removeClass('modesel');
         $('.topMenu input').val('');
-        $('.boundary').removeAttr('class').addClass('boundary boundaryNone');
+        $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
         $('.calibrate').removeClass('calibratesel');
@@ -238,9 +238,9 @@ class MapProperties {
             $("#dstCalibrate").removeClass("calibratesel");
 
         if (dst_bound_min != null)
-            this.set_boundary($("#boundaryMin"), dst_bound_min, 0);
+            this.set_boundary($("#boundary_min"), dst_bound_min, 0);
         if (dst_bound_max != null)
-            this.set_boundary($("#boundaryMax"), dst_bound_max, 1);
+            this.set_boundary($("#boundary_max"), dst_bound_max, 1);
     }
 
     // object with arguments for the map
@@ -408,7 +408,7 @@ class MapProperties {
     on_boundary(e, self) {
         var boundaryMode = null;
         for (var i in this.boundaryIcons) {
-            if ($(e.currentTarget).hasClass("boundary"+this.boundaryIcons[i])) {
+            if ($(e.currentTarget).hasClass("boundary_"+this.boundaryIcons[i])) {
                 boundaryMode = this.boundaryIcons[i];
                 break;
             }
@@ -416,35 +416,35 @@ class MapProperties {
         if (i >= this.boundaryIcons.length)
             return;
 
-        var is_max = (e.currentTarget.id == 'boundaryMax');
+        var is_max = (e.currentTarget.id == 'boundary_max');
         switch (boundaryMode) {
-            case 'Left':
+            case 'left':
                 if (is_max)
-                    boundaryMode = 'Wrap'; // fold -> wrap
+                    boundaryMode = 'wrap'; // fold -> wrap
                 else
-                    boundaryMode = 'Mute'; // none -> mute
+                    boundaryMode = 'mute'; // none -> mute
                 break;
-            case 'Right':
+            case 'right':
                 if (is_max)
-                    boundaryMode = 'Mute'; // none -> mute
+                    boundaryMode = 'mute'; // none -> mute
                 else
-                    boundaryMode = 'Wrap'; // fold -> wrap
+                    boundaryMode = 'wrap'; // fold -> wrap
                 break;
-            case 'Mute':
-                boundaryMode = 'Clamp'; // mute -> clamp
+            case 'mute':
+                boundaryMode = 'clamp'; // mute -> clamp
                 break;
-            case 'Clamp':
-                boundaryMode = 'Fold'; // clamp -> fold
+            case 'clamp':
+                boundaryMode = 'fold'; // clamp -> fold
                 break;
-            case 'Wrap':
-                boundaryMode = 'None'; // wrap -> none
+            case 'wrap':
+                boundaryMode = 'none'; // wrap -> none
                 break;
             default:
                 break;
         }
         if (boundaryMode != null)
             self.setMapProperty(is_max ? "dst_bound_max" : 'dst_bound_min',
-                                 boundaryMode);
+                                boundaryMode);
         e.stopPropagation();
     }
 
@@ -460,22 +460,22 @@ class MapProperties {
 
     set_boundary(boundaryElement, value, ismax) {
         for (var i in this.boundaryIcons)
-            boundaryElement.removeClass("boundary"+this.boundaryIcons[i]);
+            boundaryElement.removeClass("boundary_"+this.boundaryIcons[i]);
 
-        if (value == 'None') { // special case, icon depends on direction
+        if (value == 'none') { // special case, icon depends on direction
             if (ismax)
-                boundaryElement.addClass('boundaryRight');
+                boundaryElement.addClass('boundary_right');
             else
-                boundaryElement.addClass('boundaryLeft');
+                boundaryElement.addClass('boundary_left');
         }
-        else if (value == 'Fold') { // special case, icon depends on direction
+        else if (value == 'fold') { // special case, icon depends on direction
             if (ismax)
-                boundaryElement.addClass('boundaryLeft');
+                boundaryElement.addClass('boundary_left');
             else
-                boundaryElement.addClass('boundaryRight');
+                boundaryElement.addClass('boundary_right');
         }
         else if (value != null) {
-            boundaryElement.addClass('boundary'+value);
+            boundaryElement.addClass('boundary_'+value);
         }
     }
 

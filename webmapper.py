@@ -9,7 +9,7 @@ from random import randint
 
 networkInterfaces = {'active': '', 'available': []}
 
-boundaryModes = ['Undefined', 'None', 'Mute', 'Clamp', 'Fold', 'Wrap']
+boundaryModes = ['undefined', 'none', 'mute', 'clamp', 'fold', 'wrap']
 boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
                     'none': mapper.BOUND_NONE,
                     'mute': mapper.BOUND_MUTE,
@@ -343,7 +343,7 @@ server.add_command_handler("add_links",
 server.add_command_handler("add_maps",
                            lambda x: ("add_maps", map(map_props, db.maps())))
 
-server.add_command_handler("set_map", lambda x: set_map_properties(x))
+server.add_command_handler("set_map", lambda x: set_map_properties(x, None))
 
 server.add_command_handler("map", lambda x: new_map(x))
 

@@ -702,11 +702,15 @@ function MapperDatabase() {
             dst = dst.slice(dst.indexOf('/'));
             let self = this;
             this.devices.each(function(d1) {
+                if (d1.hidden)
+                    return;
                 let srcsig = d1.signals.find(d1.name+src);
                 if (!srcsig)
                     return;
                 let dstsig = null;
                 self.devices.each(function (d2) {
+                    if (d2.hidden)
+                        return;
                     dstsig = d2.signals.find(d2.name+dst);
                     if (!dstsig)
                         return;
