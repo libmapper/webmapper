@@ -228,18 +228,18 @@ class SignalTable {
             case 'left':
                 if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.1;
+                x = this.div[0].offsetLeft + 20;
                 break;
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 2;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 20;
                 break;
             case 'bottom':
                 let yoffset = $(this.div[0]).offset().top;
                 if (y > yoffset + this.frame.width * (1 + snapRatio))
                     return;
-                y = yoffset + this.frame.width - 2;
+                y = yoffset + this.frame.width - 20;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
