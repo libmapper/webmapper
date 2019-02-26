@@ -61,10 +61,7 @@ class ListView extends View {
         this.resize(null, 1000);
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.frame.width * 0.4, this.frame.height, 0,
                                 duration);
@@ -76,7 +73,6 @@ class ListView extends View {
         this.mapPane.height = this.frame.height;
         this.mapPane.cx = this.frame.width * 0.5;
         this.mapPane.cy = this.frame.height * 0.5;
-        this.draw();
     }
 
     draw(duration) {

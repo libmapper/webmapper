@@ -33,10 +33,7 @@ class HiveView extends View {
         this.resize();
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         this.mapPane.left = 50;
         this.mapPane.width = this.frame.width - 100;
         this.mapPane.top = 50;

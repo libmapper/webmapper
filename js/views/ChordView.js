@@ -54,10 +54,7 @@ class ChordView extends View {
         this.resize();
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         this.mapPane.left = 0;
         this.mapPane.width = this.frame.width;
         this.mapPane.top = 0;
@@ -238,10 +235,9 @@ class ChordView extends View {
         if (!dev.view)
             return;
         dev.view.stop();
-        let staged = false;
-        let r = dev.view.radius;
+        let offline = (dev.status == 'offline');
         let angleInc;
-        if (dev.status == 'offline') {
+        if (offline == 'offline') {
             if (dev.draggingFrom)
                 angleInc = self.onlineInc;
             else
@@ -251,10 +247,23 @@ class ChordView extends View {
             angleInc = self.onlineInc;
         }
 
-        dev.view.path = [['M', dev.view.pstart.x, dev.view.pstart.y],
+        let r = self.radius ? self.radius : 0;
+        let cx = self.mapPane.cx;
+        let cy = self.mapPane.cy;
+        let x = cx * (offline ? 1.5 : 0.5);
+        let angle = (dev.index - 0.45) * angleInc;
+        let pstart = {'angle': angle,
+                      'x': x + Math.cos(angle) * r,
+                      'y': cy + Math.sin(angle) * r};
+        angle += angleInc * 0.9;
+        let pstop = {'angle': angle,
+                     'x': x + Math.cos(angle) * r,
+                     'y': cy + Math.sin(angle) * r};
+
+        dev.view.path = [['M', pstart.x, pstart.y],
                          ['A', r, r, angleInc,
                           fuzzyEq(angleInc, 6.283, 0.01) ? 1 : 0, 1,
-                          dev.view.pstop.x, dev.view.pstop.y]];
+                          pstop.x, pstop.y]];
         dev.view.attr({'stroke-linecap': 'butt'})
                 .animate({'path': dev.view.path,
                           'fill-opacity': 0,

@@ -76,10 +76,17 @@ class View {
         });
     }
 
-    resize(newFrame) {
+    // Subclasses should override the behavior of _resize rather than this one
+    resize(newFrame, duration) {
         if (newFrame)
             this.frame = newFrame;
+        this._resize(duration);
+        this.canvas.setViewBox(0, 0, this.frame.width, this.frame.height, false);
+        this.draw(duration);
+    }
 
+    // Define subclass specific resizing related tasks
+    _resize() {
         this.mapPane = {'left': this.frame.left,
                         'top': this.frame.top,
                         'width': this.frame.width,
@@ -88,8 +95,6 @@ class View {
                         'cy': this.frame.height * 0.5};
 
         this.origin = [this.mapPane.cx, this.mapPane.cy];
-
-        this.draw(0);
     }
 
     updateDevices(func) {
