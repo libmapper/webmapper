@@ -317,22 +317,22 @@ form {
     position: relative;
     top: 2px;
 }
-.boundaryNone {
+.boundary_none {
     background-position: 0px 0px;
 }
-.boundaryRight {
+.boundary_right {
     background-position: -24px 0px;
 }
-.boundaryLeft {
+.boundary_left {
     background-position: -48px 0px;
 }
-.boundaryMute {
+.boundary_mute {
     background-position: -72px 0px;
 }
-.boundaryClamp {
+.boundary_clamp {
     background-position: -96px 0px;
 }
-.boundaryWrap {
+.boundary_wrap {
     background-position: -120px 0px;
 }
 /****************/

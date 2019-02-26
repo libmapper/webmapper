@@ -9,10 +9,10 @@ class ConsoleView extends View {
         super('console', frame, null, canvas, database, tooltip);
 
         // hide left table
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500);
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -283,11 +283,11 @@ class ConsoleView extends View {
 //        });
 
         $('#container').append("<div id='mapListDiv' class='console' style='left:50%;'>"+
-                               "<span><h2>Maps</h2></span>"+
+                               "<span><h2 id='mapsLabel'>Maps</h2></span>"+
                                "<ol></ol>"+
                                "</div>");
 
-        this.resize(null, 1000);
+        this.resize(null, 500);
     }
 
     _resize(duration) {
@@ -314,7 +314,13 @@ class ConsoleView extends View {
     updateMaps() {
         let mapList = $('#mapListDiv ol');
         mapList.empty();
+        let hidden = 0;
         this.database.maps.each(function(map) {
+            map.hidden = map.src.device.hidden || map.dst.device.hidden;
+            if (map.hidden) {
+                hidden += 1;
+                return;
+            }
             let string = "<li";
             if (map.selected)
                 string += " style='color:red'"
@@ -341,6 +347,7 @@ class ConsoleView extends View {
             }
             mapList.append(string);
         });
+        $('#mapsLabel').html('Maps ('+hidden+' hidden)');
     }
 
     update() {
@@ -358,7 +365,7 @@ class ConsoleView extends View {
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-            this.draw(1000);
+            this.draw(500);
         }
     }
 

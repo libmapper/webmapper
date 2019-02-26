@@ -37,12 +37,6 @@ class ListView extends View {
                 dev.view.label.remove();
                 dev.view.label = null;
             }
-            // change device click
-            dev.view.unclick().click(function(e) {
-                dev.collapsed ^= 3;
-                self.updateDevices();
-                self.draw(1000);
-            });
             // change device hover
             dev.view.unhover();
         });
@@ -58,7 +52,7 @@ class ListView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
-        this.resize(null, 1000);
+        this.resize(null, 500);
     }
 
     _resize(duration) {
@@ -103,7 +97,7 @@ class ListView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {

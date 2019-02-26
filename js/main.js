@@ -275,7 +275,8 @@ function select_obj(obj) {
         return false;
     obj.selected = true;
     if (obj.view) {
-        obj.view.animate({'stroke': 'red', 'fill': 'red'}, 50);
+        let fill = obj.view.attr('fill-opacity') > 0 ? 'red' : 'none';
+        obj.view.animate({'stroke': 'red', 'fill': fill}, 50);
         obj.view.toFront();
     }
     return true;
