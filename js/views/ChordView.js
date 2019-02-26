@@ -301,7 +301,7 @@ class ChordView extends View {
                          }, duration, '>');
 
         let midAngle = dev.view.pstart.angle + angleInc * 0.45;
-        let x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
+        x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
         let y = this.mapPane.cy;
         if (midAngle > Math.PI * 0.5 && midAngle < Math.PI * 1.5) {
             dev.view.label.attr({'text-anchor': 'end'})
