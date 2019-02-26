@@ -4,6 +4,10 @@ class SaverLoader {
         this.input.attr("type", "file");
         this.input.on('change', function(e) {
             var f = e.target.files[0];
+
+            // reset input value to enable reloading the same file
+            this.value = '';
+
             let reader = new FileReader();
             reader.onload = (function(file) {
                 return function(e) {

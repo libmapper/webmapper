@@ -14,8 +14,7 @@ class CanvasView extends View {
         this.tables.left.expand = true;
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
-        this.tables.left.update();
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // remove device and unused signal svg
         this.database.devices.each(function(dev) {
@@ -33,13 +32,10 @@ class CanvasView extends View {
         });
 
         this.leftExpandWidth = 200;
-        this.resize(null, 1000);
+        this.resize(null, 500);
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
                                 0, duration, function() {self.draw()}, 0, 0);
@@ -302,7 +298,7 @@ class CanvasView extends View {
                 grow = true;
             }
             if (grow)
-                this.resize(null, 1000);
+                this.resize(null, 500);
             updated = true;
         }
         if (elements.indexOf('maps') >= 0) {
@@ -310,7 +306,7 @@ class CanvasView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     draw(duration) {
@@ -407,7 +403,7 @@ class CanvasView extends View {
 //
 //                set_sig_drag(sig);
 //                set_sig_hover(sig);
-//                redraw(1000, false);
+//                redraw(500, false);
 //            });
 //        });
 //        $(document).one('mouseup.drawing', function(e) {

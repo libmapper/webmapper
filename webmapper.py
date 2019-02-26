@@ -9,13 +9,13 @@ from random import randint
 
 networkInterfaces = {'active': '', 'available': []}
 
-boundaryModes = ['Undefined', 'None', 'Mute', 'Clamp', 'Fold', 'Wrap']
-boundaryStrings = { 'Undefined': mapper.BOUND_UNDEFINED,
-                    'None': mapper.BOUND_NONE,
-                    'Mute': mapper.BOUND_MUTE,
-                    'Clamp': mapper.BOUND_CLAMP,
-                    'Fold': mapper.BOUND_FOLD,
-                    'Wrap': mapper.BOUND_WRAP }
+boundaryModes = ['undefined', 'none', 'mute', 'clamp', 'fold', 'wrap']
+boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
+                    'none': mapper.BOUND_NONE,
+                    'mute': mapper.BOUND_MUTE,
+                    'clamp': mapper.BOUND_CLAMP,
+                    'fold': mapper.BOUND_FOLD,
+                    'wrap': mapper.BOUND_WRAP }
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -173,14 +173,14 @@ def on_map(map, action):
 #        print 'ON_MAP (removed)', map_props(map)
         server.send_command("del_map", map_props(map))
 
-def set_map_properties(props):
-    print 'incoming expression: ', props['expression']
+def set_map_properties(props, map):
     # todo: check for convergent maps, only release selected
-    maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
-    map = maps.next()
     if not map:
-        print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
-        return
+        maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
+        map = maps.next()
+        if not map:
+            print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
+            return
     if props.has_key('mode'):
         if props['mode'] == 'linear':
             map.mode = mapper.MODE_LINEAR
@@ -256,7 +256,6 @@ def set_map_properties(props):
         slot.bound_min = boundaryStrings[props['dst_bound_min']]
     if props.has_key('dst_bound_max'):
         slot.bound_max = boundaryStrings[props['dst_bound_max']]
-#    print 'pushing map'
     map.push()
 
 def on_save(arg):
@@ -313,7 +312,7 @@ def find_sig(fullname):
         sig = dev.signal(names[1])
         return sig
     else:
-        print 'error: could not find device', dev
+        print 'error: could not find device', names[0]
 
 def new_map(args):
     if find_sig(args[0]) and find_sig(args[1]):
@@ -324,7 +323,7 @@ def new_map(args):
         else:
             print 'created map: ', args[0], ' -> ', args[1]
         if len(args) > 2 and type(args[2]) is dict:
-            set_map_properties(args[2]) #map.set_properties doesn't seem to work
+            set_map_properties(args[2], map)
         map.push()
     else:
        print args[0], ' and ', args[1], ' not found on network!'
@@ -344,7 +343,7 @@ server.add_command_handler("add_links",
 server.add_command_handler("add_maps",
                            lambda x: ("add_maps", map(map_props, db.maps())))
 
-server.add_command_handler("set_map", lambda x: set_map_properties(x))
+server.add_command_handler("set_map", lambda x: set_map_properties(x, None))
 
 server.add_command_handler("map", lambda x: new_map(x))
 

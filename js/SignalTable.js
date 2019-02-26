@@ -93,7 +93,7 @@ class SignalTable {
             angle_was += Math.PI * 2;
 
         $({someValue: 0}).animate({someValue: 1},
-                                  {duration: duration * 0.33,
+                                  {duration: duration,
                                   step: function(now, fx) {
             let was = 1 - now;
             self.frame.left = left * now + left_was * was;
@@ -113,14 +113,13 @@ class SignalTable {
                 'text-align': self.frame.angle ? 'right' : 'left'
             });
 
-            if (innerLeft != null && innerWidth != null) {
-                $('#' + self.id + 'Scroller').css({
-                    'left': innerLeft ? innerLeft : 0,
-                    'top': 0,
-                    'width': innerWidth ? innerWidth : '100%',
-                    'height': self.frame.height - 20,
-                });
-            }
+            $('#' + self.id + 'Scroller').css({
+                'left': innerLeft ? innerLeft : 0,
+                'top': 0,
+                'width': innerWidth ? innerWidth : '100%',
+                'height': self.frame.height - 20,
+            });
+
             if (func)
                 func();
         }});
@@ -232,18 +231,18 @@ class SignalTable {
             case 'left':
                 if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.1;
+                x = this.div[0].offsetLeft + 20;
                 break;
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 2;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 20;
                 break;
             case 'bottom':
                 let yoffset = $(this.div[0]).offset().top;
                 if (y > yoffset + this.frame.width * (1 + snapRatio))
                     return;
-                y = yoffset + this.frame.width - 2;
+                y = yoffset + this.frame.width - 20;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
@@ -456,6 +455,7 @@ class SignalTable {
         var max_depth = 0;
         var tree = {"branches": {}, "num_leaves": 0};
         this.database.devices.each(function(dev) {
+            if (dev.hidden) return;
             if (_self.direction == 'output' && dev.num_outputs < 1) return;
             else if (_self.direction == 'input' && dev.num_inputs < 1) return;
 

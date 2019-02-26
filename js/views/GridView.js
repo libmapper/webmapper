@@ -41,35 +41,32 @@ class GridView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
-        this.leftExpandWidth = 200;
-        this.rightExpandWidth = 200;
 
         this.tables.left.collapseHandler = function() {
             if (self.tables.left.expandWidth != self.leftExpandWidth) {
                 self.leftExpandWidth = self.tables.left.expandWidth;
-                self.resize(null, 1000);
+                self.resize(null, 500);
             }
-            self.drawMaps()
+            self.drawMaps();
         };
         this.tables.right.collapseHandler = function() {
             if (self.tables.right.expandWidth != self.rightExpandWidth) {
                 self.rightExpandWidth = self.tables.right.expandWidth;
-                self.resize(null, 1000);
+                self.resize(null, 500);
             }
-            self.drawMaps()
+            self.drawMaps();
         };
 
         this.update();
-        this.resize(null, 0);
+        this.leftExpandWidth = 200;
+        this.rightExpandWidth = 200;
+        this.resize(null, 500);
 
         // move svg canvas to front
         $('#svgDiv').css({'position': 'relative', 'z-index': 2});
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, this.rightExpandWidth-20, this.leftExpandWidth,
                                 this.frame.height - this.rightExpandWidth + 20,
@@ -78,7 +75,7 @@ class GridView extends View {
                                  this.rightExpandWidth,
                                  this.frame.width - this.leftExpandWidth + 20,
                                  -Math.PI * 0.5, duration,
-                                 function() {self.draw(1000)},
+                                 function() {self.draw(500)},
                                  this.rightExpandWidth-this.frame.height,
                                  this.frame.height);
         this.mapPane.left = this.leftExpandWidth;
@@ -89,15 +86,9 @@ class GridView extends View {
         this.mapPane.cy = this.mapPane.top + this.mapPane.height * 0.5;
 
         $('#svgDiv').css({'left': this.mapPane.left,
-                          'top': this.mapPane.top,
-                          'width': this.mapPane.width,
-                          'height': this.mapPane.height});
+                          'top': this.mapPane.top});
         $('svg').css({'left': -this.mapPane.left,
-                      'top': -this.mapPane.top,
-                      'width': this.frame.width,
-                      'height': this.frame.height});
-
-        this.draw(duration);
+                      'top': -this.mapPane.top});
     }
 
     draw(duration) {
@@ -130,7 +121,7 @@ class GridView extends View {
                 grow = true;
             }
             if (grow)
-                this.resize(null, 1000);
+                this.resize(null, 500);
             updated = true;
         }
         if (elements.indexOf('maps') >= 0) {
@@ -138,7 +129,7 @@ class GridView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {
@@ -147,13 +138,9 @@ class GridView extends View {
         // reposition svg canvas and send to back
         $('#svgDiv').css({'z-index': 0,
                           'left': 0,
-                          'top': 0,
-                          'width': this.frame.width,
-                          'height': this.frame.height});
+                          'top': 0});
         $('svg').css({'left': 0,
-                      'top': 0,
-                      'width': this.frame.width,
-                      'height': this.frame.height});
+                      'top': 0});
 
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {

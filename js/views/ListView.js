@@ -38,12 +38,6 @@ class ListView extends View {
                 dev.view.label.remove();
                 dev.view.label = null;
             }
-            // change device click
-            dev.view.unclick().click(function(e) {
-                dev.collapsed ^= 3;
-                self.updateDevices();
-                self.draw(1000);
-            });
             // change device hover
             dev.view.unhover();
         });
@@ -59,13 +53,10 @@ class ListView extends View {
         this.pan = this.tablePan;
         this.zoom = this.tableZoom;
 
-        this.resize(null, 0);
+        this.resize(null, 500);
     }
 
-    resize(newFrame, duration) {
-        let dontDraw = true;
-        super.resize(newFrame, duration, dontDraw);
-
+    _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.frame.width * 0.4, this.frame.height, 0,
                                 duration);
@@ -77,7 +68,6 @@ class ListView extends View {
         this.mapPane.height = this.frame.height;
         this.mapPane.cx = this.frame.width * 0.5;
         this.mapPane.cy = this.frame.height * 0.5;
-        this.draw(duration);
     }
 
     draw(duration) {
@@ -108,7 +98,7 @@ class ListView extends View {
             updated = true;
         }
         if (updated)
-            this.draw(1000);
+            this.draw(500);
     }
 
     cleanup() {
