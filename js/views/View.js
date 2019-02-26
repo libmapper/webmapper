@@ -601,6 +601,7 @@ class View {
             let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
             let stroke_color = map.selected ? 'red' : 'white';
             let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
+            let arrow_end = fill_opacity > 0.5 ? 'none' : 'block-wide-long';
 
             if (map.view.new) {
                 map.view.show();
@@ -613,8 +614,7 @@ class View {
                                    'stroke-dasharray': map.muted ? '-' : '',
                                    'fill-opacity': fill_opacity,
                                    'fill': fill_color,
-                                   'arrow-end': 'block-wide-long'
-                                  })
+                                   'arrow-end': arrow_end})
                             .toFront();
                     return;
                 }
