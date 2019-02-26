@@ -766,6 +766,7 @@ class View {
         // can also drag map to self
         // if tables are orthogonal we can simply drag to 2D space between them
         // if no other table exists, can drag out signal representation
+        $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
             self.escaped = false;
 

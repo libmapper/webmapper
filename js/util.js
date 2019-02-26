@@ -243,7 +243,7 @@ function canvas_rect_path(dim) {
     return path;
 }
 
-function canvas_bezier(map, table, table_x) {
+function canvas_bezier(map, table, table_x, pan_x, pan_y, zoom) {
     let src_x, src_y, dst_x, dst_y;
     let src_cx = null, dst_cx = null;
     if (map.src.canvas_object) {
@@ -259,8 +259,8 @@ function canvas_bezier(map, table, table_x) {
             console.log("src row not found!", map.src.key);
             return;
         }
-        src_x = table_x;
-        src_y = o.y;
+        src_x = table_x * zoom + pan_x;
+        src_y = o.y * zoom + pan_y;
     }
     if (map.dst.canvas_object) {
         let o = map.dst.canvas_object
@@ -275,8 +275,8 @@ function canvas_bezier(map, table, table_x) {
             console.log("dst row not found!", map.dst.key);
             return;
         }
-        dst_x = table_x;
-        dst_y = o.y;
+        dst_x = table_x * zoom + pan_x;
+        dst_y = o.y * zoom + pan_y;
     }
     if (!src_cx && !dst_cx) {
         let maxoffset = 200;
