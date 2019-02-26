@@ -130,8 +130,7 @@ class View {
                                                     'stroke': dev.color,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
-                                                    'stroke-linecap': 'round'
-                                                   });
+                                                    'stroke-linecap': 'round'});
             }
         });
     }
@@ -667,6 +666,7 @@ class View {
         // can also drag map to self
         // if tables are orthogonal we can simply drag to 2D space between them
         // if no other table exists, can drag out signal representation
+        $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
             self.escaped = false;
 
@@ -683,34 +683,12 @@ class View {
                     console.log('unknown source row');
                     return;
             }
-            if ($(src_row).hasClass('device')) {
-                let dev = self.database.devices.find(src_row.id);
-                if (dev) {
-                    switch (src_table) {
-                    case self.tables.left:
-                        dev.collapsed ^= 1;
-                        break;
-                    case self.tables.right:
-                        dev.collapsed ^= 2;
-                        break;
-                    case self.tables.top:
-                        dev.collapsed ^= 4;
-                        break;
-                    default:
-                        return;
-                    }
-                    self.updateDevices();
-                    self.draw(0);
-                }
-                return;
-            }
 
             $('#svgDiv').one('mouseenter.drawing', function() {
                 deselectAllMaps(self.tables);
-                let id = src_row.id.replace('\\/', '\/');
-                var src = src_table.getRowFromName(id);
+                var src = src_table.getRowFromName(src_row.id);
                 var dst = null;
-                self.draggingFrom = self.database.find_signal(id);
+                self.draggingFrom = self.database.find_signal(src.id);
 
                 self.newMap = 
                 {
