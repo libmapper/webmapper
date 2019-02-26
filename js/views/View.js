@@ -808,7 +808,7 @@ class View {
 
                 self.newMap = self.canvas.path([['M', src.x, src.y],
                                                 ['l', 0, 0]])
-                                         .attr({'fill-opacity': 0,
+                                         .attr({'fill': 'none',
                                                 'stroke': 'white',
                                                 'stroke-opacity': 1,
                                                 'stroke-width': MapPath.strokeWidth});
