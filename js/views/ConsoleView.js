@@ -290,11 +290,7 @@ class ConsoleView extends View {
         this.resize(null, 500);
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
-        let self = this;
+    _resize(duration) {
         this.mapPane.left = 0;
         this.mapPane.width = this.frame.width;
         this.mapPane.height = this.frame.height;

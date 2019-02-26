@@ -93,7 +93,7 @@ class SignalTable {
             angle_was += Math.PI * 2;
 
         $({someValue: 0}).animate({someValue: 1},
-                                  {duration: duration * 0.33,
+                                  {duration: duration,
                                   step: function(now, fx) {
             let was = 1 - now;
             self.frame.left = left * now + left_was * was;
@@ -113,14 +113,13 @@ class SignalTable {
                 'text-align': self.frame.angle ? 'right' : 'left'
             });
 
-            if (innerLeft != null && innerWidth != null) {
-                $('#' + self.id + 'Scroller').css({
-                    'left': innerLeft ? innerLeft : 0,
-                    'top': 0,
-                    'width': innerWidth ? innerWidth : '100%',
-                    'height': self.frame.height - 20,
-                });
-            }
+            $('#' + self.id + 'Scroller').css({
+                'left': innerLeft ? innerLeft : 0,
+                'top': 0,
+                'width': innerWidth ? innerWidth : '100%',
+                'height': self.frame.height - 20,
+            });
+
             if (func)
                 func();
         }});

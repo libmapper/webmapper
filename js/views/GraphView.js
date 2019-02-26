@@ -29,15 +29,16 @@ class GraphView extends View {
         this.resize();
     }
 
-    resize(newFrame) {
-        super.resize(newFrame);
+    _resize(duration) {
+        super._resize();
         $('#axes').stop(true, false)
                   .text('foooooo')
                   .css({'left': this.frame.left + 50,
                         'top': this.frame.top + 50,
                         'width': this.frame.width - 100,
                         'height': this.frame.height - 100,
-                        'opacity': 1});
+                        'opacity': 1,
+                        'z-index': -1});
     }
 
     update() {

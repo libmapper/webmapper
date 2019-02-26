@@ -35,10 +35,7 @@ class CanvasView extends View {
         this.resize(null, 500);
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
                                 0, duration, function() {self.draw()}, 0, 0);

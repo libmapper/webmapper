@@ -67,8 +67,8 @@ class BalloonView extends View {
             remove_node_svg(root.children[i]);  // recurse
     }
 
-    resize(newFrame) {
-        super.resize(newFrame);
+    _resize(duration) {
+        super._resize(newFrame);
 
         let path = circle_path(this.frame.left + this.frame.width * 0.33, this.frame.cy, 0);
         path.push(circle_path(this.frame.left + this.frame.width * 0.67, this.frame.cy, 0));
