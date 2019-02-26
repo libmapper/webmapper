@@ -124,8 +124,7 @@ class ChordView extends View {
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
                                                     'stroke-linecap': 'butt',
-                                                    'stroke-width': 0,
-                                                   });
+                                                    'stroke-width': 0});
                 self.setDevClick(dev);
                 self.setDevHover(dev);
             }
@@ -140,16 +139,16 @@ class ChordView extends View {
                     midAngle += Math.PI;
                     anchor = 'end';
                 }
-                dev.view.label = self.canvas.text(0, 0, dev.name)
-                                            .attr({'opacity': 0,
-                                                   'pointer-events': 'none',
-                                                   'font-size': 14,
-                                                   'fill': 'white',
-                                                   'text-anchor': anchor,
-                                                   'transform': 'r'+Raphael.deg(midAngle)+'0,0t,'+x+','+cy
-                                                  });
-
-                                   }
+                midAngle = Raphael.deg(midAngle);
+                dev.view.label = self.canvas.text(0, 0, dev.name);
+                dev.view.label.attr({'opacity': 0,
+                                     'pointer-events': 'none',
+                                     'font-size': 14,
+                                     'fill': 'white',
+                                     'text-anchor': anchor,
+                                     'transform': 'r'+midAngle+'0,0t,'+x+','+cy});
+                dev.view.label.node.setAttribute('pointer-events', 'none');
+            }
 
             if (offline)
                 self.setDevDrag(dev);
