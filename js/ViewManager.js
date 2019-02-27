@@ -211,6 +211,8 @@ class ViewManager
     _selection_handlers() {
         let self = this;
         $('#svgDiv').on('mousedown', function(e) {
+            if (self.view.dragging)
+                return;
             if (e.shiftKey == false) {
                 deselectAllMaps(self.tables);
             }
