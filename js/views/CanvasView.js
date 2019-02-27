@@ -19,10 +19,15 @@ class CanvasView extends View {
         this.setCanvasTableDrag();
 
         // remove device and unused signal svg
+        let self = this;
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
                 if (!sig.canvas_object)
                     remove_object_svg(sig);
+                else if (sig.view) {
+                    self.setSigHover(sig);
+                    self.setSigDrag(sig);
+                }
             });
             if (!dev.view)
                 return;
@@ -107,6 +112,10 @@ class CanvasView extends View {
                 sig.view = null;
                 sig.canvas_object = null;
                 self.trashing = false;
+                // update table to replace signal
+                self.tables.left.update();
+                // update maps
+                self.drawMaps();
             }
         });
         sig.view.drag(
@@ -222,28 +231,24 @@ class CanvasView extends View {
             this.setSigHover(sig);
             this.setSigDrag(sig);
         }
-        else {
+        else
             sig.view.stop();
-            if (first_draw) {
-                setSigHover(sig);
-                setSigDrag(sig);
-            }
-        }
         sig.view.attr({'stroke-linecap': 'round'});
         sig.view.animate(attrs, duration, '>');
         if (!sig.view.label) {
-            let key = (sig.direction == 'input') ? '→ ' + sig.key : sig.key + ' →';
+            let key = (sig.direction == 'input') ? '• ' + sig.key : sig.key + ' •';
             sig.view.label = this.canvas.text(sig.position.x, sig.position.y, key);
             sig.view.label.node.setAttribute('pointer-events', 'none');
         }
         else
             sig.view.label.stop();
-        sig.view.label.attr({'font-size': 16});
+        sig.view.label.attr({'font-size': 16})
+                      .toFront();
         sig.view.label.animate({'x': sig.canvas_object.left,
                                 'y': sig.canvas_object.top,
                                 'opacity': 1,
                                 'fill': 'white'},
-                               duration, '>').toFront();
+                               duration, '>');
     }
 
     drawMaps(duration) {
@@ -328,7 +333,7 @@ class CanvasView extends View {
     }
 
     draw(duration) {
-        this.drawDevices(duration);
+        this.drawSignals(duration);
         this.drawMaps(duration);
     }
 
@@ -384,7 +389,8 @@ class CanvasView extends View {
                                                         'stroke-linecap': 'round'});
                 }
                 if (!sig.view.label) {
-                    sig.view.label = self.canvas.text(x, y, sig.key)
+                    let key = (sig.direction == 'input') ? '• ' + sig.key : sig.key + ' •';
+                    sig.view.label = self.canvas.text(x, y, key)
                                                 .attr({'fill': 'white',
                                                        'opacity': 1,
                                                        'font-size': 16})
@@ -392,10 +398,15 @@ class CanvasView extends View {
                     sig.view.label.node.setAttribute('pointer-events', 'none');
                 }
 
-                // draw canvas object
-                let temp = { 'left': x, 'top': y, 'width': width, 'height': 20 };
-                constrain(temp, self.mapPane, 5);
-                sig.view.attr({'path': canvas_rect_path(temp)});
+                // add canvas object
+                sig.canvas_object = {'left': x,
+                                     'top': y,
+                                     'width': width,
+                                     'height': 20};
+                constrain(sig.canvas_object, self.mapPane, 5);
+                self.drawSignal(sig);
+                // remove signal from table
+                table.update();
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     if (self.escaped) {
@@ -406,28 +417,22 @@ class CanvasView extends View {
                     let x = e.pageX - self.frame.left;
                     let y = e.pageY - self.frame.top;
 
-                    // draw canvas object
-                    let temp = { 'left': x, 'top': y, 'width': width, 'height': 20 };
-                    constrain(temp, self.mapPane, 5);
-                    sig.view.attr({'path': canvas_rect_path(temp)});
-                    sig.view.label.attr({'x': x, 'y': y}).toFront();
+                    // update canvas object
+                    sig.canvas_object = {'left': x,
+                                         'top': y,
+                                         'width': width,
+                                         'height': 20};
+                    constrain(sig.canvas_object, self.mapPane, 5);
+                    self.drawSignal(sig);
+                    // TODO: only redraw maps associated with this signal
+                    self.drawMaps();
                 });
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
 
-                    let obj = { 'left': e.pageX - self.frame.left,
-                                'top': e.pageY - self.frame.top,
-                                'width': labelwidth(sig.key),
-                                'height': 20 };
-                    constrain(obj, self.mapPane, 5);
-                    sig.canvas_object = obj;
-
                     self.setSigDrag(sig);
                     self.setSigHover(sig);
-
-                    // TODO: only redraw maps associated with this signal
-                    self.drawMaps();
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
@@ -444,8 +449,11 @@ class CanvasView extends View {
         // clean up any objects created only for this view
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
-                if (sig.view)
-                    sig.view.undrag();
+                if (!sig.view)
+                    return;
+                sig.view.undrag();
+                if (sig.view.label)
+                    sig.view.label.remove();
             });
         });
 
