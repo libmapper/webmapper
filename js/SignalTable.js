@@ -510,7 +510,7 @@ class SignalTable {
                     if (sig.direction != _self.direction) 
                         return ignore(sig);
                 }
-                if (sig.canvasObject)
+                if (sig.canvasObject && _self.ignoreCanvasObjects)
                     return ignore(sig);
                 if (_self.regexp && !_self.regexp.test(sig.key))
                     return hide(sig);

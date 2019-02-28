@@ -54,9 +54,10 @@ class View {
 
         this.sigLabel = null;
 
-        if (typeof painter === "undefined") this.setMapPainter(MapPainter);
-        else this.setMapPainter(painter)
-        this.update();
+        if (typeof painter === "undefined")
+            this.setMapPainter(MapPainter);
+        else
+            this.setMapPainter(painter);
     }
 
     // Subclasses should override the behavior of _resize rather than this one
