@@ -24,6 +24,8 @@ class SignalTable {
         this.collapseAll = false;
         this.expandWidth = 0;
 
+        this.ignoreCanvasObjects = false;
+
         this.title = 'SIGNALS';
 
         // The selected rows, for shift-selecting
@@ -508,7 +510,7 @@ class SignalTable {
                     if (sig.direction != _self.direction) 
                         return ignore(sig);
                 }
-                if (sig.canvas_object)
+                if (sig.canvasObject)
                     return ignore(sig);
                 if (_self.regexp && !_self.regexp.test(sig.key))
                     return hide(sig);
@@ -580,6 +582,7 @@ class SignalTable {
         let sigRowType = 'odd';
         function add_tree(t, tds, target, depth) {
             let first = true;
+            let left = _self.location == "left";
             for (var i in t.branches) {
                 let b = t.branches[i];
                 if (!tds || !first)
@@ -598,10 +601,9 @@ class SignalTable {
                         let tokens = b.leaf.id.split('/');
                         for (var j in tds) {
                             let idx = parseInt(j);
-                            let leaf = j == len -1;
-                            if (_self.location != "left")
-                                leaf = j == 0;
-                            if (leaf && _self.expand && _self.location == "right")
+                            let leaf = left ? (j == len-1) : (j == 0);
+                            let device = left ? (j == 0) : (j == len-1);
+                            if (leaf && _self.expand && !left)
                                 line += "<td class='"+sigRowType+" filler'></td>";
                             line += "<td";
                             if (leaf) {
@@ -622,10 +624,13 @@ class SignalTable {
                                     id = tokens.slice(0, tokens.length-idx).join('/');
                                 line += " id='"+id+"'";
                                 line += " rowspan="+tds[j][0];
+                                line += " class='";
+                                if (id.indexOf('/') == -1)
+                                    line += " device";
                                 if (tds[j][0] >= tds[j][1].length / 2)
-                                    line += " class=tall><div>"+tds[j][1]+"</div>";
+                                    line += " tall'><div>"+tds[j][1]+"</div>";
                                 else
-                                    line += ">"+tds[j][1];
+                                    line += "'>"+tds[j][1];
                                 line += "</td>";
                             }
                         }
@@ -717,39 +722,44 @@ class SignalTable {
         this.adjustRowHeight();
     }
 
+    setSigPosition(sig) {
+        let self = this;
+        if (self.direction != null && self.direction != sig.direction)
+            return;
+        if (self.ignoreCanvasObjects && sig.canvasObject)
+            return;
+
+        let row = self.getRowFromName(sig.key);
+        if (row == null) {
+            sig.hidden = true;
+            return;
+        }
+        sig.hidden = false;
+        sig.position = {
+            get left() {return row.left;},
+            set left(nl) {delete this.left; this.left = nl;},
+            get top() {return row.top;},
+            set top(nt) {delete this.top; this.top = nt;},
+            get height() {return row.height;},
+            set height(nh) {delete this.height; this.height = nh;},
+            get width() {return row.width;},
+            set width(nw) {delete this.width; this.width = nw;},
+            get x() {return row.x;},
+            set x(newx) {delete this.x; this.x = newx;},
+            get vx() {return row.vx;},
+            set vx(newx) {delete this.vx; this.vx = newx;},
+            get y() {return row.y;},
+            set y(newy) {delete this.y; this.y = newy;},
+            get vy() {return row.vy;},
+            set vy(newy) {delete this.vy; this.vy = newy;}
+        }
+    }
+
     setSigPositions() {
         let self = this;
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
-                if (self.direction != null && self.direction != sig.direction) 
-                    return;
-
-                let row = self.getRowFromName(sig.key);
-                if (row == null)
-                {
-                    sig.hidden = true;
-                    return;
-                }
-                sig.hidden = false;
-                sig.position = 
-                    {
-                        get left() {return row.left;},
-                        set left(nl) {delete this.left; this.left = nl;},
-                        get top() {return row.top;},
-                        set top(nt) {delete this.top; this.top = nt;},
-                        get height() {return row.height;},
-                        set height(nh) {delete this.height; this.height = nh;},
-                        get width() {return row.width;},
-                        set width(nw) {delete this.width; this.width = nw;},
-                        get x() {return row.x;},
-                        set x(newx) {delete this.x; this.x = newx;},
-                        get vx() {return row.vx;},
-                        set vx(newx) {delete this.vx; this.vx = newx;},
-                        get y() {return row.y;},
-                        set y(newy) {delete this.y; this.y = newy;},
-                        get vy() {return row.vy;},
-                        set vy(newy) {delete this.vy; this.vy = newy;}
-                    }
+                self.setSigPosition(sig);
             });
         });
     }

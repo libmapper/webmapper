@@ -246,8 +246,8 @@ function canvas_rect_path(dim) {
 function canvas_bezier(map, table, table_x, pan_x, pan_y, zoom) {
     let src_x, src_y, dst_x, dst_y;
     let src_cx = null, dst_cx = null;
-    if (map.src.canvas_object) {
-        let o = map.src.canvas_object
+    if (map.src.canvasObject) {
+        let o = map.src.canvasObject
         let offset = o.width * 0.5 + 10;
         src_x = o.left + offset;
         src_cx = o.left + offset * 3;
@@ -262,8 +262,8 @@ function canvas_bezier(map, table, table_x, pan_x, pan_y, zoom) {
         src_x = table_x * zoom + pan_x;
         src_y = o.y * zoom + pan_y;
     }
-    if (map.dst.canvas_object) {
-        let o = map.dst.canvas_object
+    if (map.dst.canvasObject) {
+        let o = map.dst.canvasObject
         let offset = o.width * -0.5 - 10;
         dst_x = o.left + offset;
         dst_cx = o.left + offset * 3;

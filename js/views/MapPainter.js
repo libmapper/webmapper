@@ -9,6 +9,7 @@ class MapPainter {
         this.paths = [];
         this.attributes = [];
         this._highlight = false;
+        this.midPointInflation = 0.2;
     }
 
     // APPEARANCE //////////////////////////////////////////////////////////////
@@ -28,9 +29,8 @@ class MapPainter {
         let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
         let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
 
-        let midpointinflation = 0.2;
-        mid.x = mid.x + (mid.x - origin.x) * midpointinflation;
-        mid.y = mid.y + (mid.y - origin.y) * midpointinflation;
+        mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
+        mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
 
         this.pathspecs[0] = [['M', src.x, src.y],
                              ['S', mid.x, mid.y, dst.x, dst.y]];

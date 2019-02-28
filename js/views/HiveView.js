@@ -6,7 +6,7 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('hive', frame, null, canvas, database, tooltip);
+        super('hive', frame, null, canvas, database, tooltip, HiveMapPainter);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
@@ -207,5 +207,15 @@ class HiveView extends View {
     cleanup() {
         super.cleanup();
         this.database.devices.each(function(dev) {dev.angle = null;});
+    }
+}
+
+class HiveMapPainter extends MapPainter
+{
+    constructor(map, canvas, frame) { super(map, canvas, frame); }
+
+    updateAttributes() {
+        this._defaultAttributes();
+        this.midPointInflation = -0.2;
     }
 }

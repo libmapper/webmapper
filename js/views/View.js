@@ -731,7 +731,8 @@ class View {
                     }
 
                     if (!self.newMap.dst) {
-                        self.newMap.dst = {position: {'x': x, 'y': y}};
+                        self.newMap.dst = {position: {'x': x - self.frame.left,
+                                                      'y': y - self.frame.top}};
                     }
                     self.newMap.view.draw();
 
