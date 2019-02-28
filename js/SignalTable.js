@@ -19,6 +19,7 @@ class SignalTable {
 
         this.num_devs = 0;
         this.num_sigs = 0;
+        this.num_hidden_sigs = 0;
 
         this.collapseHandler = null;
         this.collapseAll = false;
@@ -142,22 +143,32 @@ class SignalTable {
         return true;
     }
 
-    filterByDirection(dir) {
-        if (dir)
-            this.direction = (dir == 'both') ? null : dir;
-        switch (dir) {
+    updateTitle() {
+        let title = null;
+        switch (this.direction) {
             case 'output':
-                dir = 'SRC';
+                title = 'SRC';
                 break;
             case 'input':
-                dir = 'DST';
+                title = 'DST';
                 break;
             default:
-                dir = 'SIGNALS';
+                title = 'SIGNALS';
                 break;
         }
-        $('#'+this.id+'Title>strong').text(dir);
-        this.title = dir;
+        this.title = title;
+        if (this.num_hidden_sigs > 0)
+            title += " ("+this.num_sigs+" of "+(this.num_sigs + this.num_hidden_sigs)+")";
+        else
+            title += " ("+this.num_sigs+")";
+        $('#'+this.id+'Title>strong').text(title);
+    }
+
+    filterByDirection(dir) {
+        if (!dir)
+            return;
+        this.direction = (dir == 'both') ? null : dir;
+        this.updateTitle();
     }
 
     showDetail(show) {
@@ -440,6 +451,7 @@ class SignalTable {
         let _self = this;
         let num_devs = 0;
         let num_sigs = 0;
+        let num_hidden_sigs = 0;
         let collapse_bit;
         switch (this.snap) {
             case 'right':
@@ -469,6 +481,7 @@ class SignalTable {
                     id: sig.key,
                     invisible: true
                 });
+                num_hidden_sigs += 1;
             }
 
             function ignore(sig) {}
@@ -719,7 +732,9 @@ class SignalTable {
         this.setSigPositions();
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
+        this.num_hidden_sigs = num_hidden_sigs;
         this.adjustRowHeight();
+        this.updateTitle();
     }
 
     setSigPosition(sig) {
