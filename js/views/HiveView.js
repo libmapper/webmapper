@@ -6,11 +6,11 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('hive', frame, null, canvas, database, tooltip);
+        super('hive', frame, null, canvas, database, tooltip, HiveMapPainter);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // start with signals at origin
         this.database.devices.each(function(dev) {
@@ -33,10 +33,7 @@ class HiveView extends View {
         this.resize();
     }
 
-    resize(newFrame, duration) {
-        if (newFrame)
-            this.frame = newFrame;
-
+    _resize(duration) {
         this.mapPane.left = 50;
         this.mapPane.width = this.frame.width - 100;
         this.mapPane.top = 50;
@@ -93,7 +90,8 @@ class HiveView extends View {
             let angle = Raphael.deg(Math.atan(y / x));
             x += self.mapPane.left;
             y += self.frame.height - self.mapPane.top - 30;
-            dev.view.label.animate({'opacity': 0.5,
+            dev.view.label.attr({'text-anchor': 'end'})
+                          .animate({'opacity': 0.5,
                                     'transform': 't'+x+','+y+'r'+angle+',0,30'
                                    }, duration, '>');
 
@@ -168,10 +166,12 @@ class HiveView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('devices') >= 0) {
-            let dev_num = this.database.devices.reduce(function(temp, dev) {
+            let dev_num = this.database.devices.reduce(function(t, dev) {
                 let uncollapsed = dev.collapsed ? 0 : 1;
-                return temp ? temp + uncollapsed : uncollapsed;
+                let unhidden = dev.hidden ? 0 : 1;
+                return uncollapsed && unhidden + (t ? t : 0);
             });
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
             let angleInc = (Math.PI * -0.5) / dev_num;
@@ -186,6 +186,7 @@ class HiveView extends View {
                 }
                 return false;
             });
+            updated = true;
         }
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
@@ -193,14 +194,28 @@ class HiveView extends View {
                     sig.position = position(null, null, self.frame);
                 return false;
             });
+            updated = true;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(500);
     }
 
     cleanup() {
         super.cleanup();
         this.database.devices.each(function(dev) {dev.angle = null;});
+    }
+}
+
+class HiveMapPainter extends MapPainter
+{
+    constructor(map, canvas, frame) { super(map, canvas, frame); }
+
+    updateAttributes() {
+        this._defaultAttributes();
+        this.midPointInflation = -0.2;
     }
 }

@@ -10,7 +10,7 @@
 // type() // returns view type
 
 class View {
-    constructor(type, frame, tables, canvas, database, tooltip) {
+    constructor(type, frame, tables, canvas, database, tooltip, painter) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
@@ -27,21 +27,6 @@ class View {
         this.escaped = false;
 
         this.newMap = null;
-
-        this.dragObj = 'map';
-
-        // normalized table positions & dimensions
-        this.leftTableLeft = 0;
-        this.leftTableTop = 0;
-        this.leftTableWidth = 0;
-        this.leftTableHeight = 1;
-        this.leftTableAngle = 0;
-
-        this.rightTableLeft = 1;
-        this.rightTableTop = 0;
-        this.rightTableWidth = 0;
-        this.rightTableHeight = 1;
-        this.rightTableAngle = 0;
 
         if (tables) {
             this.setTableDrag();
@@ -69,19 +54,23 @@ class View {
 
         this.sigLabel = null;
 
-        // default to arrowheads on maps
-        this.database.maps.each(function(map) {
-            if (map.view)
-                map.view.attr({'arrow-end': 'block-wide-long'});
-        });
-
-        this.update();
+        if (typeof painter === "undefined")
+            this.setMapPainter(MapPainter);
+        else
+            this.setMapPainter(painter);
     }
 
-    resize(newFrame) {
+    // Subclasses should override the behavior of _resize rather than this one
+    resize(newFrame, duration) {
         if (newFrame)
             this.frame = newFrame;
+        this._resize(duration);
+        this.canvas.setViewBox(0, 0, this.frame.width, this.frame.height, false);
+        this.draw(duration);
+    }
 
+    // Define subclass specific resizing related tasks
+    _resize() {
         this.mapPane = {'left': this.frame.left,
                         'top': this.frame.top,
                         'width': this.frame.width,
@@ -90,8 +79,6 @@ class View {
                         'cy': this.frame.height * 0.5};
 
         this.origin = [this.mapPane.cx, this.mapPane.cy];
-
-        this.draw(0);
     }
 
     updateDevices(func) {
@@ -104,29 +91,25 @@ class View {
             // update device signals
             let sigIndex = 0;
             dev.signals.each(function(sig) {
+                sig.hidden = (dev.hidden == true);
                 let regexp = sig.direction == 'output' ? self.srcregexp : self.dstregexp;
-                if (regexp && !regexp.test(sig.key)) {
+                if (self.tables || dev.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     return;
                 }
                 sig.index = sigIndex++;
 
-                if (self.tables) {
-                    remove_object_svg(sig);
-                }
-                else {
-                    if (!sig.view) {
-                        sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
-                                              .attr({'fill-opacity': 0,
-                                                     'stroke-opacity': 0});
-                        self.setSigDrag(sig);
-                        self.setSigHover(sig);
-                    }
+                if (!sig.view) {
+                    sig.view = self.canvas.path(circle_path(0, self.frame.height, 0))
+                                          .attr({'fill-opacity': 0,
+                                                 'stroke-opacity': 0});
+                    self.setSigDrag(sig);
+                    self.setSigHover(sig);
                 }
             });
             // if no signals visible, hide device also
-            if (!sigIndex) {
+            if (self.tables || dev.hidden || !sigIndex) {
                 remove_object_svg(dev);
                 dev.index = null;
                 return;
@@ -134,9 +117,6 @@ class View {
 
             dev.index = devIndex++;
             dev.numVisibleSigs = sigIndex + 1;
-            if (self.tables) {
-                remove_object_svg(dev);
-            }
 
             if (func && func(dev)) {
                 remove_object_svg(dev);
@@ -151,14 +131,7 @@ class View {
                                                     'stroke': dev.color,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
-                                                    'stroke-linecap': 'round'
-                                                   });
-                dev.view.click(function(e) {
-                    dev.collapsed ^= 3;
-                    // TODO: hide signals
-                    self.updateDevices();
-                    self.draw(0);
-                });
+                                                    'stroke-linecap': 'round'});
             }
         });
     }
@@ -174,7 +147,7 @@ class View {
         dev.view.unhover();
         dev.view.hover(
             function(e) {
-                if (!hovered && !dev.view.label) {
+                if (!hovered) {
                     self.tooltip.showTable(
                         dev.status+" device", {
                             name: dev.name,
@@ -189,6 +162,8 @@ class View {
                         dev.view.toFront();
                     }
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
+                    if (dev.view.label)
+                        dev.view.label.toFront();
                 }
                 hovered = true;
                 self.hoverDev = dev;
@@ -224,9 +199,13 @@ class View {
                     }, e.x, e.y);
                 link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
                 link.src.view.toFront();
+                if (link.src.view.label)
+                    link.src.view.label.toFront();
                 if (link.src.staged)
                     link.src.staged.view.toFront();
                 link.dst.view.toFront();
+                if (link.dst.view.label)
+                    link.dst.view.label.toFront();
                 if (link.dst.staged)
                     link.dst.staged.view.toFront();
             },
@@ -392,7 +371,7 @@ class View {
                 // check regexp
                 let regexp = (sig.direction == 'output'
                               ? self.srcregexp : self.dstregexp);
-                if (regexp && !regexp.test(sig.key)) {
+                if (sig.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     sig.position = null;
@@ -430,11 +409,14 @@ class View {
                           'stroke': sig.device.color,
                           'stroke-width': 6,
                           'stroke-opacity': 1}, duration, '>');
+        if (sig.hidden) sig.view.hide();
     }
 
     drawSignals(duration) {
         let self = this;
         this.database.devices.each(function(dev) {
+            if (dev.hidden)
+                return;
             dev.signals.each(function(sig) {
                 self.drawSignal(sig, duration);
             });
@@ -443,7 +425,6 @@ class View {
 
     setMapHover(map) {
         let self = this;
-        map.view.unhover();
         map.view.hover(
             function(e) {
                 if (!self.draggingFrom) {
@@ -455,28 +436,12 @@ class View {
                             expression: map.expression,
                         }, e.x, e.y);
                 }
-                map.view.animate({'stroke-width': MapPath.boldStrokeWidth}, 0, 'linear');
-
-//                if (self.draggingFrom == null)
-//                    return;
-//                else if (map == self.draggingFrom) {
-//                    // don't snap to self
-//                    return;
-//                }
-//                self.snappingTo = map;
-//                let src = self.draggingFrom.position;
-//                let dst = sig.position;
-//                let path = [['M', src.x, src.y],
-//                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
-//                             dst.x, dst.y]];
-//                let len = Raphael.getTotalLength(path);
-//                path = Raphael.getSubpath(path, 10, len - 10);
-//                self.newMap.attr({'path': path});
+                map.view.highlight();
             },
             function() {
                 self.snappingTo = null;
                 self.tooltip.hide();
-                map.view.animate({'stroke-width': MapPath.strokeWidth}, 50, 'linear');
+                map.view.unhighlight();
             }
         );
     }
@@ -484,17 +449,13 @@ class View {
     updateMaps() {
         let self = this;
         this.database.maps.each(function(map) {
-            // todo: check if signals are visible
+            map.hidden = map.src.hidden || map.dst.hidden;
+            if (map.hidden) {
+                remove_object_svg(map);
+                return;
+            }
             if (!map.view) {
-                let pos = map.src.position;
-                let path = pos ? [['M', pos.x, pos.y], ['l', 10, 0]] : null;
-                map.view = self.canvas.path(path);
-                map.view.attr({'stroke-dasharray': map.muted ? '-' : '',
-                               'stroke': map.selected ? 'red' : 'white',
-                               'fill': 'none',
-                               'stroke-width': MapPath.strokeWidth,
-                               'arrow-start': 'none'});
-                map.view.new = true;
+                map.view = new self.mapPainter(map, self.canvas, self.frame, self.database);
                 self.setMapHover(map);
             }
         });
@@ -574,67 +535,9 @@ class View {
     }
 
     drawMaps(duration) {
-        let self = this;
         this.database.maps.each(function(map) {
-            if (!map.view)
-                return;
-            if (map.hidden) {
-                map.view.hide();
-                return;
-            }
-            map.view.stop();
-
-            let path = self.getMapPath(map);
-            if (self.shortenPaths) {
-                // shorten path so it doesn't draw over signals
-                let len = Raphael.getTotalLength(path);
-                path = Raphael.getSubpath(path, self.shortenPaths,
-                                          len - self.shortenPaths);
-            }
-
-            if (!path) {
-                map.view.hide();
-                return;
-            }
-            let fill_opacity = (self.type == 'grid' && path.length > 3) ? 1.0 : 0.0;
-            let stroke_color = map.selected ? 'red' : 'white';
-            let fill_color = fill_opacity > 0.5 ? stroke_color : 'none';
-
-            if (map.view.new) {
-                map.view.show();
-                map.view.new = false;
-                if (map.status == "staged") {
-                    // draw map directly
-                    map.view.attr({'path': path,
-                                   'stroke-opacity': 0.5,
-                                   'stroke': stroke_color,
-                                   'stroke-dasharray': map.muted ? '-' : '',
-                                   'fill-opacity': fill_opacity,
-                                   'fill': fill_color,
-                                   'arrow-end': 'block-wide-long'
-                                  })
-                            .toFront();
-                    return;
-                }
-                // draw animation following arrow path
-                let len = Raphael.getTotalLength(path);
-                let path_mid = Raphael.getSubpath(path, 0, len * 0.5);
-                map.view.animate({'path': path_mid,
-                                  'stroke-opacity': 1.0},
-                                 duration * 0.5, '>')
-                        .toFront();
-            }
-            else {
-                map.view.show();
-                map.view.animate({'path': path,
-                                  'stroke-opacity': 1.0,
-                                  'fill-opacity': fill_opacity,
-                                  'fill': fill_color,
-                                  'stroke-width': MapPath.strokeWidth,
-                                  'stroke': stroke_color},
-                                 duration, '>')
-                        .toFront();
-            }
+            if (!map.view) return;
+            else map.view.draw(duration);
         });
     }
 
@@ -748,7 +651,7 @@ class View {
         this.escaped = true;
         this.draggingFrom = null;
         if (this.newMap) {
-            this.newMap.remove();
+            if (this.newMap.view) this.newMap.view.remove();
             this.newMap = null;
         }
         if (this.tables) {
@@ -764,6 +667,7 @@ class View {
         // can also drag map to self
         // if tables are orthogonal we can simply drag to 2D space between them
         // if no other table exists, can drag out signal representation
+        $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
             self.escaped = false;
 
@@ -780,41 +684,19 @@ class View {
                     console.log('unknown source row');
                     return;
             }
-            if ($(src_row).hasClass('device')) {
-                let dev = self.database.devices.find(src_row.id);
-                if (dev) {
-                    switch (src_table) {
-                    case self.tables.left:
-                        dev.collapsed ^= 1;
-                        break;
-                    case self.tables.right:
-                        dev.collapsed ^= 2;
-                        break;
-                    case self.tables.top:
-                        dev.collapsed ^= 4;
-                        break;
-                    default:
-                        return;
-                    }
-                    self.updateDevices();
-                    self.draw(0);
-                }
-                return;
-            }
 
             $('#svgDiv').one('mouseenter.drawing', function() {
                 deselectAllMaps(self.tables);
-                let id = src_row.id.replace('\\/', '\/');
-                var src = src_table.getRowFromName(id);
+                var src = src_table.getRowFromName(src_row.id);
                 var dst = null;
-                self.draggingFrom = self.database.find_signal(id);
+                self.draggingFrom = self.database.find_signal(src.id);
 
-                self.newMap = self.canvas.path([['M', src.x, src.y],
-                                                ['l', 0, 0]])
-                                         .attr({'fill-opacity': 0,
-                                                'stroke': 'white',
-                                                'stroke-opacity': 1,
-                                                'stroke-width': MapPath.strokeWidth});
+                self.newMap = 
+                {
+                    get src() {return self.draggingFrom},
+                    'dst': null
+                };
+                self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -831,8 +713,8 @@ class View {
 
                     let x = e.pageX;
                     let y = e.pageY;
-                    let path = null;
                     dst = null;
+                    self.newMap.dst = null;
                     let dst_table = null;
 
                     for (index in self.tables) {
@@ -844,31 +726,20 @@ class View {
                             dst = null;
                             continue;
                         }
+                        self.newMap.dst = self.database.find_signal(dst.id);
                         dst_table = self.tables[index];
                         break;
                     }
 
-                    if (src_table == dst_table) {
-                        // draw smooth path from table to self
-                        path = MapPath.sameTable(src, dst, self.mapPane);
+                    if (!self.newMap.dst) {
+                        self.newMap.dst = {position: {'x': x - self.frame.left,
+                                                      'y': y - self.frame.top}};
                     }
-                    else if (dst) {
-                        // draw bezier curve connecting src and dst
-                        path = MapPath.betweenTables(src, dst);
-                    }
-                    else {
-                        // draw smooth path connecting src to cursor
-                        path = [['M', src.x, src.y],
-                                ['S',
-                                 src.x + src.vx * self.mapPane.width * 0.5,
-                                 src.y + src.vy * self.mapPane.height * 0.5,
-                                 x - self.frame.left, y - self.frame.top]];
-                    }
+                    self.newMap.view.draw();
+
                     src_table.highlightRow(src, false);
                     if (dst_table)
                         dst_table.highlightRow(dst, false);
-
-                    self.newMap.attr({'path': path});
                 });
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');
@@ -885,7 +756,7 @@ class View {
                     self.tables.right.highlightRow(null, true);
                     self.draggingFrom = null;
                     if (self.newMap) {
-                        self.newMap.remove();
+                        self.newMap.view.remove();
                         self.newMap = null;
                     }
                 });
@@ -902,6 +773,21 @@ class View {
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
+    }
+
+    // sets the map painter for the view and converts existing map views to use
+    // the new painter. This should be called rather than setting the mapPainter
+    // property of this manually, which does not update the painter owned by
+    // each map
+    setMapPainter(newpainterclass) {
+        this.mapPainter = newpainterclass;
+        let self = this;
+        this.database.maps.each(function(map) {
+            if (!map.view) return;
+            let newview = new self.mapPainter(map, self.canvas, self.frame, self.database);
+            newview.copy(map.view);
+            map.view = newview;
+        });
     }
 }
 

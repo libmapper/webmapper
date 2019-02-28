@@ -237,126 +237,6 @@ function self_path(x1, y1, x2, y2, frame) {
             ['S', mp[0], mp[1], x2, y2]];
 }
 
-function canvas_rect_path(dim) {
-    let path = [['M', dim.left - dim.width * 0.5, dim.top],
-                ['l', dim.width, 0]];
-    return path;
-}
-
-function canvas_bezier(map, table, table_x) {
-    let src_x, src_y, dst_x, dst_y;
-    let src_cx = null, dst_cx = null;
-    if (map.src.canvas_object) {
-        let o = map.src.canvas_object
-        let offset = o.width * 0.5 + 10;
-        src_x = o.left + offset;
-        src_cx = o.left + offset * 3;
-        src_y = o.top;
-    }
-    else {
-        let o = table.getRowFromName(map.src.key);
-        if (!o) {
-            console.log("src row not found!", map.src.key);
-            return;
-        }
-        src_x = table_x;
-        src_y = o.y;
-    }
-    if (map.dst.canvas_object) {
-        let o = map.dst.canvas_object
-        let offset = o.width * -0.5 - 10;
-        dst_x = o.left + offset;
-        dst_cx = o.left + offset * 3;
-        dst_y = o.top;
-    }
-    else {
-        let o = table.getRowFromName(map.dst.key);
-        if (!o) {
-            console.log("dst row not found!", map.dst.key);
-            return;
-        }
-        dst_x = table_x;
-        dst_y = o.y;
-    }
-    if (!src_cx && !dst_cx) {
-        let maxoffset = 200;
-        let offset = Math.abs(src_y - dst_y) * 0.5;
-        if (offset > 0 && offset > maxoffset) offset = maxoffset;
-        else if (Math.abs(offset) > maxoffset) offset = -maxoffset;
-        src_cx = dst_cx = offset + src_x;
-    }
-    else if (!src_cx)
-        src_cx = (src_x + dst_x) * 0.5;
-    else if (!dst_cx)
-        dst_cx = (src_x + dst_x) * 0.5;
-
-    return [['M', src_x, src_y],
-            ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
-}
-
-function grid_path(row, col, frame) {
-    if (row && col) {
-        return [['M', col.left, col.top],
-                ['l', col.width, 0],
-                ['L', col.left + col.width, row.top],
-                ['L', row.left + row.width, row.top],
-                ['l', 0, row.height],
-                ['L', col.left + col.width, row.top + row.height],
-                ['L', col.left + col.width, col.top + col.height],
-                ['l', -col.width, 0],
-                ['L', col.left, row.top + row.height],
-                ['L', row.left, row.top + row.height],
-                ['l', 0, -row.height],
-                ['L', col.left, row.top],
-                ['z']];
-    }
-    else if (row)
-        return [['M', 0, row.top],
-                ['l', frame.width, 0],
-                ['l', 0, row.height],
-                ['l', -frame.width, 0],
-                ['Z']];
-    else if (col)
-        return [['M', col.left, 0],
-                ['l', col.width, 0],
-                ['l', 0, frame.height],
-                ['l', -col.width, 0],
-                ['Z']];
-    return null;
-}
-
-function list_path(src, dst, connect, frame) {
-    if (src && dst && connect) {
-        let mp = frame.width * 0.5;
-        return [['M', src.left, src.top],
-                ['l', src.width, 0],
-                ['C', mp, src.top, mp, dst.top, dst.left, dst.top],
-                ['l', dst.width, 0],
-                ['l', 0, dst.height],
-                ['l', -dst.width, 0],
-                ['C', mp, dst.top + dst.height, mp, src.top + src.height,
-                 src.left + src.width, src.top + src.height],
-                ['l', -src.width, 0],
-                ['Z']];
-    }
-    let path = [];
-    if (src) {
-        path.push(['M', src.left, src.top],
-                  ['l', src.width, 0],
-                  ['l', 0, src.height],
-                  ['l', -src.width, 0],
-                  ['Z']);
-    }
-    if (dst) {
-        path.push(['M', dst.left, dst.top],
-                  ['l', dst.width, 0],
-                  ['l', 0, dst.height],
-                  ['l', -dst.width, 0],
-                  ['Z']);
-    }
-    return path;
-}
-
 function remove_object_svg(obj, duration) {
     if (!obj.view)
         return;
@@ -400,22 +280,12 @@ function position(x, y, frame) {
 function select_all_maps() {
     let updated = false;
     database.maps.each(function(map) {
-        if (map.selected)
-            return;
-        if (map.view && !map.selected) {
-            if (map.view.attr('stroke-opacity') > 0) {
-                map.view.animate({'stroke': 'red'}, 50);
-                updated = true;
-            }
-            if (map.view.attr('fill-opacity') > 0) {
-                map.view.animate({'fill': 'red'}, 50);
-                updated = true;
-            }
-        }
+        if (map.selected) return;
         map.selected = true;
+        if (map.view) map.view.draw();
+        updated = true;
     });
-    if (updated)
-        $('#container').trigger("updateMapProperties");
+    if (updated) $('#container').trigger("updateMapProperties");
 }
 
 function deselectAllMaps(tables) {
@@ -428,14 +298,12 @@ function deselectAllMaps(tables) {
 
     let updated = false;
     database.maps.each(function(map) {
-        if (map.view && map.selected) {
-            map.view.animate({'stroke': 'white', 'fill': 'white'}, 50);
-            updated = true;
-        }
+        if (!map.selected) return;
         map.selected = false;
+        if (map.view) map.view.draw();
+        updated = true;
     });
-    if (updated)
-        $('#container').trigger("updateMapProperties");
+    if (updated) $('#container').trigger("updateMapProperties");
 }
 
 function polarDiff(angle1, angle2, fullscale = Math.PI * 2.0) {

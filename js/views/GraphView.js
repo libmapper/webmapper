@@ -9,8 +9,8 @@ class GraphView extends View {
         super('graph', frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000, null, 0, 0);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // remove associated svg elements for devices
         this.database.devices.each(remove_object_svg);
@@ -29,15 +29,16 @@ class GraphView extends View {
         this.resize();
     }
 
-    resize(newFrame) {
-        super.resize(newFrame);
+    _resize(duration) {
+        super._resize();
         $('#axes').stop(true, false)
                   .text('foooooo')
                   .css({'left': this.frame.left + 50,
                         'top': this.frame.top + 50,
                         'width': this.frame.width - 100,
                         'height': this.frame.height - 100,
-                        'opacity': 1});
+                        'opacity': 1,
+                        'z-index': -1});
     }
 
     update() {
@@ -54,16 +55,21 @@ class GraphView extends View {
                 elements = arguments;
                 break;
         }
+        let updated = false;
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
                 if (!sig.position)
                     sig.position = position(null, null, self.frame);
                 return false;
             });
+            updated = true;
         }
-        if (elements.indexOf('maps') >= 0)
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(500);
     }
 
 //    getMapPath(map) {

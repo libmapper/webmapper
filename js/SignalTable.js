@@ -19,10 +19,13 @@ class SignalTable {
 
         this.num_devs = 0;
         this.num_sigs = 0;
+        this.num_hidden_sigs = 0;
 
         this.collapseHandler = null;
         this.collapseAll = false;
         this.expandWidth = 0;
+
+        this.ignoreCanvasObjects = false;
 
         this.title = 'SIGNALS';
 
@@ -93,7 +96,7 @@ class SignalTable {
             angle_was += Math.PI * 2;
 
         $({someValue: 0}).animate({someValue: 1},
-                                  {duration: duration * 0.33,
+                                  {duration: duration,
                                   step: function(now, fx) {
             let was = 1 - now;
             self.frame.left = left * now + left_was * was;
@@ -113,14 +116,13 @@ class SignalTable {
                 'text-align': self.frame.angle ? 'right' : 'left'
             });
 
-            if (innerLeft != null && innerWidth != null) {
-                $('#' + self.id + 'Scroller').css({
-                    'left': innerLeft ? innerLeft : 0,
-                    'top': 0,
-                    'width': innerWidth ? innerWidth : '100%',
-                    'height': self.frame.height - 20,
-                });
-            }
+            $('#' + self.id + 'Scroller').css({
+                'left': innerLeft ? innerLeft : 0,
+                'top': 0,
+                'width': innerWidth ? innerWidth : '100%',
+                'height': self.frame.height - 20,
+            });
+
             if (func)
                 func();
         }});
@@ -141,22 +143,32 @@ class SignalTable {
         return true;
     }
 
-    filterByDirection(dir) {
-        if (dir)
-            this.direction = (dir == 'both') ? null : dir;
-        switch (dir) {
+    updateTitle() {
+        let title = null;
+        switch (this.direction) {
             case 'output':
-                dir = 'SRC';
+                title = 'SRC';
                 break;
             case 'input':
-                dir = 'DST';
+                title = 'DST';
                 break;
             default:
-                dir = 'SIGNALS';
+                title = 'SIGNALS';
                 break;
         }
-        $('#'+this.id+'Title>strong').text(dir);
-        this.title = dir;
+        this.title = title;
+        if (this.num_hidden_sigs > 0)
+            title += " ("+this.num_sigs+" of "+(this.num_sigs + this.num_hidden_sigs)+")";
+        else
+            title += " ("+this.num_sigs+")";
+        $('#'+this.id+'Title>strong').text(title);
+    }
+
+    filterByDirection(dir) {
+        if (!dir)
+            return;
+        this.direction = (dir == 'both') ? null : dir;
+        this.updateTitle();
     }
 
     showDetail(show) {
@@ -171,37 +183,55 @@ class SignalTable {
     }
 
     getRowFromName(id) {
-        let td = $("#"+this.id+" td[id='"+id+"']");
-        if (!td.length || $(td).hasClass('invisible'))
-            return null;
-        let pos = $(td).position();
-        pos.width = $(td).width();
-        pos.height = $(td).height()
+        let self = this;
+
+        function getTD() {
+            let td = $("#"+self.id+" td[id='"+id+"']");
+            if (!td.length) return null;
+
+            let tr = $(td).parents('tr')[0];
+            if ($(td).hasClass('invisible')) {
+                // find last visible row
+                let tr = $(td).parents('tr')[0];
+                while ($(tr).hasClass('invisible')) {
+                    tr = $(tr).prev();
+                }
+                if (!tr.length)
+                    return null;
+                td = $(tr).children('td').not('.filler, .invisible');
+                if (self.location == 'left')
+                    td = $(td).last();
+                else
+                    td = $(td).first();
+            }
+            return $(td);
+        }
+
         if (this.snap == 'bottom') {
-            pos.left += this.frame.left + 20;
-            return {'left': pos.left,
-                    'top': 0,
-                    'width': pos.height,
-                    'height': this.frame.width,
-                    'x': pos.left + pos.height * 0.5,
-                    'y': this.frame.width,
-                    'vx': Math.cos(this.frame.angle),
-                    'vy': -Math.sin(this.frame.angle),
-                    'id': id};
+            //pos.left += this.frame.left + 20;
+            return {get left(){ return getTD().position().left + self.frame.left + 20},
+                    top: 0,
+                    get width() {return getTD().height()},
+                    get height() {return self.frame.width},
+                    get x() {let td = getTD(); return td.position().left + self.frame.left + 20 + td.height() * 0.5},
+                    get y() {return self.frame.width},
+                    get vx() {return Math.cos(self.frame.angle)},
+                    get vy() {return -Math.sin(self.frame.angle)},
+                    id: id};
         }
         else {
-            pos.top += this.frame.top + 20;
-            pos.left = this.frame.left;
+            //pos.top += this.frame.top + 20;
+            //pos.left = this.frame.left;
             let snap = this.snap == 'left' ? -1 : 1;
-            return {'left': pos.left,
-                    'top': pos.top,
-                    'width': this.frame.width,
-                    'height': pos.height,
-                    'x': this.snap == 'left' ? pos.left : pos.left + this.frame.width,
-                    'y': pos.top + pos.height * 0.5,
-                    'vx': Math.cos(this.frame.angle) * snap,
-                    'vy': -Math.sin(this.frame.angle),
-                    'id': id};
+            return {get left() {return self.frame.left;},
+                    get top() {return getTD().position().top + self.frame.top + 20;},
+                    get width() {return self.frame.width},
+                    get height() {return getTD().height();},
+                    get x() {return self.snap == 'left' ? self.frame.left : self.frame.left + self.frame.width},
+                    get y() {let td = getTD(); return td.position().top + self.frame.top + 20 + td.height() * 0.5},
+                    get vx() {return Math.cos(self.frame.angle) * snap},
+                    get vy() {return -Math.sin(self.frame.angle)},
+                    id: id};
         }
     }
 
@@ -214,18 +244,18 @@ class SignalTable {
             case 'left':
                 if (x < this.frame.left - this.frame.width * snapRatio)
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth * 0.1;
+                x = this.div[0].offsetLeft + 20;
                 break;
             case 'right':
                 if (x > this.frame.left + this.frame.width * (1 + snapRatio))
                     return;
-                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 2;
+                x = this.div[0].offsetLeft + this.div[0].offsetWidth - 20;
                 break;
             case 'bottom':
                 let yoffset = $(this.div[0]).offset().top;
                 if (y > yoffset + this.frame.width * (1 + snapRatio))
                     return;
-                y = yoffset + this.frame.width - 2;
+                y = yoffset + this.frame.width - 20;
                 break;
             default:
                 console.log("unknown table snap property", this.snap);
@@ -421,6 +451,7 @@ class SignalTable {
         let _self = this;
         let num_devs = 0;
         let num_sigs = 0;
+        let num_hidden_sigs = 0;
         let collapse_bit;
         switch (this.snap) {
             case 'right':
@@ -438,6 +469,7 @@ class SignalTable {
         var max_depth = 0;
         var tree = {"branches": {}, "num_leaves": 0};
         this.database.devices.each(function(dev) {
+            if (dev.hidden) return;
             if (_self.direction == 'output' && dev.num_outputs < 1) return;
             else if (_self.direction == 'input' && dev.num_inputs < 1) return;
 
@@ -449,6 +481,7 @@ class SignalTable {
                     id: sig.key,
                     invisible: true
                 });
+                num_hidden_sigs += 1;
             }
 
             function ignore(sig) {}
@@ -490,7 +523,7 @@ class SignalTable {
                     if (sig.direction != _self.direction) 
                         return ignore(sig);
                 }
-                if (sig.canvas_object)
+                if (sig.canvasObject && _self.ignoreCanvasObjects)
                     return ignore(sig);
                 if (_self.regexp && !_self.regexp.test(sig.key))
                     return hide(sig);
@@ -562,6 +595,7 @@ class SignalTable {
         let sigRowType = 'odd';
         function add_tree(t, tds, target, depth) {
             let first = true;
+            let left = _self.location == "left";
             for (var i in t.branches) {
                 let b = t.branches[i];
                 if (!tds || !first)
@@ -580,10 +614,9 @@ class SignalTable {
                         let tokens = b.leaf.id.split('/');
                         for (var j in tds) {
                             let idx = parseInt(j);
-                            let leaf = j == len -1;
-                            if (_self.location != "left")
-                                leaf = j == 0;
-                            if (leaf && _self.expand && _self.location == "right")
+                            let leaf = left ? (j == len-1) : (j == 0);
+                            let device = left ? (j == 0) : (j == len-1);
+                            if (leaf && _self.expand && !left)
                                 line += "<td class='"+sigRowType+" filler'></td>";
                             line += "<td";
                             if (leaf) {
@@ -604,10 +637,13 @@ class SignalTable {
                                     id = tokens.slice(0, tokens.length-idx).join('/');
                                 line += " id='"+id+"'";
                                 line += " rowspan="+tds[j][0];
+                                line += " class='";
+                                if (id.indexOf('/') == -1)
+                                    line += " device";
                                 if (tds[j][0] >= tds[j][1].length / 2)
-                                    line += " class=tall><div>"+tds[j][1]+"</div>";
+                                    line += " tall'><div>"+tds[j][1]+"</div>";
                                 else
-                                    line += ">"+tds[j][1];
+                                    line += "'>"+tds[j][1];
                                 line += "</td>";
                             }
                         }
@@ -630,7 +666,6 @@ class SignalTable {
                 console.log("can't collapse leaves");
                 return;
             }
-            console.log("trying to collapse node",  $(e.currentTarget)[0].id);
 
             // toggle collapse
             function collapse_node(t, a) {
@@ -694,8 +729,53 @@ class SignalTable {
             }
         });
 
+        this.setSigPositions();
         this.num_devs = num_devs;
         this.num_sigs = num_sigs;
+        this.num_hidden_sigs = num_hidden_sigs;
         this.adjustRowHeight();
+        this.updateTitle();
+    }
+
+    setSigPosition(sig) {
+        let self = this;
+        if (self.direction != null && self.direction != sig.direction)
+            return;
+        if (self.ignoreCanvasObjects && sig.canvasObject)
+            return;
+
+        let row = self.getRowFromName(sig.key);
+        if (row == null) {
+            sig.hidden = true;
+            return;
+        }
+        sig.hidden = false;
+        sig.position = {
+            get left() {return row.left;},
+            set left(nl) {delete this.left; this.left = nl;},
+            get top() {return row.top;},
+            set top(nt) {delete this.top; this.top = nt;},
+            get height() {return row.height;},
+            set height(nh) {delete this.height; this.height = nh;},
+            get width() {return row.width;},
+            set width(nw) {delete this.width; this.width = nw;},
+            get x() {return row.x;},
+            set x(newx) {delete this.x; this.x = newx;},
+            get vx() {return row.vx;},
+            set vx(newx) {delete this.vx; this.vx = newx;},
+            get y() {return row.y;},
+            set y(newy) {delete this.y; this.y = newy;},
+            get vy() {return row.vy;},
+            set vy(newy) {delete this.vy; this.vy = newy;}
+        }
+    }
+
+    setSigPositions() {
+        let self = this;
+        this.database.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                self.setSigPosition(sig);
+            });
+        });
     }
 }

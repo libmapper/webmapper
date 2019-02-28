@@ -9,8 +9,8 @@ class BalloonView extends View {
         super(frame, null, canvas, database, tooltip);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 1000);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 1000);
+        tables.left.adjust(0, 0, 0, frame.height, 0, 500);
+        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         // draw background
         let path = circle_path(frame.left + frame.width * 0.33, frame.cy, 0);
@@ -50,8 +50,8 @@ class BalloonView extends View {
             console.log('moving node', key, 'by', Math.cos(angle) * r,
                         Math.sin(angle) * r, ', radius:', r, ', angle:', angle,
                         ', offset:', offset);
-            node.view.animate({'cx': x, 'cy': y, 'r': r}, 1000, 'linear');
-            node.label.animate({'x': x + r + 5, 'y': y}, 1000, 'linear');
+            node.view.animate({'cx': x, 'cy': y, 'r': r}, 500, 'linear');
+            node.label.animate({'x': x + r + 5, 'y': y}, 500, 'linear');
             if (node.children)
                 adjust_nodes(node.children, x, y, r, depth + 1, rev);
             idx += 1;
@@ -67,8 +67,8 @@ class BalloonView extends View {
             remove_node_svg(root.children[i]);  // recurse
     }
 
-    resize(newFrame) {
-        super.resize(newFrame);
+    _resize(duration) {
+        super._resize(newFrame);
 
         let path = circle_path(this.frame.left + this.frame.width * 0.33, this.frame.cy, 0);
         path.push(circle_path(this.frame.left + this.frame.width * 0.67, this.frame.cy, 0));
@@ -163,11 +163,17 @@ class BalloonView extends View {
                 elements = arguments;
                 break;
         }
-        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0)
+        let updated = false;
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
-        if (elements.indexOf('maps') >= 0)
+            updated = true;
+        }
+        if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
-        this.draw(1000);
+            updated = true;
+        }
+        if (updated)
+            this.draw(500);
     }
 
     cleanup() {
