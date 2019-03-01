@@ -247,8 +247,8 @@ class CanvasView extends View {
         }
         else
             sig.view.label.stop();
-        sig.view.label.attr({'font-size': 16})
-                      .toFront();
+        sig.view.label.toFront();
+        sig.view.label.attr({'font-size': 16});
         sig.view.label.animate({'x': sig.position.left,
                                 'y': sig.position.top,
                                 'opacity': 1,
