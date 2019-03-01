@@ -40,9 +40,8 @@ class View {
                         'cy': this.frame.height * 0.5
         };
 
-        this.svgZoom = 1;
-        this.svgPosX = 0;
-        this.svgPosY = 0;
+        this.canvas.zoom = 1;
+        this.canvas.pan = {x: 0, y: 0};
 
         this.xAxis = null;
         this.yAxis = null;
@@ -570,15 +569,14 @@ class View {
     canvasPan(x, y, delta_x, delta_y) {
         x -= this.frame.left;
         y -= this.frame.top;
-        this.svgPosX += delta_x * this.svgZoom;
-        this.svgPosY += delta_y * this.svgZoom;
+        this.canvas.pan.x += delta_x * this.canvas.zoom;
+        this.canvas.pan.y += delta_y * this.canvas.zoom;
 
-        this.canvas.setViewBox(this.svgPosX, this.svgPosY,
-                               this.frame.width * this.svgZoom,
-                               this.frame.height * this.svgZoom, false);
-        this.tooltip.showBrief(
-            'pan: ['+this.svgPosX.toFixed(2)+', '+this.svgPosY.toFixed(2)+']', 
-            x, y);
+        this.canvas.setViewBox(this.canvas.pan.x, this.canvas.pan.y,
+                               this.frame.width * this.canvas.zoom,
+                               this.frame.height * this.canvas.zoom, false);
+        this.tooltip.showBrief('pan: ['+this.canvas.pan.x.toFixed(2)+', '
+                               +this.canvas.pan.y.toFixed(2)+']', x, y);
     }
 
     tableZoom(x, y, delta) {
@@ -602,28 +600,28 @@ class View {
     canvasZoom(x, y, delta) {
         x -= this.frame.left;
         y -= this.frame.top;
-        let newZoom = this.svgZoom + delta * 0.01;
+        let newZoom = this.canvas.zoom + delta * 0.01;
         if (newZoom < 0.1)
             newZoom = 0.1;
         else if (newZoom > 20)
             newZoom = 20;
-        if (newZoom == this.svgZoom)
+        if (newZoom == this.canvas.zoom)
             return;
-        let zoomDiff = this.svgZoom - newZoom;
-        this.svgPosX += x * zoomDiff;
-        this.svgPosY += (y - this.frame.top) * zoomDiff;
-        this.canvas.setViewBox(this.svgPosX, this.svgPosY,
+        let zoomDiff = this.canvas.zoom - newZoom;
+        this.canvas.pan.x += x * zoomDiff;
+        this.canvas.pan.y += (y - this.frame.top) * zoomDiff;
+        this.canvas.setViewBox(this.canvas.pan.x, this.canvas.pan.y,
                                this.frame.width * newZoom,
                                this.frame.height * newZoom, false);
         this.tooltip.showBrief( 'zoom: '+(100/newZoom).toFixed(2)+'%', x, y);
-        this.svgZoom = newZoom;
+        this.canvas.zoom = newZoom;
     }
 
     resetPanZoom() {
         this.canvas.setViewBox(0, 0, this.frame.width, this.frame.height, false);
-        this.svgZoom = 1;
-        this.svgPosX = 0;
-        this.svgPosY = 0;
+        this.canvas.zoom = 1;
+        this.canvas.pan.x = 0;
+        this.canvas.pan.y = 0;
     }
 
     filterSignals(direction, text) {

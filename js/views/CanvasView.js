@@ -131,8 +131,8 @@ class CanvasView extends View {
         });
         sig.view.drag(
             function(dx, dy, x, y, event) {
-                x = x * self.svgZoom + self.svgPosX;
-                y = y * self.svgZoom + self.svgPosY;
+                x = x * self.canvas.zoom + self.canvas.pan.x;
+                y = y * self.canvas.zoom + self.canvas.pan.y;
                 let p = sig.position;
                 if (self.escaped) {
                     self.draggingFrom = null;
@@ -189,8 +189,8 @@ class CanvasView extends View {
                 }
             },
             function(x, y, event) {
-                x = x * self.svgZoom + self.svgPosX;
-                y = y * self.svgZoom + self.svgPosY;
+                x = x * self.canvas.zoom + self.canvas.pan.x;
+                y = y * self.canvas.zoom + self.canvas.pan.y;
                 self.escaped = false;
                 self.draggingFrom = sig;
                 let p = sig.position;
@@ -421,9 +421,9 @@ class CanvasMapPainter extends ListMapPainter
             src_y = src.top;
         }
         else {
-            src_x = src.x;
-            src_cx = src.x + src.width * 0.5;
-            src_y = src.y;
+            src_x = src.x * this.canvas.zoom + this.canvas.pan.x;
+            src_cx = src_x + src.width * this.canvas.zoom * 0.5;
+            src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
         }
 
         if (this.map.dst.canvasObject) {
@@ -433,9 +433,9 @@ class CanvasMapPainter extends ListMapPainter
             dst_y = dst.top;
         }
         else {
-            dst_x = dst.x;
-            dst_cx = dst.x + dst.width * 0.5;
-            dst_y = dst.y;
+            dst_x = dst.x * this.canvas.zoom + this.canvas.pan.x;
+            dst_cx = dst_x + dst.width * this.canvas.zoom * 0.5;
+            dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
         }
 
         this.pathspecs[0] = [['M', src_x, src_y],
