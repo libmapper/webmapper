@@ -240,7 +240,7 @@ function self_path(x1, y1, x2, y2, frame) {
 function remove_object_svg(obj, duration) {
     if (!obj.view)
         return;
-    if (!duration)
+    if (duration == null)
         duration = 1000;
     if (obj.view.label) {
         obj.view.label.stop();

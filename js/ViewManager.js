@@ -130,8 +130,9 @@ class ViewManager
         this.database.clear_callbacks();
         this.database.add_callback(function(event, type, obj) {
             if (event == 'removing') {
-                if (type == 'map' && obj.view) obj.view.remove();
-                remove_object_svg(obj);
+                if (type == 'map' && obj.view)
+                    obj.view.remove();
+                remove_object_svg(obj, 0);
                 return;
             }
             switch (type) {
