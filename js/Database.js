@@ -80,7 +80,41 @@ MapperNodeArray.prototype = {
         else {
             if (this.obj_type == 'device') {
                 obj.signals = new MapperNodeArray('signal', this.cb_func);
-                obj.color = Raphael.getColor();
+
+                let useColorHash = false;
+                if (useColorHash == true) {
+                    // create color hash
+                    colorHash = function(str) {
+                        var hash = 0, i, chr;
+                        if (str.length === 0) return '#000000';
+                        str = str.split("").reverse().join("");
+                        for (i = 0; i < str.length; i++) {
+                            chr   = str.charCodeAt(i);
+                            hash  = ((hash << 5) - hash) + chr;
+                            hash |= 0; // Convert to 32bit integer
+                        }
+                        return '#'+('000000' + (hash & 0xFFFFFF).toString(16)).slice(-6);
+                    };
+                    obj.color = colorHash(key);
+                }
+                else {
+                    // find unused color index
+                    obj.colorIdx = 0;
+                    Raphael.getColor.reset();
+                    obj.color = Raphael.getColor();
+                    let found = false;
+                    while (!found) {
+                        found = true;
+                        for (i in this.contents) {
+                            if (this.contents[i].colorIdx == obj.colorIdx) {
+                                found = false;
+                                obj.colorIdx += 1;
+                                obj.color = Raphael.getColor();
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             this.contents[key] = obj;
             if (this.cb_func)
@@ -100,8 +134,6 @@ MapperNodeArray.prototype = {
             if (this.cb_func)
                 this.cb_func('removed', this.obj_type, {'key': key});
         }
-        if (this.size() == 0)
-            Raphael.getColor.reset();
         return key;
     },
 
