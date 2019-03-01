@@ -163,8 +163,7 @@ class CanvasView extends View {
                         self.trashing = false;
                     }
 
-                    // TODO: only redraw maps associated with this signal
-                    self.drawMaps();
+                    self.drawMaps(0, sig);
                     return;
                 }
                 else if (!self.snappingTo) {
@@ -347,7 +346,6 @@ class CanvasView extends View {
                 self.drawSignal(sig);
                 // remove signal from table
                 table.update();
-                // TODO: only redraw maps associated with this signal
                 self.drawMaps();
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
@@ -360,8 +358,7 @@ class CanvasView extends View {
                     sig.position.top = e.pageY - self.frame.top;
                     constrain(sig.position, self.mapPane, 5);
                     self.drawSignal(sig);
-                    // TODO: only redraw maps associated with this signal
-                    self.drawMaps();
+                    self.drawMaps(0, sig);
                 });
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');

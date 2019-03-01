@@ -534,9 +534,12 @@ class View {
                 ['S', mpx, mpy, dst.x, dst.y]];
     }
 
-    drawMaps(duration) {
+    drawMaps(duration, signal) {
         this.database.maps.each(function(map) {
-            if (!map.view) return;
+            if (!map.view)
+                return;
+            if (signal && map.src != signal && map.dst != signal)
+                return;
             else map.view.draw(duration);
         });
     }
