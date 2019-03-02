@@ -117,6 +117,15 @@ MapperNodeArray.prototype = {
                 }
             }
             this.contents[key] = obj;
+
+            // sort by key
+            let ordered = {};
+            let contents = this.contents;
+            Object.keys(contents).sort(namespaceSort).forEach(function(k) {
+                ordered[k] = contents[k];
+            });
+            this.contents = ordered;
+
             if (this.cb_func)
                 this.cb_func('added', this.obj_type, this.contents[key]);
         }

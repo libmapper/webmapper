@@ -327,3 +327,27 @@ function polarMean(angle1, angle2, fullscale = Math.PI * 2.0) {
 function fuzzyEq(val1, val2, epsilon) {
     return Math.abs(val1 - val2) < epsilon;
 }
+
+function namespaceSort(a, b) {
+    // sanity check
+    if (a.indexOf('.') < 0 || a.indexOf('.') < 0)
+        return a < b ? -1 : (a > b ? 1 : 0);
+    // tokenize by slash
+    a = a.split('/');
+    b = b.split('/');
+    // extract ordinal from name
+    let ord_a, ord_b;
+    [a[0], ord_a] = a[0].split('.');
+    [b[0], ord_b] = b[0].split('.');
+    if (a[0] != b[0])
+        return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0);
+    if (ord_a != ord_b) {
+        ord_a = parseInt(ord_a);
+        ord_b = parseInt(ord_b);
+        return ord_a < ord_b ? -1 : (ord_a > ord_b ? 1 : 0);
+    }
+    // device name and ordinal match, compare signal name
+    a = a.slice(1).join('/');
+    b = b.slice(1).join('/');
+    return a < b ? -1 : (a > b ? 1 : 0);
+}

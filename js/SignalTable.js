@@ -530,13 +530,6 @@ class SignalTable {
                 add(sig);
             });
 
-            // sort signals by key (for now)
-            sigs.sort(function(a, b) {
-                a = a.name;
-                b = b.name;
-                return a < b ? -1 : (a > b ? 1 : 0);
-            });
-
             function print_tree(t, indent) {
                 let spaces = "";
                 for (i = 0; i < indent; i++)
@@ -582,13 +575,6 @@ class SignalTable {
             if (!_self.collapseAll && !(dev.collapsed & collapse_bit))
                 num_sigs += num_dev_sigs;
             num_devs += 1;
-        });
-        
-        // sort branches of tree by key (for now)
-        // https://stackoverflow.com/questions/5467129/sort-javascript-object-by-key
-        let orderedtree = {"branches": {}, "num_leaves": tree.num_leaves};
-        Object.keys(tree.branches).sort().forEach(function(key) {
-            orderedtree.branches[key] = tree.branches[key];
         });
 
         let devRowType = 'odd';
@@ -657,7 +643,7 @@ class SignalTable {
                 first = false;
             }
         }
-        add_tree(orderedtree, [], $(this.tbody), 0);
+        add_tree(tree, [], $(this.tbody), 0);
         this.grow();
 
         $("#"+this.id+" td").on('click', function(e) {
@@ -722,7 +708,7 @@ class SignalTable {
                 }
                 return false;
             }
-            if (collapse_node(orderedtree, $(e.currentTarget)[0].id.split('/'))) {
+            if (collapse_node(tree, $(e.currentTarget)[0].id.split('/'))) {
                 _self.grow();
                 if (_self.collapseHandler)
                     _self.collapseHandler();
