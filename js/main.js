@@ -156,6 +156,9 @@ function initViewCommands()
                 e.preventDefault();
                 saverLoader.fileOpenDialog();
                 break;
+            case 83:
+                e.preventDefault();
+                saverLoader.save();
             case 48:
                 e.preventDefault();
                 viewManager.resetPanZoom();

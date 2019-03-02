@@ -79,4 +79,8 @@ class SaverLoader {
     fileOpenDialog() {
         this.input.trigger("click");
     }
+
+    save() {
+        $('#saveButton').trigger("click");
+    }
 }
