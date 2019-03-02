@@ -159,7 +159,7 @@ class CanvasView extends View {
                         self.trashing = true;
                     }
                     else {
-                        sig.view.attr({'stroke': sig.device.color});
+                        sig.view.attr({'stroke': Raphael.hsl(sig.device.hue, 1, 0.3)});
                         self.trashing = false;
                     }
 
@@ -226,9 +226,9 @@ class CanvasView extends View {
                     ['l', sig.position.width, 0]];
 
         let attrs = {'path': path,
-                     'stroke': sig.device.color,
-                     'stroke-opacity': 0.75,
-                     'stroke-width': 20,
+                     'stroke': Raphael.hsl(sig.device.hue, 1, 0.3),
+                     'stroke-opacity': 1,
+                     'stroke-width': sig.canvasObject.height,
                      'fill': 'white',
                      'fill-opacity': 1};
         if (!sig.view) {

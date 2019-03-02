@@ -71,11 +71,12 @@ class HiveView extends View {
                          self.mapPane.top + self.mapPane.height],
                         ['l', x, y]]
             }
+            let color = Raphael.hsl(dev.hue, 1, 0.5);
             dev.view.animate({'path': path,
-                              'stroke': dev.color,
+                              'stroke': color,
                               'stroke-width': 26,
                               'stroke-opacity': 0.5,
-                              'fill': dev.color,
+                              'fill': color,
                               'fill-opacity': 0}, duration, '>');
             if (!dev.view.label) {
                 dev.view.label = self.canvas.text(0, 0, dev.name)

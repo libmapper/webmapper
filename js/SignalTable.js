@@ -511,7 +511,7 @@ class SignalTable {
                     name: sig.name,
                     unit: typelen+unit, 
                     direction: sig.direction,
-                    color: dev.color
+                    color: Raphael.hsl(dev.hue, 1, 0.5)
                 });
 
                 num_dev_sigs += 1;

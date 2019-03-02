@@ -125,9 +125,10 @@ class View {
             if (!dev.view) {
                 let path = [['M', self.frame.left + 50, self.frame.height - 50],
                             ['l', 0, 0]];
+                let color = Raphael.hsl(dev.hue, 1, 0.5);
                 dev.view = self.canvas.path().attr({'path': path,
-                                                    'fill': dev.color,
-                                                    'stroke': dev.color,
+                                                    'fill': color,
+                                                    'stroke': color,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
                                                     'stroke-linecap': 'round'});
@@ -235,11 +236,9 @@ class View {
             if (link.view)
                 return;
             link.view = self.canvas.path();
-            let rgb = Raphael.getRGB(src.color);
             let gradient = [];
-            gradient[0] = '0-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
-            rgb = Raphael.getRGB(dst.color);
-            gradient[1] = ')-rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
+            gradient[0] = '0-hsla('+src.hue+',1,0.5,';
+            gradient[1] = ')-hsla('+dst.hue+',1,0.5,';
 
             link.view.attr({'fill': gradient[0]+0.25+gradient[1]+0.25+')',
                             'stroke-opacity': 0});
@@ -402,10 +401,11 @@ class View {
         let is_output = sig.direction == 'output';
 
         let path = circle_path(pos.x, pos.y, 10);
+        let color = Raphael.hsl(sig.device.hue, 1, 0.5);
         sig.view.animate({'path': path,
-                          'fill': is_output ? 'black' : sig.device.color,
+                          'fill': is_output ? 'black' : color,
                           'fill-opacity': 1,
-                          'stroke': sig.device.color,
+                          'stroke': color,
                           'stroke-width': 6,
                           'stroke-opacity': 1}, duration, '>');
         if (sig.hidden) sig.view.hide();

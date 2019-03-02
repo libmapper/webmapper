@@ -81,8 +81,8 @@ MapperNodeArray.prototype = {
             if (this.obj_type == 'device') {
                 obj.signals = new MapperNodeArray('signal', this.cb_func);
 
-                // create color hash
-                colorHash = function(str) {
+                // create hue hash
+                hueHash = function(str) {
                     var hash = 0, i, chr;
                     if (str.length === 0) return '#000000';
                     // separate name and ordinal
@@ -99,9 +99,9 @@ MapperNodeArray.prototype = {
                     // constrain and normalize
                     hash = (hash & 0xFFFFFF) / 0xFFFFFF;
                     // convert to hue
-                    return Raphael.hsl(hash, 1, 0.5);
+                    return hash;
                 };
-                obj.color = colorHash(key);
+                obj.hue = hueHash(key);
             }
             this.contents[key] = obj;
 

@@ -290,9 +290,10 @@ class ChordView extends View {
                          ['A', r, r, angleInc,
                           fuzzyEq(angleInc, 6.283, 0.01) ? 1 : 0, 1,
                           pstop.x, pstop.y]];
+        let color = Raphael.hsl(dev.hue, 1, 0.5);
         dev.view.attr({'stroke-linecap': 'butt'})
                 .animate({'path': dev.view.path,
-                          'stroke': dev.hidden ? "gray" : dev.color,
+                          'stroke': dev.hidden ? "gray" : color,
                           'fill-opacity': 0,
                           'stroke-opacity': 1,
                           'stroke-width': 40,
@@ -496,10 +497,8 @@ class ChordView extends View {
         if (midAngleDeg < 0)
             midAngleDeg += 360;
 
-        let rgb = Raphael.getRGB(src.hidden ? 'gray' : src.color);
-        let srcColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
-        rgb = Raphael.getRGB(dst.hidden ? 'gray' : dst.color);
-        let dstColor = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.75)';
+        let srcColor = 'hsla(' + src.hue + ',1,0.5,0.75)';
+        let dstColor = 'hsla(' + dst.hue + ',1,0.5,0.75)';
         let fillString = midAngleDeg+'-'+srcColor+'-'+dstColor;
 
 //        if (self.draggingFrom)
