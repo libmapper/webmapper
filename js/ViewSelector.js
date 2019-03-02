@@ -15,8 +15,6 @@ class ViewSelector {
                         "<div id='hiveButton' class='viewButton'></div>"+
                         "<div id='parallelButton' class='viewButton'></div>"+
                         "<div id='consoleButton' class='viewButton'></div>"+
-//                        "<div id='balloonButton' class='viewButton'></div>"+
-//                        "<div id='linkButton' class='viewButton'></div>"+
                     "</div>"+
                 "</div>"+
             "</div>");

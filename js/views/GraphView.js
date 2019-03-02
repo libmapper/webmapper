@@ -72,35 +72,6 @@ class GraphView extends View {
             this.draw(500);
     }
 
-//    getMapPath(map) {
-//        if (!map.view)
-//            return;
-//
-//        let src = map.src.position;
-//        let dst = map.dst.position;
-//        if (!src || !dst) {
-//            console.log('missing signal positions for drawing map', map);
-//            remove_object_svg(map);
-//            return null;
-//        }
-//
-//        let path;
-//
-//        // calculate midpoint
-//        let mpx = (src.x + dst.x) * 0.5;
-//        let mpy = (src.y + dst.y) * 0.5;
-//
-//        // inflate midpoint around origin to create a curve
-//        mpx += (mpx - this.origin[0]) * 0.2;
-//        mpy += (mpy - this.origin[1]) * 0.2;
-//        path = [['M', src.x, src.y],
-//                ['S', mpx, mpy, dst.x, dst.y]];
-//
-//        // shorten path so it doesn't draw over signals
-//        let len = Raphael.getTotalLength(path);
-//        return Raphael.getSubpath(path, 12, len - 12);
-//    }
-
     draw(duration) {
         this.drawSignals(duration);
         this.drawMaps(duration);
