@@ -81,40 +81,27 @@ MapperNodeArray.prototype = {
             if (this.obj_type == 'device') {
                 obj.signals = new MapperNodeArray('signal', this.cb_func);
 
-                let useColorHash = false;
-                if (useColorHash == true) {
-                    // create color hash
-                    colorHash = function(str) {
-                        var hash = 0, i, chr;
-                        if (str.length === 0) return '#000000';
-                        str = str.split("").reverse().join("");
-                        for (i = 0; i < str.length; i++) {
-                            chr   = str.charCodeAt(i);
-                            hash  = ((hash << 5) - hash) + chr;
-                            hash |= 0; // Convert to 32bit integer
-                        }
-                        return '#'+('000000' + (hash & 0xFFFFFF).toString(16)).slice(-6);
-                    };
-                    obj.color = colorHash(key);
-                }
-                else {
-                    // find unused color index
-                    obj.colorIdx = 0;
-                    Raphael.getColor.reset();
-                    obj.color = Raphael.getColor();
-                    let found = false;
-                    while (!found) {
-                        found = true;
-                        for (i in this.contents) {
-                            if (this.contents[i].colorIdx == obj.colorIdx) {
-                                found = false;
-                                obj.colorIdx += 1;
-                                obj.color = Raphael.getColor();
-                                break;
-                            }
-                        }
+                // create color hash
+                colorHash = function(str) {
+                    var hash = 0, i, chr;
+                    if (str.length === 0) return '#000000';
+                    // separate name and ordinal
+                    let ord_idx = str.lastIndexOf('.');
+                    let ord = str.slice(ord_idx+1);
+                    str = str.slice(0, ord_idx);
+                    for (i = 0; i < str.length; i++) {
+                        chr   = str.charCodeAt(i);
+                        hash  = ((hash << 5) - hash) + (1 << chr);
+                        hash &= 0xFFFFFF; // Constrain to 48bits
                     }
-                }
+                    // add ordinal, multiplied to be visually discriminable
+                    hash += parseInt(ord) * 600000;
+                    // constrain and normalize
+                    hash = (hash & 0xFFFFFF) / 0xFFFFFF;
+                    // convert to hue
+                    return Raphael.hsl(hash, 1, 0.5);
+                };
+                obj.color = colorHash(key);
             }
             this.contents[key] = obj;
 
