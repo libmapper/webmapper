@@ -1,7 +1,7 @@
 "use strict";
 var database = new MapperDatabase();
 
-var view;
+var viewManager;
 var mapProperties;
 var devFilter;
 var saverLoader;
@@ -25,30 +25,30 @@ function init() {
     // init the view
     $('#container').empty();
     tooltip = new Tooltip();
-    view = new ViewManager(document.getElementById('container'), database, tooltip);
+    viewManager = new ViewManager(document.getElementById('container'), database,
+                                  tooltip);
 
     // init the top menu
     $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"), database, view);
-    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"), view);
-    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"), database, view);
-    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"), database, view);
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
+                                  database, viewManager);
+    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"),
+                                    viewManager);
+    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
+                                 database, viewManager);
+    mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
+                                      database, viewManager);
 
     // init controller
     initMonitorCommands();
     initViewCommands();
     initMapPropertiesCommands();
 
-//    window.onresize = function (e) {
-//        console.log('main.on_resize()');
-//        view.on_resize();
-//    };
-
     let resizing = false;
     window.onresize = function (e) {
         if (!resizing) {
             window.requestAnimationFrame(function() {
-                view.on_resize();
+                viewManager.on_resize();
                 resizing = false;
             });
             resizing = true;
@@ -62,7 +62,7 @@ function init() {
         function() {
             switch (index) {
             case 0:
-                view.on_resize();
+                viewManager.on_resize();
                 mapProperties.clearMapProperties();
                 command.start();
                 command.send('refresh');
@@ -145,22 +145,22 @@ function initViewCommands()
                 break;
             case 48:
                 e.preventDefault();
-                view.resetPanZoom();
+                viewManager.resetPanZoom();
                 break;
 //            default:
 //                console.log('key:', e.which);
         }
         if (new_view) {
-            view.switch_view(new_view);
+            viewManager.switch_view(new_view);
         }
     });
 
     $('#container').on('updateView', function(e) {
-        view.draw();
+        viewManager.draw();
     });
 
     $('#container').on('scrolll', function(e) {
-        view.draw(0);
+        viewManager.draw(0);
     });
 
     let wheeling = false;
@@ -180,10 +180,10 @@ function initViewCommands()
         if (!wheeling) {
             window.requestAnimationFrame(function() {
                 if (zooming) {
-                    view.zoom(pageX, pageY, deltaY);
+                    viewManager.zoom(pageX, pageY, deltaY);
                 }
                 else {
-                    view.pan(pageX, pageY, deltaX, deltaY);
+                    viewManager.pan(pageX, pageY, deltaX, deltaY);
                 }
                 wheeling = false;
             });
@@ -247,7 +247,7 @@ function initViewCommands()
     // asks the view for the save button link (based on the active device)
     // currently implemented in List view only
     $("#container").on("updateSaveLocation", function(e) {
-        mapProperties.updateSaveLocation(view.get_save_location());
+        mapProperties.updateSaveLocation(viewManager.get_save_location());
     });
 
 }
