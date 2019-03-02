@@ -550,8 +550,8 @@ function MapperDatabase() {
 
     this.exportFile = function() {
         let file = { "fileversion": "2.2",
-            "mapping": { "maps": [] }
-        };
+                     "mapping": { "maps": [] },
+                     "views": { "signals": []} };
         let numMaps = 0;
 
         this.maps.each(function(map) {
@@ -622,6 +622,13 @@ function MapperDatabase() {
         });
         if (!numMaps)
             alert("No maps to save!");
+        this.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.canvasObject)
+                    file.views.signals.push({'name': sig.key,
+                                             'position': sig.canvasObject});
+            });
+        });
         return numMaps ? file : null;
     }
     
