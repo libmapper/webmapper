@@ -102,8 +102,21 @@ function initMonitorCommands() {
 function initViewCommands()
 {
     $('body').on('keydown.list', function(e) {
-        if (e.metaKey != true)
+        if (e.metaKey != true) {
+            // for testing: press space bar to randomise signal positions
+            if (e.which == 32) {
+                e.preventDefault();
+                 let view = viewManager.view;
+                database.devices.each(function(dev) {
+                    dev.signals.each(function(sig) {
+                        sig.position.x = Math.random() * view.frame.width;
+                        sig.position.y = Math.random() * view.frame.height;
+                    });
+                });
+                view.draw(500);
+            }
             return;
+        }
 
         let new_view = null;
         switch (e.which) {
