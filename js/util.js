@@ -185,7 +185,7 @@ function constrain(obj, bounds, border) {
     else if (obj.left > (bounds.left + bounds.width - obj.width * 0.5 - border))
         obj.left = bounds.left + bounds.width - obj.width * 0.5 - border;
     if (obj.top < (bounds.top + obj.height * 0.5 + border))
-        obj.top = obj.height * 0.5 + border;
+        obj.top = bounds.top + obj.height * 0.5 + border;
     else if (obj.top > (bounds.top + bounds.height - obj.height * 0.5 - border))
         obj.top = bounds.top + bounds.height - obj.height * 0.5 - border;
 }

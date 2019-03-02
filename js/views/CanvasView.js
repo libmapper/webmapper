@@ -30,11 +30,11 @@ class CanvasView extends View {
                     remove_object_svg(sig);
                     return;
                 }
-                let o = sig.canvasObject;
-                sig.position.left = o.left;
-                sig.position.top = o.top;
-                sig.position.width = o.width;
-                sig.position.height = o.height;
+                let c = sig.canvasObject;
+                sig.position.left = c.left;
+                sig.position.top = c.top;
+                sig.position.width = c.width;
+                sig.position.height = c.height;
                 if (sig.view) {
                     self.setSigHover(sig);
                     self.setSigDrag(sig);
@@ -69,6 +69,7 @@ class CanvasView extends View {
 
     setSigHover(sig) {
         let self = this;
+        sig.view.unhover();
         sig.view.hover(
             function() {
                 if (self.draggingFrom == null)
@@ -108,6 +109,7 @@ class CanvasView extends View {
     // override signal drag so we can move signal representation around
     setSigDrag(sig) {
         let self = this;
+        sig.view.unmouseup();
         sig.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo) {
                 $('#container').trigger('map', [self.draggingFrom.key,
@@ -128,12 +130,16 @@ class CanvasView extends View {
                 // update maps
                 self.drawMaps();
             }
+            // move svg canvas to back
+            $('#svgDiv').css({'position': 'relative', 'z-index': 0});
         });
+        sig.view.undrag();
         sig.view.drag(
             function(dx, dy, x, y, event) {
                 x = x * self.canvas.zoom + self.canvas.pan.x;
                 y = y * self.canvas.zoom + self.canvas.pan.y;
                 let p = sig.position;
+                let c = sig.canvasObject;
                 if (self.escaped) {
                     self.draggingFrom = null;
                     delete p.drag_offset;
@@ -146,16 +152,15 @@ class CanvasView extends View {
                     return;
                 }
                 if (self.dragging == 'obj') {
-                    sig.position.left = x + p.drag_offset.x;
+                    p.left = x + p.drag_offset.x;
                     p.top = y + p.drag_offset.y;
-                    constrain(p, self.mapPane, 5);
+                    constrain(p, self.frame, 5);
+                    c.left = p.left;
+                    c.top = p.top;
                     self.drawSignal(sig);
 
-                    x -= self.mapPane.width + self.mapPane.left;
-                    y -= self.mapPane.height + self.frame.top;
-                    let dist = Math.sqrt(x * x + y * y)
-                    if (dist < 100) {
-                        sig.view.attr({'stroke': 'gray'});
+                    if (x < self.mapPane.left) {
+                        sig.view.animate({'stroke': 'gray'}, 0, 'linear');
                         self.trashing = true;
                     }
                     else {
@@ -183,6 +188,7 @@ class CanvasView extends View {
                                  x - offset * 3, y, x, y]];
                     self.newMap.attr({'path': path,
                                       'stroke': 'white',
+                                      'stroke-width': 4,
                                       'stroke-opacity': 1,
                                       'arrow-start': arrow_start,
                                       'arrow-end': arrow_end});
@@ -199,8 +205,11 @@ class CanvasView extends View {
                     self.dragging = 'left';
                 else if (x > p.left + p.width * 0.5 - 5)
                     self.dragging = 'right';
-                else
+                else {
                     self.dragging = 'obj';
+                    // move svg canvas to front
+                    $('#svgDiv').css({'z-index': 2});
+                }
                 self.newMap = self.canvas.path();
             },
             function(x, y, event) {
@@ -212,6 +221,8 @@ class CanvasView extends View {
                     self.newMap.remove();
                     self.newMap = null;
                 }
+                // move svg canvas to back
+                $('#svgDiv').css({'z-index': 0});
             }
         );
     }
@@ -238,7 +249,6 @@ class CanvasView extends View {
         }
         else
             sig.view.stop();
-        sig.view.attr({'stroke-linecap': 'round'});
         sig.view.animate(attrs, duration, '>');
         if (!sig.view.label) {
             let key = (sig.direction == 'input') ? '• ' + sig.key : sig.key + ' •';
@@ -298,6 +308,7 @@ class CanvasView extends View {
         if (x < this.tables.left.frame.width)
             this.tablePan(x, y, delta_x, delta_y);
         else {
+            this.tablePan(null, null, delta_x, delta_y);
             this.canvasPan(x, y, delta_x, delta_y);
             this.drawMaps(0);
         }
@@ -326,6 +337,9 @@ class CanvasView extends View {
             var src_row = $(this).parent('tr')[0];
 
             $('#svgDiv').one('mouseenter.drawing', function() {
+                // move svg canvas to front
+                $('#svgDiv').css({'z-index': 2});
+
                 deselectAllMaps(self.tables);
                 var src = table.getRowFromName(src_row.id);
                 var dst = null;
@@ -336,13 +350,15 @@ class CanvasView extends View {
                 if (!sig)
                     return;
 
-                sig.canvasObject = true;
-                sig.position.left = e.pageX - self.frame.left;
-                sig.position.top = sig.position.y = e.pageY - self.frame.top;
-
-                sig.position.width = labelwidth(sig.key);
-                sig.position.height = 20;
-                constrain(sig.position, self.mapPane, 5);
+                let p = sig.position;
+                p.left = e.pageX - self.frame.left;
+                p.top = sig.position.y = e.pageY - self.frame.top;
+                p.width = labelwidth(sig.key);
+                p.height = 30;
+                constrain(p, self.frame, 5);
+                sig.canvasObject = {'left': p.left, 'top': p.top,
+                                    'width': p.width, 'height': p.height};
+                let c = sig.canvasObject;
                 self.drawSignal(sig);
                 // remove signal from table
                 table.update();
@@ -354,9 +370,11 @@ class CanvasView extends View {
                         $('svg, .displayTable tbody tr').off('.drawing');
                         return;
                     }
-                    sig.position.left = e.pageX - self.frame.left;
-                    sig.position.top = e.pageY - self.frame.top;
-                    constrain(sig.position, self.mapPane, 5);
+                    p.left = e.pageX - self.frame.left;
+                    p.top = e.pageY - self.frame.top;
+                    constrain(p, self.frame, 5);
+                    c.left = p.left;
+                    c.top = p.top;
                     self.drawSignal(sig);
                     self.drawMaps(0, sig);
                 });
@@ -366,10 +384,15 @@ class CanvasView extends View {
 
                     self.setSigDrag(sig);
                     self.setSigHover(sig);
+
+                    // move svg canvas to back
+                    $('#svgDiv').css({'z-index': 0});
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
                 $(document).off('.drawing');
+                // move svg canvas to back
+                $('#svgDiv').css({'z-index': 0});
             });
         });
     }
@@ -392,10 +415,6 @@ class CanvasView extends View {
                     sig.view.label.remove();
                 // cache canvas object positions
                 // TODO: use signalPainter instead?
-                sig.canvasObject = {left: sig.position.left,
-                                    top: sig.position.top,
-                                    width: sig.position.width,
-                                    height: sig.position.height};
             });
         });
         this.tables.left.update();
@@ -415,7 +434,7 @@ class CanvasMapPainter extends ListMapPainter
         let src_x, src_cx, src_y, dst_x, dst_cx, dst_y;
 
         if (this.map.src.canvasObject) {
-            let offset = src.width * 0.5 + 10;
+            let offset = src.width * 0.5;
             src_x = src.left + offset;
             src_cx = src.left + offset * 3;
             src_y = src.top;
@@ -427,7 +446,7 @@ class CanvasMapPainter extends ListMapPainter
         }
 
         if (this.map.dst.canvasObject) {
-            let offset = dst.width * -0.5 - 10;
+            let offset = dst.width * -0.5;
             dst_x = dst.left + offset;
             dst_cx = dst.left + offset * 3;
             dst_y = dst.top;

@@ -27,7 +27,7 @@ class SignalTable {
 
         this.ignoreCanvasObjects = false;
 
-        this.title = 'SIGNALS';
+        this.title = 'SIGS';
 
         // The selected rows, for shift-selecting
         this.selectedRows = {};
@@ -153,7 +153,7 @@ class SignalTable {
                 title = 'DST';
                 break;
             default:
-                title = 'SIGNALS';
+                title = 'SIGS';
                 break;
         }
         this.title = title;
