@@ -646,7 +646,9 @@ class SignalTable {
         add_tree(tree, [], $(this.tbody), 0);
         this.grow();
 
-        $("#"+this.id+" td").on('click', function(e) {
+        let tds = $("#"+this.id+" td");
+        $(tds).off('click');
+        $(tds).on('click', function(e) {
             if ($(e.currentTarget).hasClass('leaf')) {
                 // can't collapse leaves
                 console.log("can't collapse leaves");

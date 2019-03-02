@@ -424,6 +424,7 @@ class View {
 
     setMapHover(map) {
         let self = this;
+        map.view.unhover();
         map.view.hover(
             function(e) {
                 if (!self.draggingFrom) {
