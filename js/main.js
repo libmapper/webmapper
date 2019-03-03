@@ -104,21 +104,46 @@ function initViewCommands()
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
             // for testing: press space bar to randomise signal positions
-            if (e.which == 32 && view.type == 'graph') {
-                e.preventDefault();
-                 let view = viewManager.view;
-                database.devices.each(function(dev) {
-                    dev.signals.each(function(sig) {
-                        sig.position.x = Math.random() * view.frame.width;
-                        sig.position.y = Math.random() * view.frame.height;
-                    });
-                });
-                view.draw(500);
+            switch (e.which) {
+                case 37:
+                    // pan left
+                    e.preventDefault();
+                    viewManager.pan(null, null, 10, 0);
+                    break;
+                case 39:
+                    // pan right
+                    e.preventDefault();
+                    viewManager.pan(null, null, -10, 0);
+                    break;
+                case 38:
+                    // pan up
+                    e.preventDefault();
+                    viewManager.pan(null, null, 0, 10);
+                    break;
+                case 40:
+                    // pan down
+                    e.preventDefault();
+                    viewManager.pan(null, null, 0, -10);
+                    break;
+                case 32:
+                    if (viewManager.view.type == 'graph') {
+                        e.preventDefault();
+                        let view = viewManager.view;
+                        database.devices.each(function(dev) {
+                            dev.signals.each(function(sig) {
+                                sig.position.x = Math.random() * view.frame.width;
+                                sig.position.y = Math.random() * view.frame.height;
+                            });
+                        });
+                        view.draw(500);
+                    }
+                    break;
             }
             return;
         }
 
         let new_view = null;
+                 let mp;
         switch (e.which) {
             case 49:
                 /* 1 */
@@ -163,8 +188,20 @@ function initViewCommands()
                 e.preventDefault();
                 viewManager.resetPanZoom();
                 break;
-//            default:
-//                console.log('key:', e.which);
+            case 187:
+                // decrease zoom
+                e.preventDefault();
+                mp = viewManager.view.mapPane;
+                viewManager.zoom(mp.cx, mp.cy, -10);
+                break;
+            case 189:
+                // increase zoom
+                e.preventDefault();
+                mp = viewManager.view.mapPane;
+                viewManager.zoom(mp.cx, mp.cy, 10);
+                break;
+            default:
+                console.log('key:', e.which);
         }
         if (new_view) {
             viewManager.switch_view(new_view);
