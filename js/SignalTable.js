@@ -13,6 +13,8 @@ class SignalTable {
         this.scrolled = 0;
         this.zoomed = 1;
 
+        this.minHeight = 17;
+
         this.targetHeight = 600;
         this.rowHeight = 0;
         this.regexp = null;
@@ -367,14 +369,14 @@ class SignalTable {
     adjustRowHeight() {
         // adjust row heights to fill table
         let natRowHeight = this.targetHeight / (this.num_devs + this.num_sigs);
-        if (natRowHeight > 17) {
+        if (natRowHeight > this.minHeight) {
             // don't allow zoom < 1
             if (this.zoomed < 1)
                 this.zoomed = 1;
         }
         let rowHeight = natRowHeight * this.zoomed;
-        if (rowHeight < 17) {
-            rowHeight = 17;
+        if (rowHeight < this.minHeight) {
+            rowHeight = this.minHeight;
             this.zoomed = rowHeight / natRowHeight;
         }
         let changed = (Math.round(rowHeight) != Math.round(this.rowHeight));
@@ -382,6 +384,8 @@ class SignalTable {
             this.rowHeight = $("#"+this.id+' tbody tr')
                                 .css('height', rowHeight+'px')
                                 .height();
+//            let self = this;
+//            $("#"+this.id+" td").each(function(td) { self.autoRotate(this); });
         }
         return changed;
     }
@@ -443,6 +447,23 @@ class SignalTable {
                 for (var i = 1; i < tds.length; i++)
                     this.expandWidth += tds[i].offsetWidth;
             }
+        }
+    }
+
+    autoRotate(td) {
+        let id = $(td).attr('id');
+        if (!id)
+            return;
+        let text = id.split('/').slice(-1)[0];
+        let h = td.offsetHeight;
+        let w = this.textWidth(text);
+        if (w > this.minHeight && w < h) {
+            $(td).addClass('tall');
+            $(td).empty().append("<div>"+text+"</div>");
+        }
+        else {
+            $(td).removeClass('tall');
+            $(td).empty().append(text);
         }
     }
 
@@ -626,14 +647,9 @@ class SignalTable {
                                     id = tokens.slice(0, tokens.length-idx).join('/');
                                 line += " id='"+id+"'";
                                 line += " rowspan="+tds[j][0];
-                                line += " class='";
                                 if (id.indexOf('/') == -1)
-                                    line += " device";
-                                if (tds[j][0] >= tds[j][1].length / 2)
-                                    line += " tall'><div>"+tds[j][1]+"</div>";
-                                else
-                                    line += "'>"+tds[j][1];
-                                line += "</td>";
+                                    line += " class=device";
+                                line += ">"+tds[j][1]+"</td>";
                             }
                         }
                         target.append("<tr class='"+devRowType+"' style='background: "+b.leaf.color+"44' id="+b.leaf.id+">"+line+"</tr>");
@@ -647,9 +663,10 @@ class SignalTable {
             }
         }
         add_tree(tree, [], $(this.tbody), 0);
+        let tds = $("#"+this.id+" td");
+        tds.each(function(td) { _self.autoRotate(this); });
         this.grow();
 
-        let tds = $("#"+this.id+" td");
         $(tds).off('click');
         $(tds).on('click', function(e) {
             if ($(e.currentTarget).hasClass('leaf')) {
@@ -727,6 +744,15 @@ class SignalTable {
         this.adjustRowHeight();
         this.updateTitle();
     }
+
+    // from https://stackoverflow.com/questions/1582534/calculating-text-width
+    textWidth(text){
+        var calc = '<span style="display:none">' + text + '</span>';
+        $('body').append(calc);
+        var width = $('body').find('span:last').width();
+        $('body').find('span:last').remove();
+        return width;
+    };
 
     setSigPosition(sig) {
         let self = this;
