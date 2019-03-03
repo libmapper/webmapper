@@ -56,8 +56,10 @@ def dev_props(dev):
         props['synced'] = props['synced'].get_double()
     props['key'] = dev.name
     props['status'] = 'active'
-    del props['is_local']
-    del props['id']
+    if 'is_local' in props:
+        del props['is_local']
+    if 'id' in props:
+        del props['id']
     return props
 
 def link_props(link):
