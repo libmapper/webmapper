@@ -6,7 +6,7 @@
 
 class GraphView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('graph', frame, null, canvas, database, tooltip);
+        super('graph', frame, null, canvas, database, tooltip, GraphMapPainter);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
@@ -81,5 +81,14 @@ class GraphView extends View {
         super.cleanup();
         $('#axes').stop(true, false)
                   .animate({opacity: 0}, {duration: 2000});
+    }
+}
+
+class GraphMapPainter extends MapPainter
+{
+    constructor(map, canvas, frame) { super(map, canvas, frame); }
+
+    updateAttributes() {
+        this._defaultAttributes();
     }
 }
