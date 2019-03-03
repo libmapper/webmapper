@@ -127,6 +127,7 @@ class SignalTable {
                 func();
         }});
         $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
+        this.updateTitle();
         this.targetHeight = height - 20;
         this.adjustRowHeight();
     }
@@ -157,7 +158,9 @@ class SignalTable {
                 break;
         }
         this.title = title;
-        if (this.num_hidden_sigs > 0)
+        if (!this.num_sigs && !this.num_hidden_sigs)
+            title = '';
+        else if (this.num_hidden_sigs > 0)
             title += " ("+this.num_sigs+" of "+(this.num_sigs + this.num_hidden_sigs)+")";
         else
             title += " ("+this.num_sigs+")";
@@ -431,12 +434,12 @@ class SignalTable {
         if (this.expand) {
             let tr = $("#"+this.id+" tr")[0];
             let tds = $(tr).children('td').not('.invisible');
+            this.expandWidth = 0;
             if (this.location == 'left') {
-                let td = tds[tds.length - 2];
-                this.expandWidth = td.offsetLeft + td.offsetWidth;
+                for (var i = 0; i < tds.length - 1; i++)
+                    this.expandWidth += tds[i].offsetWidth;
             }
             else {
-                this.expandWidth = 0;
                 for (var i = 1; i < tds.length; i++)
                     this.expandWidth += tds[i].offsetWidth;
             }
