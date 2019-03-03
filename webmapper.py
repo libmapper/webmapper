@@ -146,7 +146,6 @@ def on_device(dev, action):
         server.send_command("del_device", dev_props(dev))
     elif action == mapper.EXPIRED:
 #        print 'ON_DEVICE (expired)', dev_props(dev)
-        server.send_command("del_device", dev_props(dev))
         db.flush()
 
 def on_link(link, action):
