@@ -81,8 +81,8 @@ class CanvasView extends View {
                 // snap to sig object
                 let src = self.draggingFrom.position;
                 let dst = sig.position;
-                let src_offset = src.width * 0.5 + 10;
-                let dst_offset = dst.width * 0.5 + 10;
+                let src_offset = src.width * 0.5;
+                let dst_offset = dst.width * 0.5;
                 let path = null;
                 if (self.dragging == 'left') {
                    path = [['M', src.left - src_offset, src.top],
@@ -251,7 +251,8 @@ class CanvasView extends View {
             sig.view.stop();
         sig.view.animate(attrs, duration, '>');
         if (!sig.view.label) {
-            let key = (sig.direction == 'input') ? '• ' + sig.key : sig.key + ' •';
+            // TODO: use canvasObject appearance to indicate signal direction
+            let key = sig.key;
             sig.view.label = this.canvas.text(sig.position.left, sig.position.top, key);
             sig.view.label.node.setAttribute('pointer-events', 'none');
         }
