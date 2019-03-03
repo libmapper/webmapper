@@ -158,7 +158,7 @@ class SignalTable {
                 break;
         }
         this.title = title;
-        if (!this.num_sigs && !this.num_hidden_sigs)
+        if ((!this.num_sigs && !this.num_hidden_sigs) || this.frame.left <= this.frame.width)
             title = '';
         else if (this.num_hidden_sigs > 0)
             title += " ("+this.num_sigs+" of "+(this.num_sigs + this.num_hidden_sigs)+")";

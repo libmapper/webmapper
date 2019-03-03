@@ -104,7 +104,7 @@ function initViewCommands()
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
             // for testing: press space bar to randomise signal positions
-            if (e.which == 32) {
+            if (e.which == 32 && view.type == 'graph') {
                 e.preventDefault();
                  let view = viewManager.view;
                 database.devices.each(function(dev) {
