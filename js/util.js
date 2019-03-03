@@ -244,31 +244,43 @@ function remove_object_svg(obj, duration) {
         duration = 1000;
     if (obj.view.label) {
         obj.view.label.stop();
-        obj.view.label.animate({'stroke-opacity': 0, 'fill-opacity': 0},
-                               duration, 'linear', function() { this.remove(); });
+        if (duration)
+            obj.view.label.animate({'stroke-opacity': 0, 'fill-opacity': 0},
+                                   duration, 'linear', function() { this.remove(); });
+        else
+            obj.view.label.remove();
         obj.view.label = null;
     }
     if (obj.view.startPoint) {
         obj.view.startPoint.stop();
         obj.view.startPoint.unhover();
         obj.view.startPoint.undrag();
-        obj.view.startPoint.animate({'opacity': 0},
-                                    duration, 'linear', function() { this.remove(); });
+        if (duration)
+            obj.view.startPoint.animate({'opacity': 0},
+                                        duration, 'linear', function() { this.remove(); });
+        else
+            obj.view.startPoint.remove();
         obj.view.startPoint = null;
     }
     if (obj.view.stopPoint) {
         obj.view.stopPoint.stop();
         obj.view.stopPoint.unhover();
         obj.view.stopPoint.undrag();
-        obj.view.stopPoint.animate({'opacity': 0},
-                                   duration, 'linear', function() { this.remove(); });
+        if (duration)
+            obj.view.stopPoint.animate({'opacity': 0},
+                                       duration, 'linear', function() { this.remove(); });
+        else
+            obj.view.stopPoint.remove();
         obj.view.stopPoint = null;
     }
     obj.view.stop();
     obj.view.unhover();
     obj.view.undrag();
-    obj.view.animate({'stroke-opacity': 0, 'fill-opacity': 0},
-                     duration, 'linear', function() { this.remove(); });
+    if (duration)
+        obj.view.animate({'stroke-opacity': 0, 'fill-opacity': 0},
+                         duration, 'linear', function() { this.remove(); });
+    else
+        obj.view.remove();
     obj.view = null;
 }
 

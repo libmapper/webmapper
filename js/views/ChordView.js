@@ -261,6 +261,7 @@ class ChordView extends View {
         if (!dev.view)
             return;
         dev.view.stop();
+        dev.view.label.stop();
         let offline = (dev.status == 'offline');
         let angleInc;
         if (offline == 'offline') {
