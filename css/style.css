@@ -566,6 +566,7 @@ tbody {
     border-radius: 10px;
     opacity: 0;
     white-space: pre-line;
+    pointer-events: none;
 }
 
 #table.infoTable {
