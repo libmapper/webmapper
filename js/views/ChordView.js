@@ -72,6 +72,10 @@ class ChordView extends View {
                                 'y': this.frame.height - 30});
     }
 
+    gap(numDevs) {
+        return numDevs > 1 ? 0.9 : 0.999999;
+    }
+
     updateDevices() {
         let self = this;
         this.onlineDevs = 0;
@@ -108,12 +112,13 @@ class ChordView extends View {
             else
                 dev.index = onlineIndex++;
             let angleInc = offline ? self.offlineInc : self.onlineInc;
+            let numDevs = offline ? self.offlineDevs : self.onlineDevs;
             let x = cx * (offline ? 1.5 : 0.5);
             let angle = (dev.index - 0.45) * angleInc;
             let pstart = {'angle': angle,
                           'x': x + Math.cos(angle) * r,
                           'y': cy + Math.sin(angle) * r};
-            angle += angleInc * 0.9;
+            angle += angleInc * self.gap(numDevs);
             let pstop = {'angle': angle,
                          'x': x + Math.cos(angle) * r,
                          'y': cy + Math.sin(angle) * r};
@@ -171,7 +176,7 @@ class ChordView extends View {
         let cx = self.mapPane.cx;
         let cy = self.mapPane.cy;
         let lastAngle = null;
-        let r, cx2, angleInc, angle;
+        let r, cx2, angleInc, angle, numDevs;
         dev.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo) {
                 dev.staged = self.snappingTo;
@@ -187,7 +192,7 @@ class ChordView extends View {
                 dev.view.pstart = {'angle': angle,
                                    'x': cx2 + Math.cos(angle) * r,
                                    'y': cy + Math.sin(angle) * r};
-                angle += angleInc * 0.9;
+                angle += angleInc * self.gap(self.offlineDevs);
                 dev.view.pstop = {'angle': angle,
                                   'x': cx2 + Math.cos(angle) * r,
                                   'y': cy + Math.sin(angle) * r};
@@ -213,6 +218,7 @@ class ChordView extends View {
                     r = self.radius;
                     cx2 = cx * 1.5;
                     angleInc = self.offlineInc;
+                    numDevs = self.offlineDevs;
                     angle = (dev.index - 0.45) * angleInc;
                     self.snappingTo = null;
                 }
@@ -221,6 +227,7 @@ class ChordView extends View {
                     r = self.radius + (self.snappingTo ? 40 : 50);
                     cx2 = cx * 0.5;
                     angleInc = self.onlineInc;
+                    numDevs = self.onlineDevs;
                     angle = Math.atan2(y - cy, x - cx2);
                     angle = (Math.round(angle / angleInc) - 0.45) * angleInc;
                 }
@@ -230,7 +237,7 @@ class ChordView extends View {
                 dev.view.pstart = {'angle': angle,
                                    'x': cx2 + Math.cos(angle) * r,
                                    'y': cy + Math.sin(angle) * r};
-                angle += angleInc * 0.9;
+                angle += angleInc * self.gap(numDevs);
                 dev.view.pstop = {'angle': angle,
                                   'x': cx2 + Math.cos(angle) * r,
                                   'y': cy + Math.sin(angle) * r};
@@ -263,15 +270,20 @@ class ChordView extends View {
         dev.view.stop();
         dev.view.label.stop();
         let offline = (dev.status == 'offline');
-        let angleInc;
+        let angleInc, numDevs;
         if (offline == 'offline') {
-            if (dev.draggingFrom)
+            if (dev.draggingFrom) {
                 angleInc = self.onlineInc;
-            else
+                numDevs = self.onlineDevs;
+            }
+            else {
                 angleInc = self.offlineInc;
+                numDevs = self.offlineDevs;
+            }
         }
         else {
             angleInc = self.onlineInc;
+            numDevs = self.onlineDevs;
         }
 
         let r = self.radius ? self.radius : 0;
@@ -282,7 +294,7 @@ class ChordView extends View {
         let pstart = {'angle': angle,
                       'x': x + Math.cos(angle) * r,
                       'y': cy + Math.sin(angle) * r};
-        angle += angleInc * 0.9;
+        angle += angleInc * self.gap(numDevs);
         let pstop = {'angle': angle,
                      'x': x + Math.cos(angle) * r,
                      'y': cy + Math.sin(angle) * r};
