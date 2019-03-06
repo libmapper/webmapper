@@ -20,7 +20,18 @@ function init() {
 
     // add the view wrapper
     $('body').append("<div id='container'></div>");
-    $('body').append("<div id='axes'></div>");
+    $('body').append("<div id='axes'>"+
+                        "<div id='yAxis'>"+
+                            "<div id='yAxisMax'>0</div>"+
+                            "<div id='yAxisLabel'>y axis</div>"+
+                            "<div id='yAxisMin'>1</div>"+
+                        "</div>"+
+                        "<div id='xAxis'>"+
+                         "<div id='xAxisMin'>0</div>"+
+                         "<div id='xAxisLabel'>x axis</div>"+
+                         "<div id='xAxisMax'>1</div>"+
+                        "</div>"+
+                     "</div>");
 
     // init the view
     $('#container').empty();
