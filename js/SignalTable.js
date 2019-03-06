@@ -99,39 +99,41 @@ class SignalTable {
 
         $({someValue: 0}).animate({someValue: 1},
                                   {duration: duration,
-                                  step: function(now, fx) {
-            let was = 1 - now;
-            self.frame.left = left * now + left_was * was;
-            self.frame.top = top * now + top_was * was;
-            self.frame.width = width * now + width_was * was;
-            self.frame.height = height * now + height_was * was;
-            self.frame.angle = angle * now + angle_was * was;
-            $('#' + self.id).css({
-                'left': self.frame.left,
-                'top': self.frame.top,
-                'width': self.frame.width,
-                'height': self.frame.height,
-                'transform-origin': 'top left',
-                'WebkitTransform': 'rotate(' + self.frame.angle + 'rad)',
-                '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
-                'transform': 'rotate(' + self.frame.angle + 'rad)',
-                'text-align': self.frame.angle ? 'right' : 'left'
-            });
+            step: function(now, fx) {
+                let was = 1 - now;
+                self.frame.left = left * now + left_was * was;
+                self.frame.top = top * now + top_was * was;
+                self.frame.width = width * now + width_was * was;
+                self.frame.height = height * now + height_was * was;
+                self.frame.angle = angle * now + angle_was * was;
+                $('#' + self.id).css({
+                    'left': self.frame.left,
+                    'top': self.frame.top,
+                    'width': self.frame.width,
+                    'height': self.frame.height,
+                    'transform-origin': 'top left',
+                    'WebkitTransform': 'rotate(' + self.frame.angle + 'rad)',
+                    '-moz-transform': 'rotate(' + self.frame.angle + 'rad)',
+                    'transform': 'rotate(' + self.frame.angle + 'rad)',
+                    'text-align': self.frame.angle ? 'right' : 'left'
+                });
 
-            $('#' + self.id + 'Scroller').css({
-                'left': innerLeft ? innerLeft : 0,
-                'top': 0,
-                'width': innerWidth ? innerWidth : '100%',
-                'height': self.frame.height - 20,
-            });
+                $('#' + self.id + 'Scroller').css({
+                    'left': innerLeft ? innerLeft : 0,
+                    'top': 0,
+                    'width': innerWidth ? innerWidth : '100%',
+                    'height': self.frame.height - 20,
+                });
 
-            if (func)
-                func();
+                if (func)
+                    func();
+            },
+            complete: function() {
+                $('#'+self.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
+                self.updateTitle();
+                self.targetHeight = height - 20;
+                self.adjustRowHeight();
         }});
-        $('#'+this.id+'Title').css('float', (angle == 0) ? 'left' : 'right');
-        this.updateTitle();
-        this.targetHeight = height - 20;
-        this.adjustRowHeight();
     }
 
     filterByName(string) {
@@ -150,17 +152,17 @@ class SignalTable {
         let title = null;
         switch (this.direction) {
             case 'output':
-                title = 'SRC';
+                title = this.frame.width > 200 ? 'SOURCES' : 'SRC';
                 break;
             case 'input':
-                title = 'DST';
+                title = this.frame.width > 200 ? 'DESTINATIONS' : 'DST';
                 break;
             default:
                 title = 'SIGS';
                 break;
         }
         this.title = title;
-        if ((!this.num_sigs && !this.num_hidden_sigs) || this.frame.left <= this.frame.width)
+        if (!(this.num_sigs + this.num_hidden_sigs) || (this.frame.left + this.frame.width) < 0)
             title = '';
         else if (this.num_hidden_sigs > 0)
             title += " ("+this.num_sigs+" of "+(this.num_sigs + this.num_hidden_sigs)+")";
@@ -451,6 +453,9 @@ class SignalTable {
     }
 
     autoRotate(td) {
+        if ($(td).hasClass('leaf')) {
+            return;
+        }
         let id = $(td).attr('id');
         if (!id)
             return;
