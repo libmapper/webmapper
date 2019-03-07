@@ -114,7 +114,6 @@ function initViewCommands()
 {
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
-            // for testing: press space bar to randomise signal positions
             switch (e.which) {
                 case 37:
                     // pan left
@@ -135,19 +134,6 @@ function initViewCommands()
                     // pan down
                     e.preventDefault();
                     viewManager.pan(null, null, 0, -10);
-                    break;
-                case 32:
-                    if (viewManager.view.type == 'graph') {
-                        e.preventDefault();
-                        let view = viewManager.view;
-                        database.devices.each(function(dev) {
-                            dev.signals.each(function(sig) {
-                                sig.position.x = Math.random() * view.frame.width;
-                                sig.position.y = Math.random() * view.frame.height;
-                            });
-                        });
-                        view.draw(500);
-                    }
                     break;
             }
             return;
@@ -212,7 +198,7 @@ function initViewCommands()
                 viewManager.zoom(mp.cx, mp.cy, 10);
                 break;
             default:
-                console.log('key:', e.which);
+//                console.log('key:', e.which);
         }
         if (new_view) {
             viewManager.switch_view(new_view);

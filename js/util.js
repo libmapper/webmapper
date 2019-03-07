@@ -285,8 +285,8 @@ function remove_object_svg(obj, duration) {
 }
 
 function position(x, y, frame) {
-    return { 'x': x != null ? x : Math.random() * frame.width,
-             'y': y != null ? y : Math.random() * frame.height };
+    return { 'x': x != null ? x : frame.left,
+             'y': y != null ? y : frame.top };
 }
 
 function select_all_maps() {
