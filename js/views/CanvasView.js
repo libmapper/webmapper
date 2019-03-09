@@ -59,7 +59,7 @@ class CanvasView extends View {
     _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
-                                0, duration, function() {self.draw()}, 0, 0);
+                                0, duration, function() {self.draw(0)}, 0, 0);
         this.mapPane.left = this.leftExpandWidth;
         this.mapPane.width = this.frame.width - this.leftExpandWidth;
         this.mapPane.height = this.frame.height;
@@ -128,7 +128,7 @@ class CanvasView extends View {
                 // update table to replace signal row and position getters
                 self.tables.left.update();
                 // update maps
-                self.drawMaps();
+                self.drawMaps(0);
             }
             // move svg canvas to back
             $('#svgDiv').css({'position': 'relative', 'z-index': 0});
@@ -320,13 +320,13 @@ class CanvasView extends View {
             this.tableZoom(x, y, delta);
         else {
             this.canvasZoom(x, y, delta);
-            this.drawMaps();
+            this.drawMaps(0);
         }
     }
 
     resetPanZoom() {
         super.resetPanZoom();
-        this.drawMaps();
+        this.drawMaps(0);
     }
 
     setCanvasTableDrag() {
@@ -360,10 +360,10 @@ class CanvasView extends View {
                 sig.canvasObject = {'left': p.left, 'top': p.top,
                                     'width': p.width, 'height': p.height};
                 let c = sig.canvasObject;
-                self.drawSignal(sig);
+                self.drawSignal(sig, 0);
                 // remove signal from table
                 table.update();
-                self.drawMaps();
+                self.drawMaps(0);
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     if (self.escaped) {
@@ -376,7 +376,7 @@ class CanvasView extends View {
                     constrain(p, self.frame, 5);
                     c.left = p.left;
                     c.top = p.top;
-                    self.drawSignal(sig);
+                    self.drawSignal(sig, 0);
                     self.drawMaps(0, sig);
                 });
                 $(document).on('mouseup.drawing', function(e) {

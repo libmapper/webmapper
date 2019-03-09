@@ -303,7 +303,7 @@ class ConsoleView extends View {
 //                              'height': this.mapPane.height,
 //                              'left': this.mapPane.cx});
 
-        this.draw();
+        this.draw(0);
     }
 
     draw(duration) {

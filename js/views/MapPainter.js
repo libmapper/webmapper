@@ -61,10 +61,10 @@ class MapPainter {
     // OTHER ///////////////////////////////////////////////////////////////////
 
     // Use these methods to set the state of the view
-    show() { this.map.hidden = false; this.draw(); }
-    hide() { this.map.hidden = true; this.draw(); }
-    highlight() { this._highlight = true; this.draw(); }
-    unhighlight() { this._highlight = false; this.draw(); }
+    show() { if (this.map.hidden) { this.map.hidden = false; this.draw(0); }}
+    hide() { if (!this.map.hidden) { this.map.hidden = true; this.draw(0); }}
+    highlight() { if (!this._highlight) { this._highlight = true; this.draw(0); }}
+    unhighlight() { if (this._highlight) { this._highlight = false; this.draw(0); }}
 
     // The draw function causes the map view to be updated based on the current
     // state of the map which it refers to. This method should not be overridden

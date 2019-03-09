@@ -26,6 +26,8 @@ class View {
         this.snappingTo = null;
         this.escaped = false;
 
+        this.animationTime = 500;
+
         this.newMap = null;
 
         if (tables) {
@@ -61,6 +63,8 @@ class View {
 
     // Subclasses should override the behavior of _resize rather than this one
     resize(newFrame, duration) {
+        if (duration === undefined)
+            duration = this.animationTime;
         if (newFrame)
             this.frame = newFrame;
         this._resize(duration);
@@ -737,7 +741,7 @@ class View {
                         self.newMap.dst = {position: {'x': x - self.frame.left,
                                                       'y': y - self.frame.top}};
                     }
-                    self.newMap.view.draw();
+                    self.newMap.view.draw(0);
 
                     src_table.highlightRow(src, false);
                     if (dst_table)

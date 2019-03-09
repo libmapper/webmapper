@@ -47,14 +47,14 @@ class GridView extends View {
                 self.leftExpandWidth = self.tables.left.expandWidth;
                 self.resize(null, 500);
             }
-            self.drawMaps();
+            self.drawMaps(0);
         };
         this.tables.right.collapseHandler = function() {
             if (self.tables.right.expandWidth != self.rightExpandWidth) {
                 self.rightExpandWidth = self.tables.right.expandWidth;
                 self.resize(null, 500);
             }
-            self.drawMaps();
+            self.drawMaps(0);
         };
 
         this.update();

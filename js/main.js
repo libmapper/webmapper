@@ -206,7 +206,7 @@ function initViewCommands()
     });
 
     $('#container').on('updateView', function(e) {
-        viewManager.draw();
+        viewManager.draw(0);
     });
 
     $('#container').on('scrolll', function(e) {
@@ -324,6 +324,6 @@ function select_obj(obj) {
     if (obj.selected)
         return false;
     obj.selected = true;
-    obj.view.draw();
+    obj.view.draw(0);
     return true;
 }
