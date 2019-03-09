@@ -24,11 +24,49 @@ class GraphView extends View {
 
         this.xAxisProp = null;//'min';
         this.yAxisProp = null;//'max';
-        var xMin = 0, xMax = 1, yMin = 0, yMax = 1;
+        var xMin = null, xMax = null, yMin = null, yMax = null;
         this.stepInterval = 100;
 
         this._labelAxes();
         this._updateRangeLabels();
+
+        // temporary
+        // TODO: populate menus using signal properties
+        $('#xAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a>");
+        $('#yAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a>");
+
+        let self = this;
+        $('.axisLabel').on('click', function(e) {
+            let axis = e.currentTarget.id[0];
+            let menu = $('#'+axis+'AxisMenu');
+            if ($(menu).hasClass('show'))
+                $(menu).removeClass('show');
+            else {
+                $(menu).addClass('show');
+
+                // hide other axis menu if it is showing
+                let other = (axis === 'x') ? 'y' : 'x';
+                $('#'+other+axis.slice(1)+'Menu').removeClass('show');
+
+                // listen for menu item clicks
+                $(menu).children('a').one('click', function(a) {
+                    $(menu).removeClass('show');
+                    let prop = a.currentTarget.innerHTML;
+                    if (prop === 'none')
+                        prop = null;
+                    if (axis === 'x' && self.xAxisProp !== prop)
+                        self.xAxisProp = prop;
+                    else if (self.yAxisProp !== prop)
+                        self.yAxisProp = prop;
+                    else
+                        return;
+                    self._labelAxes();
+                    self.xMin = self.xMax = self.yMin = self.yMax = null;
+                    self.sortSignals();
+                    self.startStepping();
+                });
+            }
+        });
 
         this.resize();
     }
@@ -36,29 +74,34 @@ class GraphView extends View {
     _resize(duration) {
         super._resize();
         $('#axes').stop(true, false)
-                  .css({'left': this.frame.left + 50,
-                        'top': this.frame.top + 50,
-                        'width': this.frame.width - 100,
-                        'height': this.frame.height - 100,
+                  .css({'left': this.frame.left + 25,
+                        'top': this.frame.top + 25,
+                        'width': this.frame.width - 50,
+                        'height': this.frame.height - 50,
                         'opacity': 1,
-                        'z-index': -1});
+                        'z-index': 10});
     }
 
     _labelAxes() {
         if (this.xAxisProp) {
-            $('#xAxisLabel').text(this.xAxisProp);
+            $('#xAxisLabel').text('x: '+this.xAxisProp);
+            $('#xAxisLabel').css('border-radius', '0px 0px 20px 20px');
             $('#axes').css('border-bottom', '1px solid white');
+
         }
         else {
-            $('#xAxisLabel').text('');
+            $('#xAxisLabel').text('x: none');
+            $('#xAxisLabel').css('border-radius', '20px 20px 0px 0px');
             $('#axes').css('border-bottom', 'none');
         }
         if (this.yAxisProp) {
-            $('#yAxisLabel').text(this.yAxisProp);
+            $('#yAxisLabel').text('y: '+this.yAxisProp);
+            $('#yAxisLabel').css('border-radius', '0px 20px 20px 0px');
             $('#axes').css('border-left', '1px solid white');
         }
         else {
-            $('#yAxisLabel').text('');
+            $('#yAxisLabel').text('y: none');
+            $('#yAxisLabel').css('border-radius', '20px 0px 0px 20px');
             $('#axes').css('border-left', 'none');
         }
     }
@@ -193,12 +236,19 @@ class GraphView extends View {
                                 p.push(sig.position);
                             sig.position = p;
                         }
+                        else if (sig.position.length > len) {
+                            sig.position = sig.position.slice(0, len);
+                        }
+                        else if (sig.position.length < len) {
+                            let p = sig.position[sig.position.length-1];
+                            for (var i = sig.position.length; i < len; i++)
+                                sig.position.push(p);
+                        }
                     }
                 });
             });
-            if (rangeChanged)
-                this._updateRangeLabels();
         }
+        this._updateRangeLabels();
     }
 
     forceDirect() {
@@ -333,6 +383,21 @@ class GraphView extends View {
                           'stroke-opacity': 1}, duration, '>');
     }
 
+    startStepping() {
+        let self = this;
+        if (this.stepping)
+            window.clearInterval(this.stepping);
+        this.stepping = setInterval(function() {
+            if (self.forceDirect() == true) {
+                self.draw(self.stepInterval);
+            }
+            else {
+                console.log('done stepping');
+                window.clearInterval(self.stepping);
+            }
+        }, self.stepInterval);
+    }
+
     update() {
         let elements;
         let self = this;
@@ -355,19 +420,7 @@ class GraphView extends View {
                 return false;
             });
             this.sortSignals();
-            if (this.stepping)
-                window.clearInterval(this.stepping);
-            this.stepping = setInterval(function() {
-                if (self.forceDirect() == true) {
-                    self.drawSignals(self.stepInterval);
-                    self.drawMaps(self.stepInterval);
-                }
-                else {
-                    console.log('done stepping');
-                    window.clearInterval(self.stepping);
-                }
-            }, self.stepInterval);
-            updated = true;
+            this.startStepping();
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
@@ -379,6 +432,7 @@ class GraphView extends View {
 
     draw(duration) {
         this.drawSignals(duration);
+        this.drawMaps(duration);
     }
 
     pan(x, y, delta_x, delta_y) {
@@ -409,6 +463,9 @@ class GraphView extends View {
                     delete sig.target;
             });
         });
+
+        $('#xAxisLabel').off('click');
+        $('#yAxisLabel').off('click');
     }
 }
 
@@ -425,6 +482,21 @@ class GraphMapPainter extends MapPainter
         // draw a curved line from src to dst
         let srcs = this.map.src.position;
         let dsts = this.map.dst.position;
+
+        // check if number of src or dst positions has changed
+        let len = srcs.length * dsts.length;
+        if (this.pathspecs.length > len) {
+            for (var i = len; i < this.paths.length; i++) {
+                let path = this.paths[i];
+                path.stop();
+                path.unhover();
+                path.undrag();
+                path.remove();
+                path = null;
+            }
+            this.paths = this.paths.slice(0, len);
+            this.pathspecs = this.pathspecs.slice(0, len);
+        }
 
         let idx = 0;
         for (var i in srcs) {

@@ -599,64 +599,99 @@ table.infoTable tr td:first-child {
 /*    border-radius: 10px;*/
     opacity: 0;
     white-space: pre-line;
+    pointer-events: none;
 }
 
 #xAxis {
     width: 100%;
-    height: 50px;
+    height: 25px;
+    display: inline-block;
 }
 
 #xAxis div {
     height: 100%;
     float: left;
-    color: white;
+}
+
+.axisLabel {
+    pointer-events: all;
+    text-align: center;
+    font-size: 14pt;
+    color: black;
+    background-color: white;
+}
+
+.axisLabel:hover, .axisLabel:focus {
+    background-color: lightgray;
 }
 
 #xAxisLabel {
-    text-align: center;
-    font-size: 18pt;
-    width: 33%;
+    width: 20%;
+    line-height: 25px;
+}
+
+#xAxisMenu {
+    position: absolute;
+    left: 40%;
+    bottom: 0px;
+    overflow: auto;
+    pointer-events: all;
 }
 
 #xAxisMin {
     text-align: left;
-    width: 33%;
+    width: 40%;
+    color: white;
 }
 
 #xAxisMax {
     text-align: right;
-    width: 34%;
+    width: 40%;
+    color: white;
 }
 
 #yAxis {
-    left: -50px;
-    width: 50px;
+    left: -25px;
+    width: 25px;
     height: 100%;
     position: relative;
 }
 
 #yAxis div {
-    transform: rotate(180deg);
     writing-mode: vertical-lr;
     /*    -webkit-text-orientation: mixed;*/
     width: 100%;
-    color: white;
 }
 
 #yAxisLabel {
-    text-align: center;
-    font-size: 18pt;
-    height: 33%;
+    transform: rotate(180deg);
+    height: 20%;
+    top: 40%;
+    line-height: 28px;
+}
+
+#yAxisMenu {
+    position: absolute;
+    transform: rotate(-90deg);
+    left: -25px;
+    top: calc(48%);
+    overflow: auto;
+    pointer-events: all;
 }
 
 #yAxisMin {
+    transform: rotate(180deg);
     text-align: left;
-    height: 33%;
+    height: 40%;
+    color: white;
 }
 
 #yAxisMax {
+    transform: rotate(180deg);
     text-align: right;
-    height: 34%;
+    height: 40%;
+    top: 60%;
+    color: white;
 }
 
 /*.status.middle {*/
@@ -744,3 +779,33 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-font-smoothing: antialiased;
     cursor: text;
 }
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {display:block;}

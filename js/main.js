@@ -22,14 +22,16 @@ function init() {
     $('body').append("<div id='container'></div>");
     $('body').append("<div id='axes'>"+
                         "<div id='yAxis'>"+
-                            "<div id='yAxisMax'>0</div>"+
-                            "<div id='yAxisLabel'>y axis</div>"+
-                            "<div id='yAxisMin'>1</div>"+
+                            "<div id='yAxisMax'></div>"+
+                            "<div id='yAxisLabel' class='axisLabel'></div>"+
+                            "<div id='yAxisMenu' class='dropdown-content'></div>"+
+                            "<div id='yAxisMin'></div>"+
                         "</div>"+
                         "<div id='xAxis'>"+
-                         "<div id='xAxisMin'>0</div>"+
-                         "<div id='xAxisLabel'>x axis</div>"+
-                         "<div id='xAxisMax'>1</div>"+
+                            "<div id='xAxisMin'></div>"+
+                            "<div id='xAxisLabel' class='axisLabel'></div>"+
+                            "<div id='xAxisMenu' class='dropdown-content'></div>"+
+                            "<div id='xAxisMax'></div>"+
                         "</div>"+
                      "</div>");
 
