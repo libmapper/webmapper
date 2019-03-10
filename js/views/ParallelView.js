@@ -6,7 +6,8 @@
 
 class ParallelView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('parallel', frame, null, canvas, database, tooltip);
+        super('parallel', frame, null, canvas, database, tooltip,
+              ParallelMapPainter);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
@@ -189,5 +190,15 @@ class ParallelView extends View {
         }
         else
             this.canvasZoom(x, y, delta);
+    }
+}
+
+class ParallelMapPainter extends MapPainter
+{
+    constructor(map, canvas, frame) { super(map, canvas, frame); }
+
+    updateAttributes() {
+        this._defaultAttributes();
+        this.shortenPath = 12;
     }
 }

@@ -218,5 +218,6 @@ class HiveMapPainter extends MapPainter
     updateAttributes() {
         this._defaultAttributes();
         this.midPointInflation = -0.2;
+        this.shortenPath = 12;
     }
 }

@@ -20,12 +20,10 @@ class GraphView extends View {
         // remove link svg
         this.database.links.each(remove_object_svg);
 
-        this.shortenPaths = 12;
-
-        this.xAxisProp = null;//'min';
-        this.yAxisProp = null;//'max';
+        this.xAxisProp = 'min';
+        this.yAxisProp = 'max';
         var xMin = null, xMax = null, yMin = null, yMax = null;
-        this.stepInterval = 100;
+        this.stepInterval = 2;
 
         this._labelAxes();
         this._updateRangeLabels();
@@ -63,10 +61,18 @@ class GraphView extends View {
                     self.yAxisProp = prop;
                 else
                     return;
+                self.stopStepping();
                 self._labelAxes();
                 self.xMin = self.xMax = self.yMin = self.yMax = null;
                 self.sortSignals();
-                self.startStepping();
+                if (!self.xAxisProp || !self.yAxisProp) {
+                    // need to call force-directed layout
+                    self.startStepping();
+                }
+                else {
+                    // can just draw directly
+                    self.draw(500);
+                }
             });
         });
 
@@ -86,7 +92,7 @@ class GraphView extends View {
 
     _labelAxes() {
         if (this.xAxisProp) {
-            $('#xAxisLabel').text('x: '+this.xAxisProp)
+            $('#xAxisLabel').text('x: '+this.xAxisProp+' ▲')
                             .css('border-radius', '0px 0px 20px 20px');
             $('#axes').css('border-bottom', '1px solid white');
 
@@ -97,7 +103,7 @@ class GraphView extends View {
             $('#axes').css('border-bottom', 'none');
         }
         if (this.yAxisProp) {
-            $('#yAxisLabel').text('y: '+this.yAxisProp)
+            $('#yAxisLabel').text('y: '+this.yAxisProp+' ◀')
                             .css('border-radius', '0px 20px 20px 0px');
             $('#axes').css('border-left', '1px solid white');
         }
@@ -149,6 +155,19 @@ class GraphView extends View {
                     let xVal = xProp == null ? null : sig[xProp];
                     let yVal = yProp == null ? null : sig[yProp];
                     let positionChanged = false;
+                    if (xProp && (xVal === null || xVal === undefined) &&
+                        yProp && (yVal === null || yVal === undefined)) {
+                        if (sig.position) {
+                            delete sig.position;
+                            positionChanged = true;
+                        }
+                        if (sig.view) {
+//                            sig.view.hide();
+                            remove_object_svg(sig.view);
+                            sig.view = null;
+                        }
+                        return;
+                    }
                     if (xVal != null && xVal != undefined) {
                         let xValMin, xValMax;
                         if (xVal.length > 1) {
@@ -231,8 +250,13 @@ class GraphView extends View {
                         }
                         sig.target = t;
                         sig.force = f;
-                        // make sure sig.position has same length as sig.target
-                        if (sig.position.x != undefined) {
+                        if (!sig.position) {
+                            sig.position = [];
+                            let p = {'x': tx, 'y': ty};
+                            for (var i = 0; i < len; i++)
+                                sig.position.push(p);
+                        }
+                        else if (sig.position.x != undefined) {
                             let p = [sig.position];
                             for (var i = 0; i < len - 1; i++)
                                 p.push(sig.position);
@@ -246,6 +270,9 @@ class GraphView extends View {
                             for (var i = sig.position.length; i < len; i++)
                                 sig.position.push(p);
                         }
+                        // if x and y axis are defined, copy target to position
+                        if (self.xAxisProp && self.yAxisProp)
+                            sig.position = sig.target;
                     }
                 });
             });
@@ -263,13 +290,13 @@ class GraphView extends View {
         let K_map_x = 0.0;
         let K_map_y = 0.0;
         if (!self.xAxisProp) {
-            K_target_x = 0.002;
-            K_repulse_x = 200;
+            K_target_x = 0.01;
+            K_repulse_x = 1000;
             K_map_x = 0.01;
         }
         if (!self.yAxisProp) {
-            K_target_y = 0.002;
-            K_repulse_y = 200;
+            K_target_y = 0.01;
+            K_repulse_y = 1000;
             K_map_y = 0.01;
         }
         let L = 100;
@@ -391,13 +418,20 @@ class GraphView extends View {
             window.clearInterval(this.stepping);
         this.stepping = setInterval(function() {
             if (self.forceDirect() == true) {
-                self.draw(self.stepInterval);
+                self.draw(0);
             }
             else {
                 console.log('done stepping');
                 window.clearInterval(self.stepping);
+                self.stepping = null;
             }
         }, self.stepInterval);
+    }
+
+    stopStepping() {
+        console.log('done stepping');
+        window.clearInterval(this.stepping);
+        this.stepping = null;
     }
 
     update() {
@@ -422,7 +456,14 @@ class GraphView extends View {
                 return false;
             });
             this.sortSignals();
-            this.startStepping();
+            if (!this.xAxisProp || !this.yAxisProp) {
+                // need to call force-directed layout
+                this.startStepping();
+            }
+            else {
+                // can just draw directly
+                this.draw(500);
+            }
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
@@ -481,6 +522,7 @@ class GraphMapPainter extends MapPainter
         // constant width
         let width = (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth);
         this.attributes[0]['stroke-width'] = width * this.canvas.zoom;
+        this.shortenPath = 12;
     }
 
     updatePaths()
@@ -511,6 +553,9 @@ class GraphMapPainter extends MapPainter
                 let dst = dsts[j];
                 let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
                 let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
+
+                mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
+                mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
 
                 this.pathspecs[idx] = [['M', src.x, src.y],
                                        ['S', mid.x, mid.y, dst.x, dst.y]];

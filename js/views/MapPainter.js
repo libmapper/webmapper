@@ -146,6 +146,11 @@ class MapPainter {
         {
             // TODO: allow animation
             let pathspec = this.pathspecs[i];
+            if (this.shortenPath) {
+                let len = Raphael.getTotalLength(pathspec);
+                let shorten = this.shortenPath * this.canvas.zoom;
+                pathspec = Raphael.getSubpath(pathspec, shorten, len - shorten);
+            }
             let path = this.paths[i];
             let attributes = this.attributes[i];
 
@@ -199,3 +204,4 @@ MapPainter.stagedOpacity = 0.5;
 MapPainter.defaultOpacity = 1.0;
 MapPainter.boldStrokeWidth = 8;
 MapPainter.defaultStrokeWidth = 4;
+MapPainter.shortenPath = 0;
