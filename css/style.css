@@ -604,7 +604,7 @@ table.infoTable tr td:first-child {
 
 #xAxis {
     width: 100%;
-    height: 25px;
+    height: 29px;
     display: inline-block;
 }
 
@@ -651,8 +651,8 @@ table.infoTable tr td:first-child {
 }
 
 #yAxis {
-    left: -25px;
-    width: 25px;
+    left: -29px;
+    width: 29px;
     height: 100%;
     position: relative;
 }

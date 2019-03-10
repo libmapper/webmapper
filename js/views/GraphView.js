@@ -39,33 +39,35 @@ class GraphView extends View {
         $('.axisLabel').on('click', function(e) {
             let axis = e.currentTarget.id[0];
             let menu = $('#'+axis+'AxisMenu');
-            if ($(menu).hasClass('show'))
+            if ($(menu).hasClass('show')) {
                 $(menu).removeClass('show');
-            else {
-                $(menu).addClass('show');
-
-                // hide other axis menu if it is showing
-                let other = (axis === 'x') ? 'y' : 'x';
-                $('#'+other+axis.slice(1)+'Menu').removeClass('show');
-
-                // listen for menu item clicks
-                $(menu).children('a').one('click', function(a) {
-                    $(menu).removeClass('show');
-                    let prop = a.currentTarget.innerHTML;
-                    if (prop === 'none')
-                        prop = null;
-                    if (axis === 'x' && self.xAxisProp !== prop)
-                        self.xAxisProp = prop;
-                    else if (self.yAxisProp !== prop)
-                        self.yAxisProp = prop;
-                    else
-                        return;
-                    self._labelAxes();
-                    self.xMin = self.xMax = self.yMin = self.yMax = null;
-                    self.sortSignals();
-                    self.startStepping();
-                });
+                $(menu).children('a').off('click');
+                return;
             }
+            $(menu).addClass('show');
+
+            // hide other axis menu if it is showing
+            let other = (axis == 'x') ? 'y' : 'x';
+            $('#'+other+axis.slice(1)+'Menu').removeClass('show');
+            $('#'+other+axis.slice(1)+'Menu').children('a').off('click');
+
+            // listen for menu item clicks
+            $(menu).children('a').one('click', function(a) {
+                $(menu).removeClass('show');
+                let prop = a.currentTarget.innerHTML;
+                if (prop === 'none')
+                    prop = null;
+                if (axis == 'x' && self.xAxisProp != prop)
+                    self.xAxisProp = prop;
+                else if (axis == 'y' && self.yAxisProp != prop)
+                    self.yAxisProp = prop;
+                else
+                    return;
+                self._labelAxes();
+                self.xMin = self.xMax = self.yMin = self.yMax = null;
+                self.sortSignals();
+                self.startStepping();
+            });
         });
 
         this.resize();
@@ -84,24 +86,24 @@ class GraphView extends View {
 
     _labelAxes() {
         if (this.xAxisProp) {
-            $('#xAxisLabel').text('x: '+this.xAxisProp);
-            $('#xAxisLabel').css('border-radius', '0px 0px 20px 20px');
+            $('#xAxisLabel').text('x: '+this.xAxisProp)
+                            .css('border-radius', '0px 0px 20px 20px');
             $('#axes').css('border-bottom', '1px solid white');
 
         }
         else {
-            $('#xAxisLabel').text('x: none');
-            $('#xAxisLabel').css('border-radius', '20px 20px 0px 0px');
+            $('#xAxisLabel').text('x: none')
+                            .css('border-radius', '20px 20px 0px 0px');
             $('#axes').css('border-bottom', 'none');
         }
         if (this.yAxisProp) {
-            $('#yAxisLabel').text('y: '+this.yAxisProp);
-            $('#yAxisLabel').css('border-radius', '0px 20px 20px 0px');
+            $('#yAxisLabel').text('y: '+this.yAxisProp)
+                            .css('border-radius', '0px 20px 20px 0px');
             $('#axes').css('border-left', '1px solid white');
         }
         else {
-            $('#yAxisLabel').text('y: none');
-            $('#yAxisLabel').css('border-radius', '20px 0px 0px 20px');
+            $('#yAxisLabel').text('y: none')
+                            .css('border-radius', '20px 0px 0px 20px');
             $('#axes').css('border-left', 'none');
         }
     }
@@ -444,6 +446,7 @@ class GraphView extends View {
         this.canvasZoom(x, y, delta);
         this._updateRangeLabels();
         this.drawSignals();
+        this.drawMaps();
     }
 
     cleanup() {
@@ -475,6 +478,9 @@ class GraphMapPainter extends MapPainter
 
     updateAttributes() {
         this._defaultAttributes();
+        // constant width
+        let width = (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth);
+        this.attributes[0]['stroke-width'] = width * this.canvas.zoom;
     }
 
     updatePaths()
