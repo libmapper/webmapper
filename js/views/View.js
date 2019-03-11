@@ -300,7 +300,11 @@ class View {
                 }
                 self.snappingTo = sig;
                 let src = self.draggingFrom.position;
+                if (!src.x && src[0].x)
+                    src = src[0];
                 let dst = sig.position;
+                if (!dst.x && dst[0].x)
+                    dst = dst[0];
                 let path = [['M', src.x, src.y],
                             ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
                              dst.x, dst.y]];
@@ -335,6 +339,8 @@ class View {
                 x -= self.frame.left;
                 y -= self.frame.top;
                 let src = self.draggingFrom.position;
+                if (!src.x && src[0].x)
+                    src = src[0];
                 let path = [['M', src.x, src.y],
                             ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
                 if (!self.newMap) {
