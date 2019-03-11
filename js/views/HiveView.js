@@ -111,44 +111,6 @@ class HiveView extends View {
         });
     }
 
-//    getMapPath(map) {
-//        if (!map.view)
-//            return;
-//
-//        // draw L-R bezier
-//        let src = map.src.position;
-//        let dst = map.dst.position;
-//        if (!src || !dst) {
-//            console.log('missing signal positions for drawing map', map);
-//            return null;
-//        }
-//
-//        let path;
-//
-//        // calculate midpoint
-//        let mpx = (src.x + dst.x) * 0.5;
-//        let mpy = (src.y + dst.y) * 0.5;
-//
-//        if (map.src.device == map.dst.device) {
-//            // signals belong to same device
-//            mpx += (src.y - dst.y) * 0.5;
-//            mpy -= (src.x - dst.x) * 0.5;
-//            path = [['M', src.x, src.y],
-//                    ['S', mpx, mpy, dst.x, dst.y]];
-//        }
-//        else {
-//            // inflate midpoint around origin to create a curve
-//            mpx += (mpx - this.origin[0]) * 0.2;
-//            mpy += (mpy - this.origin[1]) * 0.2;
-//            path = [['M', src.x, src.y],
-//                    ['S', mpx, mpy, dst.x, dst.y]];
-//        }
-//
-//        // shorten path so it doesn't draw over signals
-//        let len = Raphael.getTotalLength(path);
-//        return Raphael.getSubpath(path, 12, len - 12);
-//    }
-
     draw(duration) {
         this.drawDevices(duration);
         this.drawMaps(duration);
@@ -217,7 +179,26 @@ class HiveMapPainter extends MapPainter
 
     updateAttributes() {
         this._defaultAttributes();
-        this.midPointInflation = -0.2;
         this.shortenPath = 12;
+    }
+
+    updatePaths() {
+        let src = this.map.src.position;
+        let dst = this.map.dst.position;
+
+        let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
+        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
+
+        if (this.map.src.device == this.map.dst.device) {
+            // signals belong to same device
+            mid.x += (src.y - dst.y) * 0.5;
+            mid.y -= (src.x - dst.x) * 0.5;
+        }
+        else {
+            mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
+            mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
+        }
+        this.pathspecs[0] = [['M', src.x, src.y],
+                             ['S', mid.x, mid.y, dst.x, dst.y]];
     }
 }
