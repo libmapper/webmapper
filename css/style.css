@@ -609,7 +609,6 @@ table.infoTable tr td:first-child {
 }
 
 #xAxis div {
-    height: 100%;
     float: left;
 }
 
@@ -627,6 +626,7 @@ table.infoTable tr td:first-child {
 
 #xAxisLabel {
     width: 20%;
+    height: 100%;
     line-height: 25px;
 }
 
@@ -641,12 +641,14 @@ table.infoTable tr td:first-child {
 #xAxisMin {
     text-align: left;
     width: 40%;
+    height: 100%;
     color: white;
 }
 
 #xAxisMax {
     text-align: right;
     width: 40%;
+    height: 100%;
     color: white;
 }
 
@@ -673,8 +675,8 @@ table.infoTable tr td:first-child {
 #yAxisMenu {
     position: absolute;
     transform: rotate(-90deg);
-    left: -25px;
-    top: calc(48%);
+    left: -40px;
+    top: calc(40% + 25px);
     overflow: auto;
     pointer-events: all;
 }
@@ -808,4 +810,4 @@ h1, h2, h3, h4, h5, h6 {
 .dropdown-content a:hover {background-color: #ddd}
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
-.show {display:block;}
+.show {display:inline-table;}
