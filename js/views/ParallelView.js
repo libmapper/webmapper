@@ -201,4 +201,21 @@ class ParallelMapPainter extends MapPainter
         this._defaultAttributes();
         this.shortenPath = 12;
     }
+
+    updatePaths() {
+        let src = this.map.src.position;
+        let dst = this.map.dst.position;
+
+        if (src.x == dst.x) {
+            // signals belong to same device
+            let offsetx = src.x + (src.y - dst.y) * 0.5;
+            this.pathspecs[0] = [['M', src.x, src.y],
+                                 ['C', offsetx, src.y, offsetx, dst.y, dst.x, dst.y]];
+        }
+        else {
+            let mpx = (src.x + dst.x) * 0.5;
+            this.pathspecs[0] = [['M', src.x, src.y],
+                                 ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        }
+    }
 }
