@@ -363,3 +363,13 @@ function namespaceSort(a, b) {
     b = b.slice(1).join('/');
     return a < b ? -1 : (a > b ? 1 : 0);
 }
+
+function stringToInt(str) {
+    str = str.toLowerCase();
+    let val = 0;
+    for (var i = 0; i < str.length; i++) {
+        let normCharCode = (str.charCodeAt(i) - 0x0030) / 0x004A;
+        val += normCharCode * Math.pow(10, 1-i);
+    }
+    return val;
+}

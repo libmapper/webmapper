@@ -4,6 +4,12 @@
 
 'use strict';
 
+/* The graph view plots signals on a 2D graph, with x and y axes chosen by the
+ * user from the signals' properties. Interestingly, some signal properties
+ * (such as min and max) may have vector values, meaning that a given signal
+ * may have more than one location on the graph. To handle this situation,
+ * this view uses an array of signal positions. */
+
 class GraphView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('graph', frame, null, canvas, database, tooltip, GraphMapPainter);
@@ -30,8 +36,8 @@ class GraphView extends View {
 
         // temporary
         // TODO: populate menus using signal properties
-        $('#xAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a>");
-        $('#yAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a>");
+        $('#xAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a><a>name</a><a>device name</a>");
+        $('#yAxisMenu').empty().append("<a>device name</a><a>name</a><a>max</a><a>min</a><a>none</a>");
 
         let self = this;
         $('.axisLabel').on('click', function(e) {
@@ -74,6 +80,13 @@ class GraphView extends View {
                     self.draw(500);
                 }
             });
+            e.stopPropagation();
+            let axes = $('#axes');
+            $(axes).css('pointer-events', 'all');
+            $(axes).one('click', function() {
+                $('.dropdown-content').removeClass('show').children('a').off('click');
+                $(axes).css('pointer-events', 'none');
+            });
         });
 
         this.resize();
@@ -115,7 +128,7 @@ class GraphView extends View {
     }
 
     _updateRangeLabels() {
-        if (this.xAxisProp) {
+        if (this.xAxisProp && typeof this.xMin != 'string') {
             let xScale = (this.xMax - this.xMin) * this.canvas.zoom;
             let xPan = this.xMin + this.canvas.pan.x / this.canvas.zoom / (this.frame.width - 100) * xScale;
             $('#xAxisMin').text(xPan.toFixed(2));
@@ -126,7 +139,7 @@ class GraphView extends View {
             $('#xAxisMax').text('');
         }
 
-        if (this.yAxisProp) {
+        if (this.yAxisProp && typeof this.yMin != 'string') {
             let yScale = (this.yMax - this.yMin) * this.canvas.zoom;
             let yPan = this.yMin + this.canvas.pan.y / this.canvas.zoom / (this.frame.height - 100) * yScale;
             $('#yAxisMin').text(yPan.toFixed(2));
@@ -152,8 +165,19 @@ class GraphView extends View {
             rangeChanged = false;
             database.devices.each(function(dev) {
                 dev.signals.each(function(sig) {
-                    let xVal = xProp == null ? null : sig[xProp];
-                    let yVal = yProp == null ? null : sig[yProp];
+                    let xVal, yVal;
+                    if (xProp == null)
+                        xVal = null;
+                    else if (xProp.indexOf('device ') == 0)
+                        xVal = sig.device[xProp.slice(7)];
+                    else
+                        xVal = sig[xProp];
+                    if (yProp == null)
+                        yVal = null;
+                    else if (yProp.indexOf('device ') == 0)
+                        yVal = sig.device[yProp.slice(7)];
+                    else
+                        yVal = sig[yProp];
                     let positionChanged = false;
                     if (xProp && (xVal === null || xVal === undefined) &&
                         yProp && (yVal === null || yVal === undefined)) {
@@ -169,29 +193,39 @@ class GraphView extends View {
                         return;
                     }
                     if (xVal != null && xVal != undefined) {
-                        let xValMin, xValMax;
-                        if (xVal.length > 1) {
-                            xValMin = xVal.reduce((a,b) => (a<b?a:b));
-                            xValMax = xVal.reduce((a,b) => (a>b?a:b));
+                        let min, max;
+                        if (typeof xVal != "string" && xVal.length > 1) {
+                            min = xVal.reduce((a,b) => (a<b?a:b));
+                            max = xVal.reduce((a,b) => (a>b?a:b));
                             xVal = xVal.slice();
                         }
                         else {
-                            xValMin = xValMax = xVal;
+                            min = max = xVal;
                             xVal = [xVal];
                         }
-                        if (self.xMin == null || xValMin < self.xMin) {
-                            self.xMin = xValMin;
+                        if (self.xMin == null || min < self.xMin) {
+                            self.xMin = min;
                             rangeChanged = true;
                         }
-                        if (self.xMax == null || xValMax > self.xMax) {
-                            self.xMax = xValMax;
+                        if (self.xMax == null || max > self.xMax) {
+                            self.xMax = max;
                             rangeChanged = true;
                         }
                         if (self.xMin != null && self.xMax != null) {
                             // calculate x position
-                            let range = self.xMax - self.xMin;
+                            if (typeof self.xMin == 'string') {
+                                min = stringToInt(self.xMin);
+                                max = stringToInt(self.xMax);
+                                for (var i = 0; i < xVal.length; i++)
+                                    xVal[i] = stringToInt(xVal[i]);
+                            }
+                            else {
+                                min = self.xMin;
+                                max = self.xMax;
+                            }
+                            let range = max - min;
                             for (var i in xVal) {
-                                xVal[i] -= self.xMin;
+                                xVal[i] -= min;
                                 if (range != 0)
                                     xVal[i] = xVal[i] / range * (self.frame.width - 100);
                                 xVal[i] += 50;
@@ -203,29 +237,39 @@ class GraphView extends View {
                     else
                         positionChanged = true;
                     if (yVal != null && yVal != undefined) {
-                        let yValMin, yValMax;
-                        if (yVal.length > 1) {
-                            yValMin = yVal.reduce((a,b) => (a<b?a:b));
-                            yValMax = yVal.reduce((a,b) => (a>b?a:b));
+                        let min, max;
+                        if (typeof yVal != "string" && yVal.length > 1) {
+                            min = yVal.reduce((a,b) => (a<b?a:b));
+                            max = yVal.reduce((a,b) => (a>b?a:b));
                             yVal = yVal.slice();
                         }
                         else {
-                            yValMin = yValMax = yVal;
+                            min = max = yVal;
                             yVal = [yVal];
                         }
-                        if (self.yMin == null || yValMin < self.yMin) {
-                            self.yMin = yValMin;
+                        if (self.yMin == null || min < self.yMin) {
+                            self.yMin = min;
                             rangeChanged = true;
                         }
-                        if (self.yMax == null || yValMax > self.yMax) {
-                            self.yMax = yValMax;
+                        if (self.yMax == null || max > self.yMax) {
+                            self.yMax = max;
                             rangeChanged = true;
                         }
                         if (self.yMin != null && self.yMax != null) {
                             // calculate y position
-                            let range = self.yMax - self.yMin;
+                            if (typeof self.yMin == 'string') {
+                                min = stringToInt(self.yMin);
+                                max = stringToInt(self.yMax);
+                                for (var i = 0; i < yVal.length; i++)
+                                    yVal[i] = stringToInt(yVal[i]);
+                            }
+                            else {
+                                min = self.yMin;
+                                max = self.yMax;
+                            }
+                            let range = max - min;
                             for (var i in yVal) {
-                                yVal[i] -= self.yMin;
+                                yVal[i] -= min;
                                 if (range != 0)
                                     yVal[i] = yVal[i] / range * (self.frame.height - 100);
                                 yVal[i] = self.frame.height - yVal[i] - 50;
@@ -486,8 +530,12 @@ class GraphView extends View {
     zoom(x, y, delta) {
         this.canvasZoom(x, y, delta);
         this._updateRangeLabels();
-        this.drawSignals();
-        this.drawMaps();
+        this.draw();
+    }
+
+    resetPanZoom() {
+        super.resetPanZoom();
+        this.draw(0);
     }
 
     cleanup() {
