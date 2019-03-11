@@ -625,14 +625,14 @@ table.infoTable tr td:first-child {
 }
 
 #xAxisLabel {
-    width: 20%;
+    width: 50%;
     height: 100%;
     line-height: 25px;
 }
 
 #xAxisMenu {
     position: absolute;
-    left: 40%;
+    left: 25%;
     bottom: 0px;
     overflow: auto;
     pointer-events: all;
@@ -640,14 +640,14 @@ table.infoTable tr td:first-child {
 
 #xAxisMin {
     text-align: left;
-    width: 40%;
+    width: 25%;
     height: 100%;
     color: white;
 }
 
 #xAxisMax {
     text-align: right;
-    width: 40%;
+    width: 25%;
     height: 100%;
     color: white;
 }
@@ -667,7 +667,7 @@ table.infoTable tr td:first-child {
 
 #yAxisLabel {
     transform: rotate(180deg);
-    height: 20%;
+    height: 50%;
     top: 40%;
     line-height: 28px;
 }
@@ -676,7 +676,7 @@ table.infoTable tr td:first-child {
     position: absolute;
     transform: rotate(-90deg);
     left: -40px;
-    top: calc(40% + 25px);
+    top: calc(25% + 25px);
     overflow: auto;
     pointer-events: all;
 }
@@ -684,14 +684,14 @@ table.infoTable tr td:first-child {
 #yAxisMin {
     transform: rotate(180deg);
     text-align: left;
-    height: 40%;
+    height: 25%;
     color: white;
 }
 
 #yAxisMax {
     transform: rotate(180deg);
     text-align: right;
-    height: 40%;
+    height: 25%;
     top: 60%;
     color: white;
 }

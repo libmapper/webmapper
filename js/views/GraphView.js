@@ -28,11 +28,11 @@ class GraphView extends View {
 
         this.xAxisProp = 'min';
         this.yAxisProp = 'max';
+        this.hidden = {'x': 0, 'y': 0};
         var xMin = null, xMax = null, yMin = null, yMax = null;
         this.stepInterval = 2;
 
         this._labelAxes();
-        this._updateRangeLabels();
 
         // temporary
         // TODO: populate menus using signal properties
@@ -68,9 +68,9 @@ class GraphView extends View {
                 else
                     return;
                 self.stopStepping();
-                self._labelAxes();
                 self.xMin = self.xMax = self.yMin = self.yMax = null;
                 self.sortSignals();
+                self._labelAxes();
                 if (!self.xAxisProp || !self.yAxisProp) {
                     // need to call force-directed layout
                     self.startStepping();
@@ -104,10 +104,11 @@ class GraphView extends View {
     }
 
     _labelAxes() {
+        let hidden = this.hidden.x > 0 ? ' ('+this.hidden.x+' hidden)' : '';
         if (this.xAxisProp) {
-            $('#xAxisLabel').text('x: '+this.xAxisProp+' ▲')
+            $('#xAxisLabel').text('▲ '+this.xAxisProp+hidden)
                             .css('border-radius', '0px 0px 20px 20px');
-            $('#axes').css('border-bottom', '1px solid white');
+            $('#axes').css('border-bottom', '1px solid rgba(255, 255, 255, 0.75)');
 
         }
         else {
@@ -115,10 +116,11 @@ class GraphView extends View {
                             .css('border-radius', '20px 20px 0px 0px');
             $('#axes').css('border-bottom', 'none');
         }
+        hidden = this.hidden.y > 0 ? ' ('+this.hidden.y+' hidden)' : '';
         if (this.yAxisProp) {
-            $('#yAxisLabel').text('y: '+this.yAxisProp+' ◀')
+            $('#yAxisLabel').text('◀ '+this.yAxisProp+hidden)
                             .css('border-radius', '0px 20px 20px 0px');
-            $('#axes').css('border-left', '1px solid white');
+            $('#axes').css('border-left', '1px solid rgba(255, 255, 255, 0.75)');
         }
         else {
             $('#yAxisLabel').text('y: none')
@@ -159,6 +161,7 @@ class GraphView extends View {
         let iterations = 0;
         let tx = this.frame.left + this.frame.width * 0.5;
         let ty = this.frame.top + this.frame.height * 0.5;
+        this.hidden.x = this.hidden.y = 0;
         // calculate ranges
         while (rangeChanged && iterations < 10) {
             iterations += 1;
@@ -168,31 +171,38 @@ class GraphView extends View {
                     let xVal, yVal;
                     if (xProp == null)
                         xVal = null;
-                    else if (xProp.indexOf('device ') == 0)
-                        xVal = sig.device[xProp.slice(7)];
-                    else
-                        xVal = sig[xProp];
+                    else  {
+                        if (xProp.indexOf('device ') == 0)
+                            xVal = sig.device[xProp.slice(7)];
+                        else
+                            xVal = sig[xProp];
+                        if (xVal == null)
+                            self.hidden.x += 1;
+                    }
                     if (yProp == null)
                         yVal = null;
-                    else if (yProp.indexOf('device ') == 0)
-                        yVal = sig.device[yProp.slice(7)];
-                    else
-                        yVal = sig[yProp];
+                    else {
+                        if (yProp.indexOf('device ') == 0)
+                            yVal = sig.device[yProp.slice(7)];
+                        else
+                            yVal = sig[yProp];
+                        if (yVal == null)
+                            self.hidden.y += 1;
+                    }
                     let positionChanged = false;
-                    if (xProp && (xVal === null || xVal === undefined) &&
-                        yProp && (yVal === null || yVal === undefined)) {
+                    if (xVal === undefined) xVal = null;
+                    if (yVal === undefined) yVal = null;
+                    if (xProp && (xVal === null) || yProp && (yVal === null)) {
                         if (sig.position) {
-                            delete sig.position;
                             positionChanged = true;
                         }
                         if (sig.view) {
-//                            sig.view.hide();
-                            remove_object_svg(sig.view);
-                            sig.view = null;
+                            sig.view.hide();
                         }
                         return;
                     }
-                    if (xVal != null && xVal != undefined) {
+                    sig.view.show();
+                    if (xVal != null) {
                         let min, max;
                         if (typeof xVal != "string" && xVal.length > 1) {
                             min = xVal.reduce((a,b) => (a<b?a:b));
@@ -236,7 +246,7 @@ class GraphView extends View {
                     }
                     else
                         positionChanged = true;
-                    if (yVal != null && yVal != undefined) {
+                    if (yVal != null) {
                         let min, max;
                         if (typeof yVal != "string" && yVal.length > 1) {
                             min = yVal.reduce((a,b) => (a<b?a:b));
@@ -347,6 +357,8 @@ class GraphView extends View {
         this.database.devices.each(function(devA) {
             // attract positions towards targets
             devA.signals.each(function(sig) {
+                if (!sig.target)
+                    return;
                 for (var i in sig.position) {
                     let dx = sig.target[i].x - sig.position[i].x;
                     let dy = sig.target[i].y - sig.position[i].y;
@@ -360,11 +372,15 @@ class GraphView extends View {
             });
             // repel signal positions
             devA.signals.each(function(sigA) {
+                if (!sigA.target)
+                    return;
                 let pA = sigA.position;
                 let fA = sigA.force;
                 let found = false;
                 self.database.devices.each(function(devB) {
                     devB.signals.each(function(sigB) {
+                        if (!sigB.target)
+                            return;
                         if (found == true) {
                             let pB = sigB.position;
                             let fB = sigB.force;
@@ -496,10 +512,11 @@ class GraphView extends View {
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
                 if (!sig.position)
-                    sig.position = position(null, null, self.frame);
+                    sig.position = [position(null, null, self.frame)];
                 return false;
             });
             this.sortSignals();
+            this._labelAxes();
             if (!this.xAxisProp || !this.yAxisProp) {
                 // need to call force-directed layout
                 this.startStepping();
