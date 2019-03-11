@@ -608,8 +608,10 @@ class ChordView extends View {
             remove_object_svg(link, 200);
         });
         database.devices.each(function(dev) {
-            if (dev.view)
-                dev.view.unclick();
+            if (!dev.view)
+                return;
+            dev.view.unclick();
+            dev.view.unhover();
         });
 
         // clean up any objects created only for this view
