@@ -124,25 +124,27 @@ class ListMapPainter extends MapPainter
 
     updatePaths()
     {
-        let src = this.map.src.position;
-        let dst = this.map.dst.position;
+        for (let i = 0; i < this.map.srcs.length; ++i)
+        {
+            let src = this.map.srcs[i].position;
+            let dst = this.map.dst.position;
 
-        let pathspec;
-        if (Math.abs(src.x - dst.x) < 1)
-            this.vertical(src, dst);
-        else if (Math.abs(src.y - dst.y) < 1)
-            this.horizontal(src, dst);
-        else this.betweenTables(src, dst);
+            if (Math.abs(src.x - dst.x) < 1)
+                this.vertical(src, dst, i);
+            else if (Math.abs(src.y - dst.y) < 1)
+                this.horizontal(src, dst, i);
+            else this.betweenTables(src, dst, i);
+        }
     }
 
-    betweenTables(src, dst) 
+    betweenTables(src, dst, i) 
     {
         let mpx = (src.x + dst.x) * 0.5;
-        this.pathspecs[0] = [['M', src.x, src.y],
+        this.pathspecs[i] = [['M', src.x, src.y],
                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
     }
 
-    vertical(src, dst) 
+    vertical(src, dst, i) 
     {
         // signals are inline vertically
         let minoffset = 30;
@@ -151,11 +153,11 @@ class ListMapPainter extends MapPainter
         if (offset > maxoffset) offset = maxoffset;
         if (offset < minoffset) offset = minoffset;
         let ctlx = src.x + offset * src.vx;
-        this.pathspecs[0] = [['M', src.x, src.y], 
+        this.pathspecs[i] = [['M', src.x, src.y], 
                             ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
     }
 
-    horizontal(src, dst) 
+    horizontal(src, dst, i) 
     {
         // signals are inline horizontally
         let minoffset = 30;
@@ -164,7 +166,7 @@ class ListMapPainter extends MapPainter
         if (offset > maxoffset) offset = maxoffset;
         if (offset < minoffset) offset = minoffset;
         let ctly = src.y + offset * src.vy;
-        this.pathspecs[0] = [['M', src.x, src.y],
+        this.pathspecs[i] = [['M', src.x, src.y],
                             ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }

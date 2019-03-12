@@ -333,6 +333,10 @@ function MapperDatabase() {
             }
             maps[i].src = src;
             maps[i].dst = dst;
+
+            let srcs = maps[i].srcs.map(findSig);
+            maps[i].srcs = srcs;
+            
 //            maps[i].status = 'active';
             let map = this.maps.add(maps[i]);
             if (!map) {

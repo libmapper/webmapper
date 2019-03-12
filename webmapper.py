@@ -93,6 +93,9 @@ def map_props(map):
     props = map.properties.copy()
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
+    num_srcs = map.num_slots - 1
+    props['srcs'] = [full_signame(map.source(i).signal()) 
+                     for i in range(0, num_srcs)]
     props['key'] = props['src'] + '->' + props['dst']
     if props['process_location'] == mapper.LOC_SOURCE:
         props['process_location'] = 'source'
