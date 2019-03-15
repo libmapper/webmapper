@@ -231,11 +231,6 @@ path {
     cursor: pointer;
 }
 
-.modesel {
-/*    background-color: rgba(200, 200, 200, 0.8);*/
-    background-color: black;
-}
-
 .utils {
     width: 160px;
     display:inline-block;
@@ -422,19 +417,24 @@ form {
     float: left;
 }
 
-.mode {
+.mode, .protocol {
     padding-right: 3pt;
     cursor: pointer;
     display: inline-block;
 }
 
-#modeLinear {
+.sel {
+    /*    background-color: rgba(200, 200, 200, 0.8);*/
+    background-color: black;
+}
+
+#modeLinear, #protoUDP {
     padding-left: 5px;
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
 }
 
-#modeExpression {
+#modeExpression, #protoTCP {
     padding-left: 3px;
     padding-right: 5px;
     border-top-right-radius: 6px;

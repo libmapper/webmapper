@@ -5,6 +5,7 @@ class MapProperties {
         this.view = view;
         this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
         this.mapModes = ["Linear", "Expression"];
+        this.mapProtocols = ["UDP", "TCP"];
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
 
         $(this.container).append(
@@ -15,7 +16,8 @@ class MapProperties {
 
         $('#mapPropsDiv').append(
             "<div style='width:50%'>"+
-                "<div id='modes' class='signalControl disabled' style='width:100%; padding-bottom:5px;'>Mode: </div>"+
+                "<div id='modes' class='signalControl disabled' style='width:50%; padding-bottom:5px;'>Mode: </div>"+
+                "<div id='protocols' class='signalControl disabled' style='width:50%; padding-bottom:5px;'>Protocol: </div>"+
                 "<div id='expression' class='signalControl disabled' style='width:100%; padding-top:5px;'>Expression: "+
                     "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
                 "</div>"+
@@ -26,6 +28,12 @@ class MapProperties {
         for (var m in this.mapModes) {
             $('#modes').append(
                 "<div class='mode' id='mode"+this.mapModes[m]+"'>"+this.mapModes[m]+"</div>");
+        }
+
+        //Add the protocol controls
+        for (var p in this.mapProtocols) {
+            $('#protocols').append(
+                "<div class='protocol' id='proto"+this.mapProtocols[p]+"'>"+this.mapProtocols[p]+"</div>");
         }
 
         //Add the range controls
@@ -81,6 +89,11 @@ class MapProperties {
             self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
+        $('.topMenu').on("click", '.protocol', function(e) {
+            e.stopPropagation();
+            self.setMapProperty("protocol", e.currentTarget.innerHTML);
+        });
+
         $('.boundary').on('click', function(e) {
             self.on_boundary(e, self);
         });
@@ -114,7 +127,8 @@ class MapProperties {
 
     // clears and disables the map properties bar
     clearMapProperties() {
-        $('.mode').removeClass('modesel');
+        $('.mode').removeClass('sel');
+        $('.protocol').removeClass('sel');
         $('.topMenu input').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
@@ -132,6 +146,7 @@ class MapProperties {
         this.clearMapProperties();
 
         var mode = null;
+        var proto = null;
         var expression = null;
         var src_min = null;
         var src_max = null;
@@ -150,6 +165,11 @@ class MapProperties {
                 mode = map.mode;
             else if (mode != map.mode)
                 mode = 'multiple'
+
+            if (proto == null)
+                proto = map.protocol;
+            else if (proto != map.protocol)
+                proto = 'multiple';
 
             if (expression == null)
                 expression = map.expression;
@@ -195,7 +215,11 @@ class MapProperties {
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
             mode = mode.charAt(0).toUpperCase() + mode.slice(1);
-            $("#mode"+mode).addClass("modesel");
+            $("#mode"+mode).addClass("sel");
+        }
+
+        if (proto != null && proto != 'multiple') {
+            $("#proto"+proto).addClass("sel");
         }
 
         if (expression != null) {
@@ -264,6 +288,9 @@ class MapProperties {
             switch (key) {
             case 'mode':
                 msg['mode'] = modes[value];
+                break;
+            case 'protocol':
+                msg['protocol'] = value;
                 break;
             case 'srcRangeSwitch':
                 msg['src_max'] = String(map['src_min']);
