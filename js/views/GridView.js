@@ -166,9 +166,7 @@ class GridMapPainter extends ListMapPainter
 
         this.pathspecs[0] = [['M', src.x, src.y],
                             ['L', mid.x, mid.y],
-                            ['L', end.x, end.y],
-                            ['L', mid.x, mid.y],
-                            ['Z']];
+                            ['L', end.x, end.y]];
 
         if (typeof dst.left === 'undefined') // dst is not a table row
         {
@@ -193,8 +191,8 @@ class GridMapPainter extends ListMapPainter
     updateAttributes()
     {
         this._defaultAttributes(2);
-        this.attributes[0]['stroke-width'] = 2;
 
+        this.attributes[1]['stroke-dasharray'] = MapPainter.defaultDashes;
         this.attributes[1]['arrow-end'] = 'none';
         this.attributes[1]['stroke-linejoin'] = 'round';
         this.attributes[1]['fill'] = this.map.selected ? 'red' : 'white';
