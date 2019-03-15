@@ -10,7 +10,7 @@ class MapProperties {
 
         $(this.container).append(
             "<div' class='topMenu' style='width:calc(75% - 170px);'>"+
-                "<div class='topMenuTitle'><strong>MAP</strong></div>"+
+                "<div id='mapPropsTitle' class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
             "</div>");
 
@@ -133,6 +133,7 @@ class MapProperties {
         $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
+        $('#mapPropsTitle').addClass('disabled');
         $('.calibrate').removeClass('calibratesel');
         $('.expression').removeClass('waiting');
         $('.ranges').children('*').removeClass('waiting');
@@ -156,9 +157,6 @@ class MapProperties {
         var dst_calibrating = null;
         var dst_bound_min = null;
         var dst_bound_max = null;
-
-        $('.signalControl').removeClass('disabled');
-        $('.signalControl').children('*').removeClass('disabled');
 
         this.database.maps.filter(this.selected).each(function(map) {
             if (mode == null)
@@ -211,6 +209,13 @@ class MapProperties {
             else if (dst_bound_max != map.dst_bound_max)
                 dst_bound_max = 'multiple';
         });
+
+        if (mode != null) {
+            // something has been selected
+            $('#mapPropsTitle').removeClass('disabled');
+            $('.signalControl').removeClass('disabled');
+            $('.signalControl').children('*').removeClass('disabled');
+        }
 
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
