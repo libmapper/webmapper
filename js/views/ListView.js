@@ -127,6 +127,12 @@ class ListMapPainter extends MapPainter
         let src = this.map.src.position;
         let dst = this.map.dst.position;
 
+        if (!src.y || !dst.y) {
+            this.hide();
+            return;
+        }
+        this.show();
+
         let pathspec;
         if (Math.abs(src.x - dst.x) < 1)
             this.vertical(src, dst);
