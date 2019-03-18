@@ -704,7 +704,8 @@ class View {
 
                 self.newMap = 
                 {
-                    get src() {return self.draggingFrom},
+                    'src': self.draggingFrom,
+                    'srcs': [self.draggingFrom],
                     'dst': null
                 };
                 self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
@@ -758,6 +759,7 @@ class View {
                     if (!self.escaped && dst && dst.id) {
                         $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
+                                                'srcs': [self.database.find_signal(src.id)],
                                                 'dst': self.database.find_signal(dst.id),
                                                 'key': src.id + '->' + dst.id,
                                                 'status': 'staged'});
