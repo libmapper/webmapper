@@ -72,8 +72,8 @@ class MapPainter {
     {
         if (!this._mapIsValid()) return;
         else if (this.stolen) return;
-        this.updateAttributes();
         this.updatePaths();
+        this.updateAttributes();
         this._setPaths(duration);
     }
 

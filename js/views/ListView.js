@@ -124,24 +124,28 @@ class ListMapPainter extends MapPainter
 
     updatePaths()
     {
-        for (let i = 0; i < this.map.srcs.length; ++i)
+        if (this.map.srcs.length > 1) this.convergent();
+        else
         {
-            let src = this.map.srcs[i].position;
+            let src = this.map.srcs[0].position;
             let dst = this.map.dst.position;
-
-            // hide maps if src or dst y is zero, due to filtering?
-            //if (!src.y || !dst.y) {
-            //    this.hide();
-            //    return;
-            //}
-            //this.show();
-
-            if (Math.abs(src.x - dst.x) < 1)
-                this.vertical(src, dst, i);
-            else if (Math.abs(src.y - dst.y) < 1)
-                this.horizontal(src, dst, i);
-            else this.betweenTables(src, dst, i);
+            this.oneToOne(src, dst, 0);
         }
+    }
+
+    oneToOne(src, dst, i)
+    {
+        // skip maps if src or dst y is zero, due to filtering
+        if (!src.y || !dst.y) {
+            this.pathspecs[i] = null;
+            return;
+        }
+
+        if (Math.abs(src.x - dst.x) < 1)
+            this.vertical(src, dst, i);
+        else if (Math.abs(src.y - dst.y) < 1)
+            this.horizontal(src, dst, i);
+        else this.betweenTables(src, dst, i);
     }
 
     betweenTables(src, dst, i) 
@@ -175,5 +179,55 @@ class ListMapPainter extends MapPainter
         let ctly = src.y + offset * src.vy;
         this.pathspecs[i] = [['M', src.x, src.y],
                             ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
+    }
+
+    convergent()
+    {
+        let xmax = this.map.srcs[0].position.x
+        let xmin = this.map.srcs[0].position.x
+        let ymax = this.map.srcs[0].position.y
+        let ymin = this.map.srcs[0].position.y
+        let sigs = this.map.srcs.concat([this.map.dst]);
+        for (let sig of sigs)
+        {
+            let x = sig.position.x;
+            let y = sig.position.y;
+            if (x > xmax) xmax = x;
+            if (x < xmin && x != 0) xmin = x;
+            if (y > ymax) ymax = y;
+            if (y < ymin && x != 0) ymin = y;
+        }
+        
+        let node = {x: (xmin + xmax) / 2, y: (ymin + ymax) / 2}
+        let i = 0;
+        for (; i < this.map.srcs.length; ++i)
+        {
+            let src = this.map.srcs[i].position;
+            this.betweenTables(src, node, i);
+        }
+        this.betweenTables(node, this.map.dst.position, i);
+
+        let radius = 10
+        this.pathspecs[i+1] = [['M', node.x - radius, node.y],
+                              ['A', radius, radius, 0, 0, 0, node.x + radius, node.y],
+                              ['A', radius, radius, 0, 0, 0, node.x - radius, node.y]];
+    }
+
+    updateAttributes()
+    {
+        let num_srcs = this.map.srcs.length;
+        if (num_srcs > 1)
+        {
+            this._defaultAttributes(num_srcs + 2);
+            let i = 0;
+            for (; i < num_srcs; ++i)
+            {
+                this.attributes[i]['arrow-end'] = 'none';
+            }
+
+            this.attributes[i+1].fill = this.attributes[0].stroke;
+            this.attributes[i+1]['arrow-end'] = 'none'
+        }
+        else this._defaultAttributes();
     }
 }

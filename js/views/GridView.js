@@ -157,6 +157,16 @@ class GridMapPainter extends ListMapPainter
 {
     constructor(map, canvas) {super(map, canvas);}
 
+    convergent()
+    {
+        let dst = this.map.dst.position;
+        for (let i = 0; i < this.maps.src.length; ++i)
+        {
+            let src = this.map.srcs[i].position;
+            this.oneToOne(src, dst, i);
+        }
+    }
+
     betweenTables(src, dst, i)
     {
         let srctodst = src.vx == 1;
