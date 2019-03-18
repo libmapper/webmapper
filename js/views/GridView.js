@@ -157,14 +157,14 @@ class GridMapPainter extends ListMapPainter
 {
     constructor(map, canvas) {super(map, canvas);}
 
-    betweenTables(src, dst)
+    betweenTables(src, dst, i)
     {
         let srctodst = src.vx == 1;
         let mid = srctodst ? {x: dst.x, y: src.y} : {x: src.x, y: dst.y};
         let end = srctodst ? {x: dst.x, y: dst.y < src.y ? dst.y : src.y}
                            : {x: dst.x < src.x ? dst.x : src.x, y: dst.y};
 
-        this.pathspecs[0] = [['M', src.x, src.y],
+        this.pathspecs[i] = [['M', src.x, src.y],
                             ['L', mid.x, mid.y],
                             ['L', end.x, end.y],
                             ['L', mid.x, mid.y],
@@ -172,18 +172,18 @@ class GridMapPainter extends ListMapPainter
 
         if (typeof dst.left === 'undefined') // dst is not a table row
         {
-            this.pathspecs[1] = null;
+            this.pathspecs[i+1] = null;
             return;
         }
 
-        let stroke = this.attributes[1]['stroke-width'];
-        if (srctodst) this.pathspecs[1] = 
+        let stroke = this.attributes[i+1]['stroke-width'];
+        if (srctodst) this.pathspecs[i+1] = 
             [['M', dst.x, src.top + stroke + 1],
              ['L', dst.left + stroke, src.top + src.height - stroke + 2],
              ['l', dst.width - stroke - 2, 0],
              ['Z']]
 
-        else this.pathspecs[1] =
+        else this.pathspecs[i+1] =
             [['M', src.left + stroke, dst.y],
              ['L', src.left + src.width - stroke + 2, dst.top + stroke],
              ['l', 0, dst.height - stroke - 2],
