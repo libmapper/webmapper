@@ -102,9 +102,9 @@ def map_props(map):
     else:
         props['process_location'] = 'destination'
     if props['protocol'] == mapper.PROTO_UDP:
-        props['protocol'] = 'udp'
+        props['protocol'] = 'UDP'
     elif props['protocol'] == mapper.PROTO_TCP:
-        props['protocol'] = 'tcp'
+        props['protocol'] = 'TCP'
     else:
         del props['protocol']
     props['status'] = 'active'
@@ -192,6 +192,13 @@ def set_map_properties(props, map):
             map.mode = mapper.MODE_EXPRESSION
         else:
             print 'error: unknown mode ', props['mode']
+    if props.has_key('protocol'):
+        if props['protocol'] == 'UDP':
+            map.protocol = mapper.PROTO_UDP
+        elif props['protocol'] == 'TCP':
+            map.protocol = mapper.PROTO_TCP
+        else:
+            print 'error: unknown protocol ', props['protocol']
     if props.has_key('expression'):
         map.expression = props['expression']
     if props.has_key('muted'):

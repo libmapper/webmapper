@@ -645,7 +645,6 @@ class View {
                     updated |= table.filterByName(text);
             }
             if (updated) {
-                this.update('signals');
                 this.draw(0);
             }
         }

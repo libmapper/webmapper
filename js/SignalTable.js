@@ -220,7 +220,7 @@ class SignalTable {
                     top: 0,
                     get width() {return getTD().height()},
                     get height() {return self.frame.width},
-                    get x() {let td = getTD(); return td.position().left + self.frame.left + 20 + td.height() * 0.5},
+                    get x() {let td = getTD(); return td ? td.position().left + self.frame.left + 20 + td.height() * 0.5 : null},
                     get y() {return self.frame.width},
                     get vx() {return Math.cos(self.frame.angle)},
                     get vy() {return -Math.sin(self.frame.angle)},
@@ -235,7 +235,7 @@ class SignalTable {
                     get width() {return self.frame.width},
                     get height() {return getTD().height();},
                     get x() {return self.snap == 'left' ? self.frame.left : self.frame.left + self.frame.width},
-                    get y() {let td = getTD(); return td.position().top + self.frame.top + 20 + td.height() * 0.5},
+                    get y() {let td = getTD(); return td ? td.position().top + self.frame.top + 20 + td.height() * 0.5 : null},
                     get vx() {return Math.cos(self.frame.angle) * snap},
                     get vy() {return -Math.sin(self.frame.angle)},
                     id: id};

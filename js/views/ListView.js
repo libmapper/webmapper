@@ -129,6 +129,13 @@ class ListMapPainter extends MapPainter
             let src = this.map.srcs[i].position;
             let dst = this.map.dst.position;
 
+            // hide maps if src or dst y is zero, due to filtering?
+            //if (!src.y || !dst.y) {
+            //    this.hide();
+            //    return;
+            //}
+            //this.show();
+
             if (Math.abs(src.x - dst.x) < 1)
                 this.vertical(src, dst, i);
             else if (Math.abs(src.y - dst.y) < 1)
