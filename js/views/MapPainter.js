@@ -181,8 +181,11 @@ class MapPainter {
                 else path.animate({'path': pathspec}, duration, '>');
                 path.toFront();
             }
-            if (this.map.hidden || this.map.src.hidden || this.map.dst.hidden) path.hide();
-            else path.show();
+            path.show();
+            if (this.map.hidden || this.map.dst.hidden) path.hide();
+            if (this.map.srcs.length == 1 && this.map.src.hidden) path.hide();
+            // maps with multiple sources have to manually hide paths by setting stroke
+            // and fill to 'none'
         }
     }
 

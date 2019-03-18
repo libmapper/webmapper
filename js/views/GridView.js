@@ -155,7 +155,7 @@ class GridView extends View {
 
 class GridMapPainter extends ListMapPainter
 {
-    constructor(map, canvas) {super(map, canvas);}
+    constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
 
     convergent()
     {

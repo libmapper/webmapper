@@ -214,6 +214,8 @@ class SignalTable {
             return $(td);
         }
 
+        if (getTD() == null) return null;
+
         if (this.snap == 'bottom') {
             //pos.left += this.frame.left + 20;
             return {get left(){ return getTD().position().left + self.frame.left + 20},

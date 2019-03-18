@@ -117,9 +117,9 @@ class ListView extends View {
 
 class ListMapPainter extends MapPainter
 {
-    constructor(map, canvas)
+    constructor(map, canvas, frame, database)
     {
-        super(map, canvas);
+        super(map, canvas, frame, database);
     }
 
     updatePaths()
@@ -183,22 +183,24 @@ class ListMapPainter extends MapPainter
 
     convergent()
     {
-        let xmax = this.map.srcs[0].position.x
-        let xmin = this.map.srcs[0].position.x
-        let ymax = this.map.srcs[0].position.y
-        let ymin = this.map.srcs[0].position.y
+        let ymax = null
+        let ymin = null
         let sigs = this.map.srcs.concat([this.map.dst]);
         for (let sig of sigs)
         {
-            let x = sig.position.x;
+            if (sig.hidden) continue;
             let y = sig.position.y;
-            if (x > xmax) xmax = x;
-            if (x < xmin && x != 0) xmin = x;
-            if (y > ymax) ymax = y;
-            if (y < ymin && x != 0) ymin = y;
+            if (ymax == null || y > ymax) ymax = y;
+            if (ymin == null || y < ymin) ymin = y;
+        }
+
+        if (ymax == null || ymin == null)
+        {
+            console.log('Error calculating convergent node position');
+            return;
         }
         
-        let node = {x: (xmin + xmax) / 2, y: (ymin + ymax) / 2}
+        let node = {x: this.frame.width / 2, y: (ymin + ymax) / 2}
         let i = 0;
         for (; i < this.map.srcs.length; ++i)
         {
@@ -218,15 +220,28 @@ class ListMapPainter extends MapPainter
         let num_srcs = this.map.srcs.length;
         if (num_srcs > 1)
         {
+            let hidden = true;
             this._defaultAttributes(num_srcs + 2);
             let i = 0;
             for (; i < num_srcs; ++i)
             {
+                hidden = hidden && this.map.srcs[i].hidden;
+                if (this.map.srcs[i].hidden) this.attributes[i]['stroke'] = 'none';
                 this.attributes[i]['arrow-end'] = 'none';
             }
 
-            this.attributes[i+1].fill = this.attributes[0].stroke;
-            this.attributes[i+1]['arrow-end'] = 'none'
+            if (hidden)
+            {
+                this.attributes[i].stroke = 'none';
+                this.attributes[i+1].stroke = 'none';
+            }
+            else
+            {
+                this.attributes[i+1].fill = this.map.selected ? 
+                                            MapPainter.selectedColor : 
+                                            MapPainter.defaultColor;
+                this.attributes[i+1]['arrow-end'] = 'none'
+            }
         }
         else this._defaultAttributes();
     }
