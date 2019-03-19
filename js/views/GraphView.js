@@ -464,12 +464,22 @@ class GraphView extends View {
         }
         let is_output = sig.direction == 'output';
         let color = Raphael.hsl(sig.device.hue, 1, 0.5);
-        sig.view.animate({'path': path,
-                          'fill': is_output ? 'black' : color,
-                          'fill-opacity': 1,
-                          'stroke': color,
-                          'stroke-width': 6 * this.canvas.zoom,
-                          'stroke-opacity': 1}, duration, '>');
+        if (duration) {
+            sig.view.animate({'path': path,
+                              'fill': is_output ? 'black' : color,
+                              'fill-opacity': 1,
+                              'stroke': color,
+                              'stroke-width': 6 * this.canvas.zoom,
+                              'stroke-opacity': 1}, duration, '>');
+        }
+        else {
+            sig.view.attr({'path': path,
+                           'fill': is_output ? 'black' : color,
+                           'fill-opacity': 1,
+                           'stroke': color,
+                           'stroke-width': 6 * this.canvas.zoom,
+                           'stroke-opacity': 1});
+        }
     }
 
     startStepping() {
