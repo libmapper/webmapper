@@ -160,10 +160,10 @@ class GridMapPainter extends ListMapPainter
     convergent()
     {
         let dst = this.map.dst.position;
-        for (let i = 0; i < this.maps.src.length; ++i)
+        for (let i = 0; i < this.map.srcs.length; ++i)
         {
             let src = this.map.srcs[i].position;
-            this.oneToOne(src, dst, i);
+            this.oneToOne(src, dst, 2*i);
         }
     }
 
@@ -200,17 +200,21 @@ class GridMapPainter extends ListMapPainter
 
     updateAttributes()
     {
-        this._defaultAttributes(2);
+        this._defaultAttributes(2*this.map.srcs.length);
 
-        this.attributes[1]['stroke-dasharray'] = MapPainter.defaultDashes;
-        this.attributes[1]['arrow-end'] = 'none';
-        this.attributes[1]['stroke-linejoin'] = 'round';
-        this.attributes[1]['fill'] = this.map.selected ? 'red' : 'white';
-        this.attributes[1]['fill-opacity'] = '100%';
+        for (let i = 0; i < this.map.srcs.length; ++i)
+        {
+            this.attributes[2*i+1]['stroke-dasharray'] = MapPainter.defaultDashes;
+            this.attributes[2*i+1]['arrow-end'] = 'none';
+            this.attributes[2*i+1]['stroke-linejoin'] = 'round';
+            this.attributes[2*i+1]['fill'] = this.map.selected ? 
+                                             MapPainter.selectedColor : 
+                                             MapPainter.defaultColor;
 
-        let src = this.map.src.position;
-        let dst = this.map.dst.position;
-        if (src.x == dst.x || src.y == dst.y) return;
-        else this.attributes[0]['arrow-end'] = 'none';
+            let src = this.map.srcs[i].position;
+            let dst = this.map.dst.position;
+            if (src.x == dst.x || src.y == dst.y) return;
+            else this.attributes[2*i]['arrow-end'] = 'none';
+        }
     }
 }

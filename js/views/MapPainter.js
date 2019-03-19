@@ -10,6 +10,7 @@ class MapPainter {
         this.attributes = [];
         this._highlight = false;
         this.midPointInflation = 0.2;
+        this.updateAttributes(); // in case paths rely on certain attributes e.g. in grid view
     }
 
     // APPEARANCE //////////////////////////////////////////////////////////////
