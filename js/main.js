@@ -241,7 +241,7 @@ function initViewCommands()
             });
         }
         wheeling = true;
-    });
+    }, {passive: false});
 
     // from list view
     // requests links and maps from the selected device (tab)
