@@ -292,7 +292,7 @@ class ViewManager
                     self.database.maps.each(function(map) {
                         if (map.selected)
                         {
-                            $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                            mapper.unmap(map.src.key, map.dst.key);
                             self.tooltip.hide();
                         }
                     });

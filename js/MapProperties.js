@@ -68,7 +68,7 @@ class MapProperties {
         var self = this;
 
         $('#networkSelection').on('change', function(e) {
-            $(this.container).trigger("selectNetwork", e.currentTarget.value);
+            command.send("select_network", e.currentTarget.value);
         });
 
         //The expression and range input handlers
@@ -353,7 +353,7 @@ class MapProperties {
             msg['dst'] = map['dst'].key;
 
             // send the command, should receive a /mapped message after.
-            container.trigger("setMap", [msg]);
+            command.send("set_map", msg);
         });
     }
 

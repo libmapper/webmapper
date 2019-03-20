@@ -211,7 +211,7 @@ class File {
             }
             src = src.join('/');
             dst = dst.join('/');
-            $('#container').trigger('map', [src, dst, map]);
+            mapper.map(src, dst, map);
         }
     }
 }
