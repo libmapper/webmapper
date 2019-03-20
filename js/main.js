@@ -248,7 +248,10 @@ function initViewCommands()
     $("#container").on("unmap", function(e, src, dst) {
         command.send('unmap', [src, dst]);
     });
+}
 
+// allows anyone to call updateMapProperties by triggering an event on #container
+function initMapPropertiesCommands() {
     // asks the view for the selected maps and updates the edit bar
     $("#container").on("updateMapProperties", function(e) {
         mapProperties.updateMapProperties();
@@ -257,16 +260,6 @@ function initViewCommands()
     // updated the properties for a specific map
     $("#container").on("updateMapPropertiesFor", function(e, key) {
         mapProperties.updateMapPropertiesFor(key);
-    });
-}
-
-function initMapPropertiesCommands()
-{
-    $("#TopMenuWrapper").on("setMap", function(e, args) {
-        command.send('set_map', args);
-    });
-    $("#TopMenuWrapper").on("selectNetwork", function(e, network) {
-        command.send('select_network', network);
     });
 }
 
