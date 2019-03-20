@@ -96,7 +96,9 @@ def map_props(map):
     num_srcs = map.num_slots - 1
     props['srcs'] = [full_signame(map.source(i).signal()) 
                      for i in range(0, num_srcs)]
-    props['key'] = props['src'] + '->' + props['dst']
+    if num_srcs > 1: 
+        props['key'] = '['+','.join(props['srcs'])+']' + '->' + '['+props['dst']+']'
+    else: props['key'] = props['src'] + '->' + props['dst']
     if props['process_location'] == mapper.LOC_SOURCE:
         props['process_location'] = 'source'
     else:
