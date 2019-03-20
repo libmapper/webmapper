@@ -234,20 +234,6 @@ function initViewCommands()
         }
         wheeling = true;
     }, {passive: false});
-
-    // map command
-    // src = "devicename/signalname"
-    // dst = "devicename/signalname"
-    $("#container").on("map", function(e, src, dst, args) {
-        command.send('map', [src, dst, args]);
-    });
-
-    // unmap command
-    // src = "devicename/signalname"
-    // dst = "devicename/signalname"
-    $("#container").on("unmap", function(e, src, dst) {
-        command.send('unmap', [src, dst]);
-    });
 }
 
 // allows anyone to call updateMapProperties by triggering an event on #container

@@ -112,8 +112,7 @@ class CanvasView extends View {
         sig.view.unmouseup();
         sig.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo) {
-                $('#container').trigger('map', [self.draggingFrom.key,
-                                                self.snappingTo.key]);
+                mapper.map(self.draggingFrom.key, self.snappingTo.key);
                 if (self.newMap) {
                     self.newMap.remove();
                     self.newMap = null;

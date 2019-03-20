@@ -52,7 +52,7 @@ class ConsoleView extends View {
                     switch (command[0]) {
                         case 'map':
                             if (command.length == 3)
-                                $('#container').trigger('map', [command[1], command[2]]);
+                                mapper.map(command[1], command[2]);
                             else
                                 this.echo('map: wrong number of arguments');
                             break;
@@ -62,12 +62,12 @@ class ConsoleView extends View {
                                 let index = 0;
                                 self.database.maps.each(function(map) {
                                     if (++index == command[1]) {
-                                        $('#container').trigger('unmap', [map.src.key, map.dst.key]);
+                                        mapper.unmap(map.src.key, map.dst.key);
                                     }
                                 });
                             }
                             else if (command.length == 3)
-                                $('#container').trigger('unmap', [command[1], command[2]]);
+                                mapper.unmap(command[1], command[2]);
                             else
                                 this.echo('unmap: wrong number of arguments');
                             break;
