@@ -207,14 +207,6 @@ function initViewCommands()
         }
     });
 
-    $('#container').on('updateView', function(e) {
-        viewManager.draw(0);
-    });
-
-    $('#container').on('scrolll', function(e) {
-        viewManager.draw(0);
-    });
-
     let wheeling = false;
     let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
@@ -243,35 +235,6 @@ function initViewCommands()
         wheeling = true;
     }, {passive: false});
 
-    // from list view
-    // requests links and maps from the selected device (tab)
-    $("#container").on("tab", function(e, tab){
-        if (tab != 'All Devices') {
-            // retrieve linked destination devices
-            database.links.each(function(link) {
-                if (tab == link.src)
-                    command.send('subscribe', link.dst);
-                else if (tab == link.dst)
-                    command.send('subscribe', link.src);
-            });
-            command.send('subscribe', tab);
-        }
-    });
-
-    // link command
-    // src = "devicename"
-    // dst = "devicename"
-    $("#container").on("link", function(e, src, dst) {
-        database.links.add({ 'src' : src, 'dst' : dst, 'num_maps': [0, 0] });
-    });
-
-    // unlink command
-    // src = "devicename"
-    // dst = "devicename"
-    $("#container").on("unlink", function(e, src, dst) {
-        database.links.remove(src, dst);
-    });
-
     // map command
     // src = "devicename/signalname"
     // dst = "devicename/signalname"
@@ -295,13 +258,6 @@ function initViewCommands()
     $("#container").on("updateMapPropertiesFor", function(e, key) {
         mapProperties.updateMapPropertiesFor(key);
     });
-
-    // asks the view for the save button link (based on the active device)
-    // currently implemented in List view only
-    $("#container").on("updateSaveLocation", function(e) {
-        mapProperties.updateSaveLocation(viewManager.get_save_location());
-    });
-
 }
 
 function initMapPropertiesCommands()
@@ -309,17 +265,9 @@ function initMapPropertiesCommands()
     $("#TopMenuWrapper").on("setMap", function(e, args) {
         command.send('set_map', args);
     });
-    $("#TopMenuWrapper").on("refreshAll", function(e) {
-        refresh_all();
-    });
     $("#TopMenuWrapper").on("selectNetwork", function(e, network) {
         command.send('select_network', network);
     });
-}
-
-function refresh_all() {
-    database.clearAll();
-    command.send('refresh');
 }
 
 function select_obj(obj) {
