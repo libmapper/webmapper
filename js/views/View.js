@@ -757,12 +757,12 @@ class View {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
                     if (!self.escaped && dst && dst.id) {
-                        $('#container').trigger('map', [src.id, dst.id]);
                         self.database.maps.add({'src': self.database.find_signal(src.id),
                                                 'srcs': [self.database.find_signal(src.id)],
                                                 'dst': self.database.find_signal(dst.id),
                                                 'key': src.id + '->' + dst.id,
                                                 'status': 'staged'});
+                        $('#container').trigger('map', [src.id, dst.id]);
                     }
                     // clear table highlights
                     self.tables.left.highlightRow(null, true);
