@@ -251,6 +251,6 @@ function select_obj(obj) {
     if (obj.selected)
         return false;
     obj.selected = true;
-    obj.view.draw(0);
+    if (obj.view instanceof MapPainter) obj.view.draw(0);
     return true;
 }

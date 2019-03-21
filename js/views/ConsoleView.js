@@ -39,45 +39,45 @@ class ConsoleView extends View {
                                    "<div id='consoleHistory'></div>"+
                                "</div>");
         jQuery(function($, undefined) {
-            $('#consoleHistory').terminal(function(command) {
-                if (command !== '') {
-//                    var result = window.eval(command);
+            $('#consoleHistory').terminal(function(cmd) {
+                if (cmd !== '') {
+//                    var result = window.eval(cmd);
 //                    if (result != undefined) {
 //                        this.echo(String(result));
 //                    }
-//                    if (command.indexOf(' ') == -1) {
-//                        this.echo('unknown command:', command);
+//                    if (cmd.indexOf(' ') == -1) {
+//                        this.echo('unknown command:', cmd);
 //                    }
-                    command = command.split(' ');
-                    switch (command[0]) {
+                    cmd = cmd.split(' ');
+                    switch (cmd[0]) {
                         case 'map':
-                            if (command.length == 3)
-                                mapper.map(command[1], command[2]);
+                            if (cmd.length >= 3)
+                                mapper.map(cmd.slice(1,-1), cmd[cmd.length - 1]);
                             else
-                                this.echo('map: wrong number of arguments');
+                                this.echo('map: need at least two distinct signal names');
                             break;
                         case 'unmap':
                         case 'rm':
-                            if (command.length == 2) {
+                            if (cmd.length == 2) {
                                 let index = 0;
                                 self.database.maps.each(function(map) {
-                                    if (++index == command[1]) {
-                                        mapper.unmap(map.src.key, map.dst.key);
+                                    if (++index == cmd[1]) {
+                                        mapper.unmap(map.srcs.map(s => s.key), map.dst.key);
                                     }
                                 });
                             }
-                            else if (command.length == 3)
-                                mapper.unmap(command[1], command[2]);
+                            else if (cmd.length >= 3)
+                                mapper.unmap(cmd.slice(1,-1), [cmd.length - 1]);
                             else
-                                this.echo('unmap: wrong number of arguments');
+                                this.echo('unmap: need at least two distinct signal names or an index');
                             break;
                         case 'select':
                         case 'sel':
                             let updated = false;
-                            if (command.length == 2) {
+                            if (cmd.length == 2) {
                                 let index = 0;
                                 self.database.maps.each(function(map) {
-                                    if (++index == command[1])
+                                    if (++index == cmd[1])
                                         updated |= select_obj(map);
                                     else if (map.selected) {
                                         map.selected = false;
@@ -85,8 +85,8 @@ class ConsoleView extends View {
                                     }
                                 });
                             }
-                            else if (command.length == 3) {
-                                let key = command[1]+'->'+command[1];
+                            else if (cmd.length >= 3) {
+                                let key = mapper.mapKey(cmd.slice(1,-1), cmd[cmd.length - 1]);
                                 self.database.maps.each(function(map) {
                                     if (key == map.key)
                                         updated |= select_obj(map);
@@ -97,7 +97,7 @@ class ConsoleView extends View {
                                 });
                             }
                             else {
-                                this.echo('modify: wrong number of arguments');
+                                this.echo('select: need at least two distinct signal names or an index');
                                 break;
                             }
                             if (updated) {
@@ -109,38 +109,38 @@ class ConsoleView extends View {
                         case 'mod':
                             let msg = {};
                             let argidx = 0
-                            if (/^\d*$/.test(command[1])) {
+                            if (cmd.length < 4) {
+                                this.echo('modify: expected more arguments');
+                                break;
+                            }
+                            else if (/^\d*$/.test(cmd[1])) {
                                 // arg is map index
                                 let index = 0;
                                 self.database.maps.each(function(map) {
-                                    if (++index == parseInt(command[1])) {
-                                        msg['src'] = map['src'].key;
+                                    if (++index == parseInt(cmd[1])) {
+                                        msg['srcs'] = map['srcs'].map(s => s.key);
                                         msg['dst'] = map['dst'].key;
-                                        argidx = 2;
+                                        argidx = 1;
                                     }
                                 });
                                 if (!argidx)
                                     break;
                             }
-                            else if (command.length < 5) {
-                                this.echo('unmap: wrong number of arguments');
+                            else {
+                                this.echo('modify: expected map index');
                                 break;
                             }
-                            else {
-                                msg['src'] = command[1];
-                                msg['dst'] = command[2];
-                                argidx = 3;
+                            while (2*argidx < cmd.length - 1) {
+                                msg[cmd[2*argidx]] = cmd[2*argidx+1];
+                                ++argidx;
                             }
-                            while (argidx < command.length - 1) {
-                                msg[command[argidx]] = command[argidx+1];
-                                argidx++;
-                            }
-                            $('#TopMenuWrapper').trigger('setMap', [msg]);
+                            command.send('set_map', msg);
+                            $('#container').trigger("updateMapPropertiesFor", mapper.mapKey(msg.srcs, msg.dst));
                             break;
                         case 'ls':
-                            if (command.length == 2) {
+                            if (cmd.length == 2) {
                             let dev = null;
-                            dev = self.database.devices.find(command[1]);
+                            dev = self.database.devices.find(cmd[1]);
                                 if (dev) {
                                     let echo = this.echo;
                                     echo('device '+dev.name+' has '+
@@ -155,9 +155,9 @@ class ConsoleView extends View {
                         case 'devs':
                             let index = 0;
                             let echo = this.echo;
-                            if (command.length > 1) {
+                            if (cmd.length > 1) {
                                 let dev = null;
-                                let re = new RegExp(command[1]);
+                                let re = new RegExp(cmd[1]);
                                 self.database.devices.each(function(dev) {
                                     ++index;
                                     if (re.test(dev.name))
@@ -175,18 +175,18 @@ class ConsoleView extends View {
                             break;
                         case 'signals':
                         case 'sigs':
-                            if (command.length > 1) {
+                            if (cmd.length > 1) {
                                 let dev = null;
-                                if (/^\d*$/.test(command[1])) {
+                                if (/^\d*$/.test(cmd[1])) {
                                     // arg is device index
                                     let index = 0;
                                     self.database.devices.each(function(_dev) {
-                                        if (++index == parseInt(command[1]))
+                                        if (++index == parseInt(cmd[1]))
                                             dev = _dev;
                                     });
                                 }
                                 else
-                                    dev = self.database.devices.find(command[1]);
+                                    dev = self.database.devices.find(cmd[1]);
                                 if (dev) {
                                     let echo = this.echo;
                                     echo('device '+dev.name+' has '+
@@ -209,23 +209,23 @@ class ConsoleView extends View {
                             }
                             break;
                         case 'echo':
-                            this.echo(command.shift().join(' '));
+                            this.echo(cmd.shift().join(' '));
                             break;
                         case 'help':
                             this.echo('Available commands:');
                             this.echo('  ls: list all devices in the graph');
                             this.echo('  ls <name>: list all signals belonging to device <name>');
                             this.echo('  ls <index>: list all signals of the device at specified index');
-                            this.echo('  map <src> <dst>: create a map from signal <src> to signal <dst>');
-                            this.echo('  unmap <src> <dst>: remove map from <src> to <dst> if it exists');
+                            this.echo('  map <srcs> <dst>: create a map from one or more signals <srcs> to signal <dst>');
+                            this.echo('  unmap <srcs> <dst>: remove map from one or more <srcs> to <dst> if it exists');
                             this.echo('  unmap <index>: remove the map at the specified index');
-                            this.echo('  sel <src> <dst>: select a map');
+                            this.echo('  sel <srcs> <dst>: select a map');
                             this.echo('  sel <index>: select a map');
-                            this.echo('  mod <src> <dst> <properties>: add or modify properties of a map');
+                            this.echo('  mod <srcs> <dst> <properties>: add or modify properties of a map');
                             this.echo('  mod <index> <properties>: add or modify properties of a map');
                             break;
                         default:
-                            this.echo('unknown command: '+command[0]);
+                            this.echo('unknown command: '+cmd[0]);
                             break;
 
                     }

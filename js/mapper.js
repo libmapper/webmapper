@@ -11,7 +11,7 @@ class Mapper
     // make a one to one mapping
     map(srckeys, dstkey, props)
     {
-        let mapkey = this._mapKey(srckeys, dstkey);
+        let mapkey = this.mapKey(srckeys, dstkey);
         if (database.maps.find(mapkey)) return; // map already exists
 
         let overlap = this._overlapWithExistingConvergentMap(srckeys, dstkey, props)
@@ -41,13 +41,13 @@ class Mapper
         command.send('unmap', [srckeys, dstkey]);
     }
 
-    _mapKey(srckeys, dstkey)
+    mapKey(srckeys, dstkey)
     {
         if (srckeys.length === 1) return srckeys[0] + '->' + dstkey;
         else
         {
             let key = '[';
-            for (src of srckeys) key += src+',';
+            for (let src of srckeys) key += src+',';
             return key+']' + '->' + dstkey;
         }
     }
