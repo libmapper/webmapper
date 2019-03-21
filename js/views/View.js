@@ -325,7 +325,7 @@ class View {
         let self = this;
         sig.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo)
-                mapper.map(self.draggingFrom.key, self.snappingTo.key);
+                mapper.map([self.draggingFrom.key], self.snappingTo.key);
         });
         sig.view.undrag();
         sig.view.drag(
@@ -756,12 +756,7 @@ class View {
                     $(document).off('.drawing');
                     $('svg, .displayTable tbody tr').off('.drawing');
                     if (!self.escaped && dst && dst.id) {
-                        mapper.map(src.id, dst.id);
-                        self.database.maps.add({'src': self.database.find_signal(src.id),
-                                                'srcs': [self.database.find_signal(src.id)],
-                                                'dst': self.database.find_signal(dst.id),
-                                                'key': src.id + '->' + dst.id,
-                                                'status': 'staged'});
+                        mapper.map([src.id], dst.id);
                     }
                     // clear table highlights
                     self.tables.left.highlightRow(null, true);

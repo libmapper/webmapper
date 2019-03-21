@@ -179,11 +179,37 @@ def on_map(map, action):
 #        print 'ON_MAP (removed)', map_props(map)
         server.send_command("del_map", map_props(map))
 
+def find_sig(fullname):
+    names = fullname.split('/', 1)
+    dev = db.device(names[0])
+    if dev:
+        sig = dev.signal(names[1])
+        return sig
+    else:
+        print 'error: could not find device', names[0]
+
+def find_map(srckeys, dstkey):
+    srcs = [find_sig(k) for k in srckeys]
+    dst = find_sig(dstkey)
+    if not (all(srcs) and dst): 
+        print srckeys, ' and ', dstkey, ' not found on network!'
+        return
+    intersect = dst.maps()
+    for s in srcs:
+        intersect = intersect.intersect(s.maps())
+    for m in intersect:
+        match = True
+        match = match and m.slot(dst)
+        if match:
+            for s in srcs:
+                match = match and m.slot(s)
+        if match: 
+            return m
+    return None
+
 def set_map_properties(props, map):
-    # todo: check for convergent maps, only release selected
     if not map:
-        maps = find_sig(props['src']).maps().intersect(find_sig(props['dst']).maps())
-        map = maps.next()
+        map = find_map(props['srcs'], props['dst'])
         if not map:
             print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
             return
@@ -318,32 +344,28 @@ def subscribe(device):
         if dev:
             db.subscribe(dev, mapper.OBJ_ALL)
 
-def find_sig(fullname):
-    names = fullname.split('/', 1)
-    dev = db.device(names[0])
-    if dev:
-        sig = dev.signal(names[1])
-        return sig
-    else:
-        print 'error: could not find device', names[0]
-
 def new_map(args):
-    if find_sig(args[0]) and find_sig(args[1]):
-        map = mapper.map(find_sig(args[0]), find_sig(args[1]))
-        if not map:
-            print 'error: failed to create map', args[0], "->", args[1]
-            return;
-        else:
-            print 'created map: ', args[0], ' -> ', args[1]
-        if len(args) > 2 and type(args[2]) is dict:
-            set_map_properties(args[2], map)
-        map.push()
+    srckeys, dstkey, props = args
+    srcs = [find_sig(k) for k in srckeys]
+    dst = find_sig(dstkey)
+    if not (all(srcs) and dst): 
+        print srckeys, ' and ', dstkey, ' not found on network!'
+        return
+
+    map = mapper.map(srcs, dst)
+    if not map:
+        print 'error: failed to create map', srckeys, "->", dstkey
+        return;
     else:
-       print args[0], ' and ', args[1], ' not found on network!'
+        print 'created map: ', srckeys, ' -> ', dstkey
+    if props and props is dict:
+        set_map_properties(props, map)
+    map.push()
 
 def release_map(args):
-    # todo: check for convergent maps, only release selected
-    find_sig(args[0]).maps().intersect(find_sig(args[1]).maps()).release()
+    srckeys, dstkey = args
+    m = find_map(srckeys, dstkey)
+    if m != None: m.release()
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 

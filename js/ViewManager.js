@@ -292,7 +292,8 @@ class ViewManager
                     self.database.maps.each(function(map) {
                         if (map.selected)
                         {
-                            mapper.unmap(map.src.key, map.dst.key);
+                            let srcs = map.srcs.map(s => s.key);
+                            mapper.unmap(srcs, map.dst.key);
                             self.tooltip.hide();
                         }
                     });

@@ -349,7 +349,8 @@ class MapProperties {
             }
 
             // copy src and dst names
-            msg['src'] = map['src'].key;
+            msg['srcs'] = []
+            for (let s of map.srcs) msg['srcs'].push(s.key);
             msg['dst'] = map['dst'].key;
 
             // send the command, should receive a /mapped message after.

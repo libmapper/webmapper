@@ -185,37 +185,8 @@ MapperEdgeArray.prototype = {
         if (!key)
             return null;
 
-        let existing;
-        let exactmatch = false;
-        let convergentmatch = false;
-        let convergentmatchsrc;
         if (key in this.contents) {
-            existing = this.contents[key];
-            exactmatch = true;
-        } 
-        else {
-            let dst = obj.dst;
-            let k;
-            for (k in this.contents) {
-                let m = this.contents[k]
-                if (dst.key != m.dst.key) continue;
-                for (src1 of obj.srcs) {
-                    for (src2 of m.srcs) {
-                        if (src1.key == src2.key) {
-                            convergentmatch = true;
-                            convergentmatchsrc = src1.key
-                            existing = this.contents[k]
-                            break;
-                        }
-                    }
-                    if (convergentmatch) break;
-                }
-                if (convergentmatch) break;
-            }
-        }
-
-        if (exactmatch) {
-            let prop;
+            let prop, existing = this.contents[key];
             let updated = false;
             // copy properties from update
             for (prop in obj) {
@@ -227,21 +198,6 @@ MapperEdgeArray.prototype = {
             }
             if (updated && this.cb_func)
                 this.cb_func('modified', this.obj_type, existing);
-        }
-        else if (convergentmatch) {
-            this.remove(existing);
-            existing.srcs = existing.srcs.filter(e => e.key !== convergentmatchsrc);
-            existing.src = existing.srcs[0];
-            let self = this;
-            setTimeout(function() {
-                self.add(existing);
-                self.add(obj);
-                if(self.cb_func)
-                {
-                    self.cb_func('added', this.obj_type, existing);
-                    self.cb_func('added', this.obj_type, self.contents[key]);
-                }
-            }, 1000);
         }
         else {
             this.contents[key] = obj;
@@ -368,19 +324,17 @@ function MapperDatabase() {
             return dev.signals.find(name);
         }
         for (var i in maps) {
-            let src = findSig(maps[i].src);
+            let srcs = maps[i].srcs.map(s => findSig(s));
+            let src = srcs[0];
             let dst = findSig(maps[i].dst);
-            if (!src || !dst) {
+            if (!srcs.every(e => e) || !dst) {
                 console.log("error adding map: couldn't find signals",
-                            maps[i].src, maps[i].dst);
+                            maps[i].srcs, maps[i].dst);
                 return;
             }
+            maps[i].srcs = srcs;
             maps[i].src = src;
             maps[i].dst = dst;
-
-            let srcs = maps[i].srcs.map(findSig);
-            maps[i].srcs = srcs;
-            
 //            maps[i].status = 'active';
             let map = this.maps.add(maps[i]);
             if (!map) {
@@ -819,3 +773,5 @@ function MapperDatabase() {
     command.register("add_maps", this.add_maps.bind(this));
     command.register("del_map", this.del_map.bind(this));
 };
+
+var database = new MapperDatabase();

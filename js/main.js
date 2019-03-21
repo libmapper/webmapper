@@ -1,6 +1,4 @@
 "use strict";
-var database = new MapperDatabase();
-
 var viewManager;
 var mapProperties;
 var devFilter;
