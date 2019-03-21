@@ -750,7 +750,7 @@ function MapperDatabase() {
                     if (!dstsig)
                         return;
                     console.log('  Creating map:', srcsig.key, '->', dstsig.key);
-                    $('#container').trigger('map', [srcsig.key, dstsig.key, map]);
+                    mapper.map(srcsig.key, dstsig.key, map);
                 });
             });
         }
