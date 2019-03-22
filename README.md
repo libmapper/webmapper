@@ -5,12 +5,12 @@
 - Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West
 - Email: [dot_mapper@googlegroups.com](mailto:dot_mapper@googlegroups.com)
 - Discussion: [https://groups.google.com/forum/#!forum/dot_mapper](https://groups.google.com/forum/#!forum/dot_mapper)
-- Web: [http://libmapper.org](http://libmapper.org)
+- Web: [http://libmapper.org][libmapper]
 
 **Note: this document is not complete! If you notice something out-of-date, please make corrections and create a pull request.**
 
 
-During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox](http://idmil.org/dot) for MaxMSP and the software library [libmapper](https://github.com/libmapper/libmapper). The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
+During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
 All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
@@ -18,7 +18,7 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 
 * discovering and browsing active devices and their signals using multiple "views" of the mapping network, using different visualization techniques
 * creating, editing, and destroying data-streaming connections ("maps") between signals
-* saving and loading mapping sets, including support for mapping transportability (cf. the GDIF project)
+* saving and loading mapping sets, including support for mapping transportability (cf. the [GDIF project][GDIF])
 
 ### Currently missing:
 
@@ -26,7 +26,7 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 
 ### To run:
 
-1. Build and install [libmapper](https://github.com/libmapper/libmapper)
+1. Build and install [libmapper][libmapper]
 2. Copy `_mapper.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory.
 3. Run webmapper.py from terminal
 4. Terminal will display "serving at port #####"
@@ -40,9 +40,9 @@ If the browser doesn't open, open it manually and type "localhost:#####" into th
 
 ### Saving and loading:
 
-<img style="height:60px;padding:0px;vertical-align:middle" src="./doc/screenshots/file_io.png">
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/file_io.png">
 
-Released versions of Webmapper use "naïve" file loading, in which maps specifications loaded from file are matched against all of the devices currently active on the network. This is intended to support *transportability* of mapping specifications between similar devices if their parameter spaces are structured similarly (cf. the GDIF project). It also ensures that files will still load if a device receives a different ordinal id than the one used when the file was saved. Unfortunately, this naïve approach may also cause unintended consequences if a file is loaded when multiple instances of an involved device are present – to avoid these problems, see hiding maps in the description of the Chord View below.
+Released versions of Webmapper use "naïve" file loading, in which maps specifications loaded from file are matched against all of the devices currently active on the network. This is intended to support *transportability* of mapping specifications between similar devices if their parameter spaces are structured similarly (cf. the [GDIF project][GDIF]). It also ensures that files will still load if a device receives a different ordinal id than the one used when the file was saved. Unfortunately, this naïve approach may also cause unintended consequences if a file is loaded when multiple instances of an involved device are present – to avoid these problems, see [hiding devices](#hiding_devices) in the description of the Chord View below.
 
 #### In development: map staging
 
@@ -50,11 +50,11 @@ We are working on a new functionality called *map staging*. While the previous n
 
 ### Searching/filtering signals
 
-<img style="height:60px;padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
 
 ### Editing map properties
 
-<img style="height:60px;padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
 
 If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s):
 
@@ -86,6 +86,7 @@ Lines representing inter-signal maps may be drawn between signals using drag-and
 | +, -                  | Increase/decrease zoom    |
 | ←, ↑, →, ↓            | Pan canvas                |
 | cmd + 0               | Reset pan and zoom        |
+| M                     | Toggle muting for selected maps |
 
 Hold down the `M` key while creating a new map to set its initial `muted` property to `true`.
 
@@ -103,48 +104,52 @@ Color is used throughout the UI for differentiating devices and their signals. T
 
 ## Views:
 
-<img style="height:60px;padding:0px;vertical-align:middle" src="./doc/screenshots/view_selector.png">
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/view_selector.png">
 
 We have explored several alternative visualization and interaction techniques, which allow more informed and flexible interaction with the mapping network. Crucially, we believe that there is no need for a single “correct” user interface; rather, different network representations and interaction approaches may be useful to different users, for different mapping tasks, or at different times.
 
-**Webmapper** currently includes eight different views. Following is a brief description of each view, including any view-specific interactions. For each, the shortcut key is displayed as `Command-N`, followed by the view's icon representation in the view selector widget.
+**Webmapper** currently includes eight different views. Following is a brief description of each view, including any view-specific interactions. For each, the name of the view is displayed along with the view's icon representation in the view selector widget, followed by the shortcut key displayed as `Command-N`.
 
-### <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view (file staging view) `Command-1`
+### <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view
 
-**Status: development**
+* Shortcut: `Command-1`
+* Status: **development**
 
 This view displays only devices and network links between them. It can be used to gain an overview of the mapping network. Hovering over a device or link representation will cause an information box to appear displaying additional metadata.
 
-#### Hiding devices
+#### <a name="hiding_devices">Hiding devices</a>
 
 Devices can be "hidden" from the rest of the views by clicking on them. This will cause the device representation to become gray. While "hidden", a device and its signals will not appear in any of the remaining views, and its signals will not be included when calculating matches for file-loading. Clicking again on a hidden device will return it to an unhidden state.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/chord.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/chord.png">
 
-### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view `Command-2`
+### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view
 
-**Status: stable**
+* Shortcut: `Command-2`
+* Status: **stable**
 
 The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/list.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/list.png">
 
-### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view `Command-3`
+### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view
 
-**Status: development**
+* Shortcut: `Command-3`
+* Status: **development**
 
 In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/grid.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/grid.png">
 
 
-### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view `Command-4`
+### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view
 
-**Status: development**
+* Shortcut: `Command-4`
+* Status: **development**
 
-The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)](http://inputconf.sourceforge.net/) by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
+The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)][ICon] by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/canvas.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/canvas.png">
 
 #### View-specific interactions
 
@@ -153,46 +158,55 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 * Drag a canvas object back to the table on the left to remove it from the canvas.
 * Click and drag the right or left edges of a canvas object to create a map. Drop the other end of the map on the desired signal.
 
-### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view `Command-5`
+### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view
 
-**Status: development**
+* Shortcut: `Command-5`
+* Status: **development**
 
 The graph view plots signals on a 2D graph, with x and y axes chosen by the
 user from the signals' properties. Interestingly, some signal properties
 (such as min and max) may have vector values, meaning that a given signal
 may have more than one location on the graph.
 
-<img style="width:49%;padding:0px" src="./doc/screenshots/graph.png">
-<img style="width:49%;float:right;padding:0px" src="./doc/screenshots/graph-fd.png">
+<img width="49%" style="padding:0px" src="./doc/screenshots/graph.png">
+<img width="49%" style="float:right;padding:0px" src="./doc/screenshots/graph-fd.png">
 
 #### View-specific interactions
 
 * Choose the property to be displayed on the X and Y axes by clicking on the axis label and choosing a property from the dropdown menu. If `none` is chosen, a force-directed layout will be applied to that axis.  A fully force-directed plot can be created by choosing `none` for both axes.
 
-### <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view `Command-6`
+### <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view
 
-**Status: development**
+* Shortcut: `Command-6`
+* Status: **development**
 
 In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/hive.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/hive.png">
 
-### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view `Command-7`
+### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view
 
-**Status: development**
+* Shortcut: `Command-7`
+* Status: **development**
 
 In this view, each device is given its own axis arranged vertically in parallel. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/parallel.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/parallel.png">
 
-### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view `Command-8`
+### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view
 
-**Status: stable**
+* Shortcut: `Command-8`
+* Status: **stable**
 
 This view presents a "console" for performing text-based interaction with the mapping network.  A separate window on the right displays the currently-active maps.
 
-<img style="width:60%;display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/console.png">
+<img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/console.png">
 
 ## Working Offline
 
 Status: planning
+
+[libmapper]: https://github.com/libmapper/libmapper
+[GDIF]: http://www.idmil.org/projects/gdif
+[ICon]: http://inputconf.sourceforge.net/
+[DOT]: http://idmil.org/dot
