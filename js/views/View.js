@@ -730,15 +730,16 @@ class View {
                     for (index in self.tables) {
                         // check if cursor is within snapping range
                         dst = self.tables[index].getRowFromPosition(x, y, 0.2);
-                        if (!dst) continue;
-                        if (dst.id == src.id) {
-                            // don't try to map a sig to itself
-                            dst = null;
-                            continue;
+                        if (dst) {
+                            if (dst.id !== src.id) {
+                                self.newMap.dst = self.database.find_signal(dst.id);
+                                self.tables[index].highlightRow(dst, false);
+                            }
+                            else {
+                                dst = null;
+                            }
+                            break;
                         }
-                        self.newMap.dst = self.database.find_signal(dst.id);
-                        dst_table = self.tables[index];
-                        break;
                     }
 
                     if (!self.newMap.dst) {
@@ -746,10 +747,7 @@ class View {
                                                       'y': y - self.frame.top}};
                     }
                     self.newMap.view.draw(0);
-
                     src_table.highlightRow(src, false);
-                    if (dst_table)
-                        dst_table.highlightRow(dst, false);
                 });
                 $(document).on('mouseup.drawing', function(e) {
                     $(document).off('.drawing');

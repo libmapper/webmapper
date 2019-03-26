@@ -144,15 +144,19 @@ class MapPainter {
         if (this.paths.length > count) count = this.paths.length;
         for (let i = 0; i < count; ++i)
         {
-            // TODO: allow animation
             let pathspec = this.pathspecs[i];
+            let len = Raphael.getTotalLength(pathspec);
+
             if (this.shortenPath) {
-                let len = Raphael.getTotalLength(pathspec);
                 let shorten = this.shortenPath * this.canvas.zoom;
                 pathspec = Raphael.getSubpath(pathspec, shorten, len - shorten);
             }
             let path = this.paths[i];
             let attributes = this.attributes[i];
+
+            // hide arrowhead if path is short to avoid Raphael error message
+            if (len < 50)
+                attributes['arrow-end'] = 'none';
 
             if (typeof pathspec === 'undefined' || pathspec === null)
             {
