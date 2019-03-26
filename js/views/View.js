@@ -551,6 +551,8 @@ class View {
                 return;
             else map.view.draw(duration);
         });
+        if (this.newMap)
+            this.newMap.view.draw(0);
     }
 
     update() {
