@@ -154,10 +154,6 @@ class MapPainter {
             let path = this.paths[i];
             let attributes = this.attributes[i];
 
-            // hide arrowhead if path is short to avoid Raphael error message
-            if (len < 50)
-                attributes['arrow-end'] = 'none';
-
             if (typeof pathspec === 'undefined' || pathspec === null)
             {
                 if (typeof path !== 'undefined') 
@@ -170,6 +166,10 @@ class MapPainter {
 
             if (typeof attributes === 'undefined') 
                 attributes = this.attributes[0];
+
+            // hide arrowhead if path is short to avoid Raphael error message
+            if (len < 50)
+                attributes['arrow-end'] = 'none';
 
             if (typeof path === 'undefined' || path[0] == null) 
             {

@@ -209,7 +209,8 @@ class CanvasView extends View {
                     // move svg canvas to front
                     $('#svgDiv').css({'z-index': 2});
                 }
-                self.newMap = self.canvas.path();
+                if (self.dragging !== 'obj')
+                    self.newMap = self.canvas.path();
             },
             function(x, y, event) {
                 self.draggingFrom = null;

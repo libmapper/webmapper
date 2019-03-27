@@ -11,8 +11,7 @@ class ChordView extends View {
         this.radius = 200;
 
         // hide tables
-        tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
-                           frame.height, 0, 500, null, 0, 0);
+        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         let self = this;
@@ -52,6 +51,8 @@ class ChordView extends View {
         this.offlineTitle.node.setAttribute('pointer-events', 'none');
 
         this.file = null;
+
+        this.updateDevices();
 
         this.resize();
     }

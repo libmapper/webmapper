@@ -10,7 +10,7 @@ class ParallelView extends View {
               ParallelMapPainter);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // remove link svg

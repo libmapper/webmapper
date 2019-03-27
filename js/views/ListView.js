@@ -133,7 +133,6 @@ class ListMapPainter extends MapPainter
         }
         this.show();
 
-        let pathspec;
         if (Math.abs(src.x - dst.x) < 1)
             this.vertical(src, dst);
         else if (Math.abs(src.y - dst.y) < 1)
@@ -145,7 +144,7 @@ class ListMapPainter extends MapPainter
     {
         let mpx = (src.x + dst.x) * 0.5;
         this.pathspecs[0] = [['M', src.x, src.y],
-                            ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
     }
 
     vertical(src, dst) 
@@ -158,7 +157,7 @@ class ListMapPainter extends MapPainter
         if (offset < minoffset) offset = minoffset;
         let ctlx = src.x + offset * src.vx;
         this.pathspecs[0] = [['M', src.x, src.y], 
-                            ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+                             ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
     }
 
     horizontal(src, dst) 
@@ -171,6 +170,6 @@ class ListMapPainter extends MapPainter
         if (offset < minoffset) offset = minoffset;
         let ctly = src.y + offset * src.vy;
         this.pathspecs[0] = [['M', src.x, src.y],
-                            ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
+                             ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 }

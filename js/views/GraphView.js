@@ -15,12 +15,17 @@ class GraphView extends View {
         super('graph', frame, null, canvas, database, tooltip, GraphMapPainter);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
 
         // remove associated svg elements for devices
         this.database.devices.each(function(dev) {
             remove_object_svg(dev);
+            // vectorize signal positions
+            dev.signals.each(function(sig) {
+                if (!Array.isArray(sig.position))
+                    sig.position = [sig.position];
+            });
         });
 
         // remove link svg
@@ -189,19 +194,18 @@ class GraphView extends View {
                         if (yVal == null)
                             self.hidden.y += 1;
                     }
-                    let positionChanged = false;
                     if (xVal === undefined) xVal = null;
                     if (yVal === undefined) yVal = null;
                     if (xProp && (xVal === null) || yProp && (yVal === null)) {
-                        if (sig.position) {
-                            positionChanged = true;
-                        }
                         if (sig.view) {
                             sig.view.hide();
+                            sig.view.hidden = true;
                         }
                         return;
                     }
                     sig.view.show();
+                    sig.view.hidden = false;
+                    let positionChanged = false;
                     if (xVal != null) {
                         let min, max;
                         if (typeof xVal != "string" && xVal.length > 1) {
@@ -310,9 +314,9 @@ class GraphView extends View {
                             for (var i = 0; i < len; i++)
                                 sig.position.push(p);
                         }
-                        else if (sig.position.x != undefined) {
-                            let p = [sig.position];
-                            for (var i = 0; i < len - 1; i++)
+                        else if (!Array.isArray(sig.position)) {
+                            let p = [];
+                            for (var i = 0; i < len; i++)
                                 p.push(sig.position);
                             sig.position = p;
                         }
@@ -449,7 +453,7 @@ class GraphView extends View {
     }
 
     drawSignal(sig, duration) {
-        if (!sig.view)
+        if (!sig.view || sig.view.hidden)
             return;
         sig.view.stop();
         let pos = sig.position;
@@ -458,9 +462,8 @@ class GraphView extends View {
             let circle = circle_path(pos[i].x, pos[i].y, 10 * this.canvas.zoom);
             if (!path)
                 path = circle;
-            else {
+            else
                 path = path.concat(circle);
-            }
         }
         let is_output = sig.direction == 'output';
         let color = Raphael.hsl(sig.device.hue, 1, 0.5);
@@ -521,8 +524,9 @@ class GraphView extends View {
         let updated = false;
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
-                if (!sig.position)
+                if (!sig.position) {
                     sig.position = [position(null, null, self.frame)];
+                }
                 return false;
             });
             this.sortSignals();
@@ -576,7 +580,7 @@ class GraphView extends View {
         // for now, restore signal positions to singular value
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
-                if (sig.position)
+                if (Array.isArray(sig.position))
                     sig.position = sig.position[0];
                 if (sig.target)
                     delete sig.target;

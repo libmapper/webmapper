@@ -391,8 +391,7 @@ class View {
                 }
 
                 if (!sig.view && sig.position) {
-                    let path = circle_path(sig.position.x, sig.position.y, 10);
-                    sig.view = self.canvas.path(path)
+                    sig.view = self.canvas.path()
                                           .attr({stroke_opacity: 0,
                                                  fill_opacity: 0});
                     self.setSigDrag(sig);
@@ -703,11 +702,7 @@ class View {
                 var dst = null;
                 self.draggingFrom = self.database.find_signal(src.id);
 
-                self.newMap = 
-                {
-                    get src() {return self.draggingFrom},
-                    'dst': null
-                };
+                self.newMap = {'src': self.draggingFrom, 'dst': null};
                 self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {

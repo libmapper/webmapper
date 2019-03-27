@@ -9,16 +9,8 @@ class HiveView extends View {
         super('hive', frame, null, canvas, database, tooltip, HiveMapPainter);
 
         // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
+        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // start with signals at origin
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
-                if (sig.index && !sig.position)
-                    sig.position = this.origin;
-            });
-        });
 
         // remove link svg
         this.database.links.each(remove_object_svg);
@@ -31,6 +23,15 @@ class HiveView extends View {
         this.aspect = 1;
 
         this.resize();
+
+        // start with signals at origin
+        let self = this;
+        this.database.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.index && !sig.position)
+                    sig.position = self.origin;
+            });
+        });
     }
 
     _resize(duration) {
@@ -117,6 +118,7 @@ class HiveView extends View {
     }
 
     update() {
+        let self = this;
         let elements;
         switch (arguments.length) {
             case 0:
