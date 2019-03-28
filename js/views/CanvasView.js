@@ -59,7 +59,8 @@ class CanvasView extends View {
     _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
-                                0, duration, function() {self.drawMaps(0)}, 0, 0);
+                                0, duration, function() {self.drawMaps(duration)},
+                                0, 0);
         this.mapPane.left = this.leftExpandWidth;
         this.mapPane.width = this.frame.width - this.leftExpandWidth;
         this.mapPane.height = this.frame.height;

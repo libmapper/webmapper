@@ -630,8 +630,8 @@ class GraphMapPainter extends MapPainter
 
     updatePaths()
     {
-        if (this.map.src.hidden || this.map.src.view.hidden
-            || this.map.dst.hidden || this.map.dst.view.hidden) {
+        if (this.map.src.hidden || !this.map.src.view || this.map.src.view.hidden
+            || this.map.dst.hidden || !this.map.dst.view || this.map.dst.view.hidden) {
             this.hide();
             return;
         }
