@@ -59,7 +59,7 @@ class CanvasView extends View {
     _resize(duration) {
         let self = this;
         this.tables.left.adjust(0, 0, this.leftExpandWidth, this.frame.height,
-                                0, duration, function() {self.draw(0)}, 0, 0);
+                                0, duration, function() {self.drawMaps(0)}, 0, 0);
         this.mapPane.left = this.leftExpandWidth;
         this.mapPane.width = this.frame.width - this.leftExpandWidth;
         this.mapPane.height = this.frame.height;
@@ -253,7 +253,7 @@ class CanvasView extends View {
         if (!sig.view.label) {
             // TODO: use canvasObject appearance to indicate signal direction
             let key = sig.key;
-            sig.view.label = this.canvas.text(sig.position.left, sig.position.top, key);
+            sig.view.label = this.canvas.text(sig.position.x, sig.position.y, key);
             sig.view.label.node.setAttribute('pointer-events', 'none');
         }
         else
@@ -410,8 +410,10 @@ class CanvasView extends View {
                 if (!sig.view)
                     return;
                 sig.view.undrag();
-                if (sig.view.label)
+                if (sig.view.label) {
                     sig.view.label.remove();
+                    sig.view.label = null;
+                }
                 // cache canvas object positions
                 // TODO: use signalPainter instead?
             });

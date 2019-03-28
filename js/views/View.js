@@ -96,7 +96,7 @@ class View {
             dev.signals.each(function(sig) {
                 sig.hidden = (dev.hidden == true);
                 let regexp = sig.direction == 'output' ? self.srcregexp : self.dstregexp;
-                if (self.tables || dev.hidden || (regexp && !regexp.test(sig.key))) {
+                if (dev.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     return;
