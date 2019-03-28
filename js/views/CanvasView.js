@@ -111,14 +111,7 @@ class CanvasView extends View {
         let self = this;
         sig.view.unmouseup();
         sig.view.mouseup(function() {
-            if (self.draggingFrom && self.snappingTo) {
-                mapper.map(self.draggingFrom.key, self.snappingTo.key);
-                if (self.newMap) {
-                    self.newMap.remove();
-                    self.newMap = null;
-                }
-            }
-            else if (self.trashing) {
+            if (self.trashing) {
                 sig.view.label.remove();
                 sig.view.remove();
                 sig.view = null;
@@ -128,6 +121,14 @@ class CanvasView extends View {
                 self.tables.left.update();
                 // update maps
                 self.drawMaps(0);
+                self.draggingFrom = self.snappingTo = null;
+            }
+            else if (self.draggingFrom && self.snappingTo) {
+                mapper.map(self.draggingFrom.key, self.snappingTo.key);
+                if (self.newMap) {
+                    self.newMap.remove();
+                    self.newMap = null;
+                }
             }
             // move svg canvas to back
             $('#svgDiv').css({'position': 'relative', 'z-index': 0});
@@ -135,8 +136,8 @@ class CanvasView extends View {
         sig.view.undrag();
         sig.view.drag(
             function(dx, dy, x, y, event) {
-                x = x * self.canvas.zoom + self.canvas.pan.x;
-                y = y * self.canvas.zoom + self.canvas.pan.y;
+                let x1 = x * self.canvas.zoom + self.canvas.pan.x;
+                let y1 = y * self.canvas.zoom + self.canvas.pan.y;
                 let p = sig.position;
                 let c = sig.canvasObject;
                 if (self.escaped) {
@@ -151,9 +152,8 @@ class CanvasView extends View {
                     return;
                 }
                 if (self.dragging == 'obj') {
-                    p.left = x + p.drag_offset.x;
-                    p.top = y + p.drag_offset.y;
-                    constrain(p, self.frame, 5);
+                    p.left = x1 + p.drag_offset.x;
+                    p.top = y1 + p.drag_offset.y;
                     c.left = p.left;
                     c.top = p.top;
                     self.drawSignal(sig);
@@ -180,11 +180,11 @@ class CanvasView extends View {
                     }
                     else
                         arrow_end = 'block-wide-long';
-                    x -= self.frame.left;
-                    y -= self.frame.top;
+                    x1 -= self.frame.left;
+                    y1 -= self.frame.top;
                     let path = [['M', p.left + offset, p.top],
                                 ['C', p.left + offset * 3, p.top,
-                                 x - offset * 3, y, x, y]];
+                                 x1 - offset * 3, y1, x1, y1]];
                     self.newMap.attr({'path': path,
                                       'stroke': 'white',
                                       'stroke-width': 4,
@@ -344,7 +344,7 @@ class CanvasView extends View {
                 deselectAllMaps(self.tables);
                 var src = table.getRowFromName(src_row.id);
                 var dst = null;
-                var width = labelwidth(src.id);
+                var width = textWidth(src.id, 1.2);
 
                 // add object to canvas
                 let sig = self.database.find_signal(src.id);
@@ -352,11 +352,10 @@ class CanvasView extends View {
                     return;
 
                 let p = sig.position;
-                p.left = e.pageX - self.frame.left;
-                p.top = sig.position.y = e.pageY - self.frame.top;
-                p.width = labelwidth(sig.key);
+                p.left = (e.pageX - self.frame.left) * self.canvas.zoom + self.canvas.pan.x;
+                p.top = sig.position.y = (e.pageY - self.frame.top) * self.canvas.zoom + self.canvas.pan.y;
+                p.width = textWidth(sig.key, 1.2);
                 p.height = 30;
-                constrain(p, self.frame, 5);
                 sig.canvasObject = {'left': p.left, 'top': p.top,
                                     'width': p.width, 'height': p.height};
                 let c = sig.canvasObject;
@@ -371,9 +370,8 @@ class CanvasView extends View {
                         $('svg, .displayTable tbody tr').off('.drawing');
                         return;
                     }
-                    p.left = e.pageX - self.frame.left;
-                    p.top = e.pageY - self.frame.top;
-                    constrain(p, self.frame, 5);
+                    p.left = (e.pageX - self.frame.left) * self.canvas.zoom + self.canvas.pan.x;
+                    p.top = (e.pageY - self.frame.top) * self.canvas.zoom + self.canvas.pan.y;
                     c.left = p.left;
                     c.top = p.top;
                     self.drawSignal(sig, 0);
@@ -437,7 +435,7 @@ class CanvasMapPainter extends ListMapPainter
         if (this.map.src.canvasObject) {
             let offset = src.width * 0.5;
             src_x = src.left + offset;
-            src_cx = src.left + offset * 3;
+            src_cx = src.left + offset + 200;
             src_y = src.top;
         }
         else {
@@ -449,7 +447,7 @@ class CanvasMapPainter extends ListMapPainter
         if (this.map.dst.canvasObject) {
             let offset = dst.width * -0.5;
             dst_x = dst.left + offset;
-            dst_cx = dst.left + offset * 3;
+            dst_cx = dst.left + offset - 200;
             dst_y = dst.top;
         }
         else {

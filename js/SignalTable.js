@@ -461,7 +461,7 @@ class SignalTable {
             return;
         let text = id.split('/').slice(-1)[0];
         let h = td.offsetHeight;
-        let w = this.textWidth(text);
+        let w = textWidth(text);
         if (w > this.minHeight && w < h) {
             $(td).addClass('tall');
             $(td).empty().append("<div>"+text+"</div>");
@@ -749,15 +749,6 @@ class SignalTable {
         this.adjustRowHeight();
         this.updateTitle();
     }
-
-    // from https://stackoverflow.com/questions/1582534/calculating-text-width
-    textWidth(text){
-        var calc = '<span style="display:none">' + text + '</span>';
-        $('body').append(calc);
-        var width = $('body').find('span:last').width();
-        $('body').find('span:last').remove();
-        return width;
-    };
 
     setSigPosition(sig) {
         let self = this;
