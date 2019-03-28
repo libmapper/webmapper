@@ -278,8 +278,30 @@ class View {
                             break;
                     }
                     let typestring = sig.length > 1 ? type+'['+sig.length+']' : type;
-                    let minstring = sig.min != null ? sig.min : '';
-                    let maxstring = sig.max != null ? sig.max : '';
+                    function parseMaybeVector(val) {
+                        if (val === null || typeof val === 'undefined')
+                            return '';
+                        if (Array.isArray(val)) {
+                            // check if values are uniform
+                            for (let i = 1; i < val.length; i++) {
+                                if (val[i] != val[0])
+                                    return val;
+                            }
+                            return val[0];
+                        }
+                        return val;
+                    }
+                    let minstring = parseMaybeVector(sig.min);
+                    let maxstring = parseMaybeVector(sig.max);
+                    let x, y;
+                    if (Array.isArray(sig.position)) {
+                       x = sig.position[0].x;
+                       y = sig.position[0].y;
+                    }
+                    else {
+                       x = sig.position.x;
+                       y = sig.position.y;
+                    }
                     self.tooltip.showTable(
                         sig.device.status+" signal", {
                             name: sig.key,
@@ -288,7 +310,7 @@ class View {
                             unit: sig.unit,
                             minimum: minstring,
                             maximum: maxstring,
-                        }, sig.position.x, sig.position.y);
+                        }, x, y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;

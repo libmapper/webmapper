@@ -167,12 +167,34 @@ class GraphView extends View {
         let tx = this.frame.left + this.frame.width * 0.5;
         let ty = this.frame.top + this.frame.height * 0.5;
         this.hidden.x = this.hidden.y = 0;
+
+        // count unique values
+        function uniqueValues(v) {
+            if (typeof v === 'undefined' || v === null)
+                return null;
+            if (!Array.isArray(v))
+                return v;
+            let unique = [v[0]];
+            for (let i = 1; i < v.length; i++) {
+                if (unique.indexOf(v[i]) == -1)
+                    unique.push(v[i]);
+            }
+            return unique;
+        }
+
         // calculate ranges
         while (rangeChanged && iterations < 10) {
             iterations += 1;
             rangeChanged = false;
             database.devices.each(function(dev) {
                 dev.signals.each(function(sig) {
+                    if (sig.hidden) {
+                        if (sig.view) {
+                            sig.view.hide();
+                            sig.view.hidden = true;
+                        }
+                        return;
+                    }
                     let xVal, yVal;
                     if (xProp == null)
                         xVal = null;
@@ -181,6 +203,7 @@ class GraphView extends View {
                             xVal = sig.device[xProp.slice(7)];
                         else
                             xVal = sig[xProp];
+                        xVal = uniqueValues(xVal);
                         if (xVal == null)
                             self.hidden.x += 1;
                     }
@@ -191,11 +214,10 @@ class GraphView extends View {
                             yVal = sig.device[yProp.slice(7)];
                         else
                             yVal = sig[yProp];
+                        yVal = uniqueValues(yVal);
                         if (yVal == null)
                             self.hidden.y += 1;
                     }
-                    if (xVal === undefined) xVal = null;
-                    if (yVal === undefined) yVal = null;
                     if (xProp && (xVal === null) || yProp && (yVal === null)) {
                         if (sig.view) {
                             sig.view.hide();
@@ -298,13 +320,15 @@ class GraphView extends View {
                         // update signal position target
                         let t = [];
                         let f = [];
-                        let len = xVal ? xVal.length : 1;
-                        if (yVal && yVal.length > len)
-                            len = yVal.length;
-                        for (var i = 0; i < len; i++) {
-                            t.push({'x': xVal ? xVal[i] : tx,
-                                    'y': yVal ? yVal[i] : ty});
-                            f.push({'x': 0, 'y': 0});
+                        let xlen = xVal && Array.isArray(xVal) ? xVal.length : 1;
+                        let ylen = yVal && Array.isArray(yVal) ? yVal.length : 1;
+                        let len = xlen * ylen;
+                        for (var i = 0; i < xlen; i++) {
+                            for (var j = 0; j < ylen; j++) {
+                                t.push({'x': xVal ? xVal[i] : tx,
+                                        'y': yVal ? yVal[j] : ty});
+                                f.push({'x': 0, 'y': 0});
+                            }
                         }
                         sig.target = t;
                         sig.force = f;
@@ -361,7 +385,7 @@ class GraphView extends View {
         this.database.devices.each(function(devA) {
             // attract positions towards targets
             devA.signals.each(function(sig) {
-                if (!sig.target)
+                if (sig.view.hidden || !sig.target)
                     return;
                 for (var i in sig.position) {
                     let dx = sig.target[i].x - sig.position[i].x;
@@ -376,7 +400,7 @@ class GraphView extends View {
             });
             // repel signal positions
             devA.signals.each(function(sigA) {
-                if (!sigA.target)
+                if (sigA.view.hidden || !sigA.target)
                     return;
                 let pA = sigA.position;
                 let fA = sigA.force;
@@ -606,6 +630,13 @@ class GraphMapPainter extends MapPainter
 
     updatePaths()
     {
+        if (this.map.src.hidden || this.map.src.view.hidden
+            || this.map.dst.hidden || this.map.dst.view.hidden) {
+            this.hide();
+            return;
+        }
+        this.show();
+
         // draw a curved line from src to dst
         let srcs = this.map.src.position;
         let dsts = this.map.dst.position;
