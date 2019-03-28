@@ -80,6 +80,10 @@ class MapPainter {
     edge_intersection(x1, y1, x2, y2)
     {
         let ret = false;
+        x1 = x1 * this.canvas.zoom + this.canvas.pan.x;
+        y1 = y1 * this.canvas.zoom + this.canvas.pan.y;
+        x2 = x2 * this.canvas.zoom + this.canvas.pan.x;
+        y2 = y2 * this.canvas.zoom + this.canvas.pan.y;
         for (let i in this.paths)
         {
             if (this.paths[i] === null) continue;
