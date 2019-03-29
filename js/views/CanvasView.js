@@ -160,7 +160,7 @@ class CanvasView extends View {
                     self.drawSignal(sig);
 
                     if (x < self.mapPane.left) {
-                        sig.view.animate({'stroke': 'gray'}, 0, 'linear');
+                        sig.view.attr({'stroke': 'gray'});
                         self.trashing = true;
                     }
                     else {
@@ -250,22 +250,30 @@ class CanvasView extends View {
         }
         else
             sig.view.stop();
-        sig.view.animate(attrs, duration, '>');
         if (!sig.view.label) {
             // TODO: use canvasObject appearance to indicate signal direction
             let key = sig.key;
             sig.view.label = this.canvas.text(sig.position.x, sig.position.y, key);
             sig.view.label.node.setAttribute('pointer-events', 'none');
+            sig.view.label.toFront();
+            sig.view.label.attr({'font-size': 16,
+                                 'opacity': 1,
+                                 'fill': 'white'});
         }
         else
             sig.view.label.stop();
-        sig.view.label.toFront();
-        sig.view.label.attr({'font-size': 16});
-        sig.view.label.animate({'x': sig.position.left,
-                                'y': sig.position.top,
-                                'opacity': 1,
-                                'fill': 'white'},
-                               duration, '>');
+
+        if (!duration || duration < 0) {
+            sig.view.attr(attrs);
+            sig.view.label.attr({'x': sig.position.left,
+                                 'y': sig.position.top});
+        }
+        else {
+            sig.view.animate(attrs, duration, '>');
+            sig.view.label.animate({'x': sig.position.left,
+                                    'y': sig.position.top},
+                                   duration, '>');
+        }
     }
 
     update() {
@@ -307,8 +315,10 @@ class CanvasView extends View {
     }
 
     pan(x, y, delta_x, delta_y) {
-        if (x < this.tables.left.frame.width)
-            this.tablePan(x, y, delta_x, delta_y);
+        if (x < this.tables.left.frame.width) {
+            if (this.tablePan(x, y, delta_x, delta_y))
+                this.drawMaps();
+        }
         else {
             this.tablePan(null, null, delta_x, delta_y);
             this.canvasPan(x, y, delta_x, delta_y);
@@ -317,8 +327,10 @@ class CanvasView extends View {
     }
 
     zoom(x, y, delta) {
-        if (x < this.tables.left.frame.width)
-            this.tableZoom(x, y, delta);
+        if (x < this.tables.left.frame.width) {
+            if (this.tableZoom(x, y, delta))
+                this.drawMaps();
+        }
         else {
             this.canvasZoom(x, y, delta);
             this.drawMaps(0);
@@ -435,28 +447,43 @@ class CanvasMapPainter extends ListMapPainter
 
         let src_x, src_cx, src_y, dst_x, dst_cx, dst_y;
 
-        if (this.map.src.canvasObject) {
-            let offset = src.width * 0.5;
-            src_x = src.left + offset;
-            src_cx = src.left + offset + 200;
-            src_y = src.top;
-        }
-        else {
-            src_x = src.x * this.canvas.zoom + this.canvas.pan.x;
-            src_cx = src_x + src.width * this.canvas.zoom * 0.5;
-            src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
-        }
+        if (!this.map.src.canvasObject && !this.map.dst.canvasObject) {
+            // signals are inline vertically
+            let minoffset = 30;
+            let maxoffset = 200;
+            let offset = Math.abs(src.y - dst.y) * 0.5;
+            if (offset > maxoffset) offset = maxoffset;
+            if (offset < minoffset) offset = minoffset;
 
-        if (this.map.dst.canvasObject) {
-            let offset = dst.width * -0.5;
-            dst_x = dst.left + offset;
-            dst_cx = dst.left + offset - 200;
-            dst_y = dst.top;
+            src_x = dst_x = src.x * this.canvas.zoom + this.canvas.pan.x;
+            src_cx = dst_cx = (src.x + offset) * this.canvas.zoom + this.canvas.pan.x;
+            src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
+            dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
         }
         else {
-            dst_x = dst.x * this.canvas.zoom + this.canvas.pan.x;
-            dst_cx = dst_x + dst.width * this.canvas.zoom * 0.5;
-            dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
+            if (this.map.src.canvasObject) {
+                let offset = src.width * 0.5;
+                src_x = src.left + offset;
+                src_cx = src.left + offset + 200;
+                src_y = src.top;
+            }
+            else {
+                src_x = src.x * this.canvas.zoom + this.canvas.pan.x;
+                src_cx = src_x + src.width * this.canvas.zoom * 0.5;
+                src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
+            }
+
+            if (this.map.dst.canvasObject) {
+                let offset = dst.width * -0.5;
+                dst_x = dst.left + offset;
+                dst_cx = dst.left + offset - 200;
+                dst_y = dst.top;
+            }
+            else {
+                dst_x = dst.x * this.canvas.zoom + this.canvas.pan.x;
+                dst_cx = dst_x + dst.width * this.canvas.zoom * 0.5;
+                dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
+            }
         }
 
         this.pathspecs[0] = [['M', src_x, src_y],

@@ -50,9 +50,6 @@ class ListView extends View {
 
         this.escaped = false;
 
-        this.pan = this.tablePan;
-        this.zoom = this.tableZoom;
-
         this.resize(null, 500);
     }
 
@@ -71,7 +68,6 @@ class ListView extends View {
     }
 
     draw(duration) {
-        this.drawDevices(duration);
         this.drawMaps(duration);
     }
 
@@ -99,6 +95,16 @@ class ListView extends View {
         }
         if (updated)
             this.draw(500);
+    }
+
+    pan(x, y, delta_x, delta_y) {
+        if (this.tablePan(x, y, delta_x, delta_y))
+            this.drawMaps();
+    }
+
+    zoom(x, y, delta) {
+        if (this.tableZoom(x, y, delta))
+            this.drawMaps();
     }
 
     cleanup() {

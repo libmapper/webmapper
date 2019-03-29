@@ -595,8 +595,7 @@ class View {
             for (index in this.tables)
                 updated |= this.tables[index].pan(delta_x, delta_y);
         }
-        if (updated)
-            this.draw(0);
+        return updated;
     }
 
     canvasPan(x, y, delta_x, delta_y) {
@@ -626,8 +625,7 @@ class View {
             for (index in this.tables)
                 updated |= this.tables[index].zoom(delta, x, y, false);
         }
-        if (updated)
-            this.draw(0);
+        return updated;
     }
 
     canvasZoom(x, y, delta) {
