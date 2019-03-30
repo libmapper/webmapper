@@ -9,6 +9,12 @@ class ListView extends View {
         super('list', frame, {'left': tables.left, 'right': tables.right},
               canvas, database, tooltip, ListMapPainter);
 
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(ListMapPainter);
+
         // set left table properties
         this.tables.left.filterByDirection('output');
 
@@ -19,6 +25,7 @@ class ListView extends View {
         // set global table properties
         for (var i in this.tables) {
             let t = this.tables[i];
+            t.hidden = false;
             t.showDetail(true);
             t.expand = false;
             t.scrolled = 0;
@@ -28,25 +35,15 @@ class ListView extends View {
 
         let self = this;
         this.database.devices.each(function(dev) {
-            // remove signal svg
             dev.signals.each(remove_object_svg);
-
             if (!dev.view)
                 return;
-            // remove device labels
-            if (dev.view.label) {
-                dev.view.label.remove();
-                dev.view.label = null;
-            }
-            // change device hover
             dev.view.unhover();
+            remove_object_svg(dev);
         });
 
         this.tables.left.collapseHandler = function() {self.drawMaps()};
         this.tables.right.collapseHandler = function() {self.drawMaps()};
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
 
         this.escaped = false;
 

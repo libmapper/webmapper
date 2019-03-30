@@ -6,20 +6,25 @@
 
 class ParallelView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('parallel', frame, null, canvas, database, tooltip,
+        super('parallel', frame, tables, canvas, database, tooltip,
               ParallelMapPainter);
 
-        // hide tables
-        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
-
         this.pan = this.canvasPan;
-//        this.zoom = this.canvasZoom;
 
         this.shortenPaths = 12;
+
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(ParallelMapPainter);
+
+        // hide tables
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         this.resize();
     }
@@ -97,37 +102,6 @@ class ParallelView extends View {
             });
         }
     }
-
-//    getMapPath(map) {
-//        if (!map.view)
-//            return;
-//
-//        // draw L-R bezier
-//        let src = map.src.position;
-//        let dst = map.dst.position;
-//        if (!src || !dst) {
-//            console.log('missing signal positions for drawing map', map);
-//            return null;
-//        }
-//
-//        let path;
-//
-//        if (src.x == dst.x) {
-//            // signals belong to same device
-//            let offsetx = src.x + (src.y - dst.y) * 0.5;
-//            path = [['M', src.x, src.y],
-//                    ['C', offsetx, src.y, offsetx, dst.y, dst.x, dst.y]];
-//        }
-//        else {
-//            let mpx = (src.x + dst.x) * 0.5;
-//            path = [['M', src.x, src.y],
-//                    ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
-//        }
-//
-//        // shorten path so it doesn't draw over signals
-//        let len = Raphael.getTotalLength(path);
-//        return Raphael.getSubpath(path, 12, len - 12);
-//    }
 
     draw(duration) {
         this.drawDevices(duration);

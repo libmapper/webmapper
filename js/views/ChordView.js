@@ -6,13 +6,31 @@
 
 class ChordView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('chord', frame, null, canvas, database, tooltip);
+        super('chord', frame, tables, canvas, database, tooltip);
 
         this.radius = 200;
 
+        this.pan = this.canvasPan;
+        this.zoom = this.canvasZoom;
+
+        this.onlineInc = Math.PI * 0.5;
+        this.offlineInc = Math.PI * 0.5;
+
+        this.onlineDevs = 0;
+        this.offlineDevs = 0;
+
+        this.file = null;
+
+        this.setup();
+    }
+
+    setup() {
         // hide tables
-        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -26,23 +44,16 @@ class ChordView extends View {
         // remove associated svg elements for maps
         this.database.maps.each(function(map) { remove_object_svg(map); });
 
-        this.pan = this.canvasPan;
-        this.zoom = this.canvasZoom;
-
-        this.onlineInc = Math.PI * 0.5;
-        this.offlineInc = Math.PI * 0.5;
-
-        this.onlineDevs = 0;
-        this.offlineDevs = 0;
-
-        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy, "online devices")
+        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy,
+                                            "online devices")
                                       .attr({'font-size': 32,
                                              'opacity': 1,
                                              'fill': 'white',
                                              'x': this.frame.width * 0.25,
                                              'y': this.frame.height - 30});
         this.onlineTitle.node.setAttribute('pointer-events', 'none');
-        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "offline devices")
+        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy,
+                                             "offline devices")
                                        .attr({'font-size': 32,
                                               'opacity': 1,
                                               'fill': 'white',
@@ -50,10 +61,7 @@ class ChordView extends View {
                                               'y': this.frame.height - 30});
         this.offlineTitle.node.setAttribute('pointer-events', 'none');
 
-        this.file = null;
-
         this.updateDevices();
-
         this.resize();
     }
 

@@ -6,14 +6,7 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('hive', frame, null, canvas, database, tooltip, HiveMapPainter);
-
-        // hide tables
-        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
+        super('hive', frame, tables, canvas, database, tooltip, HiveMapPainter);
 
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
@@ -22,7 +15,18 @@ class HiveView extends View {
 
         this.aspect = 1;
 
-        this.resize();
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(HiveMapPainter);
+
+        // hide tables
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         // start with signals at origin
         let self = this;
@@ -32,6 +36,8 @@ class HiveView extends View {
                     sig.position = self.origin;
             });
         });
+
+        this.resize();
     }
 
     _resize(duration) {

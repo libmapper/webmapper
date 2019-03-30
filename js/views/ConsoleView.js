@@ -30,9 +30,13 @@ class ConsoleView extends View {
 
         this.escaped = false;
 
-        this.pan = this.tablePan;
-        this.zoom = this.tableZoom;
+        this.pan = function() {};
+        this.zoom = function() {};
 
+        this.setup();
+    }
+
+    setup() {
         $('#container').append("<div id='consoleDiv' class='console' "+
                                "style='left:0px; border-right:1px solid gray'>"+
                                    "<span><h2>Console</h2></span>"+

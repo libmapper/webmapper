@@ -12,11 +12,26 @@
 
 class GraphView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('graph', frame, null, canvas, database, tooltip, GraphMapPainter);
+        super('graph', frame, tables, canvas, database, tooltip, GraphMapPainter);
+
+        this.xAxisProp = 'min';
+        this.yAxisProp = 'max';
+        this.hidden = {'x': 0, 'y': 0};
+        var xMin = null, xMax = null, yMin = null, yMax = null;
+        this.stepInterval = 2;
+
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(GraphMapPainter);
 
         // hide tables
-        tables.left.adjust(frame.width * -0.4, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         // remove associated svg elements for devices
         this.database.devices.each(function(dev) {
@@ -31,18 +46,22 @@ class GraphView extends View {
         // remove link svg
         this.database.links.each(remove_object_svg);
 
-        this.xAxisProp = 'min';
-        this.yAxisProp = 'max';
-        this.hidden = {'x': 0, 'y': 0};
-        var xMin = null, xMax = null, yMin = null, yMax = null;
-        this.stepInterval = 2;
-
         this._labelAxes();
 
         // temporary
         // TODO: populate menus using signal properties
-        $('#xAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a><a>name</a><a>device name</a>");
-        $('#yAxisMenu').empty().append("<a>device name</a><a>name</a><a>max</a><a>min</a><a>none</a>");
+        $('#xAxisMenu').empty().append("<a>none</a>"+
+                                       "<a>direction</a>"+
+                                       "<a>min</a>"+
+                                       "<a>max</a>"+
+                                       "<a>device name</a>"+
+                                       "<a>signal name</a>");
+        $('#yAxisMenu').empty().append("<a>signal name</a>"+
+                                       "<a>device name</a>"+
+                                       "<a>max</a>"+
+                                       "<a>min</a>"+
+                                       "<a>direction</a>"+
+                                       "<a>none</a>");
 
         let self = this;
         $('.axisLabel').on('click', function(e) {
@@ -76,14 +95,7 @@ class GraphView extends View {
                 self.xMin = self.xMax = self.yMin = self.yMax = null;
                 self.sortSignals();
                 self._labelAxes();
-                if (!self.xAxisProp || !self.yAxisProp) {
-                    // need to call force-directed layout
-                    self.startStepping();
-                }
-                else {
-                    // can just draw directly
-                    self.draw(500);
-                }
+                self.startStepping();
             });
             e.stopPropagation();
             let axes = $('#axes');
@@ -93,7 +105,6 @@ class GraphView extends View {
                 $(axes).css('pointer-events', 'none');
             });
         });
-
         this.resize();
     }
 
@@ -164,8 +175,8 @@ class GraphView extends View {
         let rangeChanged = true;
         let self = this;
         let iterations = 0;
-        let tx = this.frame.left + this.frame.width * 0.5;
-        let ty = this.frame.top + this.frame.height * 0.5;
+        let tx = this.frame.width * 0.5;
+        let ty = this.frame.height * 0.5;
         this.hidden.x = this.hidden.y = 0;
 
         // count unique values
@@ -201,6 +212,8 @@ class GraphView extends View {
                     else  {
                         if (xProp.indexOf('device ') == 0)
                             xVal = sig.device[xProp.slice(7)];
+                        else if (xProp.indexOf('signal ') == 0)
+                            xVal = sig[xProp.slice(7)];
                         else
                             xVal = sig[xProp];
                         xVal = uniqueValues(xVal);
@@ -212,6 +225,8 @@ class GraphView extends View {
                     else {
                         if (yProp.indexOf('device ') == 0)
                             yVal = sig.device[yProp.slice(7)];
+                        else if (yProp.indexOf('signal ') == 0)
+                            yVal = sig[yProp.slice(7)];
                         else
                             yVal = sig[yProp];
                         yVal = uniqueValues(yVal);
@@ -352,9 +367,6 @@ class GraphView extends View {
                             for (var i = sig.position.length; i < len; i++)
                                 sig.position.push(p);
                         }
-                        // if x and y axis are defined, copy target to position
-                        if (self.xAxisProp && self.yAxisProp)
-                            sig.position = sig.target;
                     }
                 });
             });
@@ -365,27 +377,17 @@ class GraphView extends View {
     forceDirect() {
         let self = this;
         let moved = false;
-        let K_repulse_x = 0.0;
-        let K_repulse_y = 0.0;
-        let K_target_x = 1.1;
-        let K_target_y = 1.1;
+        let K_repulse_x = 1000.0;
+        let K_repulse_y = 1000.0;
+        let K_target_x = 0.1;
+        let K_target_y = 0.1;
         let K_map_x = 0.0;
         let K_map_y = 0.0;
-        if (!self.xAxisProp) {
-            K_target_x = 0.01;
-            K_repulse_x = 1000;
-            K_map_x = 0.01;
-        }
-        if (!self.yAxisProp) {
-            K_target_y = 0.01;
-            K_repulse_y = 1000;
-            K_map_y = 0.01;
-        }
-        let L = 100;
+        let L = 200;
         this.database.devices.each(function(devA) {
             // attract positions towards targets
             devA.signals.each(function(sig) {
-                if (sig.view.hidden || !sig.target)
+                if (!sig.view || sig.view.hidden || !sig.target)
                     return;
                 for (var i in sig.position) {
                     let dx = sig.target[i].x - sig.position[i].x;
@@ -394,20 +396,20 @@ class GraphView extends View {
                         continue;
                     let fx = K_target_x * dx;
                     let fy = K_target_y * dy;
-                    sig.force[i].x = sig.force[i].x * 0.5 + fx;
-                    sig.force[i].y = sig.force[i].y * 0.5 + fy;
+                    sig.force[i].x = fx;
+                    sig.force[i].y = fy;
                 }
             });
             // repel signal positions
             devA.signals.each(function(sigA) {
-                if (sigA.view.hidden || !sigA.target)
+                if (!sigA.view || sigA.view.hidden || !sigA.target)
                     return;
                 let pA = sigA.position;
                 let fA = sigA.force;
                 let found = false;
                 self.database.devices.each(function(devB) {
                     devB.signals.each(function(sigB) {
-                        if (!sigB.target)
+                        if (!sigB.view || sigB.view.hidden || !sigB.target)
                             return;
                         if (found == true) {
                             let pB = sigB.position;
@@ -555,14 +557,7 @@ class GraphView extends View {
             });
             this.sortSignals();
             this._labelAxes();
-            if (!this.xAxisProp || !this.yAxisProp) {
-                // need to call force-directed layout
-                this.startStepping();
-            }
-            else {
-                // can just draw directly
-                this.draw(500);
-            }
+            this.startStepping();
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();

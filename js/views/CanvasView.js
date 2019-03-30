@@ -6,10 +6,22 @@
 
 class CanvasView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
-        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip,
+        super('canvas', frame, tables, canvas, database, tooltip,
               CanvasMapPainter);
 
+        this.leftExpandWidth = 200;
+
+        this.dragging = null;
+        this.trashing = false;
+
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(CanvasMapPainter);
+
         // set left table properties
+        this.tables.left.hidden = false;
         this.tables.left.filterByDirection('both');
         this.tables.left.showDetail(true);
         this.tables.left.expand = true;
@@ -18,7 +30,9 @@ class CanvasView extends View {
         this.tables.left.update();
 
         // hide right table
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.hidden = true;
 
         this.setCanvasTableDrag();
 
@@ -40,20 +54,9 @@ class CanvasView extends View {
                     self.setSigDrag(sig);
                 }
             });
-            if (!dev.view)
-                return;
-            // remove device labels
-            if (dev.view.label) {
-                dev.view.label.remove();
-                dev.view.label = null;
-            }
+            remove_object_svg(dev);
         });
-
-        this.leftExpandWidth = 200;
         this.resize(null, 500);
-
-        this.dragging = null;
-        this.trashing = false;
     }
 
     _resize(duration) {

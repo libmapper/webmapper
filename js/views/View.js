@@ -112,7 +112,7 @@ class View {
                 }
             });
             // if no signals visible, hide device also
-            if (self.tables || dev.hidden || !sigIndex) {
+            if (dev.hidden || !sigIndex) {
                 remove_object_svg(dev);
                 dev.index = null;
                 return;

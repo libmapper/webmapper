@@ -9,6 +9,15 @@ class GridView extends View {
         super('grid', frame, {'left': tables.left, 'right': tables.right},
               canvas, database, tooltip, GridMapPainter);
 
+        this.escaped = false;
+        this.leftExpandWidth = 200;
+        this.rightExpandWidth = 200;
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(GridMapPainter);
+
         // set left table properties
         this.tables.left.filterByDirection('output');
 
@@ -19,6 +28,7 @@ class GridView extends View {
         // set global table properties
         for (var i in this.tables) {
             let t = this.tables[i];
+            t.hidden = false;
             t.showDetail(false);
             t.expand = true;
             t.scrolled = 0;
@@ -27,16 +37,9 @@ class GridView extends View {
 
         let self = this;
         this.database.devices.each(function(dev) {
-            // remove signal svg
             dev.signals.each(remove_object_svg);
             remove_object_svg(dev);
         });
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
-
-        this.map_pane;
-        this.escaped = false;
 
         this.tables.left.collapseHandler = function() {
             if (self.tables.left.expandWidth != self.leftExpandWidth) {
@@ -54,8 +57,6 @@ class GridView extends View {
         };
 
         this.update();
-        this.leftExpandWidth = 200;
-        this.rightExpandWidth = 200;
         this.resize(null, 500);
 
         // move svg canvas to front

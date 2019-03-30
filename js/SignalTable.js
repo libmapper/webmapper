@@ -473,6 +473,8 @@ class SignalTable {
     }
 
     update(targetHeight) {
+        if (this.hidden)
+            return;
         if (targetHeight)
             this.targetHeight = targetHeight - 20; // headers
 
