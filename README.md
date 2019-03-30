@@ -3,22 +3,21 @@
 <br/>
 
 - Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West
-- Email: [dot_mapper@googlegroups.com](mailto:dot_mapper@googlegroups.com)
-- Discussion: [https://groups.google.com/forum/#!forum/dot_mapper](https://groups.google.com/forum/#!forum/dot_mapper)
-- Web: [http://libmapper.org][libmapper]
+- Resources: [Discussion list][group], [libmapper documentation][libmapper]
 
-**Note: this document is not complete! If you notice something out-of-date, please make corrections and create a pull request.**
+During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of media synthesizers – is by far the most challenging aspect of designing digital musical instrument or other interactive systems. This problem becomes even worse when attempted in collaborative settings, since collaborators often have different perspectives, vocabularies and tools.
 
+We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
-During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of sound synthesizers – is by far the most challenging aspect of digital musical instrument design, especially when attempted in collaborative settings. We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
+### Functionality
+
+Webmapper aims to support the mapping task in three ways:
+
+1. Aiding discovery and exploration of active devices and their signals. Currently 8 different "views" of the mapping network are available, each using a different visualization approach.
+2. Providing an interactive graphical interface for creating, editing, and destroying data-streaming connections ("maps") between signals. 
+3. Supporting saving and loading of mapping sets, including support for mapping transportability (cf. the [GDIF project][GDIF])
 
 All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
-
-### Functionality:
-
-* discovering and browsing active devices and their signals using multiple "views" of the mapping network, using different visualization techniques
-* creating, editing, and destroying data-streaming connections ("maps") between signals
-* saving and loading mapping sets, including support for mapping transportability (cf. the [GDIF project][GDIF])
 
 ### Currently missing:
 
@@ -51,6 +50,8 @@ We are working on a new functionality called *map staging*. While the previous n
 ### Searching/filtering signals
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
+
+Text boxes are provided for filtering source and destination signals by name.
 
 ### Editing map properties
 
@@ -86,9 +87,7 @@ Lines representing inter-signal maps may be drawn between signals using drag-and
 | +, -                  | Increase/decrease zoom    |
 | ←, ↑, →, ↓            | Pan canvas                |
 | cmd + 0               | Reset pan and zoom        |
-| M                     | Toggle muting for selected maps |
-
-Hold down the `M` key while creating a new map to set its initial `muted` property to `true`.
+| M                     | Toggle muting for selected maps, or hold down the while creating a new map to set its initial `muted` property to `true`.
 
 #### Scrolling and panning
 
@@ -210,3 +209,4 @@ Status: planning
 [GDIF]: http://www.idmil.org/projects/gdif
 [ICon]: http://inputconf.sourceforge.net/
 [DOT]: http://idmil.org/dot
+[group]: https://groups.google.com/forum/#!forum/dot_mapper
