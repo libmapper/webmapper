@@ -17,6 +17,7 @@ class GridView extends View {
 
     setup() {
         this.setMapPainter(GridMapPainter);
+        this.setTableDrag();
 
         // set left table properties
         this.tables.left.filterByDirection('output');

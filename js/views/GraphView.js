@@ -585,6 +585,7 @@ class GraphView extends View {
 
     resetPanZoom() {
         super.resetPanZoom();
+        this._updateRangeLabels();
         this.draw(0);
     }
 

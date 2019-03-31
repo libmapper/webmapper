@@ -30,10 +30,6 @@ class View {
 
         this.newMap = null;
 
-        if (tables) {
-            this.setTableDrag();
-        }
-
         this.mapPane = {'left': frame.left,
                         'top': frame.top,
                         'width': frame.width,
@@ -798,6 +794,7 @@ class View {
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
+        this.tooltip.hide(true);
     }
 
     // sets the map painter for the view and converts existing map views to use

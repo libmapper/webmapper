@@ -14,6 +14,7 @@ class ListView extends View {
 
     setup() {
         this.setMapPainter(ListMapPainter);
+        this.setTableDrag();
 
         // set left table properties
         this.tables.left.filterByDirection('output');

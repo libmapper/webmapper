@@ -435,7 +435,6 @@ class CanvasView extends View {
             });
         });
         this.tables.left.update();
-        this.setTableDrag();
     }
 }
 
