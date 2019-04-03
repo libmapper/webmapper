@@ -199,7 +199,7 @@ class GraphView extends View {
             rangeChanged = false;
             database.devices.each(function(dev) {
                 dev.signals.each(function(sig) {
-                    if (sig.hidden) {
+                    if (dev.hidden || sig.hidden) {
                         if (sig.view) {
                             sig.view.hide();
                             sig.view.hidden = true;
@@ -276,10 +276,13 @@ class GraphView extends View {
                             }
                             let range = max - min;
                             for (var i in xVal) {
-                                xVal[i] -= min;
-                                if (range != 0)
+                                if (range != 0) {
+                                    xVal[i] -= min;
                                     xVal[i] = xVal[i] / range * (self.frame.width - 100);
-                                xVal[i] += 50;
+                                    xVal[i] += 50;
+                                }
+                                else
+                                    xVal[i] = self.frame.cx;
                             }
                             if (xVal != sig.position.x)
                                 positionChanged = true;
@@ -320,10 +323,13 @@ class GraphView extends View {
                             }
                             let range = max - min;
                             for (var i in yVal) {
-                                yVal[i] -= min;
-                                if (range != 0)
+                                if (range != 0) {
+                                    yVal[i] -= min;
                                     yVal[i] = yVal[i] / range * (self.frame.height - 100);
-                                yVal[i] = self.frame.height - yVal[i] - 50;
+                                    yVal[i] = self.frame.height - yVal[i] - 50;
+                                }
+                                else
+                                    yVal[i] = self.frame.cy - self.frame.top - 25;
                             }
                             if (yVal != sig.position.y)
                                 positionChanged = true;
@@ -604,6 +610,10 @@ class GraphView extends View {
                     sig.position = sig.position[0];
                 if (sig.target)
                     delete sig.target;
+                if (sig.view && sig.view.hidden) {
+                    sig.view.show();
+                    sig.view.hidden = false;
+                }
             });
         });
 
@@ -626,19 +636,22 @@ class GraphMapPainter extends MapPainter
 
     updatePaths()
     {
-        if (this.map.src.hidden || !this.map.src.view || this.map.src.view.hidden
-            || this.map.dst.hidden || !this.map.dst.view || this.map.dst.view.hidden) {
+        let src = this.map.src;
+        let dst = this.map.dst;
+
+        if (   src.device.hidden || !src.view || src.view.hidden
+            || dst.device.hidden || !dst.view || dst.view.hidden) {
             this.hide();
             return;
         }
         this.show();
 
         // draw a curved line from src to dst
-        let srcs = this.map.src.position;
-        let dsts = this.map.dst.position;
+        let srcPos = src.position;
+        let dstPos = dst.position;
 
         // check if number of src or dst positions has changed
-        let len = srcs.length * dsts.length;
+        let len = srcPos.length * dstPos.length;
         if (this.pathspecs.length > len) {
             for (var i = len; i < this.paths.length; i++) {
                 let path = this.paths[i];
@@ -653,18 +666,18 @@ class GraphMapPainter extends MapPainter
         }
 
         let idx = 0;
-        for (var i in srcs) {
-            let src = srcs[i];
-            for (var j in dsts) {
-                let dst = dsts[j];
-                let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
-                let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
+        for (var i in srcPos) {
+            let s = srcPos[i];
+            for (var j in dstPos) {
+                let d = dstPos[j];
+                let m = {x: (s.x + d.x) * 0.5, y: (s.y + d.y) * 0.5};
+                let o = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
 
-                mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
-                mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
+                m.x = m.x + (m.x - o.x) * this.midPointInflation;
+                m.y = m.y + (m.y - o.y) * this.midPointInflation;
 
-                this.pathspecs[idx] = [['M', src.x, src.y],
-                                       ['S', mid.x, mid.y, dst.x, dst.y]];
+                this.pathspecs[idx] = [['M', s.x, s.y],
+                                       ['S', m.x, m.y, d.x, d.y]];
                 idx += 1;
             }
         }

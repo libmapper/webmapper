@@ -97,7 +97,7 @@ class GridView extends View {
         let elements;
         switch (arguments.length) {
             case 0:
-                elements = ['devices', 'maps'];
+                elements = ['devices', 'signals', 'maps'];
                 break;
             case 1:
                 elements = [arguments[0]];
@@ -107,7 +107,7 @@ class GridView extends View {
                 break;
         }
         let updated = false;
-        if (elements.indexOf('devices') >= 0) {
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
             let grow = false;
             if (this.tables.left.expandWidth != this.leftExpandWidth) {

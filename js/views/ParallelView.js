@@ -123,16 +123,8 @@ class ParallelView extends View {
                 break;
         }
         let updated = false;
-        if (elements.indexOf('devices') >= 0) {
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
-            updated = true;
-        }
-        if (elements.indexOf('signals') >= 0) {
-            this.updateSignals(function(sig) {
-                if (!sig.position)
-                    sig.position = position(null, null, self.frame);
-                return false;
-            });
             updated = true;
         }
         if (elements.indexOf('maps') >= 0) {

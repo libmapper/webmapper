@@ -172,7 +172,32 @@ class ChordView extends View {
     setDevClick(dev) {
         let self = this;
         dev.view.unclick().click(function(e) {
-            dev.hidden = dev.hidden ? false : true;
+            // check if any other devices are hidden
+            let num_hidden = self.database.devices.reduce(function(t, d) {
+                let hidden = d.hidden ? 1 : 0;
+                return t ? t + hidden : hidden;
+            });
+            if (dev.hidden) {
+                // unhide
+                dev.hidden = false;
+            }
+            else {
+                if (num_hidden === 0) {
+                    // 'solo' this device by hiding all others
+                    self.database.devices.each(function (d) {
+                        if (d !== dev)
+                            d.hidden = true;
+                    });
+                }
+                else if (num_hidden === self.database.devices.size() - 1) {
+                    // unhide all devices
+                    self.database.devices.each(function (d) {
+                        d.hidden = false;
+                    });
+                }
+                else
+                    dev.hidden = true;
+            }
             self.draw(0);
         });
     }
