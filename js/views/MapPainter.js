@@ -84,9 +84,29 @@ class MapPainter {
         for (let i in this.paths)
         {
             if (this.paths[i] === null) continue;
-            ret = ret || edge_intersection(this.paths[i], x1, y1, x2, y2);
+            let intersection = edge_intersection(this.paths[i], x1, y1, x2, y2);
+            if (intersection) this.intersected = this.paths[i];
+            ret = ret || intersection;
         }
         return ret;
+    }
+
+    closest_point(x, y)
+    {
+        let best_dist = null; 
+        let best_point = null;
+        for(let p of this.paths)
+        {
+            if (p === null) continue;
+            let point = closest_point(p, x, y);
+            if (best_dist === null || point.distance < best_dist) 
+            {
+                best_point = point;
+                best_dist = point.distance;
+            }
+        }
+        if (best_point === null) console.log('error: no closest point found');
+        return best_point;
     }
 
     remove()

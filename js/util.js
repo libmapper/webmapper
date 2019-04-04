@@ -162,6 +162,24 @@ function edge_intersection(edge, x1, y1, x2, y2) {
     return isect ? true : false;
 }
 
+function closest_point(edge, x, y) {
+    let len = edge.getTotalLength();
+    let best_dist = null;
+    let best_p = null;
+    for (var j = 0; j <= 10; j++) {
+        let p = edge.getPointAtLength(len * j * 0.1);
+        let dx = p.x - x; 
+        let dy = p.y - y;
+        let dist = dx*dx + dy*dy;
+        if (best_dist === null || dist < best_dist) {
+            best_p = p
+            best_dist = dist;
+        }
+    }
+    best_p.distance = Math.sqrt(best_dist);
+    return best_p;
+}
+
 // from https://stackoverflow.com/a/20392392
 function tryParseJSON (jsonString){
     try {
@@ -372,4 +390,12 @@ function stringToInt(str) {
         val += normCharCode * Math.pow(10, 1-i);
     }
     return val;
+}
+
+function degToRad(deg) {
+    return Math.PI * deg / 180;
+}
+
+function radToDeg(rad) {
+    return 180 * rad / Math.PI;
 }

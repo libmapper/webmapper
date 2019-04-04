@@ -5,9 +5,9 @@
 'use strict';
 
 class GridView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
+    constructor(frame, tables, canvas, database, tooltip, pie) {
         super('grid', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip, GridMapPainter);
+              canvas, database, tooltip, pie, GridMapPainter);
 
         // set left table properties
         this.tables.left.filterByDirection('output');

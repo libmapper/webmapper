@@ -24,6 +24,7 @@ class ViewManager
         this._selection_handlers();
         this._keyboard_handlers();
         this._add_database_callbacks();
+        this.pie = new Pie(this.canvas, ConvergentMappingSlices);
 
         let self = this;
         this.database.devices.each(function(dev) { self._update_devices(dev, 'added'); });
@@ -80,40 +81,40 @@ class ViewManager
         switch (viewType) {
             case 'balloon':
                 this.view = new BalloonView(this.frame, this.tables, this.canvas,
-                                            this.database, this.tooltip);
+                                            this.database, this.tooltip, this.pie);
                 break;
             case 'canvas':
                 this.view = new CanvasView(this.frame, this.tables, this.canvas,
-                                           this.database, this.tooltip);
+                                           this.database, this.tooltip, this.pie);
                 break;
             case 'graph':
                 this.view = new GraphView(this.frame, this.tables, this.canvas,
-                                          this.database, this.tooltip);
+                                          this.database, this.tooltip, this.pie);
                 break;
             case 'grid':
                 this.view = new GridView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip);
+                                         this.database, this.tooltip, this.pie);
                 break;
             case 'parallel':
                 this.view = new ParallelView(this.frame, this.tables, this.canvas,
-                                             this.database, this.tooltip);
+                                             this.database, this.tooltip, this.pie);
                 break;
             case 'hive':
                 this.view = new HiveView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip);
+                                         this.database, this.tooltip, this.pie);
                 break;
             case 'chord':
                 this.view = new ChordView(this.frame, this.tables, this.canvas,
-                                          this.database, this.tooltip);
+                                          this.database, this.tooltip, this.pie);
                 break;
             case 'console':
                 this.view = new ConsoleView(this.frame, this.tables, this.canvas,
-                                            this.database, this.tooltip);
+                                            this.database, this.tooltip, this.pie);
                 break;
             case 'list':
             default:
                 this.view = new ListView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip);
+                                         this.database, this.tooltip, this.pie);
                 break;
         }
 

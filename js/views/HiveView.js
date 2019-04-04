@@ -5,8 +5,8 @@
 'use strict';
 
 class HiveView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('hive', frame, null, canvas, database, tooltip, HiveMapPainter);
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('hive', frame, null, canvas, database, tooltip, pie, HiveMapPainter);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);

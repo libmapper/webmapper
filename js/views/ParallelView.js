@@ -5,8 +5,8 @@
 'use strict';
 
 class ParallelView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('parallel', frame, null, canvas, database, tooltip,
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('parallel', frame, null, canvas, database, tooltip, pie,
               ParallelMapPainter);
 
         // hide tables

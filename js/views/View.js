@@ -10,13 +10,14 @@
 // type() // returns view type
 
 class View {
-    constructor(type, frame, tables, canvas, database, tooltip, painter) {
+    constructor(type, frame, tables, canvas, database, tooltip, pie, painter) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
         this.canvas = canvas;
         this.database = database;
         this.tooltip = tooltip;
+        this.pie = pie;
 
         this.srcregexp = null;
         this.dstregexp = null;
@@ -325,7 +326,7 @@ class View {
         let self = this;
         sig.view.mouseup(function() {
             if (self.draggingFrom && self.snappingTo)
-                mapper.map([self.draggingFrom.key], self.snappingTo.key);
+                mapper.map(self.draggingFrom.key, self.snappingTo.key);
         });
         sig.view.undrag();
         sig.view.drag(
@@ -672,17 +673,18 @@ class View {
 
     setTableDrag() {
         let self = this;
-        // dragging maps from table
-        // if another table exists, we can drag between them
-        // can also drag map to self
-        // if tables are orthogonal we can simply drag to 2D space between them
-        // if no other table exists, can drag out signal representation
+        // dragging from table to table to make maps
+        // the signal associated with the row where the dragging starts becomes the 
+        // map's source signal, and if the user releases the drag over any other signal
+        // then it becomes the destination for the map.
         $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
             self.escaped = false;
 
             let src_row = $(this).parent('tr')[0];
             let src_table = null;
+            let dst_table = null;
+            let converging = null;
             switch ($(src_row).parents('.tableDiv').attr('id')) {
                 case "leftTable":
                     src_table = self.tables.left;
@@ -695,7 +697,7 @@ class View {
                     return;
             }
 
-            $('#svgDiv').one('mouseenter.drawing', function() {
+            $('#svgDiv').one('mouseenter.drawing', function(e) {
                 deselectAllMaps(self.tables);
                 var src = src_table.getRowFromName(src_row.id);
                 var dst = null;
@@ -705,9 +707,14 @@ class View {
                 {
                     'src': self.draggingFrom,
                     'srcs': [self.draggingFrom],
-                    'dst': null
+                    'dst': {position: {x: 0, y: 0}},
+                    'selected': true
                 };
                 self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
+
+                let prev_svgx = e.pageX - self.frame.left;
+                let prev_svgy = e.pageY - self.frame.top;
+                let selected_path, selected_len, selected_pos;
 
                 $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
                     // clear table highlights
@@ -724,13 +731,14 @@ class View {
 
                     let x = e.pageX;
                     let y = e.pageY;
+
                     dst = null;
                     self.newMap.dst = null;
-                    let dst_table = null;
 
                     for (index in self.tables) {
                         // check if cursor is within snapping range
-                        dst = self.tables[index].getRowFromPosition(x, y, 0.2);
+                        let snap_factor = 0.05;
+                        dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
                         if (!dst) continue;
                         if (dst.id == src.id) {
                             // don't try to map a sig to itself
@@ -742,30 +750,148 @@ class View {
                         break;
                     }
 
+                    let svgx = x - self.frame.left;
+                    let svgy = y - self.frame.top;
                     if (!self.newMap.dst) {
-                        self.newMap.dst = {position: {'x': x - self.frame.left,
-                                                      'y': y - self.frame.top}};
+                        // check if snapping to map
+                        let selected = false;
+                        self.database.maps.each(function(map) {
+                            if (selected) return;
+                            if (!map.view || map.selected) return;
+                            if (map.view.edge_intersection(prev_svgx, prev_svgy, svgx, svgy)) {
+                                selected = true;
+                                if (converging !== null) {
+                                    converging.selected = false;
+                                    converging.view.draw(0);
+                                }
+                                converging = map;
+                            }
+                        });
+
+                        if (selected) {
+                            self.database.maps.each(map => map.selected = false);
+                            converging.selected = true;
+                            converging.view.draw(0);
+                            selected_path = converging.view.intersected;
+                            selected_len = selected_path.getTotalLength();
+                            selected_pos = selected_path.getPointAtLength(selected_len / 2);
+                        }
+
+                        if (converging !== null) {
+                            let cp = converging.view.closest_point(svgx, svgy);
+
+                            let snapradius = 50;
+                            if (cp.distance < snapradius)
+                                self.newMap.dst = {position: selected_pos};
+                            else 
+                            {
+                                converging.selected = false;
+                                converging.view.draw(0);
+                                converging = null;
+                                self.newMap.dst = {position: {'x': svgx, 'y': svgy}};
+                            }
+                        }
+                        else self.newMap.dst = {position: {'x': svgx, 'y': svgy}};
+                    }
+                    else // snapping to table
+                    {
+                        if (converging !== null) {
+                            converging.selected = false;
+                            converging.view.draw(0);
+                            converging = null;
+                        }
                     }
                     self.newMap.view.draw(0);
 
                     src_table.highlightRow(src, false);
                     if (dst_table)
                         dst_table.highlightRow(dst, false);
+
+                    let dx = prev_svgx - svgx; let dy = prev_svgy - svgy;
+                    if (Math.sqrt(dx*dx + dy*dy) > 5) {
+                        prev_svgx = svgx;
+                        prev_svgy = svgy;
+                    }
                 });
                 $(document).on('mouseup.drawing', function(e) {
-                    $(document).off('.drawing');
-                    $('svg, .displayTable tbody tr').off('.drawing');
-                    if (!self.escaped && dst && dst.id) {
-                        mapper.map([src.id], dst.id);
+                    //var converging = self._converging();
+                    var convergent_method = null;
+                    function finish() {
+                        $(document).off('.drawing');
+                        $('svg, .displayTable tbody tr').off('.drawing');
+                        if (!self.escaped) {
+                            if (convergent_method !== null && converging) 
+                                mapper.converge(src.id, converging, convergent_method);
+                            else if (src && src.id && dst && dst.id) 
+                                mapper.map(src.id, dst.id);
+                        }
+                        // clean up
+                        self.tables.left.highlightRow(null, true);
+                        self.tables.right.highlightRow(null, true);
+                        $(document).off('.drawing');
+                        $('svg, .displayTable tbody tr').off('.drawing');
+                        self.draggingFrom = null;
+                        self.pie.hide();
+                        if (self.newMap) {
+                            self.newMap.view.remove();
+                            self.newMap = null;
+                        }
+                        if (converging) {
+                            // **required so that you can keep making maps afterwards...
+                            self.setTableDrag(); 
+                        }
                     }
-                    // clear table highlights
-                    self.tables.left.highlightRow(null, true);
-                    self.tables.right.highlightRow(null, true);
-                    self.draggingFrom = null;
-                    if (self.newMap) {
-                        self.newMap.view.remove();
-                        self.newMap = null;
+                    if (converging)
+                    {
+                        // switch to pie menu interaction
+                        // **so clicking convergent option doesn't start making new map
+                        $('.tableDiv').off('mousedown'); 
+                        
+                        self.pie.position(e.pageX - self.frame.left,
+                                          e.pageY - self.frame.top, false);
+                        if (dst_table === self.tables.right) 
+                        {
+                            self.pie.rotate(180, false);
+                            self.pie.thickness = self.tables.right.rowHeight;
+                        }
+                        else 
+                        {
+                            self.pie.rotate(0, false);
+                            self.pie.thickness = self.tables.left.rowHeight;
+                        }
+
+                        let pie_min_thickness = 30;
+                        let pie_max_thickness = 75;
+                        self.pie.thickness = self.pie.thickness < pie_min_thickness ?
+                                             pie_min_thickness
+                                           : self.pie.thickness > pie_max_thickness ?
+                                             pie_max_thickness : self.pie.thickness;
+                        self.pie.show();
+
+                        function get_convergent_option(e) {
+                            let x = e.pageX - self.frame.left;
+                            let y = e.pageY - self.frame.top;
+                            convergent_method = self.pie.selection(x, y, strong);
+                        }
+
+                        let strong = false;
+                        $(document).off('.drawing');
+                        $(document).on('mousedown.drawing', function(e) {
+                            if (self.escaped) return finish();
+                            strong = true;
+                            get_convergent_option(e);
+                        });
+                        $(document).on('mouseup.drawing', function(e) {
+                            finish();
+                        });
+
+                        $('svg, .displayTable tbody tr').off('.drawing');
+                        $('svg, .displayTable tbody tr').on('mousemove.drawing', function(e) {
+                            if (self.escaped) return finish();
+                            get_convergent_option(e);
+                        });
                     }
+                    else finish();
                 });
             });
             $(document).one('mouseup.drawing', function(e) {
@@ -774,6 +900,16 @@ class View {
             });
         });
     }
+
+    //_converging() {
+    //    let self = this;
+    //    let converging = false;
+    //    this.database.maps.each(function(map) {
+    //        if (!converging) 
+    //            converging = map.dst.key == self.newMap.dst.key;
+    //    });
+    //    return converging;
+    //}
 
     cleanup() {
         // clean up any objects created only for this view

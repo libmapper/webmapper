@@ -11,8 +11,8 @@
  * this view uses an array of signal positions. */
 
 class GraphView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('graph', frame, null, canvas, database, tooltip, GraphMapPainter);
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('graph', frame, null, canvas, database, tooltip, pie, GraphMapPainter);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);

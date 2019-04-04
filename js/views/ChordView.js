@@ -5,8 +5,8 @@
 'use strict';
 
 class ChordView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('chord', frame, null, canvas, database, tooltip);
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('chord', frame, null, canvas, database, tooltip, pie);
 
         this.radius = 200;
 

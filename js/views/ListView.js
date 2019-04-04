@@ -5,10 +5,12 @@
 'use strict';
 
 class ListView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
+    constructor(frame, tables, canvas, database, tooltip, pie) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip, ListMapPainter);
+              canvas, database, tooltip, pie, ListMapPainter);
 
+        //this.pie.inner_radius = 1;
+        //this.pie.set_slices(ListViewSlices);
         // set left table properties
         this.tables.left.filterByDirection('output');
 
@@ -246,3 +248,16 @@ class ListMapPainter extends MapPainter
         else this._defaultAttributes();
     }
 }
+
+var ListViewSlices =
+[
+    {angle: 90, color: 'none', items: [
+        ConvergentMappingSlices[0].items[0], 
+        ConvergentMappingSlices[1].items[0], 
+        ConvergentMappingSlices[2].items[0], 
+        ConvergentMappingSlices[3].items[0]
+    ]},
+    {angle: 270, color: 'none'},
+    {angle: 271, color: 'none'},
+    {angle: 272, color: 'none'}
+];

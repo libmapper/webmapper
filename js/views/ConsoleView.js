@@ -5,8 +5,8 @@
 'use strict';
 
 class ConsoleView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('console', frame, null, canvas, database, tooltip);
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('console', frame, null, canvas, database, tooltip, pie);
 
         // hide left table
         tables.left.adjust(0, 0, 0, frame.height, 0, 500);
@@ -51,10 +51,10 @@ class ConsoleView extends View {
                     cmd = cmd.split(' ');
                     switch (cmd[0]) {
                         case 'map':
-                            if (cmd.length >= 3)
-                                mapper.map(cmd.slice(1,-1), cmd[cmd.length - 1]);
+                            if (cmd.length == 3)
+                                mapper.map(cmd[1], cmd[2]);
                             else
-                                this.echo('map: need at least two distinct signal names');
+                                this.echo('map: needs exactly two distinct signal names');
                             break;
                         case 'unmap':
                         case 'rm':

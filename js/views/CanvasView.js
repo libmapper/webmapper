@@ -5,8 +5,8 @@
 'use strict';
 
 class CanvasView extends View {
-    constructor(frame, tables, canvas, database, tooltip) {
-        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip,
+    constructor(frame, tables, canvas, database, tooltip, pie) {
+        super('canvas', frame, {'left': tables.left}, canvas, database, tooltip, pie,
               CanvasMapPainter);
 
         // set left table properties
