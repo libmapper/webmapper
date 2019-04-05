@@ -21,6 +21,7 @@ function init() {
     // add the view wrapper
     $('body').append("<div id='container'></div>");
     $('body').append("<div id='axes'>"+
+                        "<div id='animationStatus'></div>"+
                         "<div id='yAxis'>"+
                             "<div id='yAxisMax'></div>"+
                             "<div id='yAxisLabel' class='axisLabel'></div>"+

@@ -696,6 +696,17 @@ table.infoTable tr td:first-child {
     color: white;
 }
 
+#animationStatus {
+    background: transparent;
+    width: 20px;
+    height: 20px;
+    top: 0px;
+    left: calc(100% - 20px);
+    position: absolute;
+    opacity: 1;
+    border-radius: 10px;
+}
+
 /*.status.middle {*/
 /*    width: 20%;*/
 /*    max-width: 10; /*To prevent overflow, doesn't matter what the number is*/*/

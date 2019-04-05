@@ -521,20 +521,19 @@ class GraphView extends View {
         let self = this;
         if (this.stepping)
             window.clearInterval(this.stepping);
+        $('#animationStatus').css({'background': 'red'});
         this.stepping = setInterval(function() {
             if (self.forceDirect() == true) {
                 self.draw(0);
             }
             else {
-                console.log('done stepping');
-                window.clearInterval(self.stepping);
-                self.stepping = null;
+                self.stopStepping();
             }
         }, self.stepInterval);
     }
 
     stopStepping() {
-        console.log('done stepping');
+        $('#animationStatus').css({'background': 'transparent'});
         window.clearInterval(this.stepping);
         this.stepping = null;
     }
@@ -567,6 +566,7 @@ class GraphView extends View {
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
+            this.startStepping();
             updated = true;
         }
         if (updated)
@@ -599,10 +599,7 @@ class GraphView extends View {
         super.cleanup();
         $('#axes').stop(true, false)
                   .animate({opacity: 0}, {duration: 2000});
-        if (this.stepping) {
-            window.clearInterval(this.stepping);
-            delete this.stepping;
-        }
+        this.stopStepping()
         // for now, restore signal positions to singular value
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
