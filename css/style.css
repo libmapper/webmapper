@@ -696,15 +696,50 @@ table.infoTable tr td:first-child {
     color: white;
 }
 
-#animationStatus {
-    background: transparent;
-    width: 20px;
-    height: 20px;
+#fdgCtl {
+    width: 300px;
+/*    height: 200px;*/
     top: 0px;
-    left: calc(100% - 20px);
+    left: calc(100% - 300px);
     position: absolute;
     opacity: 1;
-    border-radius: 10px;
+/*    border: 1px solid white;*/
+    background: transparent;
+    pointer-events: all;
+}
+
+#fdgCtl div {
+    position: relative;
+    color: white;
+}
+
+#fdgCtl a {
+    position: relative;
+/*    border: 1px solid white;*/
+}
+
+.ui-slider {
+    background: rgba(220, 220, 220, 0.3);
+    height: 20px;
+    margin-bottom: 5px;
+}
+
+.ui-slider div {
+    height: 20px;
+    width: 3px;
+    background: white;
+}
+
+.ui-slider a {
+    height: 20px;
+    width: 20px;
+}
+
+.sliderTitle {
+    top: -20px;
+    position: relative;
+    color: white;
+    padding: 3px;
 }
 
 /*.status.middle {*/

@@ -14,13 +14,37 @@ class GraphView extends View {
     constructor(frame, tables, canvas, database, tooltip) {
         super('graph', frame, tables, canvas, database, tooltip, GraphMapPainter);
 
-        this.xAxisProp = 'min';
-        this.yAxisProp = 'max';
+        this.xAxisProp = null;//'min';
+        this.yAxisProp = null;//'max';
         this.hidden = {'x': 0, 'y': 0};
         var xMin = null, xMax = null, yMin = null, yMax = null;
         this.stepInterval = 2;
 
         this.setup();
+
+        this.damping = {value: 0.4, min: 0, max: 100, mult: 0.01};
+        this.repulsion = {value: 4000.0, min: 0, max: 100, mult: 40};
+        this.targetAttraction = {value: 0.01, min: 0, max: 100, mult: 0.001};
+        this.devAttraction = {value: 0.01, min: 0, max: 100, mult: 0.01};
+        this.mapAttraction = {value: 0.0, min: 0, max: 100, mult: 0.01};
+        this.mapLength = {value: 100, min: 0, max: 100, mult: 10};
+
+        let self = this;
+        let sliderNames = ["damping", "repulsion", "targetAttraction",
+                           "devAttraction", "mapAttraction", "mapLength"];
+        sliderNames.forEach(function(name) {
+            $( function() {
+                let slider = self[name];
+                $("#"+name+"Slider").slider({
+                    min: slider.min,
+                    max: slider.max,
+                    value: slider.value / slider.mult,
+                    slide: function( event, ui ) {
+                        slider.value = ui.value * slider.mult;
+                        self.startStepping();
+                }});
+            });
+        });
     }
 
     setup() {
@@ -389,27 +413,27 @@ class GraphView extends View {
     forceDirect() {
         let self = this;
         let moved = false;
-        let K_repulse_x = 60.0;
-        let K_repulse_y = 60.0;
-        let K_target_x = 0.2;
-        let K_target_y = 0.2;
-        let K_map_x = 0.0;
-        let K_map_y = 0.0;
-        let K_device_x = 0.001;
-        let K_device_y = 0.001;
-        let L = 100;
+        let K_repulse_x = this.repulsion.value;
+        let K_repulse_y = this.repulsion.value;
+        let K_target_x = this.targetAttraction.value;
+        let K_target_y = this.targetAttraction.value;
+        let K_map_x = this.mapAttraction.value;
+        let K_map_y = this.mapAttraction.value;
+        let K_device_x = this.devAttraction.value;
+        let K_device_y = this.devAttraction.value;
+        let L = this.mapLength.value;
+        let mass = 1.0 - this.damping.value;
 
-        if (this.xAxisProp == null) {
-            K_repulse_x = 4000;
-            K_target_x = 0.01;
-            K_map_x = 0.3;
-            K_device_x = 0.5;
-        }
-        if (this.yAxisProp == null) {
-            K_repulse_y = 2000;
-            K_target_y = 0.01;
-            K_map_y = 0.3;
-            K_device_y = 0.5;
+        function sigNameComp(a, b) {
+            let match = 0;
+            let len = a.length > b.length ? a.length : b.length;
+            for (let i = 0; i < len; i++) {
+                if (a[i] == b[i])
+                    match += 1;
+                else
+                    break;
+            }
+            return match / len * 0.75 + 0.01;
         }
 
         this.database.devices.each(function(devA) {
@@ -424,8 +448,8 @@ class GraphView extends View {
                         continue;
                     let fx = K_target_x * dx;
                     let fy = K_target_y * dy;
-                    sig.force[i].x = sig.force[i].x * 0.4 + fx;
-                    sig.force[i].y = sig.force[i].y * 0.4 + fy;
+                    sig.force[i].x = sig.force[i].x * mass + fx;
+                    sig.force[i].y = sig.force[i].y * mass + fy;
                 }
             });
             // repel signal positions
@@ -461,21 +485,23 @@ class GraphView extends View {
                                         dy = Math.random();
                                     let distSq = dx*dx + dy*dy;
                                     let dist = Math.sqrt(distSq);
-                                    let fx = 0;
-                                    let fy = 0;
+                                    let mult = 1.0 / distSq / dist;
+                                    let fx = K_repulse_x * dx * mult;
+                                    let fy = K_repulse_y * dy * mult;
+
                                     if (devA == devB) {
                                         // add spring attraction for common device
-                                        fx -= K_device_x * (dist - L) * dx / dist / nSig;
-                                        fy -= K_device_y * (dist - L) * dy / dist / nSig;
-                                    }
-                                    else {
-                                        fx = K_repulse_x / distSq * dx / dist;
-                                        fy = K_repulse_y / distSq * dy / dist;
+                                        // based on signal similarity
+                                        let score = sigNameComp(sigA.name, sigB.name);
+                                        mult = (dist - L) / dist / nSig * score;
+                                        fx -= K_device_x * dx * mult;
+                                        fy -= K_device_y * dy * mult;
                                     }
                                     if (mapped) {
                                         // add spring attraction for map
-                                        fx -= K_map_x * (dist - L) * dx / dist;
-                                        fy -= K_map_y * (dist - L) * dy / dist;
+                                        mult = (dist - L) / dist;
+                                        fx -= K_map_x * dx * mult;
+                                        fy -= K_map_y * dy * mult;
                                     }
                                     fA[i].x -= fx;
                                     fA[i].y -= fy;
@@ -552,7 +578,7 @@ class GraphView extends View {
         let self = this;
         if (this.stepping)
             window.clearInterval(this.stepping);
-        $('#animationStatus').css({'background': 'red'});
+        $('.ui-slider-handle').css({'background': 'darkred'});
         this.stepping = setInterval(function() {
             if (self.forceDirect() == true) {
                 self.draw(0);
@@ -564,7 +590,7 @@ class GraphView extends View {
     }
 
     stopStepping() {
-        $('#animationStatus').css({'background': 'transparent'});
+        $('.ui-slider-handle').css({'background': 'white'});
         window.clearInterval(this.stepping);
         this.stepping = null;
     }
