@@ -172,6 +172,8 @@ class GraphView extends View {
     sortSignals() {
         let xProp = this.xAxisProp;
         let yProp = this.yAxisProp;
+        let xPropCategories = xProp == null ? null : [];
+        let yPropCategories = yProp == null ? null : [];
         let rangeChanged = true;
         let self = this;
         let iterations = 0;
@@ -245,7 +247,17 @@ class GraphView extends View {
                     let positionChanged = false;
                     if (xVal != null) {
                         let min, max;
-                        if (typeof xVal != "string" && xVal.length > 1) {
+                        if (typeof xVal == 'string') {
+                            if (xPropCategories.indexOf(xVal) < 0) {
+                                xPropCategories.push(xVal);
+                                xPropCategories.sort(namespaceSort);
+                                rangeChanged = true;
+                            }
+                            min = 0;
+                            max = xPropCategories.length - 1;
+                            xVal = [xPropCategories.indexOf(xVal)];
+                        }
+                        else if (xVal.length > 1) {
                             min = xVal.reduce((a,b) => (a<b?a:b));
                             max = xVal.reduce((a,b) => (a>b?a:b));
                             xVal = xVal.slice();
@@ -264,19 +276,11 @@ class GraphView extends View {
                         }
                         if (self.xMin != null && self.xMax != null) {
                             // calculate x position
-                            if (typeof self.xMin == 'string') {
-                                min = stringToInt(self.xMin);
-                                max = stringToInt(self.xMax);
-                                for (var i = 0; i < xVal.length; i++)
-                                    xVal[i] = stringToInt(xVal[i]);
-                            }
-                            else {
-                                min = self.xMin;
-                                max = self.xMax;
-                            }
+                            min = self.xMin;
+                            max = self.xMax;
                             let range = max - min;
                             for (var i in xVal) {
-                                if (range != 0) {
+                                if (range > 0) {
                                     xVal[i] -= min;
                                     xVal[i] = xVal[i] / range * (self.frame.width - 100);
                                     xVal[i] += 50;
@@ -292,7 +296,17 @@ class GraphView extends View {
                         positionChanged = true;
                     if (yVal != null) {
                         let min, max;
-                        if (typeof yVal != "string" && yVal.length > 1) {
+                        if (typeof yVal == 'string') {
+                            if (yPropCategories.indexOf(yVal) < 0) {
+                                yPropCategories.push(yVal);
+                                yPropCategories.sort(namespaceSort);
+                                rangeChanged = true;
+                            }
+                            min = 0;
+                            max = yPropCategories.length - 1;
+                            yVal = [yPropCategories.indexOf(yVal)];
+                        }
+                        else if (yVal.length > 1) {
                             min = yVal.reduce((a,b) => (a<b?a:b));
                             max = yVal.reduce((a,b) => (a>b?a:b));
                             yVal = yVal.slice();
@@ -311,19 +325,11 @@ class GraphView extends View {
                         }
                         if (self.yMin != null && self.yMax != null) {
                             // calculate y position
-                            if (typeof self.yMin == 'string') {
-                                min = stringToInt(self.yMin);
-                                max = stringToInt(self.yMax);
-                                for (var i = 0; i < yVal.length; i++)
-                                    yVal[i] = stringToInt(yVal[i]);
-                            }
-                            else {
-                                min = self.yMin;
-                                max = self.yMax;
-                            }
+                            min = self.yMin;
+                            max = self.yMax;
                             let range = max - min;
                             for (var i in yVal) {
-                                if (range != 0) {
+                                if (range > 0) {
                                     yVal[i] -= min;
                                     yVal[i] = yVal[i] / range * (self.frame.height - 100);
                                     yVal[i] = self.frame.height - yVal[i] - 50;
