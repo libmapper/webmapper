@@ -145,15 +145,15 @@ class HiveView extends View {
                 return uncollapsed && unhidden + (t ? t : 0);
             });
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
-            let angleInc = (Math.PI * -0.5) / dev_num;
-            let hiveIndex = 0;
+            let angleInc = (Math.PI * 0.5) / dev_num;
+            let angle = -Math.PI * 0.5;
             let listIndex = 0;
             this.updateDevices(function(dev) {
                 if (dev.collapsed)
                     listIndex++;
                 else {
-                    dev.angle = hiveIndex * angleInc;
-                    hiveIndex++;
+                    dev.angle = angle;
+                    angle += angleInc;
                 }
                 return false;
             });

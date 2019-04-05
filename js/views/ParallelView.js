@@ -47,7 +47,7 @@ class ParallelView extends View {
         let sigInc = numSigs > 1 ? height / (numSigs - 1) : height;
 
         dev.view.toBack();
-        let x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
+        let x = self.mapPane.left + devInc * dev.index;
         let y = self.mapPane.top + height;
         let color = Raphael.hsl(dev.hue, 1, 0.5);
         dev.view.attr({'stroke-linecap': 'round'});
