@@ -389,13 +389,29 @@ class GraphView extends View {
     forceDirect() {
         let self = this;
         let moved = false;
-        let K_repulse_x = 1000.0;
-        let K_repulse_y = 1000.0;
-        let K_target_x = 0.1;
-        let K_target_y = 0.1;
+        let K_repulse_x = 60.0;
+        let K_repulse_y = 60.0;
+        let K_target_x = 0.2;
+        let K_target_y = 0.2;
         let K_map_x = 0.0;
         let K_map_y = 0.0;
-        let L = 200;
+        let K_device_x = 0.001;
+        let K_device_y = 0.001;
+        let L = 100;
+
+        if (this.xAxisProp == null) {
+            K_repulse_x = 4000;
+            K_target_x = 0.01;
+            K_map_x = 0.3;
+            K_device_x = 0.5;
+        }
+        if (this.yAxisProp == null) {
+            K_repulse_y = 2000;
+            K_target_y = 0.01;
+            K_map_y = 0.3;
+            K_device_y = 0.5;
+        }
+
         this.database.devices.each(function(devA) {
             // attract positions towards targets
             devA.signals.each(function(sig) {
@@ -408,11 +424,12 @@ class GraphView extends View {
                         continue;
                     let fx = K_target_x * dx;
                     let fy = K_target_y * dy;
-                    sig.force[i].x = fx;
-                    sig.force[i].y = fy;
+                    sig.force[i].x = sig.force[i].x * 0.4 + fx;
+                    sig.force[i].y = sig.force[i].y * 0.4 + fy;
                 }
             });
             // repel signal positions
+            let nSig = (devA['num_outputs'] + devA['num_inputs']) * 0.25;
             devA.signals.each(function(sigA) {
                 if (!sigA.view || sigA.view.hidden || !sigA.target)
                     return;
@@ -423,13 +440,13 @@ class GraphView extends View {
                     devB.signals.each(function(sigB) {
                         if (!sigB.view || sigB.view.hidden || !sigB.target)
                             return;
-                        if (found == true) {
+                        if (found === true) {
                             let pB = sigB.position;
                             let fB = sigB.force;
                             let mapped = false;
                             // check if signals are mapped
                             self.database.maps.each(function(map) {
-                                if (map.src == sigA && map.dst != sigB)
+                                if (map.src == sigA && map.dst == sigB)
                                     mapped = true;
                                 else if (map.dst == sigA && map.src == sigB)
                                     mapped = true;
@@ -444,8 +461,17 @@ class GraphView extends View {
                                         dy = Math.random();
                                     let distSq = dx*dx + dy*dy;
                                     let dist = Math.sqrt(distSq);
-                                    let fx = K_repulse_x / distSq * dx / dist;
-                                    let fy = K_repulse_y / distSq * dy / dist;
+                                    let fx = 0;
+                                    let fy = 0;
+                                    if (devA == devB) {
+                                        // add spring attraction for common device
+                                        fx -= K_device_x * (dist - L) * dx / dist / nSig;
+                                        fy -= K_device_y * (dist - L) * dy / dist / nSig;
+                                    }
+                                    else {
+                                        fx = K_repulse_x / distSq * dx / dist;
+                                        fy = K_repulse_y / distSq * dy / dist;
+                                    }
                                     if (mapped) {
                                         // add spring attraction for map
                                         fx -= K_map_x * (dist - L) * dx / dist;
@@ -467,20 +493,19 @@ class GraphView extends View {
                 for (var i in sigA.position) {
                     let x = sigA.position[i].x;
                     let y = sigA.position[i].y;
-                    if (Math.abs(fA[i].x) > 1 || Math.abs(fA[i].y) > 1) {
-                        // limit forces arbitrarily
-                        if (fA[i].x > 100)
-                            fA[i].x = 100;
-                        else if (fA[i].x < -100)
-                            fA[i].x = -100;
-                        if (fA[i].y > 100)
-                            fA[i].y = 100;
-                        if (fA[i].y < -100)
-                            fA[i].y = -100;
-                        x += fA[i].x;
-                        y += fA[i].y;
+                    if (Math.abs(fA[i].x) > 2 || Math.abs(fA[i].y) > 2)
                         moved = true;
-                    }
+                    // limit forces arbitrarily
+                    if (fA[i].x > 100)
+                        fA[i].x = 100;
+                    else if (fA[i].x < -100)
+                        fA[i].x = -100;
+                    if (fA[i].y > 100)
+                        fA[i].y = 100;
+                    if (fA[i].y < -100)
+                        fA[i].y = -100;
+                    x += fA[i].x;
+                    y += fA[i].y;
                     newPos.push({'x': x, 'y': y});
                 }
                 if (moved)
@@ -631,6 +656,7 @@ class GraphMapPainter extends MapPainter
 
     updateAttributes() {
         this._defaultAttributes();
+        this.midPointInflation = 0;
         // constant width
         let width = (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth);
         this.attributes[0]['stroke-width'] = width * this.canvas.zoom;
