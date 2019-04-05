@@ -69,7 +69,7 @@ def link_props(link):
     props['key'] = link.device(0).name + '<->' + link.device(1).name
     props['status'] = 'active'
     del props['is_local']
-    del props['id']
+    props['id'] = str(props['id'])
     return props
 
 def sig_props(sig):
@@ -91,11 +91,14 @@ def full_signame(sig):
 
 def map_props(map):
     props = map.properties.copy()
+    print('getting map properties:')
+    print(props)
     props['src'] = full_signame(map.source().signal())
     props['dst'] = full_signame(map.destination().signal())
-    num_srcs = map.num_slots - 1
+    num_srcs = props['num_inputs']
     props['srcs'] = [full_signame(map.source(i).signal()) 
                      for i in range(0, num_srcs)]
+    props['srcs'].sort();
     if num_srcs > 1: 
         props['key'] = '['+','.join(props['srcs'])+']' + '->' + '['+props['dst']+']'
     else: props['key'] = props['src'] + '->' + props['dst']
@@ -110,8 +113,8 @@ def map_props(map):
     else:
         del props['protocol']
     props['status'] = 'active'
+    props['id'] = str(props['id']) # if left as int js will lose precision & invalidate
     del props['is_local']
-    del props['id']
 
     # translate some other properties
     if props['mode'] == mapper.MODE_LINEAR:

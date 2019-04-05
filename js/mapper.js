@@ -37,32 +37,27 @@ class Mapper
 
     _stage(srckeys, dstkey)
     {
-        if (srckeys.length > 1) dstkey = [dstkey];
+        srckeys.sort();
         let m = { 'src': database.find_signal(srckeys[0]), 
-                  'srcs': [],
+                  'srcs': srckeys.map(s => database.find_signal(s)),
                   'dst': database.find_signal(dstkey),
                   'key': this.mapKey(srckeys, dstkey),
                   'status': 'staged',
                   'selected': true
                 };
-        for (let src of srckeys) m.srcs.push(database.find_signal(src))
         database.maps.add(m);
     }
 
     unmap(srckeys, dstkey)
     {
+        srckeys.sort();
         command.send('unmap', [srckeys, dstkey]);
     }
 
     mapKey(srckeys, dstkey)
     {
         if (srckeys.length === 1) return srckeys[0] + '->' + dstkey;
-        else
-        {
-            let key = '[';
-            for (let src of srckeys) key += src+',';
-            return key+']' + '->' + dstkey;
-        }
+        else return '['+String(srckeys)+']->['+dstkey+']';
     }
 
     // check if a map exists with the given source and destination
@@ -170,6 +165,7 @@ class ConvergentMapper
     {
         let srckeys = dstmap.srcs.map(src => src.key);
         this.mapper.unmap(srckeys, dstmap.dst.key);
+        srckeys.push(srckey);
         this.mapper._stage(srckeys, dstmap.dst.key);
 
         // at the time of writing, the python server will not successfully create the
@@ -177,7 +173,6 @@ class ConvergentMapper
         // the existing one
 
         setTimeout(function() {
-            srckeys.push(srckey);
             this.mapper._map(srckeys, dstmap.dst.key);
         }, 750);
     }

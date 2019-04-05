@@ -150,7 +150,7 @@ class MapPainter {
             { 'stroke': (this.map.selected ? MapPainter.selectedColor : MapPainter.defaultColor )
             , 'stroke-dasharray': (this.map.muted ? MapPainter.mutedDashes : MapPainter.defaultDashes)
             , 'stroke-opacity': (this.map.status == 'staged' ? MapPainter.stagedOpacity : MapPainter.defaultOpacity)
-            , 'stroke-width': (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
+            , 'stroke-width': (this.map.selected ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
             , 'fill': 'none'
             , 'arrow-start': 'none'
             , 'arrow-end': 'block-wide-long'
@@ -226,6 +226,6 @@ MapPainter.mutedDashes = '-';
 MapPainter.defaultDashes = '';
 MapPainter.stagedOpacity = 0.5;
 MapPainter.defaultOpacity = 1.0;
-MapPainter.boldStrokeWidth = 8;
+MapPainter.boldStrokeWidth = 5;
 MapPainter.defaultStrokeWidth = 4;
 MapPainter.shortenPath = 0;

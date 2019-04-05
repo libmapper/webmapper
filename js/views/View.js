@@ -808,7 +808,7 @@ class View {
                         dst_table.highlightRow(dst, false);
 
                     let dx = prev_svgx - svgx; let dy = prev_svgy - svgy;
-                    if (Math.sqrt(dx*dx + dy*dy) > 5) {
+                    if (dx*dx + dy*dy > 100) {
                         prev_svgx = svgx;
                         prev_svgy = svgy;
                     }

@@ -180,31 +180,56 @@ MapperEdgeArray.prototype = {
     },
 
     add : function(obj) {
-//        console.log(this.obj_type+'s.add', obj);
+        console.log(this.obj_type+'s.add', obj.key, obj);
         let key = obj.key;
+        let id = obj.id;
         if (!key)
             return null;
 
-        if (key in this.contents) {
-            let prop, existing = this.contents[key];
-            let updated = false;
-            // copy properties from update
-            for (prop in obj) {
-                if (obj.hasOwnProperty(prop)
-                    && !is_equal(existing[prop], obj[prop])) {
-                    existing[prop] = obj[prop];
-                    updated = true;
+        let existing = this.contents[key];
+        if (typeof id !== 'undefined') {
+            for (let i in this.contents) {
+                let edge = this.contents[i];
+                if (edge.id == id) {
+                    if (!existing) {
+                        existing = edge;
+                        this.contents[key] = existing;
+                        delete this.contents[existing.key]
+                        break;
+                    }
+                    else if (existing !== edge) {
+                        this._merge(existing, edge);
+                        this.remove(this.contents[i]);
+                    }
                 }
             }
-            if (updated && this.cb_func)
-                this.cb_func('modified', this.obj_type, existing);
+        }
+        if (existing) {
+            this._merge(existing, obj);
         }
         else {
             this.contents[key] = obj;
             if (this.cb_func)
                 this.cb_func('added', this.obj_type, this.contents[key]);
         }
+        console.log(this.obj_type+"s contents: ", this.contents);
         return this.contents[key];
+    },
+
+    _merge : function(existing, obj) {
+        // copy properties from update
+        let prop;
+        let updated = false;
+        for (prop in obj) {
+            if (obj.hasOwnProperty(prop)
+                && !is_equal(existing[prop], obj[prop])) {
+                existing[prop] = obj[prop];
+                updated = true;
+            }
+        }
+        if (updated && this.cb_func) {
+            this.cb_func('modified', this.obj_type, existing);
+        }
     },
 
     remove : function(obj) {
@@ -306,6 +331,7 @@ function MapperDatabase() {
         return dev ? dev.signals.find(String(name.join('/'))) : null;
     }
     this.add_maps = function(cmd, maps) {
+        // TODO: check for convergent maps and add appropriate links
         let self = this;
         findSig = function(name) {
             name = name.split('/');
