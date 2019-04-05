@@ -6,7 +6,7 @@
 
 class BalloonView extends View {
     constructor(frame, tables, canvas, database, tooltip, pie) {
-        super(frame, null, canvas, database, tooltip, pie);
+        super(frame, tables, canvas, database, tooltip, pie);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500);

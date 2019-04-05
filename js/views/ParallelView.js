@@ -6,20 +6,25 @@
 
 class ParallelView extends View {
     constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('parallel', frame, null, canvas, database, tooltip, pie,
+        super('parallel', frame, tables, canvas, database, tooltip, pie,
               ParallelMapPainter);
 
-        // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
-
         this.pan = this.canvasPan;
-//        this.zoom = this.canvasZoom;
 
         this.shortenPaths = 12;
+
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(ParallelMapPainter);
+
+        // hide tables
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         this.resize();
     }
@@ -42,7 +47,7 @@ class ParallelView extends View {
         let sigInc = numSigs > 1 ? height / (numSigs - 1) : height;
 
         dev.view.toBack();
-        let x = self.mapPane.left + self.mapPane.width - devInc * dev.index;
+        let x = self.mapPane.left + devInc * dev.index;
         let y = self.mapPane.top + height;
         let color = Raphael.hsl(dev.hue, 1, 0.5);
         dev.view.attr({'stroke-linecap': 'round'});
@@ -98,37 +103,6 @@ class ParallelView extends View {
         }
     }
 
-//    getMapPath(map) {
-//        if (!map.view)
-//            return;
-//
-//        // draw L-R bezier
-//        let src = map.src.position;
-//        let dst = map.dst.position;
-//        if (!src || !dst) {
-//            console.log('missing signal positions for drawing map', map);
-//            return null;
-//        }
-//
-//        let path;
-//
-//        if (src.x == dst.x) {
-//            // signals belong to same device
-//            let offsetx = src.x + (src.y - dst.y) * 0.5;
-//            path = [['M', src.x, src.y],
-//                    ['C', offsetx, src.y, offsetx, dst.y, dst.x, dst.y]];
-//        }
-//        else {
-//            let mpx = (src.x + dst.x) * 0.5;
-//            path = [['M', src.x, src.y],
-//                    ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
-//        }
-//
-//        // shorten path so it doesn't draw over signals
-//        let len = Raphael.getTotalLength(path);
-//        return Raphael.getSubpath(path, 12, len - 12);
-//    }
-
     draw(duration) {
         this.drawDevices(duration);
         this.drawMaps(duration);
@@ -149,16 +123,8 @@ class ParallelView extends View {
                 break;
         }
         let updated = false;
-        if (elements.indexOf('devices') >= 0) {
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
-            updated = true;
-        }
-        if (elements.indexOf('signals') >= 0) {
-            this.updateSignals(function(sig) {
-                if (!sig.position)
-                    sig.position = position(null, null, self.frame);
-                return false;
-            });
             updated = true;
         }
         if (elements.indexOf('maps') >= 0) {

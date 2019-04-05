@@ -134,7 +134,7 @@ function line_line_intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
     let m1 = (x1 == x2) ? 1000000 : (y1 - y2) / (x1 - x2);
     let m2 = (x3 == x4) ? 1000000 : (y3 - y4) / (x3 - x4);
     if (m1 == m2) {
-            // lines are parallel - todo check if same b, overlap
+        // lines are parallel - todo check if same b, overlap
         return false;
     }
     let b1 = y1 - x1 * m1;
@@ -208,9 +208,14 @@ function constrain(obj, bounds, border) {
         obj.top = bounds.top + bounds.height - obj.height * 0.5 - border;
 }
 
-function labelwidth(label) {
-    return label.length * 8;
-}
+// from https://stackoverflow.com/questions/1582534/calculating-text-width
+function textWidth(text, mult) {
+    var calc = '<span style="display:none">' + text + '</span>';
+    $('body').append(calc);
+    var width = $('body').find('span:last').width();
+    $('body').find('span:last').remove();
+    return mult ? width * mult : width;
+};
 
 function labeloffset(start, label) {
     return {'x': start.x + label.length * 4 + 3,

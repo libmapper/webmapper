@@ -31,10 +31,6 @@ class View {
 
         this.newMap = null;
 
-        if (tables) {
-            this.setTableDrag();
-        }
-
         this.mapPane = {'left': frame.left,
                         'top': frame.top,
                         'width': frame.width,
@@ -97,7 +93,7 @@ class View {
             dev.signals.each(function(sig) {
                 sig.hidden = (dev.hidden == true);
                 let regexp = sig.direction == 'output' ? self.srcregexp : self.dstregexp;
-                if (self.tables || dev.hidden || (regexp && !regexp.test(sig.key))) {
+                if (dev.hidden || (regexp && !regexp.test(sig.key))) {
                     remove_object_svg(sig);
                     sig.index = null;
                     return;
@@ -113,7 +109,7 @@ class View {
                 }
             });
             // if no signals visible, hide device also
-            if (self.tables || dev.hidden || !sigIndex) {
+            if (dev.hidden || !sigIndex) {
                 remove_object_svg(dev);
                 dev.index = null;
                 return;
@@ -279,8 +275,30 @@ class View {
                             break;
                     }
                     let typestring = sig.length > 1 ? type+'['+sig.length+']' : type;
-                    let minstring = sig.min != null ? sig.min : '';
-                    let maxstring = sig.max != null ? sig.max : '';
+                    function parseMaybeVector(val) {
+                        if (val === null || typeof val === 'undefined')
+                            return '';
+                        if (Array.isArray(val)) {
+                            // check if values are uniform
+                            for (let i = 1; i < val.length; i++) {
+                                if (val[i] != val[0])
+                                    return val;
+                            }
+                            return val[0];
+                        }
+                        return val;
+                    }
+                    let minstring = parseMaybeVector(sig.min);
+                    let maxstring = parseMaybeVector(sig.max);
+                    let x, y;
+                    if (Array.isArray(sig.position)) {
+                       x = sig.position[0].x;
+                       y = sig.position[0].y;
+                    }
+                    else {
+                       x = sig.position.x;
+                       y = sig.position.y;
+                    }
                     self.tooltip.showTable(
                         sig.device.status+" signal", {
                             name: sig.key,
@@ -289,7 +307,7 @@ class View {
                             unit: sig.unit,
                             minimum: minstring,
                             maximum: maxstring,
-                        }, sig.position.x, sig.position.y);
+                        }, x, y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
@@ -392,8 +410,7 @@ class View {
                 }
 
                 if (!sig.view && sig.position) {
-                    let path = circle_path(sig.position.x, sig.position.y, 10);
-                    sig.view = self.canvas.path(path)
+                    sig.view = self.canvas.path()
                                           .attr({stroke_opacity: 0,
                                                  fill_opacity: 0});
                     self.setSigDrag(sig);
@@ -552,6 +569,8 @@ class View {
                 return;
             else map.view.draw(duration);
         });
+        if (this.newMap)
+            this.newMap.view.draw(0);
     }
 
     update() {
@@ -573,8 +592,7 @@ class View {
             for (index in this.tables)
                 updated |= this.tables[index].pan(delta_x, delta_y);
         }
-        if (updated)
-            this.draw(0);
+        return updated;
     }
 
     canvasPan(x, y, delta_x, delta_y) {
@@ -604,8 +622,7 @@ class View {
             for (index in this.tables)
                 updated |= this.tables[index].zoom(delta, x, y, false);
         }
-        if (updated)
-            this.draw(0);
+        return updated;
     }
 
     canvasZoom(x, y, delta) {
@@ -740,13 +757,13 @@ class View {
                         let snap_factor = 0.05;
                         dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
                         if (!dst) continue;
-                        if (dst.id == src.id) {
-                            // don't try to map a sig to itself
-                            dst = null;
-                            continue;
+                        if (dst.id !== src.id) {
+                            self.newMap.dst = self.database.find_signal(dst.id);
+                            self.tables[index].highlightRow(dst, false);
                         }
-                        self.newMap.dst = self.database.find_signal(dst.id);
-                        dst_table = self.tables[index];
+                        else {
+                            dst = null;
+                        }
                         break;
                     }
 
@@ -802,11 +819,7 @@ class View {
                         }
                     }
                     self.newMap.view.draw(0);
-
                     src_table.highlightRow(src, false);
-                    if (dst_table)
-                        dst_table.highlightRow(dst, false);
-
                     let dx = prev_svgx - svgx; let dy = prev_svgy - svgy;
                     if (dx*dx + dy*dy > 100) {
                         prev_svgx = svgx;
@@ -901,21 +914,12 @@ class View {
         });
     }
 
-    //_converging() {
-    //    let self = this;
-    //    let converging = false;
-    //    this.database.maps.each(function(map) {
-    //        if (!converging) 
-    //            converging = map.dst.key == self.newMap.dst.key;
-    //    });
-    //    return converging;
-    //}
-
     cleanup() {
         // clean up any objects created only for this view
         $(document).off('.drawing');
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
+        this.tooltip.hide(true);
     }
 
     // sets the map painter for the view and converts existing map views to use

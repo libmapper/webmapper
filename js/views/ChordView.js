@@ -6,14 +6,31 @@
 
 class ChordView extends View {
     constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('chord', frame, null, canvas, database, tooltip, pie);
+        super('chord', frame, tables, canvas, database, tooltip, pie);
 
         this.radius = 200;
 
+        this.pan = this.canvasPan;
+        this.zoom = this.canvasZoom;
+
+        this.onlineInc = Math.PI * 0.5;
+        this.offlineInc = Math.PI * 0.5;
+
+        this.onlineDevs = 0;
+        this.offlineDevs = 0;
+
+        this.file = null;
+
+        this.setup();
+    }
+
+    setup() {
         // hide tables
-        tables.left.adjust(this.frame.width * -0.4, 0, this.frame.width * 0.35,
-                           frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
 
         let self = this;
         this.database.devices.each(function(dev) {
@@ -27,23 +44,16 @@ class ChordView extends View {
         // remove associated svg elements for maps
         this.database.maps.each(function(map) { remove_object_svg(map); });
 
-        this.pan = this.canvasPan;
-        this.zoom = this.canvasZoom;
-
-        this.onlineInc = Math.PI * 0.5;
-        this.offlineInc = Math.PI * 0.5;
-
-        this.onlineDevs = 0;
-        this.offlineDevs = 0;
-
-        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy, "online devices")
+        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy,
+                                            "online devices")
                                       .attr({'font-size': 32,
                                              'opacity': 1,
                                              'fill': 'white',
                                              'x': this.frame.width * 0.25,
                                              'y': this.frame.height - 30});
         this.onlineTitle.node.setAttribute('pointer-events', 'none');
-        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy, "offline devices")
+        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy,
+                                             "offline devices")
                                        .attr({'font-size': 32,
                                               'opacity': 1,
                                               'fill': 'white',
@@ -51,8 +61,7 @@ class ChordView extends View {
                                               'y': this.frame.height - 30});
         this.offlineTitle.node.setAttribute('pointer-events', 'none');
 
-        this.file = null;
-
+        this.updateDevices();
         this.resize();
     }
 
@@ -163,7 +172,32 @@ class ChordView extends View {
     setDevClick(dev) {
         let self = this;
         dev.view.unclick().click(function(e) {
-            dev.hidden = dev.hidden ? false : true;
+            // check if any other devices are hidden
+            let num_hidden = self.database.devices.reduce(function(t, d) {
+                let hidden = d.hidden ? 1 : 0;
+                return t ? t + hidden : hidden;
+            });
+            if (dev.hidden) {
+                // unhide
+                dev.hidden = false;
+            }
+            else {
+                if (num_hidden === 0) {
+                    // 'solo' this device by hiding all others
+                    self.database.devices.each(function (d) {
+                        if (d !== dev)
+                            d.hidden = true;
+                    });
+                }
+                else if (num_hidden === self.database.devices.size() - 1) {
+                    // unhide all devices
+                    self.database.devices.each(function (d) {
+                        d.hidden = false;
+                    });
+                }
+                else
+                    dev.hidden = true;
+            }
             self.draw(0);
         });
     }

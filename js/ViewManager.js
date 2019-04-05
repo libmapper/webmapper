@@ -17,6 +17,8 @@ class ViewManager
         this.srcregexp = null;
         this.dstregexp = null;
 
+        this.views = [];
+
         // remove all previous DOM elements
         $(this.container).empty();
         this._add_canvas();
@@ -30,24 +32,25 @@ class ViewManager
         this.database.devices.each(function(dev) { self._update_devices(dev, 'added'); });
         this.database.maps.each(function(map) { self._update_maps(map, 'added'); });
 
+        this.currentView = null;
         this.switch_view('chord');
     }
 
     zoom(x, y, delta) {
-        this.view.zoom(x, y, delta);
+        this.views[this.currentView].zoom(x, y, delta);
     }
 
     pan(x, y, delta_x, delta_y) {
-        this.view.pan(x, y, delta_x, delta_y);
+        this.views[this.currentView].pan(x, y, delta_x, delta_y);
     }
 
     resetPanZoom() {
-        this.view.resetPanZoom();
+        this.views[this.currentView].resetPanZoom();
     }
 
     on_resize() {
         this.frame = fullOffset($(this.container)[0]);
-        this.view.resize(this.frame);
+        this.views[this.currentView].resize(this.frame);
         this.tooltip.hide();
     }
 
@@ -55,70 +58,79 @@ class ViewManager
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
             this.srcregexp = text ? new RegExp(text, 'i') : null;
-            this.view.filterSignals('src', text.length ? text : null);
+            this.views[this.currentView].filterSignals('src', text.length ? text : null);
         }
         else {
             this.dstregexp = text ? new RegExp(text, 'i') : null;
-            this.view.filterSignals('dst', text.length ? text : null);
+            this.views[this.currentView].filterSignals('dst', text.length ? text : null);
         }
     }
 
     loadFile(file) {
-        if (this.view && this.view.type() == 'chord')
-            this.view.stageFile(file);
+        if (this.currentView == 'chord')
+            this.views[this.currentView].stageFile(file);
     }
 
     switch_view(viewType) {
-        if (this.view) {
-            if (this.view.type == viewType) {
+        if (this.currentView) {
+            if (this.currentView == viewType) {
                 // already on correct view
                 return;
             }
             // call cleanup for previous view
-            this.view.cleanup();
+            this.views[this.currentView].cleanup();
         }
 
-        switch (viewType) {
-            case 'balloon':
-                this.view = new BalloonView(this.frame, this.tables, this.canvas,
-                                            this.database, this.tooltip, this.pie);
-                break;
-            case 'canvas':
-                this.view = new CanvasView(this.frame, this.tables, this.canvas,
+        if (this.views[viewType]) {
+            this.views[viewType].setup();
+        }
+        else {
+            let view;
+            switch (viewType) {
+                case 'balloon':
+                    view = new BalloonView(this.frame, this.tables, this.canvas,
                                            this.database, this.tooltip, this.pie);
-                break;
-            case 'graph':
-                this.view = new GraphView(this.frame, this.tables, this.canvas,
+                    break;
+                case 'canvas':
+                    view = new CanvasView(this.frame, this.tables, this.canvas,
                                           this.database, this.tooltip, this.pie);
-                break;
-            case 'grid':
-                this.view = new GridView(this.frame, this.tables, this.canvas,
+                    break;
+                case 'graph':
+                    view = new GraphView(this.frame, this.tables, this.canvas,
                                          this.database, this.tooltip, this.pie);
-                break;
-            case 'parallel':
-                this.view = new ParallelView(this.frame, this.tables, this.canvas,
-                                             this.database, this.tooltip, this.pie);
-                break;
-            case 'hive':
-                this.view = new HiveView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip, this.pie);
-                break;
-            case 'chord':
-                this.view = new ChordView(this.frame, this.tables, this.canvas,
-                                          this.database, this.tooltip, this.pie);
-                break;
-            case 'console':
-                this.view = new ConsoleView(this.frame, this.tables, this.canvas,
+                    break;
+                case 'grid':
+                    view = new GridView(this.frame, this.tables, this.canvas,
+                                        this.database, this.tooltip, this.pie);
+                    break;
+                case 'parallel':
+                    view = new ParallelView(this.frame, this.tables, this.canvas,
                                             this.database, this.tooltip, this.pie);
-                break;
-            case 'list':
-            default:
-                this.view = new ListView(this.frame, this.tables, this.canvas,
+                    break;
+                case 'hive':
+                    view = new HiveView(this.frame, this.tables, this.canvas,
+                                        this.database, this.tooltip, this.pie);
+                    break;
+                case 'chord':
+                    view = new ChordView(this.frame, this.tables, this.canvas,
                                          this.database, this.tooltip, this.pie);
-                break;
+                    break;
+                case 'console':
+                    view = new ConsoleView(this.frame, this.tables, this.canvas,
+                                           this.database, this.tooltip, this.pie);
+                    break;
+                case 'list':
+                default:
+                    view = new ListView(this.frame, this.tables, this.canvas,
+                                        this.database, this.tooltip, this.pie);
+                    break;
+            }
+            this.views[viewType] = view;
         }
 
-        this.view.update();
+        this.views[viewType].update();
+
+        this.currentView = viewType;
 
         // unhighlight all view select buttons
         $('.viewButton').removeClass("viewButtonsel");
@@ -170,41 +182,41 @@ class ViewManager
             dev.signals.each(function(sig) {
                 this._update_signals(sig, 'added', false);
             });
-            this.view.update('devices');
+            this.views[this.currentView].update('devices');
         }
         else if (event == 'removed')
-            this.view.update('devices');
+            this.views[this.currentView].update('devices');
     }
 
     _update_signals(sig, event, repaint) {
         if (event == 'added' && !sig.view) {
             sig.position = position(null, null, this.frame);
             if (repaint)
-                this.view.update('signals');
+                this.views[this.currentView].update('signals');
         }
         else if (event == 'modified' || event == 'removed')
-            this.view.update('signals');
+            this.views[this.currentView].update('signals');
     }
 
     _update_links(link, event) {
-        this.view.update('links');
+        this.views[this.currentView].update('links');
     }
 
     _update_maps(map, event) {
         switch (event) {
             case 'added':
                 if (!map.view)
-                    this.view.update('maps');
+                    this.views[this.currentView].update('maps');
                 break;
             case 'modified':
                 if (map.view) {
                     if (map.selected)
                         $('#container').trigger("updateMapPropertiesFor", map.key);
-                    this.view.update('maps');
+                    this.views[this.currentView].update('maps');
                 }
                 break;
             case 'removed':
-                this.view.update('maps');
+                this.views[this.currentView].update('maps');
                 break;
         }
     }
@@ -212,7 +224,7 @@ class ViewManager
     _selection_handlers() {
         let self = this;
         $('#svgDiv').on('mousedown', function(e) {
-            if (self.view.dragging)
+            if (self.views[self.currentView].dragging)
                 return;
             if (e.shiftKey == false) {
                 deselectAllMaps(self.tables);
@@ -221,10 +233,10 @@ class ViewManager
 
             // cache current mouse position
             let svgPos = fullOffset($('#svgDiv')[0]);
-            if (self.view.type == 'grid') {
+            if (self.currentView == 'grid') {
                 // svg canvas has hidden offset
-                svgPos.left -= self.view.tables.left.expandWidth;
-                svgPos.top -= self.view.tables.right.expandWidth;
+                svgPos.left -= self.tables.left.expandWidth;
+                svgPos.top -= self.tables.right.expandWidth;
             }
             let x1 = e.pageX - svgPos.left;
             let y1 = e.pageY - svgPos.top;
@@ -289,7 +301,7 @@ class ViewManager
                     }
                     /* delete */
                     // do not allow 'delete' key to unmap in console view
-                    if (self.view.type == 'console') break;
+                    if (self.currentView == 'console') break;
                     self.database.maps.each(function(map) {
                         if (map.selected)
                         {
@@ -313,7 +325,7 @@ class ViewManager
                     }
                     break;
                 case 27:
-                    self.view.escape();
+                    self.views[self.currentView].escape();
                     break;
             }
         });

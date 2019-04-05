@@ -81,6 +81,10 @@ class MapPainter {
     edge_intersection(x1, y1, x2, y2)
     {
         let ret = false;
+        x1 = x1 * this.canvas.zoom + this.canvas.pan.x;
+        y1 = y1 * this.canvas.zoom + this.canvas.pan.y;
+        x2 = x2 * this.canvas.zoom + this.canvas.pan.x;
+        y2 = y2 * this.canvas.zoom + this.canvas.pan.y;
         for (let i in this.paths)
         {
             if (this.paths[i] === null) continue;
@@ -165,10 +169,10 @@ class MapPainter {
         if (this.paths.length > count) count = this.paths.length;
         for (let i = 0; i < count; ++i)
         {
-            // TODO: allow animation
             let pathspec = this.pathspecs[i];
+            let len = Raphael.getTotalLength(pathspec);
+
             if (this.shortenPath) {
-                let len = Raphael.getTotalLength(pathspec);
                 let shorten = this.shortenPath * this.canvas.zoom;
                 pathspec = Raphael.getSubpath(pathspec, shorten, len - shorten);
             }
@@ -187,6 +191,10 @@ class MapPainter {
 
             if (typeof attributes === 'undefined') 
                 attributes = this.attributes[0];
+
+            // hide arrowhead if path is short to avoid Raphael error message
+            if (len < 50)
+                attributes['arrow-end'] = 'none';
 
             if (typeof path === 'undefined' || path[0] == null) 
             {

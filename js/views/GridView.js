@@ -9,6 +9,16 @@ class GridView extends View {
         super('grid', frame, {'left': tables.left, 'right': tables.right},
               canvas, database, tooltip, pie, GridMapPainter);
 
+        this.escaped = false;
+        this.leftExpandWidth = 200;
+        this.rightExpandWidth = 200;
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(GridMapPainter);
+        this.setTableDrag();
+
         // set left table properties
         this.tables.left.filterByDirection('output');
 
@@ -19,6 +29,7 @@ class GridView extends View {
         // set global table properties
         for (var i in this.tables) {
             let t = this.tables[i];
+            t.hidden = false;
             t.showDetail(false);
             t.expand = true;
             t.scrolled = 0;
@@ -27,20 +38,9 @@ class GridView extends View {
 
         let self = this;
         this.database.devices.each(function(dev) {
-            // remove signal svg
             dev.signals.each(remove_object_svg);
             remove_object_svg(dev);
         });
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
-
-        this.map_pane;
-        this.escaped = false;
-
-        this.pan = this.tablePan;
-        this.zoom = this.tableZoom;
-
 
         this.tables.left.collapseHandler = function() {
             if (self.tables.left.expandWidth != self.leftExpandWidth) {
@@ -58,8 +58,6 @@ class GridView extends View {
         };
 
         this.update();
-        this.leftExpandWidth = 200;
-        this.rightExpandWidth = 200;
         this.resize(null, 500);
 
         // move svg canvas to front
@@ -99,7 +97,7 @@ class GridView extends View {
         let elements;
         switch (arguments.length) {
             case 0:
-                elements = ['devices', 'maps'];
+                elements = ['devices', 'signals', 'maps'];
                 break;
             case 1:
                 elements = [arguments[0]];
@@ -109,7 +107,7 @@ class GridView extends View {
                 break;
         }
         let updated = false;
-        if (elements.indexOf('devices') >= 0) {
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             this.updateDevices();
             let grow = false;
             if (this.tables.left.expandWidth != this.leftExpandWidth) {
@@ -130,6 +128,16 @@ class GridView extends View {
         }
         if (updated)
             this.draw(500);
+    }
+
+    pan(x, y, delta_x, delta_y) {
+        if (this.tablePan(x, y, delta_x, delta_y))
+            this.drawMaps();
+    }
+
+    zoom(x, y, delta) {
+        if (this.tableZoom(x, y, delta))
+            this.drawMaps();
     }
 
     cleanup() {

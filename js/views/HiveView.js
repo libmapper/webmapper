@@ -6,22 +6,7 @@
 
 class HiveView extends View {
     constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('hive', frame, null, canvas, database, tooltip, pie, HiveMapPainter);
-
-        // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // start with signals at origin
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
-                if (sig.index && !sig.position)
-                    sig.position = this.origin;
-            });
-        });
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
+        super('hive', frame, tables, canvas, database, tooltip, pie, HiveMapPainter);
 
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
@@ -29,6 +14,28 @@ class HiveView extends View {
         this.shortenPaths = 12;
 
         this.aspect = 1;
+
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(HiveMapPainter);
+
+        // hide tables
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
+
+        // start with signals at origin
+        let self = this;
+        this.database.devices.each(function(dev) {
+            dev.signals.each(function(sig) {
+                if (sig.index && !sig.position)
+                    sig.position = self.origin;
+            });
+        });
 
         this.resize();
     }
@@ -117,6 +124,7 @@ class HiveView extends View {
     }
 
     update() {
+        let self = this;
         let elements;
         switch (arguments.length) {
             case 0:
@@ -130,31 +138,23 @@ class HiveView extends View {
                 break;
         }
         let updated = false;
-        if (elements.indexOf('devices') >= 0) {
+        if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
             let dev_num = this.database.devices.reduce(function(t, dev) {
                 let uncollapsed = dev.collapsed ? 0 : 1;
                 let unhidden = dev.hidden ? 0 : 1;
                 return uncollapsed && unhidden + (t ? t : 0);
             });
             dev_num = dev_num > 1 ? dev_num - 1 : 1;
-            let angleInc = (Math.PI * -0.5) / dev_num;
-            let hiveIndex = 0;
+            let angleInc = (Math.PI * 0.5) / dev_num;
+            let angle = -Math.PI * 0.5;
             let listIndex = 0;
             this.updateDevices(function(dev) {
                 if (dev.collapsed)
                     listIndex++;
                 else {
-                    dev.angle = hiveIndex * angleInc;
-                    hiveIndex++;
+                    dev.angle = angle;
+                    angle += angleInc;
                 }
-                return false;
-            });
-            updated = true;
-        }
-        if (elements.indexOf('signals') >= 0) {
-            this.updateSignals(function(sig) {
-                if (!sig.position)
-                    sig.position = position(null, null, self.frame);
                 return false;
             });
             updated = true;

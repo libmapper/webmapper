@@ -12,19 +12,7 @@
 
 class GraphView extends View {
     constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('graph', frame, null, canvas, database, tooltip, pie, GraphMapPainter);
-
-        // hide tables
-        tables.left.adjust(0, 0, 0, frame.height, 0, 500, null, 0, 0);
-        tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500, null, 0, 0);
-
-        // remove associated svg elements for devices
-        this.database.devices.each(function(dev) {
-            remove_object_svg(dev);
-        });
-
-        // remove link svg
-        this.database.links.each(remove_object_svg);
+        super('graph', frame, tables, canvas, database, tooltip, pie, GraphMapPainter);
 
         this.xAxisProp = 'min';
         this.yAxisProp = 'max';
@@ -32,12 +20,48 @@ class GraphView extends View {
         var xMin = null, xMax = null, yMin = null, yMax = null;
         this.stepInterval = 2;
 
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(GraphMapPainter);
+
+        // hide tables
+        this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
+                                this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0,
+                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.left.hidden = this.tables.right.hidden = true;
+
+        // remove associated svg elements for devices
+        this.database.devices.each(function(dev) {
+            remove_object_svg(dev);
+            // vectorize signal positions
+            dev.signals.each(function(sig) {
+                if (!Array.isArray(sig.position))
+                    sig.position = [sig.position];
+            });
+        });
+
+        // remove link svg
+        this.database.links.each(remove_object_svg);
+
         this._labelAxes();
 
         // temporary
         // TODO: populate menus using signal properties
-        $('#xAxisMenu').empty().append("<a>none</a><a>min</a><a>max</a><a>name</a><a>device name</a>");
-        $('#yAxisMenu').empty().append("<a>device name</a><a>name</a><a>max</a><a>min</a><a>none</a>");
+        $('#xAxisMenu').empty().append("<a>none</a>"+
+                                       "<a>direction</a>"+
+                                       "<a>min</a>"+
+                                       "<a>max</a>"+
+                                       "<a>device name</a>"+
+                                       "<a>signal name</a>");
+        $('#yAxisMenu').empty().append("<a>signal name</a>"+
+                                       "<a>device name</a>"+
+                                       "<a>max</a>"+
+                                       "<a>min</a>"+
+                                       "<a>direction</a>"+
+                                       "<a>none</a>");
 
         let self = this;
         $('.axisLabel').on('click', function(e) {
@@ -71,14 +95,7 @@ class GraphView extends View {
                 self.xMin = self.xMax = self.yMin = self.yMax = null;
                 self.sortSignals();
                 self._labelAxes();
-                if (!self.xAxisProp || !self.yAxisProp) {
-                    // need to call force-directed layout
-                    self.startStepping();
-                }
-                else {
-                    // can just draw directly
-                    self.draw(500);
-                }
+                self.startStepping();
             });
             e.stopPropagation();
             let axes = $('#axes');
@@ -88,7 +105,6 @@ class GraphView extends View {
                 $(axes).css('pointer-events', 'none');
             });
         });
-
         this.resize();
     }
 
@@ -156,26 +172,53 @@ class GraphView extends View {
     sortSignals() {
         let xProp = this.xAxisProp;
         let yProp = this.yAxisProp;
+        let xPropCategories = xProp == null ? null : [];
+        let yPropCategories = yProp == null ? null : [];
         let rangeChanged = true;
         let self = this;
         let iterations = 0;
-        let tx = this.frame.left + this.frame.width * 0.5;
-        let ty = this.frame.top + this.frame.height * 0.5;
+        let tx = this.frame.width * 0.5;
+        let ty = this.frame.height * 0.5;
         this.hidden.x = this.hidden.y = 0;
+
+        // count unique values
+        function uniqueValues(v) {
+            if (typeof v === 'undefined' || v === null)
+                return null;
+            if (!Array.isArray(v))
+                return v;
+            let unique = [v[0]];
+            for (let i = 1; i < v.length; i++) {
+                if (unique.indexOf(v[i]) == -1)
+                    unique.push(v[i]);
+            }
+            return unique;
+        }
+
         // calculate ranges
         while (rangeChanged && iterations < 10) {
             iterations += 1;
             rangeChanged = false;
             database.devices.each(function(dev) {
                 dev.signals.each(function(sig) {
+                    if (dev.hidden || sig.hidden) {
+                        if (sig.view) {
+                            sig.view.hide();
+                            sig.view.hidden = true;
+                        }
+                        return;
+                    }
                     let xVal, yVal;
                     if (xProp == null)
                         xVal = null;
                     else  {
                         if (xProp.indexOf('device ') == 0)
                             xVal = sig.device[xProp.slice(7)];
+                        else if (xProp.indexOf('signal ') == 0)
+                            xVal = sig[xProp.slice(7)];
                         else
                             xVal = sig[xProp];
+                        xVal = uniqueValues(xVal);
                         if (xVal == null)
                             self.hidden.x += 1;
                     }
@@ -184,27 +227,37 @@ class GraphView extends View {
                     else {
                         if (yProp.indexOf('device ') == 0)
                             yVal = sig.device[yProp.slice(7)];
+                        else if (yProp.indexOf('signal ') == 0)
+                            yVal = sig[yProp.slice(7)];
                         else
                             yVal = sig[yProp];
+                        yVal = uniqueValues(yVal);
                         if (yVal == null)
                             self.hidden.y += 1;
                     }
-                    let positionChanged = false;
-                    if (xVal === undefined) xVal = null;
-                    if (yVal === undefined) yVal = null;
                     if (xProp && (xVal === null) || yProp && (yVal === null)) {
-                        if (sig.position) {
-                            positionChanged = true;
-                        }
                         if (sig.view) {
                             sig.view.hide();
+                            sig.view.hidden = true;
                         }
                         return;
                     }
                     sig.view.show();
+                    sig.view.hidden = false;
+                    let positionChanged = false;
                     if (xVal != null) {
                         let min, max;
-                        if (typeof xVal != "string" && xVal.length > 1) {
+                        if (typeof xVal == 'string') {
+                            if (xPropCategories.indexOf(xVal) < 0) {
+                                xPropCategories.push(xVal);
+                                xPropCategories.sort(namespaceSort);
+                                rangeChanged = true;
+                            }
+                            min = 0;
+                            max = xPropCategories.length - 1;
+                            xVal = [xPropCategories.indexOf(xVal)];
+                        }
+                        else if (xVal.length > 1) {
                             min = xVal.reduce((a,b) => (a<b?a:b));
                             max = xVal.reduce((a,b) => (a>b?a:b));
                             xVal = xVal.slice();
@@ -223,22 +276,17 @@ class GraphView extends View {
                         }
                         if (self.xMin != null && self.xMax != null) {
                             // calculate x position
-                            if (typeof self.xMin == 'string') {
-                                min = stringToInt(self.xMin);
-                                max = stringToInt(self.xMax);
-                                for (var i = 0; i < xVal.length; i++)
-                                    xVal[i] = stringToInt(xVal[i]);
-                            }
-                            else {
-                                min = self.xMin;
-                                max = self.xMax;
-                            }
+                            min = self.xMin;
+                            max = self.xMax;
                             let range = max - min;
                             for (var i in xVal) {
-                                xVal[i] -= min;
-                                if (range != 0)
+                                if (range > 0) {
+                                    xVal[i] -= min;
                                     xVal[i] = xVal[i] / range * (self.frame.width - 100);
-                                xVal[i] += 50;
+                                    xVal[i] += 50;
+                                }
+                                else
+                                    xVal[i] = self.frame.cx;
                             }
                             if (xVal != sig.position.x)
                                 positionChanged = true;
@@ -248,7 +296,17 @@ class GraphView extends View {
                         positionChanged = true;
                     if (yVal != null) {
                         let min, max;
-                        if (typeof yVal != "string" && yVal.length > 1) {
+                        if (typeof yVal == 'string') {
+                            if (yPropCategories.indexOf(yVal) < 0) {
+                                yPropCategories.push(yVal);
+                                yPropCategories.sort(namespaceSort);
+                                rangeChanged = true;
+                            }
+                            min = 0;
+                            max = yPropCategories.length - 1;
+                            yVal = [yPropCategories.indexOf(yVal)];
+                        }
+                        else if (yVal.length > 1) {
                             min = yVal.reduce((a,b) => (a<b?a:b));
                             max = yVal.reduce((a,b) => (a>b?a:b));
                             yVal = yVal.slice();
@@ -267,22 +325,17 @@ class GraphView extends View {
                         }
                         if (self.yMin != null && self.yMax != null) {
                             // calculate y position
-                            if (typeof self.yMin == 'string') {
-                                min = stringToInt(self.yMin);
-                                max = stringToInt(self.yMax);
-                                for (var i = 0; i < yVal.length; i++)
-                                    yVal[i] = stringToInt(yVal[i]);
-                            }
-                            else {
-                                min = self.yMin;
-                                max = self.yMax;
-                            }
+                            min = self.yMin;
+                            max = self.yMax;
                             let range = max - min;
                             for (var i in yVal) {
-                                yVal[i] -= min;
-                                if (range != 0)
+                                if (range > 0) {
+                                    yVal[i] -= min;
                                     yVal[i] = yVal[i] / range * (self.frame.height - 100);
-                                yVal[i] = self.frame.height - yVal[i] - 50;
+                                    yVal[i] = self.frame.height - yVal[i] - 50;
+                                }
+                                else
+                                    yVal[i] = self.frame.cy - self.frame.top - 25;
                             }
                             if (yVal != sig.position.y)
                                 positionChanged = true;
@@ -294,13 +347,15 @@ class GraphView extends View {
                         // update signal position target
                         let t = [];
                         let f = [];
-                        let len = xVal ? xVal.length : 1;
-                        if (yVal && yVal.length > len)
-                            len = yVal.length;
-                        for (var i = 0; i < len; i++) {
-                            t.push({'x': xVal ? xVal[i] : tx,
-                                    'y': yVal ? yVal[i] : ty});
-                            f.push({'x': 0, 'y': 0});
+                        let xlen = xVal && Array.isArray(xVal) ? xVal.length : 1;
+                        let ylen = yVal && Array.isArray(yVal) ? yVal.length : 1;
+                        let len = xlen * ylen;
+                        for (var i = 0; i < xlen; i++) {
+                            for (var j = 0; j < ylen; j++) {
+                                t.push({'x': xVal ? xVal[i] : tx,
+                                        'y': yVal ? yVal[j] : ty});
+                                f.push({'x': 0, 'y': 0});
+                            }
                         }
                         sig.target = t;
                         sig.force = f;
@@ -310,9 +365,9 @@ class GraphView extends View {
                             for (var i = 0; i < len; i++)
                                 sig.position.push(p);
                         }
-                        else if (sig.position.x != undefined) {
-                            let p = [sig.position];
-                            for (var i = 0; i < len - 1; i++)
+                        else if (!Array.isArray(sig.position)) {
+                            let p = [];
+                            for (var i = 0; i < len; i++)
                                 p.push(sig.position);
                             sig.position = p;
                         }
@@ -324,9 +379,6 @@ class GraphView extends View {
                             for (var i = sig.position.length; i < len; i++)
                                 sig.position.push(p);
                         }
-                        // if x and y axis are defined, copy target to position
-                        if (self.xAxisProp && self.yAxisProp)
-                            sig.position = sig.target;
                     }
                 });
             });
@@ -337,27 +389,33 @@ class GraphView extends View {
     forceDirect() {
         let self = this;
         let moved = false;
-        let K_repulse_x = 0.0;
-        let K_repulse_y = 0.0;
-        let K_target_x = 1.1;
-        let K_target_y = 1.1;
+        let K_repulse_x = 60.0;
+        let K_repulse_y = 60.0;
+        let K_target_x = 0.2;
+        let K_target_y = 0.2;
         let K_map_x = 0.0;
         let K_map_y = 0.0;
-        if (!self.xAxisProp) {
-            K_target_x = 0.01;
-            K_repulse_x = 1000;
-            K_map_x = 0.01;
-        }
-        if (!self.yAxisProp) {
-            K_target_y = 0.01;
-            K_repulse_y = 1000;
-            K_map_y = 0.01;
-        }
+        let K_device_x = 0.001;
+        let K_device_y = 0.001;
         let L = 100;
+
+        if (this.xAxisProp == null) {
+            K_repulse_x = 4000;
+            K_target_x = 0.01;
+            K_map_x = 0.3;
+            K_device_x = 0.5;
+        }
+        if (this.yAxisProp == null) {
+            K_repulse_y = 2000;
+            K_target_y = 0.01;
+            K_map_y = 0.3;
+            K_device_y = 0.5;
+        }
+
         this.database.devices.each(function(devA) {
             // attract positions towards targets
             devA.signals.each(function(sig) {
-                if (!sig.target)
+                if (!sig.view || sig.view.hidden || !sig.target)
                     return;
                 for (var i in sig.position) {
                     let dx = sig.target[i].x - sig.position[i].x;
@@ -366,28 +424,29 @@ class GraphView extends View {
                         continue;
                     let fx = K_target_x * dx;
                     let fy = K_target_y * dy;
-                    sig.force[i].x = sig.force[i].x * 0.5 + fx;
-                    sig.force[i].y = sig.force[i].y * 0.5 + fy;
+                    sig.force[i].x = sig.force[i].x * 0.4 + fx;
+                    sig.force[i].y = sig.force[i].y * 0.4 + fy;
                 }
             });
             // repel signal positions
+            let nSig = (devA['num_outputs'] + devA['num_inputs']) * 0.25;
             devA.signals.each(function(sigA) {
-                if (!sigA.target)
+                if (!sigA.view || sigA.view.hidden || !sigA.target)
                     return;
                 let pA = sigA.position;
                 let fA = sigA.force;
                 let found = false;
                 self.database.devices.each(function(devB) {
                     devB.signals.each(function(sigB) {
-                        if (!sigB.target)
+                        if (!sigB.view || sigB.view.hidden || !sigB.target)
                             return;
-                        if (found == true) {
+                        if (found === true) {
                             let pB = sigB.position;
                             let fB = sigB.force;
                             let mapped = false;
                             // check if signals are mapped
                             self.database.maps.each(function(map) {
-                                if (map.src == sigA && map.dst != sigB)
+                                if (map.src == sigA && map.dst == sigB)
                                     mapped = true;
                                 else if (map.dst == sigA && map.src == sigB)
                                     mapped = true;
@@ -402,8 +461,17 @@ class GraphView extends View {
                                         dy = Math.random();
                                     let distSq = dx*dx + dy*dy;
                                     let dist = Math.sqrt(distSq);
-                                    let fx = K_repulse_x / distSq * dx / dist;
-                                    let fy = K_repulse_y / distSq * dy / dist;
+                                    let fx = 0;
+                                    let fy = 0;
+                                    if (devA == devB) {
+                                        // add spring attraction for common device
+                                        fx -= K_device_x * (dist - L) * dx / dist / nSig;
+                                        fy -= K_device_y * (dist - L) * dy / dist / nSig;
+                                    }
+                                    else {
+                                        fx = K_repulse_x / distSq * dx / dist;
+                                        fy = K_repulse_y / distSq * dy / dist;
+                                    }
                                     if (mapped) {
                                         // add spring attraction for map
                                         fx -= K_map_x * (dist - L) * dx / dist;
@@ -425,20 +493,19 @@ class GraphView extends View {
                 for (var i in sigA.position) {
                     let x = sigA.position[i].x;
                     let y = sigA.position[i].y;
-                    if (Math.abs(fA[i].x) > 1 || Math.abs(fA[i].y) > 1) {
-                        // limit forces arbitrarily
-                        if (fA[i].x > 100)
-                            fA[i].x = 100;
-                        else if (fA[i].x < -100)
-                            fA[i].x = -100;
-                        if (fA[i].y > 100)
-                            fA[i].y = 100;
-                        if (fA[i].y < -100)
-                            fA[i].y = -100;
-                        x += fA[i].x;
-                        y += fA[i].y;
+                    if (Math.abs(fA[i].x) > 2 || Math.abs(fA[i].y) > 2)
                         moved = true;
-                    }
+                    // limit forces arbitrarily
+                    if (fA[i].x > 100)
+                        fA[i].x = 100;
+                    else if (fA[i].x < -100)
+                        fA[i].x = -100;
+                    if (fA[i].y > 100)
+                        fA[i].y = 100;
+                    if (fA[i].y < -100)
+                        fA[i].y = -100;
+                    x += fA[i].x;
+                    y += fA[i].y;
                     newPos.push({'x': x, 'y': y});
                 }
                 if (moved)
@@ -449,7 +516,7 @@ class GraphView extends View {
     }
 
     drawSignal(sig, duration) {
-        if (!sig.view)
+        if (!sig.view || sig.view.hidden)
             return;
         sig.view.stop();
         let pos = sig.position;
@@ -458,9 +525,8 @@ class GraphView extends View {
             let circle = circle_path(pos[i].x, pos[i].y, 10 * this.canvas.zoom);
             if (!path)
                 path = circle;
-            else {
+            else
                 path = path.concat(circle);
-            }
         }
         let is_output = sig.direction == 'output';
         let color = Raphael.hsl(sig.device.hue, 1, 0.5);
@@ -486,20 +552,19 @@ class GraphView extends View {
         let self = this;
         if (this.stepping)
             window.clearInterval(this.stepping);
+        $('#animationStatus').css({'background': 'red'});
         this.stepping = setInterval(function() {
             if (self.forceDirect() == true) {
                 self.draw(0);
             }
             else {
-                console.log('done stepping');
-                window.clearInterval(self.stepping);
-                self.stepping = null;
+                self.stopStepping();
             }
         }, self.stepInterval);
     }
 
     stopStepping() {
-        console.log('done stepping');
+        $('#animationStatus').css({'background': 'transparent'});
         window.clearInterval(this.stepping);
         this.stepping = null;
     }
@@ -521,23 +586,18 @@ class GraphView extends View {
         let updated = false;
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {
-                if (!sig.position)
+                if (!sig.position) {
                     sig.position = [position(null, null, self.frame)];
+                }
                 return false;
             });
             this.sortSignals();
             this._labelAxes();
-            if (!this.xAxisProp || !this.yAxisProp) {
-                // need to call force-directed layout
-                this.startStepping();
-            }
-            else {
-                // can just draw directly
-                this.draw(500);
-            }
+            this.startStepping();
         }
         if (elements.indexOf('maps') >= 0) {
             this.updateMaps();
+            this.startStepping();
             updated = true;
         }
         if (updated)
@@ -562,6 +622,7 @@ class GraphView extends View {
 
     resetPanZoom() {
         super.resetPanZoom();
+        this._updateRangeLabels();
         this.draw(0);
     }
 
@@ -569,17 +630,18 @@ class GraphView extends View {
         super.cleanup();
         $('#axes').stop(true, false)
                   .animate({opacity: 0}, {duration: 2000});
-        if (this.stepping) {
-            window.clearInterval(this.stepping);
-            delete this.stepping;
-        }
+        this.stopStepping()
         // for now, restore signal positions to singular value
         this.database.devices.each(function(dev) {
             dev.signals.each(function(sig) {
-                if (sig.position)
+                if (Array.isArray(sig.position))
                     sig.position = sig.position[0];
                 if (sig.target)
                     delete sig.target;
+                if (sig.view && sig.view.hidden) {
+                    sig.view.show();
+                    sig.view.hidden = false;
+                }
             });
         });
 
@@ -594,6 +656,7 @@ class GraphMapPainter extends MapPainter
 
     updateAttributes() {
         this._defaultAttributes();
+        this.midPointInflation = 0;
         // constant width
         let width = (this._highlight ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth);
         this.attributes[0]['stroke-width'] = width * this.canvas.zoom;
@@ -602,12 +665,22 @@ class GraphMapPainter extends MapPainter
 
     updatePaths()
     {
+        let src = this.map.src;
+        let dst = this.map.dst;
+
+        if (   src.device.hidden || !src.view || src.view.hidden
+            || dst.device.hidden || !dst.view || dst.view.hidden) {
+            this.hide();
+            return;
+        }
+        this.show();
+
         // draw a curved line from src to dst
-        let srcs = this.map.src.position;
-        let dsts = this.map.dst.position;
+        let srcPos = src.position;
+        let dstPos = dst.position;
 
         // check if number of src or dst positions has changed
-        let len = srcs.length * dsts.length;
+        let len = srcPos.length * dstPos.length;
         if (this.pathspecs.length > len) {
             for (var i = len; i < this.paths.length; i++) {
                 let path = this.paths[i];
@@ -622,18 +695,18 @@ class GraphMapPainter extends MapPainter
         }
 
         let idx = 0;
-        for (var i in srcs) {
-            let src = srcs[i];
-            for (var j in dsts) {
-                let dst = dsts[j];
-                let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
-                let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
+        for (var i in srcPos) {
+            let s = srcPos[i];
+            for (var j in dstPos) {
+                let d = dstPos[j];
+                let m = {x: (s.x + d.x) * 0.5, y: (s.y + d.y) * 0.5};
+                let o = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
 
-                mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
-                mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
+                m.x = m.x + (m.x - o.x) * this.midPointInflation;
+                m.y = m.y + (m.y - o.y) * this.midPointInflation;
 
-                this.pathspecs[idx] = [['M', src.x, src.y],
-                                       ['S', mid.x, mid.y, dst.x, dst.y]];
+                this.pathspecs[idx] = [['M', s.x, s.y],
+                                       ['S', m.x, m.y, d.x, d.y]];
                 idx += 1;
             }
         }

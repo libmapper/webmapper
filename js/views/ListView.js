@@ -9,8 +9,13 @@ class ListView extends View {
         super('list', frame, {'left': tables.left, 'right': tables.right},
               canvas, database, tooltip, pie, ListMapPainter);
 
-        //this.pie.inner_radius = 1;
-        //this.pie.set_slices(ListViewSlices);
+        this.setup();
+    }
+
+    setup() {
+        this.setMapPainter(ListMapPainter);
+        this.setTableDrag();
+
         // set left table properties
         this.tables.left.filterByDirection('output');
 
@@ -21,6 +26,7 @@ class ListView extends View {
         // set global table properties
         for (var i in this.tables) {
             let t = this.tables[i];
+            t.hidden = false;
             t.showDetail(true);
             t.expand = false;
             t.scrolled = 0;
@@ -30,30 +36,17 @@ class ListView extends View {
 
         let self = this;
         this.database.devices.each(function(dev) {
-            // remove signal svg
             dev.signals.each(remove_object_svg);
-
             if (!dev.view)
                 return;
-            // remove device labels
-            if (dev.view.label) {
-                dev.view.label.remove();
-                dev.view.label = null;
-            }
-            // change device hover
             dev.view.unhover();
+            remove_object_svg(dev);
         });
 
         this.tables.left.collapseHandler = function() {self.drawMaps()};
         this.tables.right.collapseHandler = function() {self.drawMaps()};
 
-        // remove link svg
-        this.database.links.each(remove_object_svg);
-
         this.escaped = false;
-
-        this.pan = this.tablePan;
-        this.zoom = this.tableZoom;
 
         this.resize(null, 500);
     }
@@ -73,7 +66,6 @@ class ListView extends View {
     }
 
     draw(duration) {
-        this.drawDevices(duration);
         this.drawMaps(duration);
     }
 
@@ -101,6 +93,16 @@ class ListView extends View {
         }
         if (updated)
             this.draw(500);
+    }
+
+    pan(x, y, delta_x, delta_y) {
+        if (this.tablePan(x, y, delta_x, delta_y))
+            this.drawMaps();
+    }
+
+    zoom(x, y, delta) {
+        if (this.tableZoom(x, y, delta))
+            this.drawMaps();
     }
 
     cleanup() {
