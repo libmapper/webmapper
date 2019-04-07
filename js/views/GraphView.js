@@ -578,7 +578,7 @@ class GraphView extends View {
         let self = this;
         if (this.stepping)
             window.clearInterval(this.stepping);
-        $('.ui-slider-handle').css({'background': 'darkred'});
+        $('.ui-slider').css({'background': 'rgba(220, 0, 0, 0.3)'});
         this.stepping = setInterval(function() {
             if (self.forceDirect() == true) {
                 self.draw(0);
@@ -590,7 +590,7 @@ class GraphView extends View {
     }
 
     stopStepping() {
-        $('.ui-slider-handle').css({'background': 'white'});
+        $('.ui-slider').css({'background': 'rgba(220, 220, 220, 0.3)'});
         window.clearInterval(this.stepping);
         this.stepping = null;
     }
