@@ -26,12 +26,14 @@ class GraphView extends View {
         this.repulsion = {value: 4000.0, min: 0, max: 100, mult: 40};
         this.targetAttraction = {value: 0.01, min: 0, max: 100, mult: 0.001};
         this.devAttraction = {value: 0.01, min: 0, max: 100, mult: 0.01};
+        this.devDistance = {value: 100, min: 0, max: 100, mult: 10};
         this.mapAttraction = {value: 0.0, min: 0, max: 100, mult: 0.01};
         this.mapLength = {value: 100, min: 0, max: 100, mult: 10};
 
         let self = this;
         let sliderNames = ["damping", "repulsion", "targetAttraction",
-                           "devAttraction", "mapAttraction", "mapLength"];
+                           "devAttraction", "devDistance", "mapAttraction",
+                           "mapLength"];
         sliderNames.forEach(function(name) {
             $( function() {
                 let slider = self[name];
@@ -72,41 +74,26 @@ class GraphView extends View {
 
         this._labelAxes();
 
-        // temporary
-        // TODO: populate menus using signal properties
-        $('#xAxisMenu').empty().append("<a>none</a>"+
-                                       "<a>direction</a>"+
-                                       "<a>min</a>"+
-                                       "<a>max</a>"+
-                                       "<a>device name</a>"+
-                                       "<a>signal name</a>");
-        $('#yAxisMenu').empty().append("<a>signal name</a>"+
-                                       "<a>device name</a>"+
-                                       "<a>max</a>"+
-                                       "<a>min</a>"+
-                                       "<a>direction</a>"+
-                                       "<a>none</a>");
-
         let self = this;
         $('.axisLabel').on('click', function(e) {
             let axis = e.currentTarget.id[0];
             let menu = $('#'+axis+'AxisMenu');
             if ($(menu).hasClass('show')) {
                 $(menu).removeClass('show');
-                $(menu).children('a').off('click');
+                $(menu).find('td').off('click');
                 return;
             }
             $(menu).addClass('show');
 
             // hide other axis menu if it is showing
             let other = (axis == 'x') ? 'y' : 'x';
-            $('#'+other+axis.slice(1)+'Menu').removeClass('show');
-            $('#'+other+axis.slice(1)+'Menu').children('a').off('click');
+            $('#'+other+'AxisMenu').removeClass('show');
+            $('#'+other+'AxisMenu').find('td').off('click');
 
             // listen for menu item clicks
-            $(menu).children('a').one('click', function(a) {
+            $(menu).find('td').one('click', function(td) {
                 $(menu).removeClass('show');
-                let prop = a.currentTarget.innerHTML;
+                let prop = td.currentTarget.innerHTML;
                 if (prop === 'none')
                     prop = null;
                 if (axis == 'x' && self.xAxisProp != prop)
@@ -125,7 +112,7 @@ class GraphView extends View {
             let axes = $('#axes');
             $(axes).css('pointer-events', 'all');
             $(axes).one('click', function() {
-                $('.dropdown-content').removeClass('show').children('a').off('click');
+                $('.dropdown-content').removeClass('show').find('td').off('click');
                 $(axes).css('pointer-events', 'none');
             });
         });
@@ -190,6 +177,79 @@ class GraphView extends View {
         else {
             $('#yAxisMin').text('');
             $('#yAxisMax').text('');
+        }
+    }
+
+    updatePropLists() {
+        let devProps = [];
+        let sigProps = [];
+        this.database.devices.each(function (dev) {
+            let keys = Object.keys(dev);
+            for (var i in keys) {
+                let key = keys[i];
+                switch (key) {
+                    case 'key':
+                    case 'links':
+                    case 'signals':
+                    case 'view':
+                    case 'hue':
+                    case 'angle':
+                    case 'link_angles':
+                    case 'index':
+                    case 'numVisibleSigs':
+                    case 'status':
+                    case 'hidden':
+                    case 'synced':
+                    case 'version':
+                        break;
+                    default:
+                        if (devProps.indexOf('device '+key) == -1)
+                            devProps.push('device '+key);
+                }
+            }
+            dev.signals.each(function (sig) {
+                let keys = Object.keys(sig);
+                for (var i in keys) {
+                    let key = keys[i];
+                    switch (key) {
+                        case 'key':
+                        case 'device':
+                        case 'view':
+                        case 'index':
+                        case 'position':
+                        case 'force':
+                        case 'hidden':
+                        case 'version':
+                        case 'status':
+                            break;
+                        default:
+                            if (sigProps.indexOf('signal '+key) == -1)
+                                sigProps.push('signal '+key);
+                    }
+                }
+            });
+        });
+        devProps = devProps.sort();
+        devProps.unshift('none');
+        sigProps = sigProps.sort();
+        sigProps.unshift('none');
+
+        let len = devProps.length > sigProps.length ? devProps.length : sigProps.length;
+        let xmenu = $('#xAxisMenu');
+        xmenu.empty().append("<tr><th>DEVICE PROPS</th><th>SIGNAL PROPS</th></tr>");
+        let ymenu = $('#yAxisMenu');
+        ymenu.empty().append("<tr><th>DEVICE PROPS</th><th>SIGNAL PROPS</th></tr>");
+
+        for (var i = 0; i < len; i++) {
+            let entry = "<tr><td>";
+            if (i < devProps.length)
+                entry += devProps[i];
+            entry += "</td><td>";
+            if (i < sigProps.length)
+                entry += sigProps[i];
+            entry += "</td></tr>";
+            xmenu.append(entry);
+            ymenu.append(entry);
         }
     }
 
@@ -421,7 +481,8 @@ class GraphView extends View {
         let K_map_y = this.mapAttraction.value;
         let K_device_x = this.devAttraction.value;
         let K_device_y = this.devAttraction.value;
-        let L = this.mapLength.value;
+        let L_map = this.mapLength.value;
+        let L_dev = this.devDistance.value;
         let mass = 1.0 - this.damping.value;
 
         function sigNameComp(a, b) {
@@ -493,13 +554,13 @@ class GraphView extends View {
                                         // add spring attraction for common device
                                         // based on signal similarity
                                         let score = sigNameComp(sigA.name, sigB.name);
-                                        mult = (dist - L) / dist / nSig * score;
+                                        mult = (dist - L_dev) / dist / nSig * score;
                                         fx -= K_device_x * dx * mult;
                                         fy -= K_device_y * dy * mult;
                                     }
                                     if (mapped) {
                                         // add spring attraction for map
-                                        mult = (dist - L) / dist;
+                                        mult = (dist - L_map) / dist;
                                         fx -= K_map_x * dx * mult;
                                         fy -= K_map_y * dy * mult;
                                     }
@@ -617,6 +678,7 @@ class GraphView extends View {
                 }
                 return false;
             });
+            this.updatePropLists();
             this.sortSignals();
             this._labelAxes();
             this.startStepping();

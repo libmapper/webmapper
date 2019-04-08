@@ -38,6 +38,10 @@ function init() {
                                 "<div id='devAttractionHandle' class='ui-slider-handle'></div>"+
                                 "<span class='sliderTitle'>Device attraction:</span>"+
                             "</div>"+
+                            "<div id='devDistanceSlider'>"+
+                                "<div id='devDistanceHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Device distance:</span>"+
+                            "</div>"+
                             "<div id='mapAttractionSlider'>"+
                                 "<div id='mapAttractionHandle' class='ui-slider-handle'></div>"+
                                 "<span class='sliderTitle'>Map attraction:</span>"+
@@ -50,13 +54,13 @@ function init() {
                         "<div id='yAxis'>"+
                             "<div id='yAxisMax'></div>"+
                             "<div id='yAxisLabel' class='axisLabel'></div>"+
-                            "<div id='yAxisMenu' class='dropdown-content'></div>"+
+                            "<table id='yAxisMenu' class='dropdown-content'></table>"+
                             "<div id='yAxisMin'></div>"+
                         "</div>"+
                         "<div id='xAxis'>"+
                             "<div id='xAxisMin'></div>"+
                             "<div id='xAxisLabel' class='axisLabel'></div>"+
-                            "<div id='xAxisMenu' class='dropdown-content'></div>"+
+                            "<table id='xAxisMenu' class='dropdown-content'></table>"+
                             "<div id='xAxisMax'></div>"+
                         "</div>"+
                      "</div>");
