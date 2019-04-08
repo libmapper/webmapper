@@ -187,24 +187,7 @@ class ListMapPainter extends MapPainter
 
     convergent()
     {
-        let ymax = null
-        let ymin = null
-        let sigs = this.map.srcs.concat([this.map.dst]);
-        for (let sig of sigs)
-        {
-            if (sig.hidden) continue;
-            let y = sig.position.y;
-            if (ymax == null || y > ymax) ymax = y;
-            if (ymin == null || y < ymin) ymin = y;
-        }
-
-        if (ymax == null || ymin == null)
-        {
-            console.log('Error calculating convergent node position');
-            return;
-        }
-        
-        let node = {x: this.frame.width / 2, y: (ymin + ymax) / 2}
+        let node = this.getNodePosition();
         let i = 0;
         for (; i < this.map.srcs.length; ++i)
         {
@@ -217,6 +200,17 @@ class ListMapPainter extends MapPainter
         this.pathspecs[i+1] = [['M', node.x - radius, node.y],
                               ['A', radius, radius, 0, 0, 0, node.x + radius, node.y],
                               ['A', radius, radius, 0, 0, 0, node.x - radius, node.y]];
+    }
+
+    getNodePosition()
+    {
+        let dst = this.map.dst.position;
+        let yavg = this.map.srcs.map(s => s.position.y)
+                                .reduce((accum, val) => accum + val)
+                                / this.map.srcs.length;
+        let ymin = yavg < dst.y ? yavg : dst.y;
+        let ymax = yavg > dst.y ? yavg : dst.y;
+        return {x: this.frame.width / 2, y: (ymin + ymax) / 2}
     }
 
     updateAttributes()
