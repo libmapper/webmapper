@@ -80,7 +80,7 @@ class Pie
         if (!(typeof x === 'number' && typeof y === 'number')) return null;
 
         let vec = {'x': x - this.x, 'y': y - this.y};
-        let magn = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+        let magn = norm(vec.x, vec.y);
         if (magn < this.inner_radius) return null;
 
         let selected = this._slices[0];
@@ -271,7 +271,7 @@ class Pie
     // get the angle in degrees which rotates (0,-1) (i.e. 12 o'clock) clockwise to v
     _vec_to_angle(v, magn = null)
     {
-        if (magn === null) magn = Math.sqrt(v.x*v.x + v.y*v.y);
+        if (magn === null) magn = norm(v.x, v.y);
         let angle = radToDeg(Math.acos(-v.y / magn));
         if (v.x < 0) angle = 360 - angle;
         return angle;

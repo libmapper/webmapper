@@ -168,9 +168,7 @@ function closest_point(edge, x, y) {
     let best_p = null;
     for (var j = 0; j <= 10; j++) {
         let p = edge.getPointAtLength(len * j * 0.1);
-        let dx = p.x - x; 
-        let dy = p.y - y;
-        let dist = dx*dx + dy*dy;
+        let dist = distance_squared(x, y, p.x, p.y);
         if (best_dist === null || dist < best_dist) {
             best_p = p
             best_dist = dist;
@@ -403,4 +401,20 @@ function degToRad(deg) {
 
 function radToDeg(rad) {
     return 180 * rad / Math.PI;
+}
+
+function norm_squared(x, y) {
+    return x*x + y*y;
+}
+
+function norm(x, y) {
+    return Math.sqrt(norm_squared(x, y));
+}
+
+function distance(x1, y1, x2, y2) {
+    return norm(x2 - x1, y2 - y1);
+}
+
+function distance_squared(x1, y1, x2, y2) {
+    return norm_squared(x2 - x1, y2 - y1);
 }
