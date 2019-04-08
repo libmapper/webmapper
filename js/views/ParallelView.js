@@ -77,6 +77,7 @@ class ParallelView extends View {
             // assign position along line
             sig.position.x = x;
             sig.position.y = y - sigInc * (sig.index);
+            sig.position.vx = sig.position.x < self.frame.width / 2 ? 1 : -1;
             self.drawSignal(sig, duration);
         });
     }
@@ -159,29 +160,10 @@ class ParallelView extends View {
     }
 }
 
-class ParallelMapPainter extends MapPainter
+class ParallelMapPainter extends ListMapPainter
 {
-    constructor(map, canvas, frame) { super(map, canvas, frame); }
-
-    updateAttributes() {
-        this._defaultAttributes();
+    constructor(map, canvas, frame, database) { 
+        super(map, canvas, frame, database); 
         this.shortenPath = 12;
-    }
-
-    updatePaths() {
-        let src = this.map.src.position;
-        let dst = this.map.dst.position;
-
-        if (src.x == dst.x) {
-            // signals belong to same device
-            let offsetx = src.x + (src.y - dst.y) * 0.5;
-            this.pathspecs[0] = [['M', src.x, src.y],
-                                 ['C', offsetx, src.y, offsetx, dst.y, dst.x, dst.y]];
-        }
-        else {
-            let mpx = (src.x + dst.x) * 0.5;
-            this.pathspecs[0] = [['M', src.x, src.y],
-                                 ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
-        }
     }
 }
