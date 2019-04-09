@@ -216,11 +216,13 @@ class GraphView extends View {
                         case 'device':
                         case 'view':
                         case 'index':
+                        case 'target':
                         case 'position':
                         case 'force':
                         case 'hidden':
                         case 'version':
                         case 'status':
+                        case 'canvasObject':
                             break;
                         default:
                             if (sigProps.indexOf('signal '+key) == -1)
@@ -726,6 +728,8 @@ class GraphView extends View {
                     sig.position = sig.position[0];
                 if (sig.target)
                     delete sig.target;
+                if (sig.force)
+                    delete sig.force;
                 if (sig.view && sig.view.hidden) {
                     sig.view.show();
                     sig.view.hidden = false;
