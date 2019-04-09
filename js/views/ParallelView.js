@@ -18,6 +18,7 @@ class ParallelView extends View {
 
     setup() {
         this.setMapPainter(ParallelMapPainter);
+        this.setAllSigHandlers();
 
         // hide tables
         this.tables.left.adjust(this.frame.width * -0.4, 0, 0,

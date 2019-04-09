@@ -25,6 +25,7 @@ class GraphView extends View {
 
     setup() {
         this.setMapPainter(GraphMapPainter);
+        this.setAllSigHandlers();
 
         // hide tables
         this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
@@ -668,16 +669,9 @@ class GraphMapPainter extends MapPainter
         let src = this.map.src;
         let dst = this.map.dst;
 
-        if (   src.device.hidden || !src.view || src.view.hidden
-            || dst.device.hidden || !dst.view || dst.view.hidden) {
-            this.hide();
-            return;
-        }
-        this.show();
-
         // draw a curved line from src to dst
-        let srcPos = src.position;
-        let dstPos = dst.position;
+        let srcPos = src.position instanceof Array ? src.position : [src.position];
+        let dstPos = dst.position instanceof Array ? dst.position : [dst.position];
 
         // check if number of src or dst positions has changed
         let len = srcPos.length * dstPos.length;

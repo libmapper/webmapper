@@ -180,7 +180,7 @@ MapperEdgeArray.prototype = {
     },
 
     add : function(obj) {
-        console.log(this.obj_type+'s.add', obj.key, obj);
+        // console.log(this.obj_type+'s.add', obj.key, obj);
         let key = obj.key;
         let id = obj.id;
         if (!key)
@@ -212,7 +212,7 @@ MapperEdgeArray.prototype = {
             if (this.cb_func)
                 this.cb_func('added', this.obj_type, this.contents[key]);
         }
-        console.log(this.obj_type+"s contents: ", this.contents);
+        // console.log(this.obj_type+"s contents: ", this.contents);
         return this.contents[key];
     },
 

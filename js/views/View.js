@@ -318,18 +318,8 @@ class View {
                     return;
                 }
                 self.snappingTo = sig;
-                let src = self.draggingFrom.position;
-                if (!src.x && src[0].x)
-                    src = src[0];
-                let dst = sig.position;
-                if (!dst.x && dst[0].x)
-                    dst = dst[0];
-                let path = [['M', src.x, src.y],
-                            ['S', (src.x + dst.x) * 0.6, (src.y + dst.y) * 0.4,
-                             dst.x, dst.y]];
-                let len = Raphael.getTotalLength(path);
-                path = Raphael.getSubpath(path, 12, len - 12);
-                self.newMap.attr({'path': path});
+                self.newMap.dst = sig;
+                self.newMap.view.draw(0);
             },
             function() {
                 self.snappingTo = null;
@@ -354,24 +344,22 @@ class View {
                 if (self.escaped) {
                     return;
                 }
-                x -= self.frame.left;
+                //x -= self.frame.left;
                 y -= self.frame.top;
-                let src = self.draggingFrom.position;
-                if (!src.x && src[0].x)
-                    src = src[0];
-                let path = [['M', src.x, src.y],
-                            ['S', (src.x + x) * 0.6, (src.y + y) * 0.4, x, y]];
                 if (!self.newMap) {
-                    self.newMap = self.canvas.path(path);
-                    self.newMap.attr({'stroke': 'white',
-                                      'stroke-width': MapPath.strokeWidth,
-                                      'stroke-opacity': 1,
-                                      'fill': 'none',
-                                      'arrow-start': 'none',
-                                      'arrow-end': 'block-wide-long'});
+                    self.newMap =
+                        {
+                            'src': sig,
+                            'srcs': [sig],
+                            'dst': {'position': {'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
+                            'selected': true,
+                            'hidden': false
+                        };
+                    self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
                 }
                 else
-                    self.newMap.attr({'path': path});
+                    self.newMap.dst.position = {'x': x, 'y': y};
+                self.newMap.view.draw(0);
             },
             function(x, y, event) {
                 self.escaped = false;
@@ -380,11 +368,22 @@ class View {
             function(x, y, event) {
                 self.draggingFrom = null;
                 if (self.newMap) {
-                    self.newMap.remove();
+                    self.newMap.view.remove();
                     self.newMap = null;
                 }
             }
         );
+    }
+
+    setAllSigHandlers() {
+        let self = this;
+        this.database.devices.each(dev => 
+            dev.signals.each(sig => {
+                if (!sig.view) return;
+                self.setSigHover(sig);
+                self.setSigDrag(sig);
+            })
+        );;
     }
 
     updateSignals(func) {

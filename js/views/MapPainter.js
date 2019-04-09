@@ -211,8 +211,13 @@ class MapPainter {
                 path.toFront();
             }
             path.show();
-            if (this.map.hidden || this.map.dst.hidden) path.hide();
-            if (this.map.srcs.length == 1 && this.map.src.hidden) path.hide();
+            if (this.map.hidden || this.map.dst.hidden || !this.map.dst.view || 
+                (this.map.dst.device && this.map.dst.device.hidden))
+                path.hide();
+            if (this.map.srcs.length == 1 && (this.map.src.hidden || 
+               !this.map.src.view || 
+               (this.map.src.device && this.map.src.device.hidden)))
+                path.hide();
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none'
         }

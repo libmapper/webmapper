@@ -34,8 +34,9 @@ class HiveView extends View {
             dev.signals.each(function(sig) {
                 if (sig.index && !sig.position)
                     sig.position = self.origin;
-            });
+            })
         });
+        this.setAllSigHandlers();
 
         this.resize();
     }
@@ -175,7 +176,7 @@ class HiveView extends View {
 
 class HiveMapPainter extends MapPainter
 {
-    constructor(map, canvas, frame) { super(map, canvas, frame); }
+    constructor(map, canvas, frame, database) { super(map, canvas, frame, database); }
 
     updateAttributes() {
         this._defaultAttributes();

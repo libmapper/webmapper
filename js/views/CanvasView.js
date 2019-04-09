@@ -83,25 +83,9 @@ class CanvasView extends View {
                    return;
                 }
                 // snap to sig object
-                let src = self.draggingFrom.position;
-                let dst = sig.position;
-                let src_offset = src.width * 0.5;
-                let dst_offset = dst.width * 0.5;
-                let path = null;
-                if (self.dragging == 'left') {
-                   path = [['M', src.left - src_offset, src.top],
-                           ['C', src.left - src_offset * 3, src.top,
-                            dst.left + dst_offset * 3, dst.top,
-                            dst.left + dst_offset, dst.top]];
-                }
-                else {
-                   path = [['M', src.left + src_offset, src.top],
-                           ['C', src.left + src_offset * 3, src.top,
-                            dst.left - dst_offset * 3, dst.top,
-                            dst.left - dst_offset, dst.top]];
-                }
                 self.snappingTo = sig;
-                self.newMap.attr({'path': path});
+                self.newMap.dst = sig;
+                self.newMap.view.draw(0);
                 return;
             },
             function() {
@@ -130,7 +114,7 @@ class CanvasView extends View {
             else if (self.draggingFrom && self.snappingTo) {
                 mapper.map(self.draggingFrom.key, self.snappingTo.key);
                 if (self.newMap) {
-                    self.newMap.remove();
+                    self.newMap.view.remove();
                     self.newMap = null;
                 }
             }
@@ -150,7 +134,7 @@ class CanvasView extends View {
                     self.dragging = null;
                     self.trashing = false;
                     if (self.newMap) {
-                        self.newMap.remove();
+                        self.newMap.view.remove();
                         self.newMap = null;
                     }
                     return;
@@ -175,26 +159,11 @@ class CanvasView extends View {
                     return;
                 }
                 else if (!self.snappingTo) {
-                    let offset = p.width * 0.5 + 10;
-                    let arrow_start = 'none';
-                    let arrow_end = 'none';
-                    if (self.dragging == 'left') {
-                        offset *= -1;
-                        arrow_start = 'block-wide-long';
-                    }
-                    else
-                        arrow_end = 'block-wide-long';
                     x1 -= self.frame.left;
                     y1 -= self.frame.top;
-                    let path = [['M', p.left + offset, p.top],
-                                ['C', p.left + offset * 3, p.top,
-                                 x1 - offset * 3, y1, x1, y1]];
-                    self.newMap.attr({'path': path,
-                                      'stroke': 'white',
-                                      'stroke-width': 4,
-                                      'stroke-opacity': 1,
-                                      'arrow-start': arrow_start,
-                                      'arrow-end': arrow_end});
+                    self.newMap.dst.position.x = x1;
+                    self.newMap.dst.position.y = y1;
+                    self.newMap.view.draw(0);
                 }
             },
             function(x, y, event) {
@@ -213,8 +182,17 @@ class CanvasView extends View {
                     // move svg canvas to front
                     $('#svgDiv').css({'z-index': 2});
                 }
-                if (self.dragging !== 'obj')
-                    self.newMap = self.canvas.path();
+                if (self.dragging !== 'obj') {
+                    self.newMap = 
+                        {
+                            'src': sig,
+                            'srcs': [sig],
+                            'dst': {'position': {'width': 2, 'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
+                            'selected': true,
+                            'hidden': false
+                        };
+                    self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
+                }
             },
             function(x, y, event) {
                 self.draggingFrom = null;
@@ -222,7 +200,7 @@ class CanvasView extends View {
                     delete sig.position.drag_offset;
                 self.dragging = null;
                 if (self.newMap) {
-                    self.newMap.remove();
+                    self.newMap.view.remove();
                     self.newMap = null;
                 }
                 // move svg canvas to back
@@ -440,7 +418,7 @@ class CanvasView extends View {
 
 class CanvasMapPainter extends ListMapPainter
 {
-    constructor(map, canvas) {super(map, canvas);}
+    constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
 
     updatePaths() {
         // draw a curved line from src to dst
