@@ -636,6 +636,8 @@ table.infoTable tr td:first-child {
     bottom: 0px;
     overflow: auto;
     pointer-events: all;
+    color: black;
+    width: 50%;
 }
 
 #xAxisMin {
@@ -674,11 +676,12 @@ table.infoTable tr td:first-child {
 
 #yAxisMenu {
     position: absolute;
-    transform: rotate(-90deg);
-    left: -40px;
-    top: calc(25% + 25px);
+    left: 30px;
+    top: 0px;
     overflow: auto;
     pointer-events: all;
+    color: black;
+    width: 400px;
 }
 
 #yAxisMin {
@@ -696,15 +699,50 @@ table.infoTable tr td:first-child {
     color: white;
 }
 
-#animationStatus {
-    background: transparent;
-    width: 20px;
-    height: 20px;
+#fdgCtl {
+    width: 300px;
+/*    height: 200px;*/
     top: 0px;
-    left: calc(100% - 20px);
+    left: calc(100% - 300px);
     position: absolute;
     opacity: 1;
-    border-radius: 10px;
+/*    border: 1px solid white;*/
+    background: transparent;
+    pointer-events: all;
+}
+
+#fdgCtl div {
+    position: relative;
+    color: white;
+}
+
+#fdgCtl a {
+    position: relative;
+/*    border: 1px solid white;*/
+}
+
+.ui-slider {
+    background: rgba(220, 220, 220, 0.3);
+    height: 20px;
+    margin-bottom: 5px;
+}
+
+.ui-slider div {
+    height: 20px;
+    width: 3px;
+    background: white;
+}
+
+.ui-slider a {
+    height: 20px;
+    width: 20px;
+}
+
+.sliderTitle {
+    top: -20px;
+    position: relative;
+    color: white;
+    padding: 3px;
 }
 
 /*.status.middle {*/
@@ -796,7 +834,6 @@ h1, h2, h3, h4, h5, h6 {
 /* The container <div> - needed to position the dropdown content */
 .dropdown {
     position: relative;
-    display: inline-block;
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -810,15 +847,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Links inside the dropdown */
-.dropdown-content a {
+.dropdown-content td {
     color: black;
     padding: 12px 16px;
     text-decoration: none;
-    display: block;
+    width: 50%;
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: #ddd}
+.dropdown-content td:hover {background-color: #ddd}
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:inline-table;}

@@ -82,11 +82,15 @@ class ConsoleView extends View {
                         this.echo('  mod <index> <properties>: add or modify properties of a map');
                         break;
                     case 'ls':
-                        if (command.length < 2)
+                        if (command.length < 2) {
+                            this.echo("Please specify objects to list or type 'help' for usage.");
                             return;
+                        }
                         let flags = command[1];
-                        if (flags[0] != '-')
+                        if (flags[0] != '-') {
+                            this.echo("Please specify objects to list or type 'help' for usage.");
                             return;
+                        }
                         let devFilter = command.length > 2 ? self.database.devices.find(command[2]) : null;
                         let showDevices = flags.indexOf('d') > 0;
                         let showSignals = flags.indexOf('s') > 0;
@@ -257,8 +261,8 @@ class ConsoleView extends View {
                                         else
                                             s += s2;
                                     }
+                                    echo(s);
                                 }
-                                echo(s);
                                 mapIdx += 1;
                             });
                         }

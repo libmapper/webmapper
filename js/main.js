@@ -19,17 +19,46 @@ function init() {
     // add the view wrapper
     $('body').append("<div id='container'></div>");
     $('body').append("<div id='axes'>"+
-                        "<div id='animationStatus'></div>"+
+                        "<div id='fdgCtl'>"+
+                            "<div id='dampingSlider'>"+
+                                "<div id='dampingSliderHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Damping:</span>"+
+                            "</div>"+
+                            "<div id='repulsionSlider'>"+
+                                "<div id='repulsionSliderHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Signal repulsion:</span>"+
+                            "</div>"+
+                            "<div id='targetAttractionSlider'>"+
+                                "<div id='targetAttractionHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Target attraction:</span>"+
+                            "</div>"+
+                            "<div id='devAttractionSlider'>"+
+                                "<div id='devAttractionHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Device attraction:</span>"+
+                            "</div>"+
+                            "<div id='devDistanceSlider'>"+
+                                "<div id='devDistanceHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Device distance:</span>"+
+                            "</div>"+
+                            "<div id='mapAttractionSlider'>"+
+                                "<div id='mapAttractionHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Map attraction:</span>"+
+                            "</div>"+
+                            "<div id='mapLengthSlider'>"+
+                                "<div id='mapLengthHandle' class='ui-slider-handle'></div>"+
+                                "<span class='sliderTitle'>Map length:</span>"+
+                            "</div>"+
+                        "</div>"+
                         "<div id='yAxis'>"+
                             "<div id='yAxisMax'></div>"+
                             "<div id='yAxisLabel' class='axisLabel'></div>"+
-                            "<div id='yAxisMenu' class='dropdown-content'></div>"+
+                            "<table id='yAxisMenu' class='dropdown-content'></table>"+
                             "<div id='yAxisMin'></div>"+
                         "</div>"+
                         "<div id='xAxis'>"+
                             "<div id='xAxisMin'></div>"+
                             "<div id='xAxisLabel' class='axisLabel'></div>"+
-                            "<div id='xAxisMenu' class='dropdown-content'></div>"+
+                            "<table id='xAxisMenu' class='dropdown-content'></table>"+
                             "<div id='xAxisMax'></div>"+
                         "</div>"+
                      "</div>");
