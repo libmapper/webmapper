@@ -861,23 +861,6 @@ class View {
                         
                         self.pie.position(e.pageX - self.frame.left,
                                           e.pageY - self.frame.top, false);
-                        if (dst_table === self.tables.right) 
-                        {
-                            self.pie.rotate(180, false);
-                            self.pie.thickness = self.tables.right.rowHeight;
-                        }
-                        else 
-                        {
-                            self.pie.rotate(0, false);
-                            self.pie.thickness = self.tables.left.rowHeight;
-                        }
-
-                        let pie_min_thickness = 30;
-                        let pie_max_thickness = 75;
-                        self.pie.thickness = self.pie.thickness < pie_min_thickness ?
-                                             pie_min_thickness
-                                           : self.pie.thickness > pie_max_thickness ?
-                                             pie_max_thickness : self.pie.thickness;
                         self.pie.show();
 
                         function get_convergent_option(e) {

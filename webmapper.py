@@ -361,7 +361,7 @@ def new_map(args):
         return;
     else:
         print 'created map: ', srckeys, ' -> ', dstkey
-    if props and props is dict:
+    if props and type(props) is dict:
         set_map_properties(props, map)
     map.push()
 

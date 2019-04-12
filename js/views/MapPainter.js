@@ -73,6 +73,11 @@ class MapPainter {
     {
         if (!this._mapIsValid()) return;
         else if (this.stolen) return;
+        if (this.map.srcs.filter(s => !s.hidden).length === 0 || this.map.dst.hidden) 
+        {   // no need to update, everything will be hidden anyways
+            this._setPaths(duration);
+            return; 
+        }
         this.updatePaths();
         this.updateAttributes();
         this._setPaths(duration);
@@ -211,15 +216,16 @@ class MapPainter {
                 path.toFront();
             }
             path.show();
-            if (this.map.hidden || this.map.dst.hidden || !this.map.dst.view || 
-                (this.map.dst.device && this.map.dst.device.hidden))
-                path.hide();
-            if (this.map.srcs.length == 1 && (this.map.src.hidden || 
-               !this.map.src.view || 
-               (this.map.src.device && this.map.src.device.hidden)))
-                path.hide();
+
+            // One could also check other conditions which would indicate that
+            // a signal is hidden, e.g. is it missing a view? Is its device hidden?
+            // Rather than check a million conditions, one should arguably just make
+            // sure that signals are marked as hidden when appropriate
+            if (this.map.hidden || this.map.dst.hidden) path.hide();
+            else if (this.map.srcs.length == 1 && this.map.src.hidden) path.hide();
+            else if (this.map.srcs.length >= 2 && this.map.srcs.every(s => s.hidden)) path.hide();
             // maps with multiple sources have to manually hide paths by setting stroke
-            // and fill to 'none'
+            // and fill to 'none' if only some of their sources are hidden
         }
     }
 

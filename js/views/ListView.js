@@ -202,12 +202,18 @@ class ListMapPainter extends MapPainter
         let i = 0;
         for (; i < this.map.srcs.length; ++i)
         {
+            if (this.map.srcs[i].hidden) 
+            {
+                this.pathspecs[i] = null;
+                continue;
+            }
             let src = this.map.srcs[i].position;
             this.betweenTables(src, node, i);
         }
         this.betweenTables(node, this.map.dst.position, i);
 
-        this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
+        if (node !== null) this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
+        else this.pathspecs[i+1] = null;
     }
 
     convergent_horizontal()
@@ -216,6 +222,11 @@ class ListMapPainter extends MapPainter
         let i = 0;
         for (; i < this.map.srcs.length; ++i)
         {
+            if (this.map.srcs[i].hidden) 
+            {
+                this.pathspecs[i] = null;
+                continue;
+            }
             src = this.map.srcs[i].position;
             this.horizontal(src, dst, i);
         }
@@ -243,6 +254,11 @@ class ListMapPainter extends MapPainter
         let i = 0;
         for (; i < this.map.srcs.length; ++i)
         {
+            if (this.map.srcs[i].hidden) 
+            {
+                this.pathspecs[i] = null;
+                continue;
+            }
             src = this.map.srcs[i].position;
             this.vertical(src, dst, i);
         }
@@ -275,9 +291,10 @@ class ListMapPainter extends MapPainter
     getNodePosition()
     {
         let dst = this.map.dst.position;
-        let sigs = this.map.srcs.map(s => s.position);
+        let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+        if (sigs.length === 0) return null;
 
-        let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / this.map.srcs.length;
+        let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
         let ymin = yavg < dst.y ? yavg : dst.y;
         let ymax = yavg > dst.y ? yavg : dst.y;
 
@@ -286,9 +303,10 @@ class ListMapPainter extends MapPainter
         let xmax = null;
         for (let s of sigs)
         {
-            if (xmin == null || s.x < xmin) xmin = s.x;
-            if (xmax == null || s.x > xmax) xmax = s.x;
+            if (xmin === null || s.x < xmin) xmin = s.x;
+            if (xmax === null || s.x > xmax) xmax = s.x;
         }
+        if (xmin === null || xmax === null) return null;
         return {x: (xmin + xmax) / 2, y: (ymin + ymax) / 2}
     }
 
