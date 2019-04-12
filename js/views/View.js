@@ -564,7 +564,7 @@ class View {
         this.database.maps.each(function(map) {
             if (!map.view)
                 return;
-            if (signal && map.src != signal && map.dst != signal)
+            if (signal && map.srcs.every(s => s != signal) && map.dst != signal)
                 return;
             else map.view.draw(duration);
         });

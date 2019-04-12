@@ -167,16 +167,18 @@ class GridMapPainter extends ListMapPainter
 
     convergent()
     {
+        this.pathspecs = []; // so that there won't be any spare triangles left lying about
         let dst = this.map.dst.position;
         for (let i = 0; i < this.map.srcs.length; ++i)
         {
             let src = this.map.srcs[i].position;
-            this.oneToOne(src, dst, 2*i);
+            this.oneToOne(src, dst, i);
         }
     }
 
     betweenTables(src, dst, i)
     {
+        let len = this.map.srcs.length;
         let srctodst = src.vx == 1;
         let mid = srctodst ? {x: dst.x, y: src.y} : {x: src.x, y: dst.y};
         let end = srctodst ? {x: dst.x, y: dst.y < src.y ? dst.y : src.y}
@@ -186,20 +188,19 @@ class GridMapPainter extends ListMapPainter
                             ['L', mid.x, mid.y],
                             ['L', end.x, end.y]];
 
-        if (typeof dst.left === 'undefined') // dst is not a table row
+        if (typeof dst.left === 'undefined') // dst is not a table row (i.e. user is making a map)
         {
-            this.pathspecs[i+1] = null;
             return;
         }
 
-        let stroke = this.attributes[i+1]['stroke-width'];
-        if (srctodst) this.pathspecs[i+1] = 
+        let stroke = this.attributes[i+len]['stroke-width'];
+        if (srctodst) this.pathspecs[i+len] = 
             [['M', dst.x, src.top + stroke + 1],
              ['L', dst.left + stroke, src.top + src.height - stroke + 2],
              ['l', dst.width - stroke - 2, 0],
              ['Z']]
 
-        else this.pathspecs[i+1] =
+        else this.pathspecs[i+len] =
             [['M', src.left + stroke, dst.y],
              ['L', src.left + src.width - stroke + 2, dst.top + stroke],
              ['l', 0, dst.height - stroke - 2],
@@ -208,21 +209,22 @@ class GridMapPainter extends ListMapPainter
 
     updateAttributes()
     {
-        this._defaultAttributes(2*this.map.srcs.length);
+        let len = this.map.srcs.length;
+        this._defaultAttributes(2*len);
 
-        for (let i = 0; i < this.map.srcs.length; ++i)
+        for (let i = 0; i < len; ++i)
         {
-            this.attributes[2*i+1]['stroke-dasharray'] = MapPainter.defaultDashes;
-            this.attributes[2*i+1]['arrow-end'] = 'none';
-            this.attributes[2*i+1]['stroke-linejoin'] = 'round';
-            this.attributes[2*i+1]['fill'] = this.map.selected ? 
+            this.attributes[i+len]['stroke-dasharray'] = MapPainter.defaultDashes;
+            this.attributes[i+len]['arrow-end'] = 'none';
+            this.attributes[i+len]['stroke-linejoin'] = 'round';
+            this.attributes[i+len]['fill'] = this.map.selected ? 
                                              MapPainter.selectedColor : 
                                              MapPainter.defaultColor;
 
             let src = this.map.srcs[i].position;
             let dst = this.map.dst.position;
-            if (src.x == dst.x || src.y == dst.y) return;
-            else this.attributes[2*i]['arrow-end'] = 'none';
+            if (src.x == dst.x || src.y == dst.y) continue;
+            else this.attributes[i]['arrow-end'] = 'none';
         }
     }
 }

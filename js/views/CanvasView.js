@@ -416,57 +416,74 @@ class CanvasView extends View {
     }
 }
 
-class CanvasMapPainter extends ListMapPainter
+class CanvasMapPainter extends MapPainter
 {
     constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
 
     updatePaths() {
         // draw a curved line from src to dst
-        let src = this.map.src.position;
-        let dst = this.map.dst.position;
+        let dst = this.map.dst;
+
+        for (let i in this.map.srcs)
+        {
+            let src = this.map.srcs[i];
+            if (src.hidden) continue;
+
+            if (!src.canvasObject && !dst.canvasObject)
+                this.pathspecs[i] = this.vertical(src, dst);
+            else
+                this.pathspecs[i] = this.canvas_path(src, dst);
+        }
+    }
+
+    vertical(src, dst, minoffset = 30, maxoffset = 200)
+    {
+        src = src.position;
+        dst = dst.position;
 
         let src_x, src_cx, src_y, dst_x, dst_cx, dst_y;
 
-        if (!this.map.src.canvasObject && !this.map.dst.canvasObject) {
-            // signals are inline vertically
-            let minoffset = 30;
-            let maxoffset = 200;
-            let offset = Math.abs(src.y - dst.y) * 0.5;
-            if (offset > maxoffset) offset = maxoffset;
-            if (offset < minoffset) offset = minoffset;
+        let offset = Math.abs(src.y - dst.y) * 0.5;
+        if (offset > maxoffset) offset = maxoffset;
+        if (offset < minoffset) offset = minoffset;
 
-            src_x = dst_x = src.x * this.canvas.zoom + this.canvas.pan.x;
-            src_cx = dst_cx = (src.x + offset) * this.canvas.zoom + this.canvas.pan.x;
-            src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
-            dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
+        src_x = dst_x = src.x * this.canvas.zoom + this.canvas.pan.x;
+        src_cx = dst_cx = (src.x + offset) * this.canvas.zoom + this.canvas.pan.x;
+        src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
+        dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
+
+        return [['M', src_x, src_y], ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
+    }
+
+    canvas_path(src, dst)
+    {
+        let srcPos = src.position;
+        let dstPos = dst.position;
+        let src_x, src_cx, src_y, dst_x, dst_cx, dst_y;
+
+        if (src.canvasObject) {
+            let offset = srcPos.width * 0.5;
+            src_x = srcPos.left + offset;
+            src_cx = srcPos.left + offset + 200;
+            src_y = srcPos.top;
         }
         else {
-            if (this.map.src.canvasObject) {
-                let offset = src.width * 0.5;
-                src_x = src.left + offset;
-                src_cx = src.left + offset + 200;
-                src_y = src.top;
-            }
-            else {
-                src_x = src.x * this.canvas.zoom + this.canvas.pan.x;
-                src_cx = src_x + src.width * this.canvas.zoom * 0.5;
-                src_y = src.y * this.canvas.zoom + this.canvas.pan.y;
-            }
-
-            if (this.map.dst.canvasObject) {
-                let offset = dst.width * -0.5;
-                dst_x = dst.left + offset;
-                dst_cx = dst.left + offset - 200;
-                dst_y = dst.top;
-            }
-            else {
-                dst_x = dst.x * this.canvas.zoom + this.canvas.pan.x;
-                dst_cx = dst_x + dst.width * this.canvas.zoom * 0.5;
-                dst_y = dst.y * this.canvas.zoom + this.canvas.pan.y;
-            }
+            src_x = srcPos.x * this.canvas.zoom + this.canvas.pan.x;
+            src_cx = src_x + srcPos.width * this.canvas.zoom * 0.5;
+            src_y = srcPos.y * this.canvas.zoom + this.canvas.pan.y;
         }
 
-        this.pathspecs[0] = [['M', src_x, src_y],
-                             ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
+        if (dst.canvasObject) {
+            let offset = dstPos.width * -0.5;
+            dst_x = dstPos.left + offset;
+            dst_cx = dstPos.left + offset - 200;
+            dst_y = dstPos.top;
+        }
+        else {
+            dst_x = dstPos.x * this.canvas.zoom + this.canvas.pan.x;
+            dst_cx = dst_x + dstPos.width * this.canvas.zoom * 0.5;
+            dst_y = dstPos.y * this.canvas.zoom + this.canvas.pan.y;
+        }
+        return [['M', src_x, src_y], ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
     }
 }
