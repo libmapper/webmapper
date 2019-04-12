@@ -20,8 +20,8 @@ class Mapper
         if (this._mapExists(srckey, dstkey)) return;
         else
         {
-            this._stage([srckey], dstkey);
             this._map([srckey], dstkey, props);
+            this._stage([srckey], dstkey);
         }
     }
 
@@ -97,8 +97,12 @@ class ConvergentMapper
         // define the supported methods of convergent mapping here
         this.method = {sum: 'sum', 
                        product: 'product', 
-                       switchoid: 'switchoid', 
-                       'default': 'default'};
+                       average: 'average', 
+                       default: 'default'};
+        this.icon = {sum:     {black: 'images/convergent_add_icon_black.png', white: 'images/convergent_add_icon_white.png'},
+                     product: {black: 'images/convergent_mul_icon_black.png', white: 'images/convergent_mul_icon_white.png'},
+                     average: {black: 'images/convergent_avg_icon_black.png', white: 'images/convergent_avg_icon_white.png'},
+                     default: {black: 'images/convergent_default_icon_black.png', white: 'images/convergent_default_icon_white.png'}};
     }
 
     valid_method(method)
@@ -140,25 +144,74 @@ class ConvergentMapper
         if (!this.valid_method(method)) {
             console.log("error: unexpected convergent method", method);
         }
+        let expr = null;
         switch (method) 
         {
             case this.method.sum:
-
+                expr = this._sum(srckey, dstmap);
+                break;
             case this.method.product:
-            case this.method.switchoid:
+                expr = this._product(srckey, dstmap);
+                break;
+            case this.method.average:
+                expr = this._average(srckey, dstmap);
+                break;
             case this.method.default:
             default:
-                this._sum(srckey, dstmap);
-                return;
-                break;
         }
+        if (expr !== null) this._converge(srckey, dstmap, {expression: expr});
+        else this._converge(srckey, dstmap);
     }
 
+    // (the existing expression) + (src scaled to dst range)
     _sum(srckey, dstmap)
     {
-        let expr = dstmap.expression;
-        expr += '+x' + dstmap.srcs.length;
-        this._converge(srckey, dstmap, {expression: expr});
+        let [src, dst, expr] = this._prep(srckey, dstmap);
+        let newx;
+        if (this._signals_have_bounds([src, dst]))
+            newx = ConvExpr.scaled(src.min, src.max, dst.min, dst.max, 'new');
+        else newx = 'new'
+        return 'y='+ConvExpr.reindex(expr+'+'+newx, srckey, dstmap);
+    }
+
+    // (the existing expression) * (src scaled to [0,1] range)
+    _product(srckey, dstmap)
+    {
+        let [src, dst, expr] = this._prep(srckey, dstmap);
+        let newx;
+        if (this._signals_have_bounds([src, dst]))
+            newx = ConvExpr.zero_to_one_scaled(src.min, src.max, 'new');
+        else newx = 'new'
+        newx = ConvExpr.paren_wrap(newx);
+        expr = ConvExpr.paren_wrap(expr);
+        return 'y='+ConvExpr.reindex(expr+'*'+newx, srckey, dstmap);
+    }
+
+    // average of the normalized signals scaled to dst range
+    _average(srckey, dstmap)
+    {
+        let [src, dst, expr] = this._prep(srckey, dstmap);
+        let srcs = dstmap.srcs.concat([src]).sort();
+
+        // at time of writing, the default expression assigned by libmapper is a simple
+        // average of the src signals not taking their bounds into account. If any of
+        // the signals in the map are missing min and max properties, default to that
+        if (!this._signals_have_bounds(srcs.concat([dst]))) return null; 
+
+        expr = 'y=(';
+        let offset = 0;
+        for (let i in srcs)
+        {
+            let src = srcs[i];
+            let x = 'x'+i;
+            let [b, m] = ConvExpr.zero_to_one_params(src.min, src.max);
+            offset += b;
+            expr += m.toString()+'*'+x+'+';
+        }
+        expr += offset.toString() + ')';
+        expr += '*' + (dst.max - dst.min).toString() + '/' + srcs.length;
+        expr += '+' + dst.min.toString();
+        return expr;
     }
 
     _converge(srckey, dstmap, props)
@@ -173,8 +226,28 @@ class ConvergentMapper
         // the existing one
 
         setTimeout(function() {
-            this.mapper._map(srckeys, dstmap.dst.key);
+            this.mapper._map(srckeys, dstmap.dst.key, props);
         }, 750);
+    }
+
+    _prep(srckey, dstmap)
+    {
+        let src = database.find_signal(srckey);
+        let dst = dstmap.dst;
+        if (!src) 
+        {
+            console.log('error creating convergent map, no src matching', srckey);
+            return;
+        }
+
+        let expr = dstmap.expression.substring(2);
+        if (dstmap.srcs.length == 1) expr = ConvExpr.replace(expr, 'x', 'x0');
+        return [src, dst, expr];
+    }
+
+    _signals_have_bounds(signals)
+    {
+        return signals.every(sig => typeof sig.min !== 'undefined' && typeof sig.max !== 'undefined');
     }
 
     _overlapWithExistingMap(srckeys, dstkey, props)
@@ -210,6 +283,80 @@ class ConvergentMapper
         });
         return overlapmap;
     }
+}
+
+// helper class for composing expressions for convergent maps
+class ConvExpr
+{
+    constructor() {}
+
+    static scaled(xmin, xmax, ymin, ymax, x)
+    {
+        let [inneroffset, innerslope] = ConvExpr.zero_to_one_params(xmin, xmax);
+        let outerslope = ymax - ymin;
+        let outeroffset = ymin;
+        let offset = inneroffset*outerslope + outeroffset;
+        let slope = innerslope*outerslope;
+        if (isNaN(offset) || isNaN(slope))
+            console.log('NaN error');
+        return ConvExpr.offset_slope(offset, slope, x);
+    }
+
+    // returns a string in the for m*x+b so that an x with domain [min, max] will be
+    // scaled to a y with the range [0,1]
+    static zero_to_one_scaled(min, max, x)
+    {
+        let [offset, slope] = ConvExpr.zero_to_one_params(min, max);
+        if (isNaN(offset) || isNaN(slope))
+            console.log('NaN error');
+        return ConvExpr.offset_slope(offset, slope, x);
+    }
+
+    static zero_to_one_params(min, max)
+    {
+        let offset = min / (max - min);
+        let slope  = 1 / (max - min);
+        return [offset, slope];
+    }
+
+    static offset_slope(offset, slope, x)
+    {
+        return offset.toString() + '*' + x + '+' + slope.toString();
+    }
+
+    static paren_wrap(str)
+    {
+        return '('+str+')';
+    }
+
+    static reindex(expr, srckey, dstmap, srcexprname = 'new')
+    {
+        let srcs = dstmap.srcs.map(s => s.key).concat([srckey]).sort();
+        let idx = srcs.indexOf(srckey);
+        for (let i = 0; i < dstmap.srcs.length; ++i)
+        {
+            if (i < idx) continue;
+            expr = ConvExpr.replace(expr, 'x'+i, 'x'+(i+1));
+        }
+        return ConvExpr.replace(expr, srcexprname, 'x'+idx);
+    }
+
+    static replace(expr, key, newkey)
+    {
+        let idxs = [];
+        let idx = expr.indexOf(key);
+        while(idx !== -1) 
+        {
+            idxs.push(idx);
+            idx = expr.indexOf(key,idx+1);
+        }
+        for (let idx of idxs)
+        {
+            expr = expr.substring(0,idx) + newkey + expr.substring(idx+key.length);
+        }
+        return expr;
+    }
+
 }
 
 var mapper = new Mapper(); // make global instance

@@ -8,14 +8,17 @@
 //      and update the appearance of the Pie to highlight the current selection
 // call hide() when you're done to make the Pie invisible
 
+// TODO: devise a way to ensure that the pie is drawn on top of HTML such as signal
+// tables, e.g. give the menu its own SVG canvas element on top of everything else?
+
 class Pie
 {
     constructor(canvas, slices, x=0, y=0) 
     {
         this.canvas = canvas;
-        this.inner_radius = 40;
-        this.thickness = 60;
-        this.spacing_angle = 2;
+        this.inner_radius = 20;
+        this.thickness = 90;
+        this.spacing_angle = 4;
         this.glyph_margin = 2;
         this.position(x, y, false); 
         this.rotate(0, false);
@@ -81,7 +84,11 @@ class Pie
 
         let vec = {'x': x - this.x, 'y': y - this.y};
         let magn = norm(vec.x, vec.y);
-        if (magn < this.inner_radius) return null;
+        if (magn < this.inner_radius) 
+        {
+            this._paint_all(); // to ensure no hightlight
+            return null;
+        }
 
         let selected = this._slices[0];
         let angle = this._vec_to_angle(vec, magn);
@@ -98,7 +105,7 @@ class Pie
         {
             let item = Math.floor((magn - this.inner_radius) / this.thickness);
             if (item >= selected.items.length) item = selected.items.length - 1;
-            this.highlight(selected, item, strong);
+            this.highlight(selected, item);
             return selected.items[item].name;
         }
         else return null;
@@ -126,7 +133,7 @@ class Pie
     highlight(slice, itemidx, strong = false)
     {
         this._paint_all();
-        if (slice.color !== 'none') slice.arc.attr('stroke', strong ? 'black' : 'white');
+        if (slice.color !== 'none') slice.arc.attr('stroke', strong ? 'red' : 'black');
         if (slice.items && slice.items[itemidx]) 
             slice.items[itemidx].icon.attr('src', slice.items[itemidx].highlight_img_uri);
     }
@@ -180,13 +187,14 @@ class Pie
         s.arc.attr({'fill': 'none',
                     'stroke': s.color ? s.color : Pie.fill_color,
                     'stroke-width': this.thickness});
+        s.arc.toFront();
         
         if (this.hidden) s.arc.hide();
 
         if (s.items) for (let i in s.items)
         {
             let item = s.items[i];
-            let size = this.thickness - this.glyph_margin;
+            let size = this.thickness*0.75 - this.glyph_margin;
             let vec = {'x': 0, 'y': -(this.inner_radius + this.thickness / 2 + i * this.thickness)};
             vec = this._rotate(vec, degToRad(this._apply_rotation(s.angle)));
             vec.x += this.x - size/2;
@@ -197,6 +205,7 @@ class Pie
                             height: size, width: size, 
                             src:item.default_img_uri});
             if (this.hidden) item.icon.hide();
+            else item.icon.toFront();
         }
 
     }
@@ -282,21 +291,21 @@ Pie.fill_color = 'white'
 
 var ConvergentMappingSlices =
 [
-    {angle: 0,   color: 'rgb(70%,90%,90%)', 
-        items: [{name: 'product', 
-            default_img_uri:'images/console_icon_white.png', 
-            highlight_img_uri:'images/console_icon_black.png'}]},
-    {angle: 90,  color: 'rgb(90%,70%,90%)', 
-        items: [{name: 'sum', 
-            default_img_uri:'images/gear_icon_white.png', 
-            highlight_img_uri:'images/console_icon_black.png'}]},
-    {angle: 180, color: 'rgb(90%,90%,70%)', 
-        items: [{name: 'switchoid', 
-            default_img_uri:'images/graph_icon_white.png', 
-            highlight_img_uri:'images/console_icon_black.png'}]},
-    {angle: 270, color: 'rgb(60%,90%,60%)', 
-        items: [{name: 'default', 
-            default_img_uri:'images/chord_icon_white.png', 
-            highlight_img_uri:'images/console_icon_black.png'}]},
+    {angle: 0,   color: 'white', 
+        items: [{name: mapper.convergent.method.sum, 
+            default_img_uri:mapper.convergent.icon.sum.black,
+            highlight_img_uri:mapper.convergent.icon.sum.white}]},
+    {angle: 90,  color: 'white', 
+        items: [{name: mapper.convergent.method.average, 
+            default_img_uri:mapper.convergent.icon.average.black, 
+            highlight_img_uri:mapper.convergent.icon.average.white}]},
+    {angle: 180, color: 'white', 
+        items: [{name: mapper.convergent.method.default, 
+            default_img_uri:mapper.convergent.icon.default.black, 
+            highlight_img_uri:mapper.convergent.icon.default.white}]},
+    {angle: 270, color: 'white', 
+        items: [{name: mapper.convergent.method.product, 
+            default_img_uri:mapper.convergent.icon.product.black, 
+            highlight_img_uri:mapper.convergent.icon.product.white}]},
 ];
 
