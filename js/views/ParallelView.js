@@ -172,10 +172,14 @@ class ParallelMapPainter extends ListMapPainter
     {
         // adjust node x so that it won't overlap with a device
         let node = super.getNodePosition();
-        if (Math.abs(node.x - this.map.dst.position.x) < 50) 
+        let sigs = this.map.srcs.concat([this.map.dst]);
+        for (let s of sigs)
         {
-            node.x += 50;
-            node.y += 50;
+            if (Math.abs(node.x - s.position.x) < 50) 
+            {
+                node.x += 50;
+                node.y += 50;
+            }
         }
         return node;
     }
