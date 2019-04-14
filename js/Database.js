@@ -293,7 +293,7 @@ function MapperDatabase() {
         let maps = this.maps;
         dev.signals.each(function(sig) {
             maps.each(function(map) {
-                if (sig == map.src || sig == map.dst)
+                if (map.srcs.indexOf(sig) >= 0 || sig == map.dst)
                     maps.remove(map);
             });
         });
@@ -351,7 +351,6 @@ function MapperDatabase() {
         }
         for (var i in maps) {
             let srcs = maps[i].srcs.map(s => findSig(s));
-            let src = srcs[0];
             let dst = findSig(maps[i].dst);
             if (!srcs.every(e => e) || !dst) {
                 console.log("error adding map: couldn't find signals",
@@ -359,7 +358,6 @@ function MapperDatabase() {
                 return;
             }
             maps[i].srcs = srcs;
-            maps[i].src = src;
             maps[i].dst = dst;
 //            maps[i].status = 'active';
             let map = this.maps.add(maps[i]);
@@ -368,35 +366,38 @@ function MapperDatabase() {
                 return;
             }
 
-            let link_key;
-            let rev = false;
-            if (src.device.name < dst.device.name)
-                link_key = src.device.name + '<->' + dst.device.name;
-            else {
-                link_key = dst.device.name + '<->' + src.device.name;
-                rev = true;
-            }
-            let link = this.links.find(link_key);
-            if (!link) {
-                link = this.links.add({'key': link_key,
-                                       'src': rev ? dst.device : src.device,
-                                       'dst': rev ? src.device : dst.device,
-                                       'maps': [map.key],
-                                       'status': map.status});
-                if (src.device.links)
-                    src.device.links.push(link_key);
-                else
-                    src.device.links = [link_key];
-                if (dst.device.links)
-                    dst.device.links.push(link_key);
-                else
-                    dst.device.links = [link_key];
-            }
-            else if (!link.maps.includes(map.key))
-                link.maps.push(map.key);
-            if (link.status != 'active' && map.status == 'active') {
-                link.status = 'active';
-                this.links.cb_func('modified', 'link', link);
+            for (var j in srcs) {
+                let src = srcs[j];
+                let link_key;
+                let rev = false;
+                if (src.device.name < dst.device.name)
+                    link_key = src.device.name + '<->' + dst.device.name;
+                else {
+                    link_key = dst.device.name + '<->' + src.device.name;
+                    rev = true;
+                }
+                let link = this.links.find(link_key);
+                if (!link) {
+                    link = this.links.add({'key': link_key,
+                                           'src': rev ? dst.device : src.device,
+                                           'dst': rev ? src.device : dst.device,
+                                           'maps': [map.key],
+                                           'status': map.status});
+                    if (src.device.links)
+                        src.device.links.push(link_key);
+                    else
+                        src.device.links = [link_key];
+                    if (dst.device.links)
+                        dst.device.links.push(link_key);
+                    else
+                        dst.device.links = [link_key];
+                }
+                else if (!link.maps.includes(map.key))
+                    link.maps.push(map.key);
+                if (link.status != 'active' && map.status == 'active') {
+                    link.status = 'active';
+                    this.links.cb_func('modified', 'link', link);
+                }
             }
         }
     }
@@ -404,24 +405,27 @@ function MapperDatabase() {
         map = this.maps.find(map.key);
         if (!map)
             return;
-        let link_key;
-        if (map.src.device.name < map.dst.device.name)
-            link_key = map.src.device.name + '<->' + map.dst.device.name;
-        else
-            link_key = map.dst.device.name + '<->' + map.src.device.name;
-        let link = this.links.find(link_key);
-        if (link) {
-            let index = link.maps.indexOf(map.key);
-            if (index > -1)
-                link.maps.splice(index, 1);
-            if (link.maps.length == 0) {
-                index = link.src.links.indexOf(link_key);
+        for (var j in map.srcs) {
+            let src = map.srcs[j];
+            let link_key;
+            if (src.device.name < map.dst.device.name)
+                link_key = src.device.name + '<->' + map.dst.device.name;
+            else
+                link_key = map.dst.device.name + '<->' + src.device.name;
+            let link = this.links.find(link_key);
+            if (link) {
+                let index = link.maps.indexOf(map.key);
                 if (index > -1)
-                    link.src.links.splice(index, 1);
-                index = link.dst.links.indexOf(link_key);
-                if (index > -1)
-                    link.dst.links.splice(index, 1);
-                this.links.remove(link);
+                    link.maps.splice(index, 1);
+                if (link.maps.length == 0) {
+                    index = link.src.links.indexOf(link_key);
+                    if (index > -1)
+                        link.src.links.splice(index, 1);
+                    index = link.dst.links.indexOf(link_key);
+                    if (index > -1)
+                        link.dst.links.splice(index, 1);
+                    this.links.remove(link);
+                }
             }
         }
         this.maps.remove(map);
@@ -587,8 +591,6 @@ function MapperDatabase() {
             if (!map.view)
                 return;
             let m = {'sources': [], 'destinations': []};
-            let src = {};
-            let dst = {};
             for (var attr in map) {
                 switch (attr) {
                     // ignore a few properties
@@ -596,13 +598,17 @@ function MapperDatabase() {
                     case 'status':
                     case 'key':
                         break;
-                    case 'src':
-                        src.name = map.src.key;
-                        src.direction = map.src.direction;
+                    case 'srcs':
+                        for (var i in map.srcs) {
+                            m.sources.push({'name': map.srcs[i].key,
+                                            'direction': map.srcs[i].direction});
+                        }
                         break;
                     case 'dst':
                         dst.name = map.dst.key;
                         dst.direction = map.dst.direction;
+                        m.destinations.push({'name': map.dst.key,
+                                             'direction': map.dst.direction});
                         break;
                     case 'expression':
                         // need to replace x and y variables with signal references
@@ -643,8 +649,6 @@ function MapperDatabase() {
                         break;
                 }
             }
-            m.sources.push(src);
-            m.destinations.push(dst);
             file.mapping.maps.push(m);
             numMaps++;
         });

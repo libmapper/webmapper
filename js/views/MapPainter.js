@@ -24,7 +24,7 @@ class MapPainter {
     updatePaths()
     {
         // draw a curved line from src to dst
-        let src = this.map.src.position;
+        let src = this.map.srcs[0].position;
         let dst = this.map.dst.position;
 
         let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
@@ -137,7 +137,7 @@ class MapPainter {
     _mapIsValid()
     {
         if (   !this.map
-            || !this.map.src || !this.map.src.position 
+            || !this.map.srcs[0] || !this.map.srcs[0].position
             || !this.map.dst || !this.map.dst.position)
         {
             console.log('error drawing map: map missing src or dst position', this.map);
@@ -222,7 +222,7 @@ class MapPainter {
             // Rather than check a million conditions, one should arguably just make
             // sure that signals are marked as hidden when appropriate
             if (this.map.hidden || this.map.dst.hidden) path.hide();
-            else if (this.map.srcs.length == 1 && this.map.src.hidden) path.hide();
+            else if (this.map.srcs.length == 1 && this.map.srcs[0].hidden) path.hide();
             else if (this.map.srcs.length >= 2 && this.map.srcs.every(s => s.hidden)) path.hide();
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none' if only some of their sources are hidden

@@ -183,7 +183,7 @@ class HiveMapPainter extends MapPainter
     }
 
     updatePaths() {
-        let src = this.map.src.position;
+        let src = this.map.srcs[0].position;
         let dst = this.map.dst.position;
         let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
         let base_mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
