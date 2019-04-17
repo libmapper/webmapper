@@ -321,7 +321,7 @@ class ConvExpr
 
     static offset_slope(offset, slope, x)
     {
-        return offset.toString() + '*' + x + '+' + slope.toString();
+        return slope.toString() + '*' + x + '+' + offset.toString();
     }
 
     static paren_wrap(str)
