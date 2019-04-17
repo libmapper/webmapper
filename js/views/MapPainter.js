@@ -21,20 +21,31 @@ class MapPainter {
     // only be called if the map is in a valid state according to the
     // _mapIsValid() function. See draw().
 
-    updatePaths()
+    oneToOne(src, dst, i)
     {
         // draw a curved line from src to dst
-        let src = this.map.srcs[0].position;
-        let dst = this.map.dst.position;
-
         let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
         let origin = {x: this.frame.width * 0.5, y: this.frame.height * 0.5};
 
         mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
         mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
 
-        this.pathspecs[0] = [['M', src.x, src.y],
+        this.pathspecs[i] = [['M', src.x, src.y],
                              ['S', mid.x, mid.y, dst.x, dst.y]];
+    }
+
+    updatePaths()
+    {
+        let i = 0, len = this.map.srcs.length;
+        let dst = this.map.dst.position;
+        let node = len > 1 ? this.getNodePosition() : dst;
+        for (; i < len; i++) {
+            this.oneToOne(this.map.srcs[i].position, node, i);
+        }
+        if (len > 1) {
+            this.oneToOne(node, dst, i);
+            this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
+        }
     }
 
     // Updates the properties of the attributes object
@@ -227,6 +238,34 @@ class MapPainter {
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none' if only some of their sources are hidden
         }
+    }
+
+    getNodePosition(offset)
+    {
+        let dst = this.map.dst.position;
+        let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+        if (sigs.length === 0) return null;
+        sigs = sigs.concat([dst]);
+
+        let x = sigs.map(s => s.x).reduce((accum, s) => accum + s) / sigs.length;
+        let y = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
+
+        if (offset) {
+            if (x === dst.x)
+                x += offset * dst.vx;
+            if (y === dst.y)
+                y += offset * dst.vy;
+        }
+
+        return {x: x, y: y};
+    }
+
+    circle_spec(x, y, radius = 10)
+    {
+        return [['M', x - radius, y],
+                ['A', radius, radius, 0, 0, 0, x + radius, y],
+                ['A', radius, radius, 0, 0, 0, x - radius, y],
+                ['A', radius, radius, 0, 0, 0, x + radius, y]]; // repeated in case of shortening in e.g. parallel view
     }
 
     // copy the paths from another painter e.g. before replacing it

@@ -363,7 +363,6 @@ class View {
                 if (!self.newMap) {
                     self.newMap =
                         {
-                            'src': sig,
                             'srcs': [sig],
                             'dst': {'position': {'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
                             'selected': true,
@@ -476,7 +475,7 @@ class View {
                 if (!self.draggingFrom) {
                     self.tooltip.showTable(
                         "Map", {
-                            source: map.src.key,
+                            source: map.srcs.map(s => s.key).join(', '),
                             destination: map.dst.key,
                             mode: map.mode,
                             expression: map.expression,
@@ -495,7 +494,7 @@ class View {
     updateMaps() {
         let self = this;
         this.database.maps.each(function(map) {
-            map.hidden = map.src.hidden || map.dst.hidden;
+            map.hidden = map.srcs.some(s => s.hidden) || map.dst.hidden;
             if (map.hidden) {
                 remove_object_svg(map);
                 return;
@@ -667,7 +666,6 @@ class View {
 
                 self.newMap = 
                 {
-                    'src': self.draggingFrom,
                     'srcs': [self.draggingFrom],
                     'dst': {position: {x: 0, y: 0}},
                     'selected': true

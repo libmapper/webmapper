@@ -219,9 +219,18 @@ class ConsoleView extends View {
                             echo('Maps ('+mapCount+'):');
                             self.database.maps.each(function (map) {
                                 let s = ' '+mapIdx+') ';
-                                color = Raphael.hsl(map.src.device.hue, 1, 0.5);
-                                s += '[[;'+color+';]'+map.src.device.name+'/'+map.src.name+']';
-                                s += '[[;white;]->]';
+                                let len = map.srcs.length;
+                                if (len > 1)
+                                    s += '[[;white;]\[]';
+                                for (var i in map.srcs) {
+                                    color = Raphael.hsl(map.srcs[i].device.hue, 1, 0.5);
+                                    s += '[[;'+color+';]'+map.srcs[i].device.name+'/'+map.srcs[i].name+']';
+                                    if (i < len-1)
+                                        s += '[[;white;],]';
+                                }
+                                if (len > 1)
+                                    s += '[[;white;]\\]';
+                                s += ' [[;white;]->] ';
                                 color = Raphael.hsl(map.dst.device.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+map.dst.device.name+'/'+map.dst.name+']';
                                 echo(s);
@@ -281,7 +290,8 @@ class ConsoleView extends View {
                             let index = 0;
                             self.database.maps.each(function(map) {
                                 if (++index == command[1]) {
-                                    mapper.unmap(map.src.key, map.dst.key);
+                                    mapper.unmap(map.srcs.map(s => s.key),
+                                                 map.dst.key);
                                 }
                             });
                         }

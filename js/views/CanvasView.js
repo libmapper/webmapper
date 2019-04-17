@@ -142,6 +142,8 @@ class CanvasView extends View {
                 if (self.dragging == 'obj') {
                     p.left = x1 + p.drag_offset.x;
                     p.top = y1 + p.drag_offset.y;
+                    p.x = p.left + p.width * 0.5;
+                    p.y = p.top + p.height * 0.5;
                     c.left = p.left;
                     c.top = p.top;
                     self.drawSignal(sig);
@@ -366,6 +368,8 @@ class CanvasView extends View {
                     }
                     p.left = (e.pageX - self.frame.left) * self.canvas.zoom + self.canvas.pan.x;
                     p.top = (e.pageY - self.frame.top) * self.canvas.zoom + self.canvas.pan.y;
+                    p.x = p.left + p.width * 0.5;
+                    p.y = p.top + p.height * 0.5;
                     c.left = p.left;
                     c.top = p.top;
                     self.drawSignal(sig, 0);
@@ -421,18 +425,30 @@ class CanvasMapPainter extends MapPainter
     constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
 
     updatePaths() {
-        // draw a curved line from src to dst
         let dst = this.map.dst;
-
-        for (let i in this.map.srcs)
-        {
-            let src = this.map.srcs[i];
-            if (src.hidden) continue;
-
+        if (this.map.srcs.length === 1) {
+            // draw a curved line from src to dst
+            let src = this.map.srcs[0];
             if (!src.canvasObject && !dst.canvasObject)
-                this.pathspecs[i] = this.vertical(src, dst);
+                this.pathspecs[0] = this.vertical(src, dst);
             else
-                this.pathspecs[i] = this.canvas_path(src, dst);
+                this.pathspecs[0] = this.canvas_path(src, dst);
+        }
+        else {
+            let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+            sigs = sigs.concat([dst]);
+            let xavg = sigs.map(s => s.x).reduce((accum, s) => accum + s) / sigs.length;
+            let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
+            let node = this.getNodePosition(50);
+            node.width = 20;
+            let i = 0;
+            for (; i < this.map.srcs.length; i++) {
+                let src = this.map.srcs[i];
+                if (src.hidden) continue;
+                this.pathspecs[i] = this.canvas_path(src, {position: node});
+            }
+            this.pathspecs[i] = this.canvas_path({position: node}, dst);
+            this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
         }
     }
 
@@ -485,5 +501,36 @@ class CanvasMapPainter extends MapPainter
             dst_y = dstPos.y * this.canvas.zoom + this.canvas.pan.y;
         }
         return [['M', src_x, src_y], ['C', src_cx, src_y, dst_cx, dst_y, dst_x, dst_y]];
+    }
+
+    updateAttributes()
+    {
+        let num_srcs = this.map.srcs.length;
+        if (num_srcs > 1)
+        {
+            let hidden = true;
+            this._defaultAttributes(num_srcs + 2);
+            let i = 0;
+            for (; i < num_srcs; ++i)
+            {
+                hidden = hidden && this.map.srcs[i].hidden;
+                if (this.map.srcs[i].hidden) this.attributes[i]['stroke'] = 'none';
+                this.attributes[i]['arrow-end'] = 'none';
+            }
+
+            if (hidden)
+            {
+                this.attributes[i].stroke = 'none';
+                this.attributes[i+1].stroke = 'none';
+            }
+            else
+            {
+                this.attributes[i+1].fill = this.map.selected ?
+                MapPainter.selectedColor :
+                MapPainter.defaultColor;
+                this.attributes[i+1]['arrow-end'] = 'none'
+            }
+        }
+        else this._defaultAttributes();
     }
 }

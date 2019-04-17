@@ -126,17 +126,6 @@ class ListMapPainter extends MapPainter
         super(map, canvas, frame, database);
     }
 
-    updatePaths()
-    {
-        if (this.map.srcs.length > 1) this.convergent();
-        else
-        {
-            let src = this.map.srcs[0].position;
-            let dst = this.map.dst.position;
-            this.oneToOne(src, dst, 0);
-        }
-    }
-
     oneToOne(src, dst, i)
     {
         // skip maps if src or dst y is zero, due to filtering
@@ -152,9 +141,9 @@ class ListMapPainter extends MapPainter
         else this.betweenTables(src, dst, i);
     }
 
-    betweenTables(src, dst, i) 
+    betweenTables(src, dst, i, dstPos)
     {
-        let mpx = (src.x + dst.x) * 0.5;
+        let mpx = dstPos ? dst.x : (src.x + dst.x) * 0.5;
         this.pathspecs[i] = [['M', src.x, src.y],
                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
     }
@@ -183,131 +172,6 @@ class ListMapPainter extends MapPainter
         if (offset > maxoffset) offset = maxoffset;
         if (offset < minoffset) offset = minoffset;
         return offset;
-    }
-
-    convergent()
-    {
-        let dst = this.map.dst.position;
-        let srcs = this.map.srcs.map(src => src.position);
-        if (srcs.map(src => Math.abs(src.x - dst.x) < 1).every(b => b))
-            this.convergent_vertical();
-        else if (srcs.map(src => Math.abs(src.y - dst.y) < 1).every(b => b))
-            this.convergent_horizontal();
-        else this.convergent_betweenTables();
-    }
-
-    convergent_betweenTables()
-    {
-        let node = this.getNodePosition();
-        let i = 0;
-        for (; i < this.map.srcs.length; ++i)
-        {
-            if (this.map.srcs[i].hidden) 
-            {
-                this.pathspecs[i] = null;
-                continue;
-            }
-            let src = this.map.srcs[i].position;
-            this.betweenTables(src, node, i);
-        }
-        this.betweenTables(node, this.map.dst.position, i);
-
-        if (node !== null) this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
-        else this.pathspecs[i+1] = null;
-    }
-
-    convergent_horizontal()
-    {
-        let src, dst = this.map.dst.position;
-        let i = 0;
-        for (; i < this.map.srcs.length; ++i)
-        {
-            if (this.map.srcs[i].hidden) 
-            {
-                this.pathspecs[i] = null;
-                continue;
-            }
-            src = this.map.srcs[i].position;
-            this.horizontal(src, dst, i);
-        }
-        this.horizontal(src, dst, i);
-
-        let furthest_src = null;
-        let furthest_dist = Number.NEGATIVE_INFINITY;
-        for (let s of this.map.srcs)
-        {
-            let src = s.position;
-            let dist = Math.abs(src.x - dst.x);
-            if (dist > furthest_dist || furthest_src === null)
-            {
-                furthest_src = src;
-                furthest_dist = dist;
-            }
-        }
-        let offset = this.offset(furthest_src.x, dst.x) / 4;
-        this.pathspecs[i+1] = this.circle_spec(dst.x, dst.y + offset * dst.vy);
-    }
-
-    convergent_vertical()
-    {
-        let src, dst = this.map.dst.position;
-        let i = 0;
-        for (; i < this.map.srcs.length; ++i)
-        {
-            if (this.map.srcs[i].hidden) 
-            {
-                this.pathspecs[i] = null;
-                continue;
-            }
-            src = this.map.srcs[i].position;
-            this.vertical(src, dst, i);
-        }
-        this.vertical(src, dst, i);
-
-        let furthest_src = null;
-        let furthest_dist = Number.NEGATIVE_INFINITY;
-        for (let s of this.map.srcs)
-        {
-            let src = s.position;
-            let dist = Math.abs(src.y - dst.y);
-            if (dist > furthest_dist || furthest_src === null)
-            {
-                furthest_src = src;
-                furthest_dist = dist;
-            }
-        }
-        let offset = 50;
-        this.pathspecs[i+1] = this.circle_spec(dst.x + offset * dst.vx, dst.y);
-    }
-
-    circle_spec(x, y, radius = 10)
-    {
-        return [['M', x - radius, y],
-                ['A', radius, radius, 0, 0, 0, x + radius, y],
-                ['A', radius, radius, 0, 0, 0, x - radius, y],
-                ['A', radius, radius, 0, 0, 0, x + radius, y]]; // repeated in case of shortening in e.g. parallel view
-    }
-
-    getNodePosition()
-    {
-        let dst = this.map.dst.position;
-        let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
-        if (sigs.length === 0) return null;
-
-        let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
-        let ymin = yavg < dst.y ? yavg : dst.y;
-        let ymax = yavg > dst.y ? yavg : dst.y;
-
-        sigs = sigs.concat([dst]);
-        let xmin = null;
-        let xmax = null;
-        for (let s of sigs)
-        {
-            if (xmin === null || s.x < xmin) xmin = s.x;
-            if (xmax === null || s.x > xmax) xmax = s.x;
-        }
-        if (xmin === null || xmax === null) return null;
-        return {x: (xmin + xmax) / 2, y: (ymin + ymax) / 2}
     }
 
     updateAttributes()
@@ -339,6 +203,10 @@ class ListMapPainter extends MapPainter
             }
         }
         else this._defaultAttributes();
+    }
+
+    getNodePosition() {
+        return super.getNodePosition(50);
     }
 }
 

@@ -591,6 +591,12 @@ function MapperDatabase() {
             if (!map.view)
                 return;
             let m = {'sources': [], 'destinations': []};
+            for (var i in map.srcs) {
+                m.sources.push({'name': map.srcs[i].key,
+                                'direction': map.srcs[i].direction});
+            }
+            m.destinations.push({'name': map.dst.key,
+                                 'direction': map.dst.direction});
             for (var attr in map) {
                 switch (attr) {
                     // ignore a few properties
@@ -598,17 +604,9 @@ function MapperDatabase() {
                     case 'status':
                     case 'key':
                         break;
+                    case 'src':
                     case 'srcs':
-                        for (var i in map.srcs) {
-                            m.sources.push({'name': map.srcs[i].key,
-                                            'direction': map.srcs[i].direction});
-                        }
-                        break;
                     case 'dst':
-                        dst.name = map.dst.key;
-                        dst.direction = map.dst.direction;
-                        m.destinations.push({'name': map.dst.key,
-                                             'direction': map.dst.direction});
                         break;
                     case 'expression':
                         // need to replace x and y variables with signal references
@@ -633,16 +631,16 @@ function MapperDatabase() {
                         if (attr.startsWith('src_')) {
                             let key = attr.slice(4);
                             if (key == 'min' || key == 'max')
-                                src[key + 'imum'] = map[attr];
+                                m.sources[0][key + 'imum'] = map[attr];
                             else
-                                src[key] = map[attr];
+                                m.sources[0][key] = map[attr];
                         }
                         else if (attr.startsWith('dst_')) {
                             let key = attr.slice(4);
                             if (key == 'min' || key == 'max')
-                                dst[key + 'imum'] = map[attr];
+                                m.destinations[0][key + 'imum'] = map[attr];
                             else
-                                dst[key] = map[attr];
+                                m.destinations[0][key] = map[attr];
                         }
                         else
                             m[attr] = map[attr];

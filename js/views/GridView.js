@@ -207,6 +207,16 @@ class GridMapPainter extends ListMapPainter
              ['Z']];
     }
 
+    // disable drawing convergent maps in grid view for now
+    updatePaths()
+    {
+        let i = 0, len = this.map.srcs.length;
+        let dst = this.map.dst.position;
+        for (; i < len; i++) {
+            this.oneToOne(this.map.srcs[i].position, dst, i);
+        }
+    }
+
     updateAttributes()
     {
         let len = this.map.srcs.length;

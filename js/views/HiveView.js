@@ -174,36 +174,26 @@ class HiveView extends View {
     }
 }
 
-class HiveMapPainter extends MapPainter
+class HiveMapPainter extends ListMapPainter
 {
-    constructor(map, canvas, frame, database) 
-    { 
+    constructor(map, canvas, frame, database) {
         super(map, canvas, frame, database); 
         this.shortenPath = 12;
     }
 
-    updatePaths() {
-        let src = this.map.srcs[0].position;
-        let dst = this.map.dst.position;
-        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
-        let base_mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
-
-        let mid = {x: 0, y: 0};
-        for (let i in this.map.srcs)
+    getNodePosition()
+    {
+        // adjust node x so that it won't overlap with a device
+        let node = super.getNodePosition();
+        let sigs = this.map.srcs.concat([this.map.dst]);
+        for (let s of sigs)
         {
-            let src = this.map.srcs[i].position;
-
-            if (this.map.srcs[i].device == this.map.dst.device) {
-                // signals belong to same device
-                mid.x = base_mid.x + (src.y - dst.y) * 0.5;
-                mid.y = base_mid.y + (src.x - dst.x) * 0.5;
+            if (distance(node.x, node.y, s.position.x, s.position.y) < 200)
+            {
+                node.x += 50;
+                node.y += 50;
             }
-            else {
-                mid.x = base_mid.x + (base_mid.x - origin.x) * this.midPointInflation;
-                mid.y = base_mid.y + (base_mid.y - origin.y) * this.midPointInflation;
-            }
-            this.pathspecs[i] = [['M', src.x, src.y],
-                                 ['S', mid.x, mid.y, dst.x, dst.y]];
         }
+        return node;
     }
 }
