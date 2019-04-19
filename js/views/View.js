@@ -870,6 +870,7 @@ class View {
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
         this.tooltip.hide(true);
+        this.database.maps.filter(m => m.selected).each(m => m.view.cleanup());
     }
 
     // sets the map painter for the view and converts existing map views to use
