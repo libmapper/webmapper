@@ -440,16 +440,52 @@ class CanvasMapPainter extends MapPainter
             let xavg = sigs.map(s => s.x).reduce((accum, s) => accum + s) / sigs.length;
             let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
             let node = this.getNodePosition(50);
-            node.width = 20;
+            if (sigs.every(s => !s.canvasObject))
+                node.x += 50;
+            node.width = 0;
+            node.left = node.x;
+            node.top = node.y;
             let i = 0;
             for (; i < this.map.srcs.length; i++) {
                 let src = this.map.srcs[i];
                 if (src.hidden) continue;
-                this.pathspecs[i] = this.canvas_path(src, {position: node});
+                this.pathspecs[i] = this.canvas_path(src, {position: node,
+                                                           canvasObject: true});
             }
-            this.pathspecs[i] = this.canvas_path({position: node}, dst);
+            this.pathspecs[i] = this.canvas_path({position: node,
+                                                  canvasObject: true}, dst);
             this.pathspecs[i+1] = this.circle_spec(node.x, node.y);
         }
+    }
+
+    getNodePosition(offset)
+    {
+        let self = this;
+        function canvasPos(o) {
+            let x = o.position.x;
+            let y = o.position.y;
+            if (!o.canvasObject) {
+                x = x * self.canvas.zoom + self.canvas.pan.x;
+                y = y * self.canvas.zoom + self.canvas.pan.y;
+            }
+            return {x: x, y: y};
+        }
+        let dst = this.map.dst;
+        let sigs = this.map.srcs.filter(s => !s.hidden);
+        if (sigs.length === 0) return null;
+        sigs = sigs.concat([dst]);
+
+        let x = sigs.map(s => canvasPos(s).x).reduce((accum, s) => accum + s) / sigs.length;
+        let y = sigs.map(s => canvasPos(s).y).reduce((accum, s) => accum + s) / sigs.length;
+
+        if (offset) {
+            if (x === dst.x)
+                x += offset * dst.vx;
+            if (y === dst.y)
+                y += offset * dst.vy;
+        }
+
+        return {x: x, y: y};
     }
 
     vertical(src, dst, minoffset = 30, maxoffset = 200)
@@ -480,7 +516,7 @@ class CanvasMapPainter extends MapPainter
         if (src.canvasObject) {
             let offset = srcPos.width * 0.5;
             src_x = srcPos.left + offset;
-            src_cx = srcPos.left + offset + 200;
+            src_cx = srcPos.left + offset * 2;
             src_y = srcPos.top;
         }
         else {
@@ -492,7 +528,7 @@ class CanvasMapPainter extends MapPainter
         if (dst.canvasObject) {
             let offset = dstPos.width * -0.5;
             dst_x = dstPos.left + offset;
-            dst_cx = dstPos.left + offset - 200;
+            dst_cx = dstPos.left + offset * 2;
             dst_y = dstPos.top;
         }
         else {
