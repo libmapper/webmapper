@@ -52,11 +52,6 @@ class View {
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.sigLabel = null;
-
-        if (typeof painter === "undefined")
-            this.setMapPainter(MapPainter);
-        else
-            this.setMapPainter(painter);
     }
 
     // Subclasses should override the behavior of _resize rather than this one
@@ -870,15 +865,14 @@ class View {
         $('svg, .displayTable tbody tr').off('.drawing');
         $('.tableDiv').off('mousedown');
         this.tooltip.hide(true);
-        this.database.maps.filter(m => m.selected).each(m => m.view.cleanup());
     }
 
     // sets the map painter for the view and converts existing map views to use
     // the new painter. This should be called rather than setting the mapPainter
     // property of this manually, which does not update the painter owned by
     // each map
-    setMapPainter(newpainterclass) {
-        this.mapPainter = newpainterclass;
+    setMapPainter(painter) {
+        this.mapPainter = (painter === "undefined") ? MapPainter : painter;
         let self = this;
         this.database.maps.each(function(map) {
             if (!map.view) return;

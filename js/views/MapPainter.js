@@ -139,7 +139,9 @@ class MapPainter {
             path.undrag();
             path.remove();
             path = null;
-       });
+        });
+        this.labels.forEach(l => l.remove());
+        this.labels = [];
     }
 
     stop() {} unhover() {} undrag() {} animate() {this.remove()} // methods that might get called if the caller doesn't know about the new MapPainter class yet and thinks map.view is a Raphael element
@@ -176,25 +178,6 @@ class MapPainter {
             , 'arrow-start': 'none'
             , 'arrow-end': 'block-wide-long'
             };
-        }
-        if (!this.map.selected || this.map.srcs.length == 1) {
-            for (var i in this.labels)
-                this.labels[i].remove();
-            this.labels = [];
-            return;
-        }
-        // assign labels
-        let attrs = {'font-size': 16,
-                     'opacity': 1,
-                     'fill': 'white',
-                     'pointer-events': 'none'};
-        for (var i = 0; i < this.map.srcs.length; i++) {
-            let l = Raphael.getTotalLength(this.pathspecs[i]);
-            let p = Raphael.getPointAtLength(this.pathspecs[i], 20);
-            if (this.labels.length <= i)
-                this.labels[i] = this.canvas.text(p.x, p.y, 'x'+i).attr(attrs);
-            else
-                this.labels[i].attr({'x': p.x, 'y': p.y});
         }
     }
 
@@ -258,6 +241,26 @@ class MapPainter {
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none' if only some of their sources are hidden
         }
+        if (!this.map.selected || this.map.srcs.length == 1) {
+            this.labels.forEach(l => l.remove());
+            this.labels = [];
+            return;
+        }
+        // assign labels
+        let attrs = {'font-size': 16,
+                     'opacity': 1,
+                     'fill': 'white',
+                     'pointer-events': 'none'};
+        for (var i = 0; i < this.map.srcs.length; i++) {
+            let l = Raphael.getTotalLength(this.pathspecs[i]);
+            let p = Raphael.getPointAtLength(this.pathspecs[i], 20);
+            if (this.labels.length <= i) {
+                this.labels[i] = this.canvas.text(p.x, p.y, 'x'+i).attr(attrs);
+            }
+            else {
+                this.labels[i].attr({'x': p.x, 'y': p.y});
+            }
+        }
         if (this.labels.length) {
             this.labels.forEach(l => l.toFront());
         }
@@ -295,12 +298,8 @@ class MapPainter {
     copy(otherpainter)
     {
         this.paths = otherpainter.paths;
+        this.labels = otherpainter.labels;
         this._highlight = otherpainter._highlight;
-    }
-
-    cleanup() {
-        for (var i in this.labels)
-            this.labels[i].remove();
     }
 }
 
