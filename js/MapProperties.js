@@ -72,18 +72,24 @@ class MapProperties {
             command.send("select_network", e.currentTarget.value);
         });
 
-        //The expression and range input handlers
+        // The range input handler
         $('.topMenu').on({
             keydown: function(e) {
                 e.stopPropagation();
-                if (e.which == 13) { //'enter' key
+                if (e.which == 13 || e.which == 9) { //'enter' or 'tab' key
                     self.setMapProperty($(this).attr('id').split(' ')[0],
                                          this.value);
                 }
             },
             click: function(e) { e.stopPropagation(); },
+            focusout: function(e) {
+                e.stopPropagation();
+                self.setMapProperty($(this).attr('id').split(' ')[0],
+                                    this.value);
+            },
         }, 'input');
 
+        // The expression input handler
         $('.topMenu').on({
             keydown: function(e) {
                 e.stopPropagation();
@@ -101,6 +107,11 @@ class MapProperties {
                     counter = 0;
             },
             click: function(e) { e.stopPropagation(); },
+            focusout: function(e) {
+                e.stopPropagation();
+                self.setMapProperty($(this).attr('id').split(' ')[0],
+                                    this.value);
+            },
         }, 'textarea');
 
         //For the mode buttons
@@ -156,6 +167,7 @@ class MapProperties {
         $('.signalControl').addClass('disabled');
         $('#mapPropsTitle').addClass('disabled');
         $('.calibrate').removeClass('calibratesel');
+        $('.range').removeClass('calibratesel');
         $('.expression').removeClass('waiting');
         $('.ranges').children('*').removeClass('waiting');
     }
@@ -289,14 +301,26 @@ class MapProperties {
                 $("#dst_max").val(dst_max);
         }
 
-        if (src_calibrating == true)
+        if (src_calibrating == true) {
             $("#srcCalibrate").addClass("calibratesel");
-        else if (src_calibrating == false)
+            $("#src_min").addClass("calibratesel");
+            $("#src_max").addClass("calibratesel");
+        }
+        else if (src_calibrating == false) {
             $("#srcCalibrate").removeClass("calibratesel");
-        if (dst_calibrating == true)
+            $("#src_min").removeClass("calibratesel");
+            $("#src_max").removeClass("calibratesel");
+        }
+        if (dst_calibrating == true) {
             $("#dstCalibrate").addClass("calibratesel");
-        else if (dst_calibrating == false)
+            $("#dst_min").addClass("calibratesel");
+            $("#dst_max").addClass("calibratesel");
+        }
+        else if (dst_calibrating == false) {
             $("#dstCalibrate").removeClass("calibratesel");
+            $("#dst_min").removeClass("calibratesel");
+            $("#dst_max").removeClass("calibratesel");
+        }
 
         if (dst_bound_min != null)
             this.set_boundary($("#boundary_min"), dst_bound_min, 0);
@@ -316,7 +340,7 @@ class MapProperties {
         let container = $(this.container);
         let modes = this.mapModeCommands;
         this.database.maps.filter(this.selected).each(function(map) {
-            if (map[key] == value || map[key] == parseFloat(value))
+            if (map[key] && (map[key] == value || map[key] == parseFloat(value)))
                 return;
 
             var msg = {};
@@ -329,13 +353,20 @@ class MapProperties {
             case 'protocol':
                 msg['protocol'] = value;
                 break;
+            case 'srcCalibrate':
+                msg['src_calibrating'] = !map.src_calibrating;
+                break;
             case 'srcRangeSwitch':
                 msg['src_max'] = String(map['src_min']);
                 msg['src_min'] = String(map['src_max']);
+                $("#src_max").addClass('waiting');
+                $("#src_min").addClass('waiting');
                 break;
             case 'dstRangeSwitch':
                 msg['dst_max'] = String(map['dst_min']);
                 msg['dst_min'] = String(map['dst_max']);
+                $("#dst_max").addClass('waiting');
+                $("#dst_min").addClass('waiting');
                 break;
             case 'muted':
                 msg['muted'] = !map['muted'];

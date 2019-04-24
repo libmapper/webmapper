@@ -738,19 +738,27 @@ function MapperDatabase() {
             if (map.destinations[0].bound_min)
                 map.dst_bound_min = map.destinations[0].bound_min;
             if (map.destinations[0].bound_max)
-                map.dst_bound_min = map.destinations[0].bound_max;
+                map.dst_bound_max = map.destinations[0].bound_max;
             if (map.sources[0].calibrating)
                 map.src_calibrating = map.sources[0].calibrating;
             if (map.destinations[0].calibrating)
                 map.dst_calibrating = map.destinations[0].calibrating;
             if (map.sources[0].min)
                 map.src_min = map.sources[0].min;
+            else if (map.sources[0].minimum)
+                map.src_min = map.sources[0].minimum;
             if (map.sources[0].max)
                 map.src_max = map.sources[0].max;
+            else if (map.sources[0].maximum)
+                map.src_max = map.sources[0].maximum;
             if (map.destinations[0].min)
                 map.dst_min = map.destinations[0].min;
+            else if (map.destinations[0].minimum)
+                map.dst_min = map.destinations[0].minimum;
             if (map.destinations[0].max)
                 map.dst_max = map.destinations[0].max;
+            else if (map.destinations[0].maximum)
+                map.dst_max = map.destinations[0].maximum;
             delete map.sources;
             delete map.destinations;
             map.src = src;

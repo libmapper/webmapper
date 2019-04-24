@@ -65,7 +65,7 @@ thead, #networkMenu {
 }
 
 .calibratesel, .setlinearsel {
-    background-color: #9CC2CF;
+    background-color: red;
 }
 
 .tableTitle {
