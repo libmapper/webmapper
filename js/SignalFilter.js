@@ -3,7 +3,7 @@ class SignalFilter{
         this.container = container;
         this.database = database;
         $(this.container).append(
-            "<div id='signalFilterDiv' class='topMenu' style='width:calc(25% - 75px);'>"+
+            "<div id='signalFilterDiv' class='topMenu' style='width:275px'>"+
                 "<div class='topMenuTitle'><strong>FILTER</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div>Sources: "+

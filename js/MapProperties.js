@@ -9,20 +9,20 @@ class MapProperties {
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
 
         $(this.container).append(
-            "<div' class='topMenu' style='width:calc(75% - 170px);'>"+
+            "<div' class='topMenu' style='width:calc(100% - 525px);'>"+
                 "<div id='mapPropsTitle' class='topMenuTitle'><strong>MAP</strong></div>"+
-                "<div id='mapPropsDiv' class='topMenuContainer'></div>"+
+                "<div id='mapPropsDiv' style='position:absolute;left:0px;top:20px;width:100%;height:100%;'></div>"+
             "</div>");
 
         $('#mapPropsDiv').append(
-            "<div style='width:50%'>"+
-                "<div id='modes' class='signalControl disabled' style='width:50%; padding-bottom:5px;'>Mode: </div>"+
-                "<div id='protocols' class='signalControl disabled' style='width:50%; padding-bottom:5px;'>Protocol: </div>"+
-                "<div id='expression' class='signalControl disabled' style='width:100%; padding-top:5px;'>Expression: "+
-                    "<input type='text' id='expression 'class='expression' style='width:calc(100% - 90px)'></input>"+
-                "</div>"+
+            "<div class='topMenuContainer' style='width:190px;height:100%;'>"+
+                "<div id='protocols' class='signalControl disabled'>Protocol: </div>"+
+                "<div id='modes' class='signalControl disabled'>Mode: </div>"+
             "</div>"+
-            "<div id='ranges' style='width:50%'></div>");
+            "<div id='expression' class='signalControl disabled hidden' style='position:absolute;width:calc(100% - 200px);left:200px;top:-20px;height:100%;padding:5px;'>"+
+                "<textarea id='expression 'class='expression' style='width:100%;height:100%;resize:none'></textarea>"+
+            "</div>"+
+            "<div class='hidden' id='ranges' style='position:absolute;top:-20px;width:calc(100% - 200px);padding:5px;'></div>");
         
         //Add the mode controls
         for (var m in this.mapModes) {
@@ -66,6 +66,7 @@ class MapProperties {
 
     _addHandlers() {
         var self = this;
+        var counter = 0;
 
         $('#networkSelection').on('change', function(e) {
             command.send("select_network", e.currentTarget.value);
@@ -82,6 +83,25 @@ class MapProperties {
             },
             click: function(e) { e.stopPropagation(); },
         }, 'input');
+
+        $('.topMenu').on({
+            keydown: function(e) {
+                e.stopPropagation();
+                if (e.which == 13) { //'enter' key
+                    if (counter >= 1) {
+                        console.log('sending updated expression');
+                        self.setMapProperty($(this).attr('id').split(' ')[0],
+                                            this.value);
+                         counter = 0;
+                    }
+                    else
+                        counter += 1;
+                }
+                else
+                    counter = 0;
+            },
+            click: function(e) { e.stopPropagation(); },
+        }, 'textarea');
 
         //For the mode buttons
         $('.topMenu').on("click", '.mode', function(e) {
@@ -130,6 +150,7 @@ class MapProperties {
         $('.mode').removeClass('sel');
         $('.protocol').removeClass('sel');
         $('.topMenu input').val('');
+        $('.topMenu textarea').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
@@ -219,8 +240,17 @@ class MapProperties {
 
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
+            console.log('mode:', mode);
             mode = mode.charAt(0).toUpperCase() + mode.slice(1);
             $("#mode"+mode).addClass("sel");
+            if (mode == 'Linear') {
+                $("#expression").addClass('hidden');
+                $("#ranges").removeClass('hidden');
+            }
+            else {
+                $("#ranges").addClass('hidden');
+                $("#expression").removeClass('hidden');
+            }
         }
 
         if (proto != null && proto != 'multiple') {
@@ -229,6 +259,8 @@ class MapProperties {
 
         if (expression != null) {
             $(".expression").removeClass('waiting');
+            expression = expression.replace(/;;/, '');
+            expression = expression.replace(/;/g, ';\n');
             $(".expression").val(expression);
             if (expression == 'multiple expressions')
                 $(".expression").css({'font-style': 'italic'});
@@ -309,6 +341,7 @@ class MapProperties {
                 msg['muted'] = !map['muted'];
                 break;
             case 'expression':
+                value = value.replace(/\r?\n|\r/g, '');
                 if (value == map.expression)
                     return;
                 msg['expression'] = value;
