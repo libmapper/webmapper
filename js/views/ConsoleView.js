@@ -42,24 +42,6 @@ class ConsoleView extends View {
                                    "<div id='consoleHistory'></div>"+
                                "</div>");
 
-//        function printdevice(terminal, dev)
-//        {
-//            printf(" └─ ");
-//            mapper_device_print(dev);
-//        }
-//
-//        function printlink(terminal, link)
-//        {
-//            printf(" └─ ");
-//            mapper_link_print(link);
-//        }
-//
-//        function printmap(terminal, map)
-//        {
-//            printf(" └─ ");
-//            mapper_map_print(map);
-//        }
-
         jQuery(function($, undefined) {
             $('#consoleHistory').terminal(function(command) {
                 if (command === '')
@@ -419,27 +401,9 @@ class ConsoleView extends View {
         this.mapPane.cy = this.frame.height * 0.5;
     }
 
-    draw(duration) {
-    }
+    draw(duration) {}
 
-    update() {
-        let elements;
-        switch (arguments.length) {
-            case 0:
-                elements = ['maps'];
-                break;
-            case 1:
-                elements = [arguments[0]];
-                break;
-            default:
-                elements = arguments;
-                break;
-        }
-        if (elements.indexOf('maps') >= 0) {
-            this.updateMaps();
-            this.draw(500);
-        }
-    }
+    update() {}
 
     cleanup() {
         super.cleanup();
