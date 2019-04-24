@@ -242,6 +242,7 @@ class ConsoleView extends View {
                                         let key = keys[i];
                                         switch (key) {
                                             case 'src':
+                                            case 'srcs':
                                             case 'dst':
                                             case 'key':
                                             case 'view':

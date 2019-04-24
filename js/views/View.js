@@ -752,6 +752,7 @@ class View {
                             // **required so that you can keep making maps afterwards...
                             self.setTableDrag(); 
                         }
+                        $('svg, .displayTable tbody tr').off('mousemove.drawing');
                     }
                     if (self.snapping_to_map())
                     {
