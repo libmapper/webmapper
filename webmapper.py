@@ -310,10 +310,13 @@ def on_load(arg):
 
 def select_network(newNetwork):
     global db
+    if networkInterfaces['active'] == newNetwork:
+        return
+    db.flush(0)
     networkInterfaces['active'] = newNetwork
     net = mapper.network(networkInterfaces['active'])
-    db.mapper.database(net, mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
-    server.send_command('set_network', newNetwork)
+    db = mapper.database(net)
+    server.send_command("active_network", newNetwork)
 
 def get_networks(arg):
     location = netifaces.AF_INET    # A computer specific integer for internet addresses

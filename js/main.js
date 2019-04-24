@@ -3,6 +3,7 @@ var viewManager;
 var mapProperties;
 var devFilter;
 var saverLoader;
+var netSelector;
 var viewSelector;
 var tooltip;
 
@@ -79,6 +80,8 @@ function init() {
                                  database, viewManager);
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
                                       database, viewManager);
+    netSelector = new NetworkSelector(document.getElementById("TopMenuWrapper"),
+                                      database, viewManager);
 
     // init controller
     initMonitorCommands();
@@ -129,11 +132,11 @@ function init() {
 function initMonitorCommands() {
     command.register("available_networks", function(cmd, args) {
         database.networkInterfaces.available = args;
-        mapProperties.updateNetworkInterfaces(args);
+        netSelector.update();
     });
     command.register("active_network", function(cmd, args) {
         database.networkInterfaces.selected = args
-        mapProperties.updateNetworkInterfaces(args);
+        netSelector.update();
     });
 }
 

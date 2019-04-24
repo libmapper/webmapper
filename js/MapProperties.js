@@ -9,7 +9,7 @@ class MapProperties {
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
 
         $(this.container).append(
-            "<div' class='topMenu' style='width:calc(100% - 525px);'>"+
+            "<div' class='topMenu' style='width:calc(100% - 605px);'>"+
                 "<div id='mapPropsTitle' class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' style='position:absolute;left:0px;top:20px;width:100%;height:100%;'></div>"+
             "</div>");
@@ -143,17 +143,6 @@ class MapProperties {
             if (e.which == 77)
                 self.setMapProperty("muted", null);
         });
-    }
-
-    updateNetworkInterfaces() {
-        $('#networkSelection').children('*').remove();
-        for (var i in this.database.networkInterfaces.available) {
-            let iface = this.database.networkInterfaces.available[i];
-            if (iface == this.database.networkInterfaces.selected)
-                $('#networkSelection').append("<option value='"+iface+"' selected>"+iface+"</option>");
-            else
-                $('#networkSelection').append("<option value='"+iface+"'>"+iface+"</option>");
-        }
     }
 
     // clears and disables the map properties bar
