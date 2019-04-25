@@ -33,7 +33,9 @@ class ViewManager
         this.database.maps.each(function(map) { self._update_maps(map, 'added'); });
 
         this.currentView = null;
-        this.switch_view('chord');
+        setTimeout(function() {
+            self.switch_view('chord');
+        }, 100);
     }
 
     zoom(x, y, delta) {
@@ -316,12 +318,6 @@ class ViewManager
                     if (e.metaKey == true) { // Select all 'cmd+a'
                         e.preventDefault();
                         select_all_maps();
-                    }
-                    break;
-                case 65:
-                    if (e.metaKey == true) {
-                        e.preventDefault();
-                        console.log('should add tab');
                     }
                     break;
                 case 27:

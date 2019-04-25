@@ -25,6 +25,9 @@ class ChordView extends View {
     }
 
     setup() {
+        // disable signal filter
+        $('#signalFilterDiv').addClass('disabled');
+
         // hide tables
         this.tables.left.adjust(this.frame.width * -0.4, 0, 0,
                                 this.frame.height, 0, 500, null, 0, 0);
@@ -647,6 +650,8 @@ class ChordView extends View {
             dev.view.unclick();
             dev.view.unhover();
         });
+
+        $('#signalFilterDiv').removeClass('disabled');
 
         // clean up any objects created only for this view
     }
