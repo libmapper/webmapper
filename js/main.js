@@ -1,7 +1,7 @@
 "use strict";
 var viewManager;
 var mapProperties;
-var devFilter;
+var sigFilter;
 var saverLoader;
 var netSelector;
 var viewSelector;
@@ -76,7 +76,7 @@ function init() {
                                   database, viewManager);
     viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"),
                                     viewManager);
-    devFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
+    sigFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
                                  database, viewManager);
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
                                       database, viewManager);
@@ -173,7 +173,7 @@ function initViewCommands()
         }
 
         let new_view = null;
-                 let mp;
+        let mp;
         switch (e.which) {
             case 49:
                 /* 1 */
@@ -229,6 +229,11 @@ function initViewCommands()
                 e.preventDefault();
                 mp = viewManager.view.mapPane;
                 viewManager.zoom(mp.cx, mp.cy, 10);
+                break;
+            case 70:
+                // "find": focus on signal filter
+                e.preventDefault();
+                sigFilter.activate();
                 break;
             default:
 //                console.log('key:', e.which);

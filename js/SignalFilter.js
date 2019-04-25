@@ -1,7 +1,8 @@
 class SignalFilter{
-    constructor(container, database, viewmanager) {
+    constructor(container, database, viewManager) {
         this.container = container;
         this.database = database;
+        this.viewManager = viewManager;
         $(this.container).append(
             "<div id='signalFilterDiv' class='topMenu' style='width:275px'>"+
                 "<div class='topMenuTitle'><strong>FILTER</strong></div>"+
@@ -18,17 +19,30 @@ class SignalFilter{
         let self = this;
         $('#srcSearch, #dstSearch').on({
             keydown: function(e) {
+                e.stopPropagation();
+                if (e.metaKey == true) {
+                    e.preventDefault();
+                    if (e.which == 70) {
+                        // remove focus
+                        $(this).blur();
+                        self.activate();
+                    }
+                }
                 // check enter or escape
-                if (e.which == 13 || e.which == 27) {
+                else if (e.which == 13 || e.which == 27) {
                     // remove focus
                     $(this).blur();
-                    e.stopPropagation();
                 }
             },
             input: function(e) {
                 let id = e.currentTarget.id;
-                viewmanager.filterSignals(id, $('#'+id).val());
+                viewManager.filterSignals(id, $('#'+id).val());
             },
         });
+    }
+
+    activate() {
+        if (this.viewManager.currentView != 'chord')
+            $('#srcSearch').focus();
     }
 }
