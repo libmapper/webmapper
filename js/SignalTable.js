@@ -17,13 +17,12 @@ class SignalTable {
 
         this.targetHeight = 600;
         this.rowHeight = 0;
-        this.regexp = null;
 
         this.num_devs = 0;
         this.num_sigs = 0;
         this.num_hidden_sigs = 0;
 
-        this.collapseHandler = null;
+        this.resizeHandler = null;
         this.collapseAll = false;
         this.expandWidth = 0;
 
@@ -136,15 +135,11 @@ class SignalTable {
         }});
     }
 
-    filterByName(string) {
-        if (this.filterstring == string)
-            return;
-        this.filterstring = string;
-        this.regexp = string ? 
-            new RegExp(this.filterstring, 'i') : 
-            new RegExp('.*');
+    filterByName() {
         this.update();
         this.grow();
+        if (this.resizeHandler)
+            this.resizeHandler();
         return true;
     }
 
@@ -551,14 +546,12 @@ class SignalTable {
             }
 
             dev.signals.each(function(sig) {
-                // todo: check for filters
-                if (_self.direction) {
-                    if (sig.direction != _self.direction) 
-                        return ignore(sig);
-                }
                 if (sig.canvasObject && _self.ignoreCanvasObjects)
                     return ignore(sig);
-                if (_self.regexp && !_self.regexp.test(sig.key))
+                if (_self.direction &&  _self.direction != sig.direction)
+                    return ignore(sig);
+                let re = sig.direction == 'output' ? _self.database.srcRE : _self.database.dstRE;
+                if (re && !re.test(sig.key))
                     return hide(sig);
                 add(sig);
             });
@@ -741,8 +734,8 @@ class SignalTable {
             }
             if (collapse_node(tree, $(e.currentTarget)[0].id.split('/'))) {
                 _self.grow();
-                if (_self.collapseHandler)
-                    _self.collapseHandler();
+                if (_self.resizeHandler)
+                    _self.resizeHandler();
             }
         });
 

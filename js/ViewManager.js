@@ -14,8 +14,8 @@ class ViewManager
         this.canvas_zoom = 1;
         this.canvas_pan = [0, 0];
 
-        this.srcregexp = null;
-        this.dstregexp = null;
+        this.srcRE = null;
+        this.dstRE = null;
 
         this.views = [];
 
@@ -59,12 +59,12 @@ class ViewManager
     filterSignals(searchbar, text) {
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
-            this.srcregexp = text ? new RegExp(text, 'i') : null;
-            this.views[this.currentView].filterSignals('src', text.length ? text : null);
+            this.database.srcRE = text ? new RegExp(text, 'i') : new RegExp('.*');
+            this.views[this.currentView].filterSignals('src');
         }
         else {
-            this.dstregexp = text ? new RegExp(text, 'i') : null;
-            this.views[this.currentView].filterSignals('dst', text.length ? text : null);
+            this.database.dstRE = text ? new RegExp(text, 'i') : new RegExp('.*');
+            this.views[this.currentView].filterSignals('dst');
         }
     }
 

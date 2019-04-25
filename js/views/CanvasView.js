@@ -56,6 +56,16 @@ class CanvasView extends View {
             });
             remove_object_svg(dev);
         });
+
+        this.tables.left.resizeHandler = function() {
+            if (self.tables.left.expandWidth != self.leftExpandWidth) {
+                self.leftExpandWidth = self.tables.left.expandWidth;
+                self.resize(null, 500);
+            }
+            self.drawMaps(0);
+        };
+        this.tables.right.resizeHandler = null;
+
         this.resize(null, 500);
     }
 

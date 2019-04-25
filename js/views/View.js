@@ -19,9 +19,6 @@ class View {
         this.tooltip = tooltip;
         this.pie = pie;
 
-        this.srcregexp = null;
-        this.dstregexp = null;
-
         this.hoverDev = null;
         this.draggingFrom = null;
         this.snappingTo = null;
@@ -78,8 +75,10 @@ class View {
     }
 
     updateDevices(func) {
-        for (var i in this.tables)
-            this.tables[i].update();
+        for (var i in this.tables) {
+            if (!this.tables[i].hidden)
+                this.tables[i].update();
+        }
 
         let self = this;
         let devIndex = 0;
@@ -88,9 +87,10 @@ class View {
             let sigIndex = 0;
             dev.signals.each(function(sig) {
                 sig.hidden = (dev.hidden == true);
-                let regexp = sig.direction == 'output' ? self.srcregexp : self.dstregexp;
-                if (dev.hidden || (regexp && !regexp.test(sig.key))) {
-                    remove_object_svg(sig);
+                let re = sig.direction == 'output' ? self.database.srcRE : self.database.dstRE;
+                if (dev.hidden || (re && !re.test(sig.key))) {
+                    if (sig.view)
+                        sig.view.hide();
                     sig.index = null;
                     return;
                 }
@@ -103,6 +103,8 @@ class View {
                     self.setSigDrag(sig);
                     self.setSigHover(sig);
                 }
+                else
+                    sig.view.show();
             });
             // if no signals visible, hide device also
             if (dev.hidden || !sigIndex) {
@@ -408,17 +410,19 @@ class View {
                     sig.view.stop();
 
                 // check regexp
-                let regexp = (sig.direction == 'output'
-                              ? self.srcregexp : self.dstregexp);
-                if (sig.hidden || (regexp && !regexp.test(sig.key))) {
-                    remove_object_svg(sig);
+                let re = (sig.direction == 'output'
+                          ? self.database.srcRE : self.database.dstRE);
+                if (sig.hidden || (re && !re.test(sig.key))) {
+                    if (sig.view)
+                        sig.view.hide();
                     sig.index = null;
                     sig.position = null;
                     return;
                 }
 
                 if (func && func(sig)) {
-                    remove_object_svg(sig);
+                    if (sig.view)
+                        sig.view.hide();
                     return;
                 }
 
@@ -429,6 +433,7 @@ class View {
                     self.setSigDrag(sig);
                     self.setSigHover(sig);
                 }
+                sig.view.show();
             });
         });
     }
@@ -592,26 +597,34 @@ class View {
         this.canvas.pan.y = 0;
     }
 
-    filterSignals(direction, text) {
+    filterSignals(direction) {
         direction = direction == 'src' ? 'output' : 'input';
         let index, updated = false;
-        if (this.tables) {
-            for (index in this.tables) {
-                let table = this.tables[index];
-                if (!table.direction || table.direction == direction)
-                    updated |= table.filterByName(text);
-            }
-            if (updated) {
+        switch (this.type) {
+            case 'list':
+            case 'grid':
+                for (index in this.tables) {
+                    let table = this.tables[index];
+                    if (!table.direction || table.direction == direction)
+                        updated |= table.filterByName();
+                }
+                if (updated) {
+                    this.draw(0);
+                }
+                break;
+            case 'canvas':
+                // TODO: need to filter canvas objects also
+                this.tables.left.filterByName();
                 this.draw(0);
-            }
-        }
-        else {
-            if (direction == 'output')
-                this.srcregexp = text ? new RegExp(text, 'i') : null;
-            else
-                this.dstregexp = text ? new RegExp(text, 'i') : null;
-            this.update('signals');
-            this.draw(0);
+                break;
+            case 'graph':
+            case 'hive':
+            case 'parallel':
+                this.update('signals');
+                this.draw();
+                break;
+            default:
+                break;
         }
     }
 

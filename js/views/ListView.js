@@ -43,8 +43,8 @@ class ListView extends View {
             remove_object_svg(dev);
         });
 
-        this.tables.left.collapseHandler = function() {self.drawMaps()};
-        this.tables.right.collapseHandler = function() {self.drawMaps()};
+        this.tables.left.resizeHandler = function() {self.drawMaps()};
+        this.tables.right.resizeHandler = function() {self.drawMaps()};
 
         this.escaped = false;
 
