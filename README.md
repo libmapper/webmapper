@@ -127,9 +127,13 @@ Devices can be "hidden" from the rest of the views by clicking on them. This wil
 * Shortcut: `Command-2`
 * Status: **stable**
 
-The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations or sinks for data appear on the right.
+The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations (or "sinks") for data appear on the right.
 
 <img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/list.png">
+
+#### View-specific interactions
+
+The lists of source and destination signals are arranged hierarchically. Groups of signals can be collapsed by clicking on the parent node, potentially making the list easier to navigate.
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view
 
@@ -139,6 +143,10 @@ The primary view used in our mapping GUIs is based on the common structure of di
 In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
 <img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/grid.png">
+
+#### View-specific interactions
+
+The lists of source and destination signals are arranged hierarchically. Groups of signals can be collapsed by clicking on the parent node, potentially making the list easier to navigate.
 
 
 ### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view
