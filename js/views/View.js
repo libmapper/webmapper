@@ -636,6 +636,8 @@ class View {
         // then it becomes the destination for the map.
         $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
+            if (self.draggingFrom)
+                return;
             self.escaped = false;
 
             let src_row = $(this).parent('tr')[0];
@@ -729,7 +731,7 @@ class View {
                         prev_svgy = svgy;
                     }
                 });
-                $(document).on('mouseup.drawing', function(e) {
+                $(document).one('mouseup.drawing', function(e) {
                     function finish(convergent_method) {
                         if (!self.escaped) {
                             if (convergent_method !== null && self.snapping_to_map()) 
