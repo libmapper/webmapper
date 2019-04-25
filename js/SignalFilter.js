@@ -16,10 +16,19 @@ class SignalFilter{
             "</div>");
         
         let self = this;
-        $('#srcSearch, #dstSearch').on('input', function(e) {
-            e.stopPropagation();
-            let id = e.currentTarget.id;
-            viewmanager.filterSignals(id, $('#'+id).val());
+        $('#srcSearch, #dstSearch').on({
+            keydown: function(e) {
+                // check enter or escape
+                if (e.which == 13 || e.which == 27) {
+                    // remove focus
+                    $(this).blur();
+                    e.stopPropagation();
+                }
+            },
+            input: function(e) {
+                let id = e.currentTarget.id;
+                viewmanager.filterSignals(id, $('#'+id).val());
+            },
         });
     }
 }
