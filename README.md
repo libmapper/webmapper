@@ -82,6 +82,7 @@ Lines representing inter-signal maps may be drawn between signals using drag-and
 | cmd + 1-8             | Switch view               |
 | cmd + O               | Open file                 |
 | cmd + S               | Save file                 |
+| cmd + F               | Filter signal names       |
 | cmd + A               | Select all displayed maps |
 | delete, backspace     | Remove selected maps      |
 | +, -                  | Increase/decrease zoom    |
