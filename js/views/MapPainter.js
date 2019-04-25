@@ -241,7 +241,8 @@ class MapPainter {
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none' if only some of their sources are hidden
         }
-        if (!this.map.selected || this.map.srcs.length == 1) {
+        if (this.map.hidden || this.map.dst.hidden
+            || !this.map.selected || this.map.srcs.length == 1) {
             this.labels.forEach(l => l.remove());
             this.labels = [];
             return;
@@ -253,12 +254,18 @@ class MapPainter {
                      'pointer-events': 'none'};
         for (var i = 0; i < this.map.srcs.length; i++) {
             let l = Raphael.getTotalLength(this.pathspecs[i]);
-            let p = Raphael.getPointAtLength(this.pathspecs[i], 20);
-            if (this.labels.length <= i) {
-                this.labels[i] = this.canvas.text(p.x, p.y, 'x'+i).attr(attrs);
+            if (l) {
+                let p = Raphael.getPointAtLength(this.pathspecs[i], 20);
+                if (this.labels.length <= i) {
+                    this.labels[i] = this.canvas.text(p.x, p.y, 'x'+i).attr(attrs);
+                }
+                else {
+                    this.labels[i].attr({'x': p.x, 'y': p.y});
+                }
             }
-            else {
-                this.labels[i].attr({'x': p.x, 'y': p.y});
+            else if (this.labels[i]) {
+                this.labels[i].remove();
+                delete this.labels[i];
             }
         }
         if (this.labels.length) {
