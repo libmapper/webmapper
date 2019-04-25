@@ -149,7 +149,7 @@ class MapProperties {
     clearMapProperties() {
         $('.mode').removeClass('sel');
         $('.protocol').removeClass('sel');
-        $('.topMenu input').val('');
+        $('.topMenu .range').val('');
         $('.topMenu textarea').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
