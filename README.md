@@ -53,6 +53,21 @@ We are working on a new functionality called *map staging*. While the previous n
 
 Text boxes are provided for filtering source and destination signals by name.
 
+### Creating maps
+
+Lines representing inter-signal **maps** may be drawn between signals using drag-and-drop or by clicking on the source signal and then the destination signal.
+
+Webmapper now also supports the creation and representation of *convergent* maps. If you click and drag a signal as you would usually do when making a mapping you should notice that the map you are creating will snap to existing map edges as you drag the mouse over them. If you release the mouse while snapping to an existing map, a radial menu will appear offering several preset convergent mapping methods:
+
+1. add the new signal to the existing expression
+2. multiply the existing expression by the new signal
+3. take the average of all the sources of the convergent map
+4. use the libmapper defined default expression
+
+### Selecting maps
+
+Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Hold down the `Shift` key to select multiple maps.
+
 ### Editing map properties
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
@@ -75,8 +90,6 @@ If a map or maps are selected, the *map property editor* becomes active. This pa
 
 ### Global Commands
 
-Lines representing inter-signal maps may be drawn between signals using drag-and-drop, and properties are set by first selecting the map(s) to work on and then setting properties using the map property editor described above.  Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Hold down the `Shift` key to select multiple maps.
-
 | Shortcut              | Action                    |
 | --------------------- | ------------------------- |
 | cmd + 1-8             | Switch view               |
@@ -84,6 +97,7 @@ Lines representing inter-signal maps may be drawn between signals using drag-and
 | cmd + S               | Save file                 |
 | cmd + F               | Filter signal names       |
 | cmd + A               | Select all displayed maps |
+| tab                   | Jump between text boxes   |
 | delete, backspace     | Remove selected maps      |
 | +, -                  | Increase/decrease zoom    |
 | ←, ↑, →, ↓            | Pan canvas                |
