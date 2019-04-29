@@ -183,8 +183,12 @@ class HiveMapPainter extends ListMapPainter
 
     getNodePosition()
     {
-        // adjust node x so that it won't overlap with a device
+        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
         let node = super.getNodePosition();
+        node.x = node.x + (node.x - origin.x) * this.midPointInflation;
+        node.y = node.y + (node.y - origin.y) * this.midPointInflation;
+
+        // adjust node x so that it won't overlap with a device
         let sigs = this.map.srcs.concat([this.map.dst]);
         for (let s of sigs)
         {
@@ -195,5 +199,18 @@ class HiveMapPainter extends ListMapPainter
             }
         }
         return node;
+    }
+
+    oneToOne(src, dst, i)
+    {
+        // draw a curved line from src to dst
+        let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
+        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
+
+        mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
+        mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
+
+        this.pathspecs[i] = [['M', src.x, src.y],
+                             ['S', mid.x, mid.y, dst.x, dst.y]];
     }
 }
