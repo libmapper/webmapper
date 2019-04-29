@@ -132,6 +132,8 @@ class SignalTable {
                 self.updateTitle();
                 self.targetHeight = height - 20;
                 self.adjustRowHeight();
+                if (func)
+                    func();
         }});
     }
 
