@@ -481,12 +481,10 @@ class ChordView extends View {
             if (src == self.draggingFrom) {
                 r += self.snappingTo ? 40 : 50;
             }
-//            cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
             angleInc = offline ? self.offlineInc : self.onlineInc;
         }
         cx = self.mapPane.cx * (src.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
-        // we will be inserting spaces between links equal to (arclength * 0.1)
         let srcAngleInc = angleInc / src.link_angles.length * 0.9;
         let srcStartAngle = src.view.pstart.angle;
         let srcStopAngle;
@@ -576,11 +574,22 @@ class ChordView extends View {
             }
         }
         else {
+            let cx1 = cx, cy1 = cy;
+            angleInc *= 0.1;
+            if (fuzzyEq(Math.abs(polarDiff(srcStopAngle, dstStartAngle)), angleInc, 0.1)) {
+                cx = cx * 0.5 + (srcStopPos[0] + dstStartPos[0]) * 0.25;
+                cy = cy * 0.5 + (srcStopPos[1] + dstStartPos[1]) * 0.25;
+            }
+            else if (fuzzyEq(Math.abs(polarDiff(srcStartAngle, dstStopAngle)), angleInc, 0.1)) {
+                cx1 = cx * 0.5 + (srcStartPos[0] + dstStopPos[0]) * 0.25;
+                cy1 = cy * 0.5 + (srcStartPos[1] + dstStopPos[1]) * 0.25;
+            }
+
             path.push(['M', srcStartPos[0], srcStartPos[1]],
                       ['A', r, r, srcStopAngle - srcStartAngle, 0, 1, srcStopPos[0], srcStopPos[1]]);
             path.push(['Q', cx, cy, dstStartPos[0], dstStartPos[1]]);
             path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
-            path.push(['Q', cx, cy, srcStartPos[0], srcStartPos[1]]);
+            path.push(['Q', cx1, cy1, srcStartPos[0], srcStartPos[1]]);
             path.push(['Z']);
         }
 
