@@ -201,6 +201,7 @@ class ChordView extends View {
                 else
                     dev.hidden = true;
             }
+            self.showDevLabel(self, dev, e);
             self.draw(0);
         });
     }

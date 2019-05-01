@@ -140,6 +140,23 @@ class View {
         // e.g. because you're using a signal table
     }
 
+    showDevLabel(self, dev, e) {
+        let hidden = self.database.devices.filter(d => d.hidden).size();
+        let size = self.database.devices.size();
+        let action;
+        if (hidden == 0)
+            action = "solo";
+        else if (hidden == size-1 && !dev.hidden)
+            action = "unsolo";
+        else
+            action = dev.hidden ? "unhide" : "hide";
+        self.tooltip.showTable(
+                               dev.status+" device (click to "+action+")", {
+                               name: dev.name,
+                               signals: dev.signals.size()
+                               }, e.x, e.y);
+    }
+
     setDevHover(dev) {
         let self = this;
         let hovered = false;
@@ -147,11 +164,7 @@ class View {
         dev.view.hover(
             function(e) {
                 if (!hovered) {
-                    self.tooltip.showTable(
-                        dev.status+" device", {
-                            name: dev.name,
-                            signals: dev.signals.size()
-                        }, e.x, e.y);
+                    self.showDevLabel(self, dev, e);
                     if (self.type == 'chord') {
                         // also move associated  links to front
                         self.database.links.each(function(link) {
