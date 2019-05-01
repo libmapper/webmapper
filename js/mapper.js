@@ -144,6 +144,10 @@ class ConvergentMapper
 
     converge(srckey, dstmap, method)
     {
+        if (dstmap.srcs.length >= 8) {
+            console.log("warning: maps are limited to 8 sources.");
+            return;
+        }
         if (!this.valid_method(method)) {
             console.log("error: unexpected convergent method", method);
         }
