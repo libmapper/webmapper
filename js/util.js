@@ -272,6 +272,15 @@ function remove_object_svg(obj, duration) {
             obj.view.label.remove();
         obj.view.label = null;
     }
+    if (obj.view.stick) {
+        obj.view.stick.stop();
+        if (duration)
+            obj.view.stick.animate({'stroke-opacity': 0, 'fill-opacity': 0},
+                                    duration, 'linear', function() { this.remove(); });
+        else
+            obj.view.stick.remove();
+        obj.view.stick = null;
+    }
     if (obj.view.startPoint) {
         obj.view.startPoint.stop();
         obj.view.startPoint.unhover();

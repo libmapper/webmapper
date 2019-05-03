@@ -47,22 +47,13 @@ class ChordView extends View {
         // remove associated svg elements for maps
         this.database.maps.each(function(map) { remove_object_svg(map); });
 
-        this.onlineTitle = this.canvas.text(this.frame.width * 0.33, this.cy,
-                                            "online devices")
-                                      .attr({'font-size': 32,
-                                             'opacity': 1,
-                                             'fill': 'white',
-                                             'x': this.frame.width * 0.25,
-                                             'y': this.frame.height - 30});
-        this.onlineTitle.node.setAttribute('pointer-events', 'none');
-        this.offlineTitle = this.canvas.text(this.frame.width * 0.67, this.cy,
-                                             "offline devices")
-                                       .attr({'font-size': 32,
-                                              'opacity': 1,
-                                              'fill': 'white',
-                                              'x': this.frame.width * 0.75,
-                                              'y': this.frame.height - 30});
-        this.offlineTitle.node.setAttribute('pointer-events', 'none');
+        this.devCount = this.canvas.text(this.mapPane.cx, this.mapPane.cy, " ")
+                                   .attr({'font-size': 200,
+                                          'opacity': 0.25,
+                                          'fill': 'white',
+                                          'x': this.mapPane.cx,
+                                          'y': this.mapPane.cy});
+        this.devCount.node.setAttribute('pointer-events', 'none');
 
         this.updateDevices();
         this.resize();
@@ -78,10 +69,8 @@ class ChordView extends View {
 
         this.radius = Math.min(this.frame.width, this.frame.height) * 0.25;
 
-        this.onlineTitle.attr({'x': this.frame.width * 0.25,
-                               'y': this.frame.height - 30});
-        this.offlineTitle.attr({'x': this.frame.width * 0.75,
-                                'y': this.frame.height - 30});
+        this.devCount.attr({'x': this.mapPane.cx,
+                            'y': this.mapPane.cy});
     }
 
     gap(numDevs) {
@@ -125,7 +114,7 @@ class ChordView extends View {
                 dev.index = onlineIndex++;
             let angleInc = offline ? self.offlineInc : self.onlineInc;
             let numDevs = offline ? self.offlineDevs : self.onlineDevs;
-            let x = cx * (offline ? 1.5 : 0.5);
+            let x = cx;
             let angle = (dev.index - 0.45) * angleInc;
             let pstart = {'angle': angle,
                           'x': x + Math.cos(angle) * r,
@@ -163,8 +152,16 @@ class ChordView extends View {
                                      'font-size': 14,
                                      'fill': 'white',
                                      'text-anchor': anchor,
-                                     'transform': 'r'+midAngle+'0,0t,'+x+','+cy});
+                                     'x': x,
+                                     'y': cy});
                 dev.view.label.node.setAttribute('pointer-events', 'none');
+            }
+            if (!dev.view.stick) {
+                let path = [['M', x, cy]];
+                let color = Raphael.hsl(dev.hue, dev.hidden ? 0 : 1, 0.5);
+                dev.view.stick = self.canvas.path().attr({'path': path,
+                                                          'stroke': color,
+                                                          'stroke-width': 2});
             }
 
             if (offline)
@@ -327,14 +324,13 @@ class ChordView extends View {
         let r = self.radius ? self.radius : 0;
         let cx = self.mapPane.cx;
         let cy = self.mapPane.cy;
-        let x = cx * (offline ? 1.5 : 0.5);
         let angle = (dev.index - 0.45) * angleInc;
         let pstart = {'angle': angle,
-                      'x': x + Math.cos(angle) * r,
+                      'x': cx + Math.cos(angle) * r,
                       'y': cy + Math.sin(angle) * r};
         angle += angleInc * self.gap(numDevs);
         let pstop = {'angle': angle,
-                     'x': x + Math.cos(angle) * r,
+                     'x': cx + Math.cos(angle) * r,
                      'y': cy + Math.sin(angle) * r};
 
         dev.view.path = [['M', pstart.x, pstart.y],
@@ -352,22 +348,22 @@ class ChordView extends View {
                          }, duration, '>');
 
         let midAngle = dev.view.pstart.angle + angleInc * 0.45;
-        x = this.mapPane.cx * (dev.status == 'offline' ? 1.5 : 0.5);
-        let y = this.mapPane.cy;
-        if (midAngle > Math.PI * 0.5 && midAngle < Math.PI * 1.5) {
-            dev.view.label.attr({'text-anchor': 'end'})
-                          .animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                    'transform': 'r180,'+x+','+y+'t'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(-r-20)+',-5'
-                                   }, duration, '>');
-        }
-        else {
-            dev.view.label.attr({'text-anchor': 'start'})
-                          .animate({'opacity': dev.hidden ? 0.5 : 1.0,
-                                    'transform': 't'+x+','+y+'r'+Raphael.deg(midAngle)+',0,0t'+(r+20)+',-5'
-                                   }, duration, '>');
-        }
-        if (midAngle > 3.14)
-            dev.view.label.attr({});
+        let x = Math.cos(midAngle);
+        let y = Math.sin(midAngle);
+        let offset = x > 0 ? 100 : -100;
+        if (offset < 0)
+            dev.view.label.attr({'text-anchor': 'end'});
+        else
+            dev.view.label.attr({'text-anchor': 'start'});
+        dev.view.label.animate({'opacity': dev.hidden ? 0.5 : 1.0,
+                                'x': cx + x * r * 1.5 + offset,
+                                'y': cy + y * r * 1.5}, duration, '>');
+        let mult = 1.5 * r;
+        dev.view.stick.animate({'stroke': color,
+                                'path': [['M', cx + x * r, cy + y * r],
+                                         ['L', cx + x * mult, cy + y * mult],
+                                         ['l', offset, 0]]},
+                               duration, '>');
     }
 
     drawDevices(duration) {
@@ -468,7 +464,7 @@ class ChordView extends View {
         if (!src.view || !dst.view)
             return;
 
-        let cx;
+        let cx = self.mapPane.cx;
         let cy = self.mapPane.cy;
         let angleInc;
         let r = self.radius - 19;
@@ -484,7 +480,6 @@ class ChordView extends View {
             }
             angleInc = offline ? self.offlineInc : self.onlineInc;
         }
-        cx = self.mapPane.cx * (src.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
         let srcAngleInc = angleInc / src.link_angles.length * 0.9;
         let srcStartAngle = src.view.pstart.angle;
@@ -505,7 +500,6 @@ class ChordView extends View {
         offline = dst.status == 'offline' && dst != self.draggingFrom;
         if (dst.staged) {
             r += 40;
-            cx = self.mapPane.cx * 0.5;
             angleInc = self.onlineInc;
             dst = dst.staged;
         }
@@ -513,10 +507,8 @@ class ChordView extends View {
             if (dst == self.draggingFrom) {
                 r += self.snappingTo ? 40 : 50;
             }
-            cx = self.mapPane.cx * (offline ? 1.5 : 0.5);
             angleInc = offline ? self.offlineInc : self.onlineInc;
         }
-        cx = self.mapPane.cx * (dst.view.pstart.x < self.mapPane.cx ? 0.5 : 1.5);
 
         let dstAngleInc = angleInc / dst.link_angles.length * 0.9;
         let dstStartAngle = dst.view.pstart.angle;
@@ -575,22 +567,22 @@ class ChordView extends View {
             }
         }
         else {
-            let cx1 = cx, cy1 = cy;
+            let cx1 = cx, cy1 = cy, cx2 = cx, cy2 = cy;
             angleInc *= 0.1;
             if (fuzzyEq(Math.abs(polarDiff(srcStopAngle, dstStartAngle)), angleInc, 0.1)) {
-                cx = cx * 0.5 + (srcStopPos[0] + dstStartPos[0]) * 0.25;
-                cy = cy * 0.5 + (srcStopPos[1] + dstStartPos[1]) * 0.25;
+                cx1 = cx * 0.5 + (srcStopPos[0] + dstStartPos[0]) * 0.25;
+                cy1 = cy * 0.5 + (srcStopPos[1] + dstStartPos[1]) * 0.25;
             }
-            else if (fuzzyEq(Math.abs(polarDiff(srcStartAngle, dstStopAngle)), angleInc, 0.1)) {
-                cx1 = cx * 0.5 + (srcStartPos[0] + dstStopPos[0]) * 0.25;
-                cy1 = cy * 0.5 + (srcStartPos[1] + dstStopPos[1]) * 0.25;
+            if (fuzzyEq(Math.abs(polarDiff(srcStartAngle, dstStopAngle)), angleInc, 0.1)) {
+                cx2 = cx * 0.5 + (srcStartPos[0] + dstStopPos[0]) * 0.25;
+                cy2 = cy * 0.5 + (srcStartPos[1] + dstStopPos[1]) * 0.25;
             }
 
             path.push(['M', srcStartPos[0], srcStartPos[1]],
                       ['A', r, r, srcStopAngle - srcStartAngle, 0, 1, srcStopPos[0], srcStopPos[1]]);
-            path.push(['Q', cx, cy, dstStartPos[0], dstStartPos[1]]);
+            path.push(['Q', cx1, cy1, dstStartPos[0], dstStartPos[1]]);
             path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
-            path.push(['Q', cx1, cy1, srcStartPos[0], srcStartPos[1]]);
+            path.push(['Q', cx2, cy2, srcStartPos[0], srcStartPos[1]]);
             path.push(['Z']);
         }
 
@@ -624,10 +616,12 @@ class ChordView extends View {
         let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
-            if (this.onlineTitle)
-                this.onlineTitle.attr({'text': this.onlineDevs+' online devices (click to hide/unhide)'});
-            if (this.offlineTitle)
-                this.offlineTitle.attr({'text': this.offlineDevs+' offline devices'});
+            if (this.onlineDevs)
+                this.devCount.attr({'text': this.onlineDevs,
+                                    'font-size': 200}).toBack();
+            else
+                this.devCount.attr({'text': 'waiting for devices',
+                                    'font-size': 100});
             updated = true;
         }
         if (elements.indexOf('links') >= 0) {
@@ -645,10 +639,8 @@ class ChordView extends View {
 
     cleanup() {
         super.cleanup();
-        if (this.onlineTitle)
-            this.onlineTitle.remove();
-        if (this.offlineTitle)
-            this.offlineTitle.remove();
+        if (this.devCount)
+            this.devCount.remove();
         database.links.each(function(link) {
             if (!link.view)
                 return;
@@ -657,6 +649,10 @@ class ChordView extends View {
         database.devices.each(function(dev) {
             if (!dev.view)
                 return;
+            if (dev.view.stick) {
+                dev.view.stick.remove();
+                dev.view.stick = null;
+            }
             dev.view.unclick();
             dev.view.unhover();
         });
