@@ -149,7 +149,7 @@ class ChordView extends View {
                 dev.view.label = self.canvas.text(0, 0, dev.name);
                 dev.view.label.attr({'opacity': 0,
                                      'pointer-events': 'none',
-                                     'font-size': 14,
+                                     'font-size': 16,
                                      'fill': 'white',
                                      'text-anchor': anchor,
                                      'x': x,

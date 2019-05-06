@@ -63,13 +63,15 @@ class ParallelView extends View {
             dev.view.label = self.canvas.text(0, 0, dev.name)
                                         .attr({'opacity': 0,
                                                'pointer-events': 'none',
-                                               'font-size': 24,
+                                               'font-size': 16,
                                                'fill': 'white',
                                                'text-anchor': 'end'});
         }
         let labely = y - height - 30;
         dev.view.label.attr({'text-anchor': 'end'})
                       .animate({'opacity': 0.5,
+                                'x': 0,
+                                'y': 0,
                                 'transform': 't'+x+','+labely+'r-90,0,30'
                                }, duration, '>');
         dev.signals.each(function(sig) {
