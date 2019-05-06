@@ -173,31 +173,22 @@ class ChordView extends View {
         let self = this;
         dev.view.unclick().click(function(e) {
             // check if any other devices are hidden
-            let num_hidden = self.database.devices.reduce(function(t, d) {
-                let hidden = d.hidden ? 1 : 0;
-                return t ? t + hidden : hidden;
-            });
+            let hidden = self.database.devices.map(d => d.hidden ? 1 : 0)
+                                              .reduce((a, h) => a + h);
             if (dev.hidden) {
                 // unhide
                 dev.hidden = false;
             }
-            else {
-                if (num_hidden === 0) {
-                    // 'solo' this device by hiding all others
-                    self.database.devices.each(function (d) {
-                        if (d !== dev)
-                            d.hidden = true;
-                    });
-                }
-                else if (num_hidden === self.database.devices.size() - 1) {
-                    // unhide all devices
-                    self.database.devices.each(function (d) {
-                        d.hidden = false;
-                    });
-                }
-                else
-                    dev.hidden = true;
+            else if (hidden === 0) {
+                // 'solo' this device by hiding all others
+                self.database.devices.each(d => d.hidden = (d !== dev));
             }
+            else if (hidden === self.database.devices.size() - 1) {
+                // unhide all devices
+                self.database.devices.each(d => d.hidden = false);
+            }
+            else
+                dev.hidden = true;
             self.showDevLabel(self, dev, e);
             self.draw(0);
         });
@@ -357,7 +348,9 @@ class ChordView extends View {
             dev.view.label.attr({'text-anchor': 'start'});
         dev.view.label.animate({'opacity': dev.hidden ? 0.5 : 1.0,
                                 'x': cx + x * r * 1.5 + offset,
-                                'y': cy + y * r * 1.5}, duration, '>');
+                                'y': cy + y * r * 1.5,
+                                'transform': 't0,0r0'
+                               }, duration, '>');
         let mult = 1.5 * r;
         dev.view.stick.animate({'stroke': color,
                                 'path': [['M', cx + x * r, cy + y * r],
