@@ -191,7 +191,8 @@ class HiveMapPainter extends ListMapPainter
         node.y = node.y + (node.y - origin.y) * this.midPointInflation;
 
         // adjust node x so that it won't overlap with a device
-        let sigs = this.map.srcs.concat([this.map.dst]);
+        let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
+        sigs = sigs.concat([this.map.dst.signal]);
         for (let s of sigs)
         {
             if (distance(node.x, node.y, s.position.x, s.position.y) < 200)
@@ -205,6 +206,12 @@ class HiveMapPainter extends ListMapPainter
 
     oneToOne(src, dst, i)
     {
+        // skip maps if src or dst y is zero, due to filtering
+        if (!src.y || !dst.y) {
+            this.pathspecs[i] = null;
+            return;
+        }
+
         // draw a curved line from src to dst
         let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
         let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};

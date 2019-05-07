@@ -330,7 +330,7 @@ class View {
                     return;
                 }
                 self.snappingTo = sig;
-                self.newMap.dst = sig;
+                self.newMap.dst.signal = sig;
                 self.newMap.view.draw(0);
             },
             function() {
@@ -374,8 +374,10 @@ class View {
                 if (!self.newMap) {
                     self.newMap =
                         {
-                            'srcs': [sig],
-                            'dst': {'position': {'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
+                            'srcs': [{'signal': sig}],
+                            'dst': {'signal': {'position': {'x': x, 'y': y},
+                                               'device': {'hidden' : false},
+                                               'view': {}}},
                             'selected': true,
                             'hidden': false
                         };
@@ -389,7 +391,7 @@ class View {
                     if (!self._continue_map_snap(x, y))
                     {
                         self._unsnap_to_map();
-                        self.newMap.dst.position = {'x': x, 'y': y};
+                        self.newMap.dst.signal.position = {'x': x, 'y': y};
                     }
                 }
                 self.newMap.view.draw(0);
@@ -489,8 +491,8 @@ class View {
                 if (!self.draggingFrom) {
                     self.tooltip.showTable(
                         "Map", {
-                            source: map.srcs.map(s => s.key).join(', '),
-                            destination: map.dst.key,
+                            source: map.srcs.map(s => s.signal.key).join(', '),
+                            destination: map.dst.signal.key,
                             mode: map.mode,
                             expression: map.expression,
                         }, e.x, e.y);
@@ -508,7 +510,7 @@ class View {
     updateMaps() {
         let self = this;
         this.database.maps.each(function(map) {
-            map.hidden = map.srcs.some(s => s.hidden) || map.dst.hidden;
+            map.hidden = map.srcs.some(s => s.signal.hidden) || map.dst.signal.hidden;
             if (map.hidden) {
                 remove_object_svg(map);
                 return;
@@ -524,7 +526,7 @@ class View {
         this.database.maps.each(function(map) {
             if (!map.view)
                 return;
-            if (signal && map.srcs.every(s => s != signal) && map.dst != signal)
+            if (signal && map.srcs.every(s => s.signal != signal) && map.dst.signal != signal)
                 return;
             else map.view.draw(duration);
         });
@@ -690,8 +692,8 @@ class View {
 
                 self.newMap = 
                 {
-                    'srcs': [self.draggingFrom],
-                    'dst': {position: {x: 0, y: 0}},
+                    'srcs': [{signal: self.draggingFrom}],
+                    'dst': {signal: {position: {x: 0, y: 0}}},
                     'selected': true
                 };
                 self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
@@ -717,7 +719,7 @@ class View {
                     let y = e.pageY;
 
                     dst = null;
-                    self.newMap.dst = null;
+                    self.newMap.dst.signal = null;
 
                     for (index in self.tables) {
                         // check if cursor is within snapping range
@@ -725,7 +727,7 @@ class View {
                         dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
                         if (!dst) continue;
                         if (dst.id !== src.id) {
-                            self.newMap.dst = self.database.find_signal(dst.id);
+                            self.newMap.dst.signal = self.database.find_signal(dst.id);
                             self.tables[index].highlightRow(dst, false);
                         }
                         else {
@@ -736,7 +738,7 @@ class View {
 
                     let svgx = x - self.frame.left;
                     let svgy = y - self.frame.top;
-                    if (!self.newMap.dst) {
+                    if (!self.newMap.dst.signal) {
                         if (!self.snapping_to_map()) {
                             let snapped = self._get_map_snap(prev_svgx, prev_svgy, svgx, svgy);
                             if (snapped !== null) {
@@ -745,7 +747,7 @@ class View {
                         }
                         if (!self._continue_map_snap(svgx, svgy)) {
                             self._unsnap_to_map();
-                            self.newMap.dst = {position: {'x': svgx, 'y': svgy}};
+                            self.newMap.dst.signal = {position: {'x': svgx, 'y': svgy}};
                         }
                     }
                     else self._unsnap_to_map(); // snapping to table
@@ -870,7 +872,7 @@ class View {
         this.converging = snap_map;
         this.converging.selected = true;
         this.converging.view.draw(0);
-        this.newMap.dst = {position: this._map_snap_position(this.converging)}
+        this.newMap.dst.signal = {position: this._map_snap_position(this.converging)};
     }
 
     _continue_map_snap(x, y, snapdist = 50)

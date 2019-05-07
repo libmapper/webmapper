@@ -309,7 +309,8 @@ function MapperDatabase() {
         let maps = this.maps;
         dev.signals.each(function(sig) {
             maps.each(function(map) {
-                if (map.srcs.indexOf(sig) >= 0 || sig == map.dst)
+                if (map.srcs.map(s => s.signal).indexOf(sig) >= 0
+                    || sig == map.dst.signal)
                     maps.remove(map);
             });
         });
@@ -349,41 +350,28 @@ function MapperDatabase() {
     this.add_maps = function(cmd, maps) {
         // TODO: check for convergent maps and add appropriate links
         let self = this;
-        findSig = function(name) {
-            name = name.split('/');
-            if (name.length < 2) {
-                console.log("error parsing signal name", name);
-                return null;
-            }
-            let dev = self.devices.find(name[0]);
-            if (!dev) {
-                console.log("error finding signal: couldn't find device",
-                            name[0]);
-                return null;
-            }
-//            name.shift();
-            name = String(name.join('/'));
-            return dev.signals.find(name);
-        }
         for (var i in maps) {
-            let srcs = maps[i].srcs.map(s => findSig(s));
-            let dst = findSig(maps[i].dst);
-            if (!srcs.every(e => e) || !dst) {
+            console.log('trying to add map['+i+']', maps[i]);
+            maps[i].srcs.forEach(s => s.signal = self.find_signal(s.key));
+            maps[i].dst.signal = self.find_signal(maps[i].dst.key);
+            if (!maps[i].srcs.every(e => e.signal) || !maps[i].dst.signal) {
                 console.log("error adding map: couldn't find signals",
                             maps[i].srcs, maps[i].dst);
                 return;
             }
-            maps[i].srcs = srcs;
-            maps[i].dst = dst;
-//            maps[i].status = 'active';
+            // remove key from slots now that signal is known
+            maps[i].srcs.forEach(s => delete s.key);
+            delete maps[i].dst.key;
             let map = this.maps.add(maps[i]);
             if (!map) {
                 console.log("error adding map:", maps[i]);
                 return;
             }
 
-            for (var j in srcs) {
-                let src = srcs[j];
+            let dst = map.dst.signal;
+            for (var j in map.srcs) {
+                let src = map.srcs[j].signal;
+
                 let link_key;
                 let rev = false;
                 if (src.device.name < dst.device.name)
@@ -422,12 +410,13 @@ function MapperDatabase() {
         if (!map)
             return;
         for (var j in map.srcs) {
-            let src = map.srcs[j];
+            let src = map.srcs[j].signal;
+            let dst = map.dst.signal;
             let link_key;
-            if (src.device.name < map.dst.device.name)
-                link_key = src.device.name + '<->' + map.dst.device.name;
+            if (src.device.name < dst.device.name)
+                link_key = src.device.name + '<->' + dst.device.name;
             else
-                link_key = map.dst.device.name + '<->' + src.device.name;
+                link_key = dst.device.name + '<->' + src.device.name;
             let link = this.links.find(link_key);
             if (link) {
                 let index = link.maps.indexOf(map.key);
@@ -521,37 +510,20 @@ function MapperDatabase() {
 
         for (var i in file.mapping.maps) {
             let map = file.mapping.maps[i];
-            // TODO: enable multiple sources and destinations
-            let src = addSigDev(map.sources[0]);
-            let dst = addSigDev(map.destinations[0]);
-            if (!src || !dst) {
+            let srcs = map.sources.map(s => s.name);
+            let dst = map.destinations[0].name;
+            console.log('Loading map from file:', srcs,'->',dst);
+            if (!srcs || !dst) {
                 console.log("error adding map from file:", map);
                 continue;
             }
-            if (map.sources[0].bound_min)
-                map.src_bound_min = map.sources[0].bound_min;
-            if (map.sources[0].bound_max)
-                map.src_bound_min = map.sources[0].bound_max;
-            if (map.destinations[0].bound_min)
-                map.dst_bound_min = map.destinations[0].bound_min;
-            if (map.destinations[0].bound_max)
-                map.dst_bound_min = map.destinations[0].bound_max;
-            if (map.sources[0].calibrating)
-                map.src_calibrating = map.sources[0].calibrating;
-            if (map.destinations[0].calibrating)
-                map.dst_calibrating = map.destinations[0].calibrating;
-            if (map.sources[0].min)
-                map.src_min = map.sources[0].min;
-            if (map.sources[0].max)
-                map.src_max = map.sources[0].max;
-            if (map.destinations[0].min)
-                map.dst_min = map.destinations[0].min;
-            if (map.destinations[0].max)
-                map.dst_max = map.destinations[0].max;
+            map.srcs = map.sources
+            map.srcs.forEach(s => s.signal = addSigDev(s));
+            map.dst = map.destinations
+            map.dst.signal = addSigDev(map.dst)
             delete map.sources;
             delete map.destinations;
-            map.src = src;
-            map.dst = dst;
+
             map.status = 'offline';
             if (map.expression) {
                 // fix expression
@@ -562,10 +534,13 @@ function MapperDatabase() {
             console.log("loaded map src: ", src, " dst: ", dst);
             this.maps.add(map);
 
-            // may need to also add link
-            let link_key;
-            let rev = false;
-            if (src.device.name < dst.device.name)
+            // may need to also add links
+            dst = map.dst.signal;
+            for (var j in map.srcs) {
+                let src = map.srcs[j].signal;
+                let link_key;
+                let rev = false;
+                if (src.device.name < dst.device.name)
                 link_key = src.device.name + '<->' + dst.device.name;
             else {
                 link_key = dst.device.name + '<->' + src.device.name;
@@ -595,6 +570,7 @@ function MapperDatabase() {
             }
         }
     }
+    }
 
     this.exportFile = function() {
         let file = { "fileversion": "2.2",
@@ -607,18 +583,50 @@ function MapperDatabase() {
             if (!map.view)
                 return;
             let m = {'sources': [], 'destinations': []};
+            let obj;
             for (var i in map.srcs) {
-                m.sources.push({'name': map.srcs[i].key,
-                                'direction': map.srcs[i].direction});
+                let src = map.srcs[i];
+                obj = {'name': src.signal.key};
+                for (var attr in src) {
+                    if (!src.hasOwnProperty(attr))
+                        break;
+                    switch (attr) {
+                        case 'signal':
+                            break;
+                        case 'min':
+                        case 'max':
+                            obj[attr + 'imum'] = src[attr];
+                            break;
+                        default:
+                            obj[attr] = src[attr];
+                    }
+                }
+                m.sources.push(obj);
             }
-            m.destinations.push({'name': map.dst.key,
-                                 'direction': map.dst.direction});
+            obj = {'name': map.dst.signal.key};
+            for (var attr in map.dst) {
+                if (!map.dst.hasOwnProperty(attr))
+                    continue;
+                switch (attr) {
+                    case 'signal':
+                        break;
+                    case 'min':
+                    case 'max':
+                        obj[attr + 'imum'] = map.dst[attr];
+                        break;
+                    default:
+                        obj[attr] = map.dst[attr];
+                }
+            }
+            m.destinations.push(obj);
             for (var attr in map) {
                 switch (attr) {
                     // ignore a few properties
-                    case 'view':
-                    case 'status':
+                    case 'hidden':
+                    case 'id':
                     case 'key':
+                    case 'status':
+                    case 'view':
                         break;
                     case 'src':
                     case 'srcs':
@@ -644,22 +652,7 @@ function MapperDatabase() {
                     default:
                         if (!map.hasOwnProperty(attr))
                             break;
-                        if (attr.startsWith('src_')) {
-                            let key = attr.slice(4);
-                            if (key == 'min' || key == 'max')
-                                m.sources[0][key + 'imum'] = map[attr];
-                            else
-                                m.sources[0][key] = map[attr];
-                        }
-                        else if (attr.startsWith('dst_')) {
-                            let key = attr.slice(4);
-                            if (key == 'min' || key == 'max')
-                                m.destinations[0][key + 'imum'] = map[attr];
-                            else
-                                m.destinations[0][key] = map[attr];
-                        }
-                        else
-                            m[attr] = map[attr];
+                        m[attr] = map[attr];
                         break;
                 }
             }
@@ -739,60 +732,41 @@ function MapperDatabase() {
 
         for (var i in file.mapping.maps) {
             let map = file.mapping.maps[i];
-            // TODO: enable multiple sources and destinations
-            
             let srcs = map.sources.map(s => s.name);
-            let src = map.sources[0].name;
             let dst = map.destinations[0].name;
-            console.log('Map from file:', srcs,'->',dst);
-            if (!src || !dst) {
+            console.log('Loading map from file:', srcs,'->',dst);
+            if (!srcs || !dst) {
                 console.log("error adding map from file:", map);
                 continue;
             }
-            if (map.sources[0].bound_min)
-                map.src_bound_min = map.sources[0].bound_min;
-            if (map.sources[0].bound_max)
-                map.src_bound_min = map.sources[0].bound_max;
-            if (map.destinations[0].bound_min)
-                map.dst_bound_min = map.destinations[0].bound_min;
-            if (map.destinations[0].bound_max)
-                map.dst_bound_max = map.destinations[0].bound_max;
-            if (map.sources[0].calibrating)
-                map.src_calibrating = map.sources[0].calibrating;
-            if (map.destinations[0].calibrating)
-                map.dst_calibrating = map.destinations[0].calibrating;
-            if (map.sources[0].min)
-                map.src_min = map.sources[0].min;
-            else if (map.sources[0].minimum)
-                map.src_min = map.sources[0].minimum;
-            if (map.sources[0].max)
-                map.src_max = map.sources[0].max;
-            else if (map.sources[0].maximum)
-                map.src_max = map.sources[0].maximum;
-            if (map.destinations[0].min)
-                map.dst_min = map.destinations[0].min;
-            else if (map.destinations[0].minimum)
-                map.dst_min = map.destinations[0].minimum;
-            if (map.destinations[0].max)
-                map.dst_max = map.destinations[0].max;
-            else if (map.destinations[0].maximum)
-                map.dst_max = map.destinations[0].maximum;
+            map.srcs = map.sources;
+            map.dst = map.destinations;
             delete map.sources;
             delete map.destinations;
-            map.src = src;
-            map.dst = dst;
-            //map.status = 'offline'; //
             if (map.expression) {
                 // fix expression
                 // TODO: better regexp to avoid conflicts with user vars
                 map.expression = map.expression.replace('src[0]', "x")
                                                .replace('dst[0]', "y")
                                                .replace('dst', "y");
+                console.log(map.expression)
             }
-            console.log(map.expression)
+
+            // fix extrema property names
+            function fix_extrema(slot) {
+                if (slot.maximum) {
+                    slot.max = slot.maximum;
+                    delete slot.maximum;
+                }
+                if (slot.minimum) {
+                    slot.min = slot.minimum;
+                    delete slot.minimum;
+                }
+            }
+            map.srcs.forEach(s => fix_extrema(s));
+            fix_extrema(map.dst);
 
             srcs = srcs.map(s => s.slice(s.indexOf('/')));
-            src = src.slice(src.indexOf('/'));
             dst = dst.slice(dst.indexOf('/'));
             let self = this;
             this.devices.each(function(d1) {
@@ -804,7 +778,6 @@ function MapperDatabase() {
                     if (sig) return sig;
                     else return s;
                 });
-                let srcsig = d1.signals.find(d1.name+src);
                 if (!srcsigs.every(s => typeof s.key === 'string'))
                     return;
                 let dstsig = null;
@@ -814,7 +787,8 @@ function MapperDatabase() {
                     dstsig = d2.signals.find(d2.name+dst);
                     if (!dstsig)
                         return;
-                    console.log('  Creating map:', srcsig.key, '->', dstsig.key);
+                    console.log('  Creating map:', srcsigs.map(s => s.key),
+                                '->', dstsig.key);
                     mapper._map(srcsigs.map(s => s.key), dstsig.key, map);
                 });
             });

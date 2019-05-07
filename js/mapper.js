@@ -3,8 +3,8 @@
 //++++++++++++++++++++++++++++++++++++++//
 
 // This class provides the functionality for creating and removing maps
-// A global instance of it is instantiated at the bottom of this file, and that ought to
-// be the only instance anyone should need.
+// A global instance of it is instantiated at the bottom of this file, and that
+// ought to be the only instance anyone should need.
 
 class Mapper
 {
@@ -28,7 +28,7 @@ class Mapper
 
     converge(srckey, dstmap, method)
     {
-        if (srckey === dstmap.dst.key || dstmap.srcs.map(s => s.key).indexOf(srckey) >= 0)
+        if (srckey === dstmap.dst.signal.key || dstmap.srcs.map(s => s.signal.key).indexOf(srckey) >= 0)
             return;
         this.convergent.converge(srckey, dstmap, method);
     }
@@ -41,13 +41,15 @@ class Mapper
     _stage(srckeys, dstkey)
     {
         srckeys.sort();
-        let m = { 'src': database.find_signal(srckeys[0]), 
-                  'srcs': srckeys.map(s => database.find_signal(s)),
-                  'dst': database.find_signal(dstkey),
+        let srcs = [];
+        srckeys.forEach(k => srcs.push({signal: database.find_signal(k)}));
+        let m = { 'srcs': srcs,
+                  'dst': {signal: database.find_signal(dstkey)},
                   'key': this.mapKey(srckeys, dstkey),
                   'status': 'staged',
                   'selected': true
                 };
+
         database.maps.add(m);
     }
 
@@ -70,10 +72,10 @@ class Mapper
         database.maps.each(function(map) 
         {
             if (exists) return;
-            if (map.dst.key != dstkey) return;
+            if (map.dst.signal.key != dstkey) return;
             for (let src of map.srcs) 
             {
-                if (src.key == srckey) 
+                if (src.signal.key == srckey)
                 {
                     exists = true;
                     return;
@@ -223,24 +225,24 @@ class ConvergentMapper
 
     _converge(srckey, dstmap, props)
     {
-        let srckeys = dstmap.srcs.map(src => src.key);
-        this.mapper.unmap(srckeys, dstmap.dst.key);
+        let srckeys = dstmap.srcs.map(src => src.signal.key);
+        this.mapper.unmap(srckeys, dstmap.dst.signal.key);
         srckeys.push(srckey);
-        this.mapper._stage(srckeys, dstmap.dst.key);
+        this.mapper._stage(srckeys, dstmap.dst.signal.key);
 
         // at the time of writing, the python server will not successfully create the
         // following map unless there is a time delay to give the network time to unmap
         // the existing one
 
         setTimeout(function() {
-            this.mapper._map(srckeys, dstmap.dst.key, props);
-        }, 750);
+            this.mapper._map(srckeys, dstmap.dst.signal.key, props);
+        }, 500);
     }
 
     _prep(srckey, dstmap)
     {
         let src = database.find_signal(srckey);
-        let dst = dstmap.dst;
+        let dst = dstmap.dst.signal;
         if (!src) 
         {
             console.log('error creating convergent map, no src matching', srckey);
@@ -261,8 +263,8 @@ class ConvergentMapper
     {
         let overlapmap = this._findOverlap(srckeys, dstkey);
         if (overlapmap === null) return null;
-        let overlap = { srcs: [], dst: overlapmap.dst.key };
-        for (let src of overlapmap.srcs) overlap.srcs.push(src.key);
+        let overlap = { srcs: [], dst: overlapmap.dst.signal.key };
+        for (let src of overlapmap.srcs) overlap.srcs.push(src.signal.key);
         return overlap;
     }
     
@@ -275,12 +277,12 @@ class ConvergentMapper
             {
                 for (let src2 of srckeys)
                 {
-                    if (map.dst.key == dstkey && src1.key == src2) 
+                    if (map.dst.signal.key == dstkey && src1.signal.key == src2)
                     {
                         overlapmap = map;
                         break;
                     }
-                    else if (dstkey == src1.key && src2 == map.dst.key)
+                    else if (dstkey == src1.signal.key && src2 == map.dst.signal.key)
                     {
                         overlapmap = map;
                         break;
@@ -338,7 +340,7 @@ class ConvExpr
 
     static reindex(expr, srckey, dstmap, srcexprname = 'new')
     {
-        let srcs = dstmap.srcs.map(s => s.key).concat([srckey]).sort();
+        let srcs = dstmap.srcs.map(s => s.signal.key).concat([srckey]).sort();
         let idx = srcs.indexOf(srckey);
         for (let i = 0; i < dstmap.srcs.length; ++i)
         {

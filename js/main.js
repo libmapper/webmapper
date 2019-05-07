@@ -101,29 +101,14 @@ function init() {
 
     // Delay starting polling, because it results in a spinning wait
     // cursor in the browser.
-    let index = 0;
-    setInterval(
-        function() {
-            switch (index) {
-            case 0:
-                viewManager.on_resize();
-                mapProperties.clearMapProperties();
-                command.start();
-                command.send('refresh');
-                command.send('get_networks');
-                command.send('subscribe', 'all_devices');
-                command.send('add_devices');
-                break;
-            case 1:
-                command.send('add_signals');
-                command.send('add_links');
-                break;
-            case 2:
-                command.send('add_maps');
-                window.clearInterval(this);
-            }
-            index += 1;
-        }, 250);
+    setTimeout(function() {
+        viewManager.on_resize();
+        mapProperties.clearMapProperties();
+        command.start();
+        command.send('refresh');
+        command.send('get_networks');
+        command.send('subscribe', 'all_devices');
+    }, 250);
 }
 
 /**

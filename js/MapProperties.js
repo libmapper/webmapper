@@ -95,7 +95,6 @@ class MapProperties {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
                     if (counter >= 1) {
-                        console.log('sending updated expression');
                         self.setMapProperty($(this).attr('id').split(' ')[0],
                                             this.value);
                          counter = 0;
@@ -196,39 +195,41 @@ class MapProperties {
             else if (expression != map.expression)
                 expression = 'multiple expressions';
 
-            if (src_min == null)
-                src_min = map.src_min;
-            else if (src_min != map.src_min)
-                src_min = 'multiple';
-            if (src_max == null)
-                src_max = map.src_max;
-            else if (src_max != map.src_max)
-                src_max = 'multiple';
-            if (src_calibrating == null)
-                src_calibrating = map.src_calibrating;
-            else if (src_calibrating != map.src_calibrating)
-                src_calibrating = 'multiple';
+            if (map.srcs.length == 1) {
+                if (src_min == null)
+                    src_min = map.srcs[0].min;
+                else if (src_min != map.srcs[0].min)
+                    src_min = 'multiple';
+                if (src_max == null)
+                    src_max = map.srcs[0].max;
+                else if (src_max != map.srcs[0].max)
+                    src_max = 'multiple';
+                if (src_calibrating == null)
+                    src_calibrating = map.srcs[0].calibrating;
+                else if (src_calibrating != map.srcs[0].calibrating)
+                    src_calibrating = 'multiple';
+            }
 
             if (dst_min == null)
-                dst_min = map.dst_min;
-            else if (dst_min != map.dst_min)
+                dst_min = map.dst.min;
+            else if (dst_min != map.dst.min)
                 dst_min = 'multiple';
             if (dst_max == null)
-                dst_max = map.dst_max;
-            else if (dst_max != map.dst_max)
+                dst_max = map.dst.max;
+            else if (dst_max != map.dst.max)
                 dst_max = 'multiple';
             if (dst_calibrating == null)
-                dst_calibrating = map.dst_calibrating;
-            else if (dst_calibrating != map.dst_calibrating)
+                dst_calibrating = map.dst.calibrating;
+            else if (dst_calibrating != map.dst.calibrating)
                 dst_calibrating = 'multiple';
 
             if (dst_bound_min == null)
-                dst_bound_min = map.dst_bound_min;
-            else if (dst_bound_min != map.dst_bound_min)
+                dst_bound_min = map.dst.bound_min;
+            else if (dst_bound_min != map.dst.bound_min)
                 dst_bound_min = 'multiple';
             if (dst_bound_max == null)
-                dst_bound_max = map.dst_bound_max;
-            else if (dst_bound_max != map.dst_bound_max)
+                dst_bound_max = map.dst.bound_max;
+            else if (dst_bound_max != map.dst.bound_max)
                 dst_bound_max = 'multiple';
         });
 
@@ -241,7 +242,6 @@ class MapProperties {
 
         if (mode != null && mode != 'multiple') {
             // capitalize first letter of mode
-            console.log('mode:', mode);
             mode = mode.charAt(0).toUpperCase() + mode.slice(1);
             $("#mode"+mode).addClass("sel");
             if (mode == 'Linear') {
@@ -343,17 +343,17 @@ class MapProperties {
                 msg['protocol'] = value;
                 break;
             case 'srcCalibrate':
-                msg['src_calibrating'] = !map.src_calibrating;
+                msg['src.calibrating'] = !map.srcs[0].calibrating;
                 break;
             case 'srcRangeSwitch':
-                msg['src_max'] = String(map['src_min']);
-                msg['src_min'] = String(map['src_max']);
+                msg['src.max'] = String(map.srcs[0].min);
+                msg['src.min'] = String(map.srcs[0].max);
                 $("#src_max").addClass('waiting');
                 $("#src_min").addClass('waiting');
                 break;
             case 'dstRangeSwitch':
-                msg['dst_max'] = String(map['dst_min']);
-                msg['dst_min'] = String(map['dst_max']);
+                msg['dst.max'] = String(map.dst.min);
+                msg['dst.min'] = String(map.dst.max);
                 $("#dst_max").addClass('waiting');
                 $("#dst_min").addClass('waiting');
                 break;
@@ -368,27 +368,27 @@ class MapProperties {
                 $(".expression").addClass('waiting');
                 break;
             case 'src_min':
-                if (value == map.src_min)
+                if (value == map.srcs[0].min)
                     return;
-                msg['src_min'] = value;
+                msg['src.min'] = value;
                 $("#src_min").addClass('waiting');
                 break;
             case 'src_max':
-                if (value == map.src_max)
+                if (value == map.srcs[0].max)
                     return;
-                msg['src_max'] = value;
+                msg['src.max'] = value;
                 $("#src_max").addClass('waiting');
                 break;
             case 'dst_min':
-                if (value == map.dst_min)
+                if (value == map.dst.min)
                     return;
-                msg['dst_min'] = value;
+                msg['dst.min'] = value;
                 $("#dst_min").addClass('waiting');
                 break;
             case 'dst_max':
-                if (value == map.dst_max)
+                if (value == map.dst.max)
                     return;
-                msg['dst_max'] = value;
+                msg['dst.max'] = value;
                 $("#dst_max").addClass('waiting');
                 break;
 
@@ -402,9 +402,8 @@ class MapProperties {
             }
 
             // copy src and dst names
-            msg['srcs'] = []
-            for (let s of map.srcs) msg['srcs'].push(s.key);
-            msg['dst'] = map['dst'].key;
+            msg['srcs'] = map.srcs.map(s => s.signal.key);
+            msg['dst'] = map.dst.signal.key;
 
             // send the command, should receive a /mapped message after.
             command.send("set_map", msg);
@@ -529,7 +528,7 @@ class MapProperties {
                 break;
         }
         if (boundaryMode != null)
-            self.setMapProperty(is_max ? "dst_bound_max" : 'dst_bound_min',
+            self.setMapProperty(is_max ? 'dst.bound_max' : 'dst.bound_min',
                                 boundaryMode);
         e.stopPropagation();
     }

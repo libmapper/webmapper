@@ -174,15 +174,39 @@ class ParallelMapPainter extends ListMapPainter
     {
         // adjust node x so that it won't overlap with a device
         let node = super.getNodePosition();
-        let sigs = this.map.srcs.concat([this.map.dst]);
+        let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
+        sigs = sigs.concat([this.map.dst.signal]);
         for (let s of sigs)
         {
-            if (Math.abs(node.x - s.position.x) < 50) 
+            if (Math.abs(node.x - s.position.x) < 50)
             {
                 node.x += 50;
                 node.y += 50;
             }
         }
         return node;
+    }
+
+    offset(a, b, minoffset = 30, maxoffset = 200)
+    {
+        let offset = (a - b) * 0.5;
+        let abs_offset = Math.abs(offset);
+        if (abs_offset > maxoffset) abs_offset = maxoffset;
+        if (abs_offset < minoffset) abs_offset = minoffset;
+        return abs_offset * ((offset < 0) ? -1 : 1);
+    }
+
+    oneToOne(src, dst, i)
+    {
+        // skip maps if src or dst y is zero, due to filtering
+        if (!src.y || !dst.y) {
+            this.pathspecs[i] = null;
+            return;
+        }
+
+        if (Math.abs(src.x - dst.x) < 1)
+            this.vertical(src, dst, i);
+        else
+            this.betweenTables(src, dst, i);
     }
 }

@@ -184,8 +184,9 @@ class ListMapPainter extends MapPainter
             let i = 0;
             for (; i < num_srcs; ++i)
             {
-                hidden = hidden && this.map.srcs[i].hidden;
-                if (this.map.srcs[i].hidden) this.attributes[i]['stroke'] = 'none';
+                hidden = hidden && this.map.srcs[i].signal.hidden;
+                if (this.map.srcs[i].signal.hidden)
+                    this.attributes[i]['stroke'] = 'none';
                 this.attributes[i]['arrow-end'] = 'none';
             }
 

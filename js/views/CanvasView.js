@@ -94,7 +94,7 @@ class CanvasView extends View {
                 }
                 // snap to sig object
                 self.snappingTo = sig;
-                self.newMap.dst = sig;
+                self.newMap.dst.signal = sig;
                 self.newMap.view.draw(0);
                 return;
             },
@@ -119,7 +119,6 @@ class CanvasView extends View {
                 self.tables.left.update();
                 // update maps
                 self.drawMaps(0);
-                self.draggingFrom = self.snappingTo = null;
             }
             else if (self.draggingFrom && self.snappingTo) {
                 mapper.map(self.draggingFrom.key, self.snappingTo.key);
@@ -128,6 +127,7 @@ class CanvasView extends View {
                     self.newMap = null;
                 }
             }
+            self.draggingFrom = self.snappingTo = null;
             // move svg canvas to back
             $('#svgDiv').css({'position': 'relative', 'z-index': 0});
         });
@@ -173,8 +173,8 @@ class CanvasView extends View {
                 else if (!self.snappingTo) {
                     x1 -= self.frame.left;
                     y1 -= self.frame.top;
-                    self.newMap.dst.position.x = x1;
-                    self.newMap.dst.position.y = y1;
+                    self.newMap.dst.signal.position.x = x1;
+                    self.newMap.dst.signal.position.y = y1;
                     self.newMap.view.draw(0);
                 }
             },
@@ -197,9 +197,10 @@ class CanvasView extends View {
                 if (self.dragging !== 'obj') {
                     self.newMap = 
                         {
-                            'src': sig,
-                            'srcs': [sig],
-                            'dst': {'position': {'width': 2, 'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
+                            'srcs': [{signal: sig}],
+                            'dst': {signal: {'position': {'width': 2, 'x': x, 'y': y},
+                                             'device': {'hidden' : false},
+                                             'view': {}}},
                             'selected': true,
                             'hidden': false
                         };
@@ -435,17 +436,17 @@ class CanvasMapPainter extends MapPainter
     constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
 
     updatePaths() {
-        let dst = this.map.dst;
+        let dst = this.map.dst.signal;
         if (this.map.srcs.length === 1) {
             // draw a curved line from src to dst
-            let src = this.map.srcs[0];
+            let src = this.map.srcs[0].signal;
             if (!src.canvasObject && !dst.canvasObject)
                 this.pathspecs[0] = this.vertical(src, dst);
             else
                 this.pathspecs[0] = this.canvas_path(src, dst);
         }
         else {
-            let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+            let sigs = this.map.srcs.filter(s => !s.signal.hidden).map(s => s.signal.position);
             sigs = sigs.concat([dst]);
             let xavg = sigs.map(s => s.x).reduce((accum, s) => accum + s) / sigs.length;
             let yavg = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
@@ -480,13 +481,15 @@ class CanvasMapPainter extends MapPainter
             }
             return {x: x, y: y};
         }
-        let dst = this.map.dst;
-        let sigs = this.map.srcs.filter(s => !s.hidden);
+        let dst = this.map.dst.signal;
+        let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
         if (sigs.length === 0) return null;
         sigs = sigs.concat([dst]);
 
-        let x = sigs.map(s => canvasPos(s).x).reduce((accum, s) => accum + s) / sigs.length;
-        let y = sigs.map(s => canvasPos(s).y).reduce((accum, s) => accum + s) / sigs.length;
+        let x = sigs.map(s => canvasPos(s.signal).x)
+                    .reduce((accum, s) => accum + s) / sigs.length;
+        let y = sigs.map(s => canvasPos(s.signal).y)
+                    .reduce((accum, s) => accum + s) / sigs.length;
 
         if (offset) {
             if (x === dst.x)
@@ -559,8 +562,9 @@ class CanvasMapPainter extends MapPainter
             let i = 0;
             for (; i < num_srcs; ++i)
             {
-                hidden = hidden && this.map.srcs[i].hidden;
-                if (this.map.srcs[i].hidden) this.attributes[i]['stroke'] = 'none';
+                hidden = hidden && this.map.srcs[i].signal.hidden;
+                if (this.map.srcs[i].signalhidden)
+                    this.attributes[i]['stroke'] = 'none';
                 this.attributes[i]['arrow-end'] = 'none';
             }
 

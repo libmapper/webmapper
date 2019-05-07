@@ -42,38 +42,198 @@ class ConsoleView extends View {
                                    "<div id='consoleHistory'></div>"+
                                "</div>");
 
+        function print_dev_props(dev) {
+            let s = ' url: '+dev['host']+':'+dev['port']+';';
+            let keys = Object.keys(dev).sort();
+            for (var i in keys) {
+                let s2 = '';
+                let key = keys[i];
+                switch (key) {
+                    case 'key':
+                    case 'links':
+                    case 'name':
+                    case 'signals':
+                    case 'view':
+                    case 'hue':
+                    case 'angle':
+                    case 'link_angles':
+                    case 'index':
+                    case 'numVisibleSigs':
+                    case 'num_incoming_maps':
+                    case 'num_outgoing_maps':
+                    case 'num_inputs':
+                    case 'num_outputs':
+                    case 'num_links':
+                    case 'status':
+                    case 'synced':
+                    case 'host':
+                    case 'port':
+                        break;
+                    default:
+                        s += " "+key+": "+dev[key]+";";
+                }
+                if (s.length + s2.length > 140) {
+                    echo(s);
+                    s = '   '+s2;
+                }
+                else
+                    s += s2;
+            }
+            s += ' sigs: ['+dev['num_inputs']+' in, '+dev['num_outputs']+' out];';
+            s += ' maps: ['+dev['num_incoming_maps']+' in, '+dev['num_outgoing_maps']+' out];';
+            return s;
+        }
+
+        function print_sig_props(sig) {
+            let s = ""
+            let keys = Object.keys(sig).sort();
+            for (let i in keys) {
+                let key = keys[i];
+                switch (key) {
+                    case 'device':
+                    case 'status':
+                    case 'key':
+                    case 'name':
+                    case 'view':
+                    case 'index':
+                    case 'num_maps':
+                    case 'num_incoming_maps':
+                    case 'num_outgoing_maps':
+                    case 'position':
+                    case 'direction':
+                    case 'type':
+                    case 'length':
+                        break;
+                    case 'min':
+                    case 'max':
+                        let v = sig[key];
+                        if (Array.isArray(v)) {
+                            for (let j in v)
+                                v[j] = v[j].toFixed(3);
+                        }
+                        else
+                            v = v.toFixed(3);
+                        s += " "+key+": "+v+";";
+                        break;
+                    default:
+                        s += " "+key+": "+sig[key]+";";
+                }
+            }
+            s += ' maps: ['+sig['num_incoming_maps']+' in, '+sig['num_outgoing_maps']+' out]; ';
+            return s;
+        }
+
+        function print_slot_props(slot) {
+            let color = Raphael.hsl(slot.signal.device.hue, 1, 0.5);
+            let s = '[[;'+color+';] '+slot.signal.key+':]';
+            let keys = Object.keys(slot).sort();
+            let v;
+            for (var i in keys) {
+                let key = keys[i];
+                switch (key) {
+                    case 'position':
+                    case 'signal':
+                        break;
+                    case 'min':
+                    case 'max':
+                        s += " "+key+": ";
+                        v = slot[key];
+                        if (Array.isArray(v)) {
+                            len = v.length;
+                            s += "[";
+                            for (let j in v) {
+                                s += v[j].toFixed(3);
+                                if (j < len-1)
+                                    s += ",";
+                            }
+                            s += "]";
+                        }
+                        else
+                            s += v.toFixed(3);
+                        s += ";";
+                        break;
+                    case 'calibrating':
+                    case 'causes_update':
+                    case 'use_instances':
+                        v = slot[key] == 'true' ? 'T' : 'F';
+                        s += " "+key+": "+v+";";
+                        break;
+                    default:
+                        s += " "+key+": "+slot[key]+";";
+                }
+            }
+            return s;
+        }
+
+        function print_map_props(map) {
+            let s = '   ';
+            let keys = Object.keys(map).sort();
+            for (var i in keys) {
+                let s2 = '';
+                let key = keys[i];
+                let v;
+                switch (key) {
+                    case 'src':
+                    case 'srcs':
+                    case 'dst':
+                    case 'key':
+                    case 'view':
+                    case 'hidden':
+                    case 'status':
+                        break;
+                    case 'muted':
+                        v = map[key] == 'true' ? 'T' : 'F';
+                        s2 += " "+key+": "+v+";";
+                        break;
+                    default:
+                        s2 += " "+key+": "+map[key]+";";
+                }
+//                if (s.length + s2.length > 140) {
+//                    echo(s);
+//                    s = '   '+s2;
+//                }
+//                else
+                    s += s2;
+            }
+            for (var i in map.srcs)
+                s += "\n    src"+i+":"+print_slot_props(map.srcs[i]);
+            s += "\n    dst:"+print_slot_props(map.dst);
+
+            return s;
+        }
+
         jQuery(function($, undefined) {
-            $('#consoleHistory').terminal(function(command) {
-                if (command === '')
+            $('#consoleHistory').terminal(function(cmd) {
+                if (cmd === '')
                     return;
 
                 let echo = this.echo;
-                command = command.split(' ');
-                switch (command[0]) {
+                cmd = cmd.split(' ');
+                switch (cmd[0]) {
                     case 'help':
-                        this.echo('Available commands:');
-                        this.echo('  ls: list objects in the graph, using the following flags:');
-                        this.echo('      -d    devices');
-                        this.echo('      -s    signals');
-                        this.echo('      -l    links');
-                        this.echo('      -m    maps');
-                        this.echo('  map <srcs> -> <dst>: create a map from <srcs> to <dst>');
-                        this.echo('  unmap <srcs> -> <dst>: remove map from <src> to <dst>');
-                        this.echo('  unmap <index>: remove the map at the specified index');
-                        this.echo('  mod <src> <dst> <properties>: add or modify properties of a map');
-                        this.echo('  mod <index> <properties>: add or modify properties of a map');
+                        echo('Available commands:');
+                        echo('  ls: list objects in the graph, using the following flags:');
+                        echo('      -d    devices');
+                        echo('      -s    signals');
+                        echo('      -l    links');
+                        echo('      -m    maps');
+                        echo('  map <srcs> -> <dst>: create a map from <srcs> to <dst>');
+                        echo('  unmap <srcs> -> <dst>: remove map from <src> to <dst>');
+                        echo('  unmap <index>: remove the map at the specified index');
+                        echo('  mod <src> <dst> <properties>: add or modify properties of a map');
+                        echo('  mod <index> <properties>: add or modify properties of a map');
                         break;
                     case 'ls':
-                        if (command.length < 2) {
-                            this.echo("Please specify objects to list or type 'help' for usage.");
+                        if (cmd.length < 2) {
+                            echo("Please specify objects to list or type 'help' for usage.");
                             return;
                         }
-                        let flags = command[1];
+                        let flags = cmd[1];
                         if (flags[0] != '-') {
-                            this.echo("Please specify objects to list or type 'help' for usage.");
+                            echo("Please specify objects to list or type 'help' for usage.");
                             return;
                         }
-                        let devFilter = command.length > 2 ? self.database.devices.find(command[2]) : null;
+                        let devFilter = cmd.length > 2 ? self.database.devices.find(cmd[2]) : null;
                         let showDevices = flags.indexOf('d') > 0;
                         let showSignals = flags.indexOf('s') > 0;
                         let showLinks = flags.indexOf('l') > 0;
@@ -94,44 +254,7 @@ class ConsoleView extends View {
                                 echo(' '+devIdx+') [[;'+color+';]'+dev.key+']');
                                 if (showDevices && showDetail) {
                                     let s = '    [[;'+color+';]|] ';
-                                    s += ' url: '+dev['host']+':'+dev['port']+';';
-                                    let keys = Object.keys(dev).sort();
-                                    for (var i in keys) {
-                                        let s2 = '';
-                                        let key = keys[i];
-                                        switch (key) {
-                                            case 'key':
-                                            case 'links':
-                                            case 'name':
-                                            case 'signals':
-                                            case 'view':
-                                            case 'hue':
-                                            case 'angle':
-                                            case 'link_angles':
-                                            case 'index':
-                                            case 'numVisibleSigs':
-                                            case 'num_incoming_maps':
-                                            case 'num_outgoing_maps':
-                                            case 'num_inputs':
-                                            case 'num_outputs':
-                                            case 'num_links':
-                                            case 'status':
-                                            case 'synced':
-                                            case 'host':
-                                            case 'port':
-                                                break;
-                                            default:
-                                                s += " "+key+": "+dev[key]+";";
-                                        }
-                                        if (s.length + s2.length > 140) {
-                                            echo(s);
-                                            s = '   '+s2;
-                                        }
-                                        else
-                                            s += s2;
-                                    }
-                                    s += ' sigs: ['+dev['num_inputs']+' in, '+dev['num_outputs']+' out];';
-                                    s += ' maps: ['+dev['num_incoming_maps']+' in, '+dev['num_outgoing_maps']+' out];';
+                                    s += print_dev_props(dev);
                                     echo(s);
                                 }
                                 let sigCount = dev['num_inputs'] + dev['num_outputs'];
@@ -145,34 +268,7 @@ class ConsoleView extends View {
                                         echo(s);
                                         if (showDetail) {
                                             s = sigCount > 0 ? '    [[;'+color+';]|] ' : '      ';
-                                            let keys = Object.keys(sig).sort();
-                                            for (var i in keys) {
-                                                let key = keys[i];
-                                                switch (key) {
-                                                    case 'device':
-                                                    case 'status':
-                                                    case 'key':
-                                                    case 'name':
-                                                    case 'view':
-                                                    case 'index':
-                                                    case 'num_maps':
-                                                    case 'num_incoming_maps':
-                                                    case 'num_outgoing_maps':
-                                                    case 'position':
-                                                    case 'direction':
-                                                    case 'type':
-                                                    case 'length':
-                                                        break;
-                                                    case 'min':
-                                                    case 'max':
-                                                        let v = sig[key];
-                                                        s += " "+key+": "+(v.length>1?'vector':(v).toFixed(3))+";";
-                                                        break;
-                                                    default:
-                                                        s += " "+key+": "+sig[key]+";";
-                                                }
-                                            }
-                                            s += ' maps: ['+sig['num_incoming_maps']+' in, '+sig['num_outgoing_maps']+' out]; ';
+                                            s += print_sig_props(sig);
                                             echo(s);
                                         }
                                     });
@@ -205,91 +301,55 @@ class ConsoleView extends View {
                                 if (len > 1)
                                     s += '[[;white;]\[]';
                                 for (var i in map.srcs) {
-                                    color = Raphael.hsl(map.srcs[i].device.hue, 1, 0.5);
-                                    s += '[[;'+color+';]'+map.srcs[i].device.name+'/'+map.srcs[i].name+']';
+                                    color = Raphael.hsl(map.srcs[i].signal.device.hue, 1, 0.5);
+                                    s += '[[;'+color+';]'+map.srcs[i].signal.device.name+'/'+map.srcs[i].signal.name+']';
                                     if (i < len-1)
                                         s += '[[;white;],]';
                                 }
                                 if (len > 1)
                                     s += '[[;white;]\\]';
                                 s += ' [[;white;]->] ';
-                                color = Raphael.hsl(map.dst.device.hue, 1, 0.5);
-                                s += '[[;'+color+';]'+map.dst.device.name+'/'+map.dst.name+']';
+                                color = Raphael.hsl(map.dst.signal.device.hue, 1, 0.5);
+                                s += '[[;'+color+';]'+map.dst.signal.device.name+'/'+map.dst.signal.name+']';
                                 echo(s);
                                 if (showDetail) {
-                                    s = '   ';
-                                    let keys = Object.keys(map).sort();
-                                    for (var i in keys) {
-                                        let s2 = '';
-                                        let key = keys[i];
-                                        switch (key) {
-                                            case 'src':
-                                            case 'srcs':
-                                            case 'dst':
-                                            case 'key':
-                                            case 'view':
-                                            case 'hidden':
-                                            case 'status':
-                                                break;
-                                            case 'src_min':
-                                            case 'src_max':
-                                            case 'dst_min':
-                                            case 'dst_max':
-                                                s2 += " "+key+": "+(map[key]).toFixed(3)+";";
-                                                break;
-                                            case 'muted':
-                                            case 'src_calibrating':
-                                            case 'dst_calibrating':
-                                                let v = map[key] == 'true' ? 'T' : 'F';
-                                                s2 += " "+key+": "+v+";";
-                                                break;
-                                            default:
-                                                s2 += " "+key+": "+map[key]+";";
-                                        }
-                                        if (s.length + s2.length > 140) {
-                                            echo(s);
-                                            s = '   '+s2;
-                                        }
-                                        else
-                                            s += s2;
-                                    }
-                                    echo(s);
+                                    echo(print_map_props(map));
                                 }
                                 mapIdx += 1;
                             });
                         }
                         break;
                     case 'map':
-                        if (command.length == 3)
-                            mapper.map(command[1], command[2]);
-                        else if (command.length == 4 && command[2] == '->')
-                            mapper.map(command[1], command[3]);
+                        if (cmd.length == 3)
+                            mapper.map(cmd[1], cmd[2]);
+                        else if (cmd.length == 4 && cmd[2] == '->')
+                            mapper.map(cmd[1], cmd[3]);
                         else
-                            this.echo('map: wrong number of arguments');
+                            echo('map: wrong number of arguments');
                         break;
                     case 'unmap':
                     case 'rm':
-                        if (command.length == 2) {
+                        if (cmd.length == 2) {
                             let index = 0;
                             self.database.maps.each(function(map) {
-                                if (++index == command[1]) {
+                                if (++index == cmd[1]) {
                                     mapper.unmap(map.srcs.map(s => s.key),
                                                  map.dst.key);
                                 }
                             });
                         }
-                        else if (command.length == 3)
-                            mapper.unmap(command[1], command[2]);
+                        else if (cmd.length == 3)
+                            mapper.unmap(cmd[1], cmd[2]);
                         else
-                            this.echo('unmap: wrong number of arguments');
+                            echo('unmap: wrong number of arguments');
                         break;
                     case 'select':
                     case 'sel':
                         let updated = false;
-                        if (command.length == 2) {
+                        if (cmd.length == 2) {
                             let index = 0;
                             self.database.maps.each(function(map) {
-                                if (++index == command[1])
+                                if (++index == cmd[1])
                                     updated |= select_obj(map);
                                 else if (map.selected) {
                                     map.selected = false;
@@ -297,8 +357,8 @@ class ConsoleView extends View {
                                 }
                             });
                         }
-                        else if (command.length == 3) {
-                            let key = command[1]+'->'+command[2];
+                        else if (cmd.length == 3) {
+                            let key = cmd[1]+'->'+cmd[2];
                             self.database.maps.each(function(map) {
                                 if (key == map.key)
                                     updated |= select_obj(map);
@@ -309,7 +369,7 @@ class ConsoleView extends View {
                             });
                         }
                         else {
-                            this.echo('modify: wrong number of arguments');
+                            echo('modify: wrong number of arguments');
                             break;
                         }
                         if (updated) {
@@ -320,40 +380,45 @@ class ConsoleView extends View {
                     case 'modify':
                     case 'mod':
                         let msg = {};
-                        let argidx = 0
-                        if (/^\d*$/.test(command[1])) {
+                        let i = 1;
+                        if (/^\d*$/.test(cmd[1])) {
                             // arg is map index
                             let index = 0;
                             self.database.maps.each(function(map) {
-                                if (++index == parseInt(command[1])) {
-                                    msg['src'] = map['src'].key;
-                                    msg['dst'] = map['dst'].key;
-                                    argidx = 2;
+                                if (++index == parseInt(cmd[1])) {
+                                    msg['srcs'] = map.srcs.map(s => s.signal.key);
+                                    msg['dst'] = map.dst.signal.key;
+                                    i = 2;
                                 }
                             });
-                            if (!argidx)
+                            if (i != 2)
                                 break;
                         }
-                        else if (command.length < 5) {
-                            this.echo('unmap: wrong number of arguments');
-                            break;
-                        }
                         else {
-                            msg['src'] = command[1];
-                            msg['dst'] = command[2];
-                            argidx = 3;
+                            let srcs = []
+                            while (cmd[i] != '->') {
+                                if (i >= cmd.length)
+                                    return;
+                                srcs.push(cmd[i]);
+                                i++;
+                            }
+                            if (++i >= cmd.length)
+                                return;
+                            msg['srcs'] = srcs;
+                            msg['dst'] = cmd[i];
+                            i++;
                         }
-                        while (argidx < command.length - 1) {
-                            msg[command[argidx]] = command[argidx+1];
-                            argidx++;
+                        while (i < cmd.length - 1) {
+                            msg[cmd[i]] = cmd[i+1];
+                            i++;
                         }
-                        $('#TopMenuWrapper').trigger('setMap', [msg]);
+                        command.send("set_map", msg);
                         break;
                     case 'echo':
-                        this.echo(command.slice(1).join(' '));
+                        echo(cmd.slice(1).join(' '));
                         break;
                     default:
-                        this.echo('unknown command: '+command[0]);
+                        echo('unknown command: '+cmd[0]);
                         break;
                 }
             }, {

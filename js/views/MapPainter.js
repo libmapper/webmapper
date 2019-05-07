@@ -38,10 +38,10 @@ class MapPainter {
     updatePaths()
     {
         let i = 0, len = this.map.srcs.length;
-        let dst = this.map.dst.position;
+        let dst = this.map.dst.signal.position;
         let node = len > 1 ? this.getNodePosition() : dst;
         for (; i < len; i++) {
-            this.oneToOne(this.map.srcs[i].position, node, i);
+            this.oneToOne(this.map.srcs[i].signal.position, node, i);
         }
         if (len > 1) {
             this.oneToOne(node, dst, i);
@@ -85,7 +85,8 @@ class MapPainter {
     {
         if (!this._mapIsValid()) return;
         else if (this.stolen) return;
-        if (this.map.srcs.filter(s => !s.hidden).length === 0 || this.map.dst.hidden) 
+        if (this.map.srcs.filter(s => !s.signal.hidden).length === 0
+            || this.map.dst.signal.hidden)
         {   // no need to update, everything will be hidden anyways
             this._setPaths(duration);
             return; 
@@ -151,8 +152,8 @@ class MapPainter {
     _mapIsValid()
     {
         if (   !this.map
-            || !this.map.srcs[0] || !this.map.srcs[0].position
-            || !this.map.dst || !this.map.dst.position)
+            || !this.map.srcs[0] || !this.map.srcs[0].signal || !this.map.srcs[0].signal.position
+            || !this.map.dst || !this.map.dst.signal || !this.map.dst.signal.position)
         {
             console.log('error drawing map: map missing src or dst position', this.map);
             return false;
@@ -235,13 +236,13 @@ class MapPainter {
             // a signal is hidden, e.g. is it missing a view? Is its device hidden?
             // Rather than check a million conditions, one should arguably just make
             // sure that signals are marked as hidden when appropriate
-            if (this.map.hidden || this.map.dst.hidden) path.hide();
-            else if (this.map.srcs.length == 1 && this.map.srcs[0].hidden) path.hide();
-            else if (this.map.srcs.length >= 2 && this.map.srcs.every(s => s.hidden)) path.hide();
+            if (this.map.hidden || this.map.dst.signal.hidden
+                || this.map.srcs.every(s => s.signal.hidden))
+                path.hide();
             // maps with multiple sources have to manually hide paths by setting stroke
             // and fill to 'none' if only some of their sources are hidden
         }
-        if (this.map.hidden || this.map.dst.hidden
+        if (this.map.hidden || this.map.dst.signal.hidden
             || !this.map.selected || this.map.srcs.length == 1) {
             this.labels.forEach(l => l.remove());
             this.labels = [];
@@ -275,8 +276,8 @@ class MapPainter {
 
     getNodePosition(offset)
     {
-        let dst = this.map.dst.position;
-        let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+        let dst = this.map.dst.signal.position;
+        let sigs = this.map.srcs.filter(s => !s.signal.hidden).map(s => s.signal.position);
         if (sigs.length === 0) return null;
         sigs = sigs.concat([dst]);
 

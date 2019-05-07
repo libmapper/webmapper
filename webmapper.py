@@ -7,6 +7,8 @@ import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
+initialized = False
+
 networkInterfaces = {'active': '', 'available': []}
 
 boundaryModes = ['undefined', 'none', 'mute', 'clamp', 'fold', 'wrap']
@@ -89,19 +91,46 @@ def sig_props(sig):
 def full_signame(sig):
     return sig.device().name + '/' + sig.name
 
+def translate_bound(bound):
+    if bound < mapper.BOUND_UNDEFINED or bound > mapper.BOUND_WRAP:
+        bound = mapper.BOUND_UNDEFINED
+    return boundaryModes[bound]
+
 def map_props(map):
     props = map.properties.copy()
-    print('getting map properties:')
-    print(props)
-    props['src'] = full_signame(map.source().signal())
-    props['dst'] = full_signame(map.destination().signal())
+
+    # add source slot properties
     num_srcs = props['num_inputs']
-    props['srcs'] = [full_signame(map.source(i).signal()) 
-                     for i in range(0, num_srcs)]
-    props['srcs'].sort();
+    srcs = []
+    src_names = []
+    for i in range(0, num_srcs):
+        src = map.source(i).properties.copy()
+        src_name = full_signame(map.source(i).signal())
+        src['key'] = src_name
+        if 'bound_min' in src:
+            src['bound_min'] = translate_bound(src['bound_min'])
+        if 'bound_max' in src:
+            src['bound_max'] = translate_bound(src['bound_max'])
+        src_names.append(src_name)
+        srcs.append(src)
+    props['srcs'] = srcs
+
+    # add destination slot properties
+    dst_name = full_signame(map.destination().signal())
+    dst = map.destination().properties.copy()
+    dst['key'] = dst_name
+    if 'bound_min' in dst:
+        dst['bound_min'] = translate_bound(dst['bound_min'])
+    if 'bound_max' in dst:
+        dst['bound_max'] = translate_bound(dst['bound_max'])
+    props['dst'] = dst
+
+    # generate key
     if num_srcs > 1: 
-        props['key'] = '['+','.join(props['srcs'])+']' + '->' + '['+props['dst']+']'
-    else: props['key'] = props['src'] + '->' + props['dst']
+        props['key'] = '['+','.join(src_names)+']' + '->' + '['+dst_name+']'
+    else: props['key'] = src_names[0] + '->' + dst_name
+
+    # translate some properties
     if props['process_location'] == mapper.LOC_SOURCE:
         props['process_location'] = 'source'
     else:
@@ -122,29 +151,6 @@ def map_props(map):
     elif props['mode'] == mapper.MODE_EXPRESSION:
         props['mode'] = 'expression'
 
-    slotprops = map.source().properties
-    if slotprops.has_key('min'):
-        props['src_min'] = slotprops['min']
-    if slotprops.has_key('max'):
-        props['src_max'] = slotprops['max']
-    if slotprops.has_key('bound_min'):
-        props['src_bound_min'] = boundaryModes[slotprops['bound_min']]
-    if slotprops.has_key('bound_max'):
-        props['src_bound_max'] = boundaryModes[slotprops['bound_max']]
-    if slotprops.has_key('calibrating'):
-        props['src_calibrating'] = slotprops['calibrating']
-
-    slotprops = map.destination().properties
-    if slotprops.has_key('min'):
-        props['dst_min'] = slotprops['min']
-    if slotprops.has_key('max'):
-        props['dst_max'] = slotprops['max']
-    if slotprops.has_key('bound_min'):
-        props['dst_bound_min'] = boundaryModes[slotprops['bound_min']]
-    if slotprops.has_key('bound_max'):
-        props['dst_bound_max'] = boundaryModes[slotprops['bound_max']]
-    if slotprops.has_key('calibrating'):
-        props['dst_calibrating'] = slotprops['calibrating']
     return props
 
 def on_device(dev, action):
@@ -176,7 +182,7 @@ def on_signal(sig, action):
 
 def on_map(map, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print 'ON_MAP (added or modified)', map_props(map)
+#        print 'ON_MAP', '(added)' if action == mapper.ADDED else '(modified)', map_props(map)
         server.send_command("add_maps", [map_props(map)])
     elif action == mapper.REMOVED:
 #        print 'ON_MAP (removed)', map_props(map)
@@ -210,94 +216,71 @@ def find_map(srckeys, dstkey):
             return m
     return None
 
+def as_number(value):
+    if type(value) is int or type(value) is float:
+        return value
+    else:
+        if type(value) is str:
+            value = value.replace(',',' ').split()
+        numargs = len(value)
+        for i in range(numargs):
+            value[i] = float(value[i])
+        if numargs == 1:
+            value = value[0]
+        return value
+
 def set_map_properties(props, map):
+    print 'set_map_properties', props
     if not map:
         map = find_map(props['srcs'], props['dst'])
         if not map:
             print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
             return
-    if props.has_key('mode'):
-        if props['mode'] == 'linear':
-            map.mode = mapper.MODE_LINEAR
-        elif props['mode'] == 'expression':
-            map.mode = mapper.MODE_EXPRESSION
+    for key in props:
+        if key == 'srcs' or key == 'dst':
+            continue
+        if key == 'mode':
+            if props['mode'] == 'linear':
+                map.mode = mapper.MODE_LINEAR
+            elif props['mode'] == 'expression':
+                map.mode = mapper.MODE_EXPRESSION
+            else:
+                print 'error: unknown mode ', props['mode']
+        elif key == 'protocol':
+            if props['protocol'] == 'UDP':
+                map.protocol = mapper.PROTO_UDP
+            elif props['protocol'] == 'TCP':
+                map.protocol = mapper.PROTO_TCP
+            else:
+                print 'error: unknown protocol ', props['protocol']
+        elif key.startswith('src'):
+            srcidx = -1
+            argidx = -1
+            if key[3] == '[' and key[5:6] == '].':
+                srcidx = int(key[4])
+                argidx = 7
+            elif key[3] == '.':
+                srcidx = 0
+                argidx = 4
+            else:
+                continue
+            subkey = key[argidx:]
+            value = props[key]
+            if subkey == 'min' or subkey == 'max':
+                value = as_number(value)
+            elif subkey == 'bound_min' or subkey == 'bound_max':
+                value = boundaryStrings[value]
+            map.source(srcidx).set_property(subkey, value)
+        elif key.startswith('dst.'):
+            subkey = key[4:]
+            value = props[key]
+            if subkey == 'min' or subkey == 'max':
+                value = as_number(value)
+            elif subkey == 'bound_min' or subkey == 'bound_max':
+                value = boundaryStrings[value]
+            map.destination().set_property(subkey, value)
         else:
-            print 'error: unknown mode ', props['mode']
-    if props.has_key('protocol'):
-        if props['protocol'] == 'UDP':
-            map.protocol = mapper.PROTO_UDP
-        elif props['protocol'] == 'TCP':
-            map.protocol = mapper.PROTO_TCP
-        else:
-            print 'error: unknown protocol ', props['protocol']
-    if props.has_key('expression'):
-        map.expression = props['expression']
-    if props.has_key('muted'):
-        map.muted = props['muted']
-
-    slot = map.source()
-    if props.has_key('src_min'):
-        if type(props['src_min']) is int or type(props['src_min']) is float:
-            slot.minimum = float(props['src_min'])
-        else:
-            if type(props['src_min']) is str:
-                props['src_min'] = props['src_min'].replace(',',' ').split()
-            numargs = len(props['src_min'])
-            for i in range(numargs):
-                props['src_min'][i] = float(props['src_min'][i])
-            if numargs == 1:
-                props['src_min'] = props['src_min'][0]
-            slot.minimum = props['src_min']
-    if props.has_key('src_max'):
-        if type(props['src_max']) is int or type(props['src_max']) is float:
-            slot.maximum = float(props['src_max'])
-        else:
-            if type(props['src_max']) is str:
-                props['src_max'] = props['src_max'].replace(',',' ').split()
-            numargs = len(props['src_max'])
-            for i in range(numargs):
-                props['src_max'][i] = float(props['src_max'][i])
-            if numargs == 1:
-                props['src_max'] = props['src_max'][0]
-            slot.maximum = props['src_max']
-    if props.has_key('src_calibrating'):
-        slot.calibrating = props['src_calibrating']
-    if props.has_key('src_bound_min'):
-        slot.bound_min = boundaryStrings[props['src_bound_min']]
-    if props.has_key('src_bound_max'):
-        slot.bound_max = boundaryStrings[props['src_bound_max']]
-
-    slot = map.destination()
-    if props.has_key('dst_min'):
-        if type(props['dst_min']) is int or type(props['dst_min']) is float:
-            slot.minimum = float(props['dst_min'])
-        else:
-            if type(props['dst_min']) is str:
-                props['dst_min'] = props['dst_min'].replace(',',' ').split()
-            numargs = len(props['dst_min'])
-            for i in range(numargs):
-                props['dst_min'][i] = float(props['dst_min'][i])
-            if numargs == 1:
-                props['dst_min'] = props['dst_min'][0]
-            slot.minimum = props['dst_min']
-    if props.has_key('dst_max'):
-        if type(props['dst_max']) is int or type(props['dst_max']) is float:
-            slot.maximum = float(props['dst_max'])
-        else:
-            if type(props['dst_max']) is str:
-                props['dst_max'] = props['dst_max'].replace(',',' ').split()
-            numargs = len(props['dst_max'])
-            for i in range(numargs):
-                props['dst_max'][i] = float(props['dst_max'][i])
-            if numargs == 1:
-                props['dst_max'] = props['dst_max'][0]
-            slot.maximum = props['dst_max']
-    if props.has_key('dst_calibrating'):
-        slot.calibrating = props['dst_calibrating']
-    if props.has_key('dst_bound_min'):
-        slot.bound_min = boundaryStrings[props['dst_bound_min']]
-    if props.has_key('dst_bound_max'):
-        slot.bound_max = boundaryStrings[props['dst_bound_max']]
+            map.set_property(key, props[key])
     map.push()
 
 def on_save(arg):
@@ -332,21 +315,29 @@ def get_networks(arg):
 
 def init_database(arg):
     global db
-    db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
-    db.add_device_callback(on_device)
-    db.add_link_callback(on_link)
-    db.add_signal_callback(on_signal)
-    db.add_map_callback(on_map)
+    global initialized
+    if initialized == False:
+        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+        db.add_device_callback(on_device)
+        db.add_link_callback(on_link)
+        db.add_signal_callback(on_signal)
+        db.add_map_callback(on_map)
+        initialized = True
+    else:
+        server.send_command("add_devices", map(dev_props, db.devices()))
+        server.send_command("add_links", map(link_props, db.links()))
+        server.send_command("add_signals", map(sig_props, db.signals()))
+        server.send_command("add_maps", map(map_props, db.maps()))
 
 server.add_command_handler("add_devices",
                            lambda x: ("add_devices", map(dev_props, db.devices())))
 
-def subscribe(device):
-    if device == "all_devices":
+def subscribe(name):
+    if name == "all_devices":
         db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = db.device(device)
+        dev = db.device(name)
         if dev:
             db.subscribe(dev, mapper.OBJ_ALL)
 

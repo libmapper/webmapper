@@ -168,10 +168,10 @@ class GridMapPainter extends ListMapPainter
     convergent()
     {
         this.pathspecs = []; // so that there won't be any spare triangles left lying about
-        let dst = this.map.dst.position;
+        let dst = this.map.dst.signal.position;
         for (let i = 0; i < this.map.srcs.length; ++i)
         {
-            let src = this.map.srcs[i].position;
+            let src = this.map.srcs[i].signal.position;
             this.oneToOne(src, dst, i);
         }
     }
@@ -211,9 +211,9 @@ class GridMapPainter extends ListMapPainter
     updatePaths()
     {
         let i = 0, len = this.map.srcs.length;
-        let dst = this.map.dst.position;
+        let dst = this.map.dst.signal.position;
         for (; i < len; i++) {
-            this.oneToOne(this.map.srcs[i].position, dst, i);
+            this.oneToOne(this.map.srcs[i].signal.position, dst, i);
         }
     }
 
@@ -231,8 +231,8 @@ class GridMapPainter extends ListMapPainter
                                              MapPainter.selectedColor : 
                                              MapPainter.defaultColor;
 
-            let src = this.map.srcs[i].position;
-            let dst = this.map.dst.position;
+            let src = this.map.srcs[i].signal.position;
+            let dst = this.map.dst.signal.position;
             if (src.x == dst.x || src.y == dst.y) continue;
             else this.attributes[i]['arrow-end'] = 'none';
         }

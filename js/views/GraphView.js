@@ -758,12 +758,14 @@ class GraphMapPainter extends MapPainter
 
     updatePaths()
     {
-        let srcs = this.map.srcs.filter(src => !src.hidden);
-        let dst = this.map.dst;
+        let srcs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
+        let dst = this.map.dst.signal;
 
         // draw a curved line from src to dst
-        let srcsPos = srcs.map(src => src.position instanceof Array ? src.position : [src.position])
-        let dstPos = dst.position instanceof Array ? dst.position : [dst.position];
+        let srcsPos = srcs.map(s => s.position instanceof Array
+                               ? s.position : [s.position])
+        let dstPos = (dst.position instanceof Array
+                      ? dst.position : [dst.position]);
 
         // check if number of src or dst positions has changed
         let len = srcsPos.reduce((a, srcPos) => a + srcPos.length, 0) * dstPos.length;
