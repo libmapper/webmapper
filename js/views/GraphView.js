@@ -534,9 +534,10 @@ class GraphView extends View {
                             let mapped = false;
                             // check if signals are mapped
                             self.database.maps.each(function(map) {
-                                if (map.src == sigA && map.dst == sigB)
+                                let srcsigs = map.srcs.map(s => s.signal);
+                                if (srcsigs.indexOf(sigA) != -1 && map.dst == sigB)
                                     mapped = true;
-                                else if (map.dst == sigA && map.src == sigB)
+                                else if (map.dst == sigA && srcsigs.indexOf(sigB) != -1)
                                     mapped = true;
                             });
                             for (var i in pA) {
