@@ -94,7 +94,8 @@ class GraphView extends View {
             // listen for menu item clicks
             $(menu).find('td').one('click', function(td) {
                 $(menu).removeClass('show');
-                let prop = td.currentTarget.innerHTML;
+                let prop = td.currentTarget.className === 'devProp' ? 'device ' : 'signal ';
+                prop += td.currentTarget.innerHTML;
                 if (prop === 'none')
                     prop = null;
                 if (axis == 'x' && self.xAxisProp != prop)
@@ -204,8 +205,8 @@ class GraphView extends View {
                     case 'version':
                         break;
                     default:
-                        if (devProps.indexOf('device '+key) == -1)
-                            devProps.push('device '+key);
+                        if (devProps.indexOf(key) == -1)
+                            devProps.push(key);
                 }
             }
             dev.signals.each(function (sig) {
@@ -226,8 +227,8 @@ class GraphView extends View {
                         case 'canvasObject':
                             break;
                         default:
-                            if (sigProps.indexOf('signal '+key) == -1)
-                                sigProps.push('signal '+key);
+                            if (sigProps.indexOf(key) == -1)
+                                sigProps.push(key);
                     }
                 }
             });
@@ -239,15 +240,15 @@ class GraphView extends View {
 
         let len = devProps.length > sigProps.length ? devProps.length : sigProps.length;
         let xmenu = $('#xAxisMenu');
-        xmenu.empty().append("<tr><th>DEVICE PROPS</th><th>SIGNAL PROPS</th></tr>");
+        xmenu.empty().append("<tr><th>Device Properties</th><th>Signal Properties</th></tr>");
         let ymenu = $('#yAxisMenu');
-        ymenu.empty().append("<tr><th>DEVICE PROPS</th><th>SIGNAL PROPS</th></tr>");
+        ymenu.empty().append("<tr><th>Device Properties</th><th>Signal Properties</th></tr>");
 
         for (var i = 0; i < len; i++) {
-            let entry = "<tr><td>";
+            let entry = "<tr><td class='devProp'>";
             if (i < devProps.length)
                 entry += devProps[i];
-            entry += "</td><td>";
+            entry += "</td><td class='sigProp'>";
             if (i < sigProps.length)
                 entry += sigProps[i];
             entry += "</td></tr>";
