@@ -351,7 +351,7 @@ function MapperDatabase() {
         // TODO: check for convergent maps and add appropriate links
         let self = this;
         for (var i in maps) {
-            console.log('trying to add map['+i+']', maps[i]);
+//            console.log('trying to add map['+i+']', maps[i]);
             maps[i].srcs.forEach(s => s.signal = self.find_signal(s.key));
             maps[i].dst.signal = self.find_signal(maps[i].dst.key);
             if (!maps[i].srcs.every(e => e.signal) || !maps[i].dst.signal) {
@@ -453,13 +453,13 @@ function MapperDatabase() {
                     map.expression = c.expression.replace('s[', 'src[')
                     .replace('d[', 'dst[');
                 if (c.srcMin != null)
-                    src.minimum = c.srcMin;
+                    src.min = c.srcMin;
                 if (c.srcMax != null)
-                    src.maximum = c.srcMax;
+                    src.max = c.srcMax;
                 if (c.dstMin != null)
-                    dst.minimum = c.dstMin;
+                    dst.min = c.dstMin;
                 if (c.dstMax != null)
-                    dst.maximum = c.dstMax;
+                    dst.max = c.dstMax;
                 if (c.boundMin != null)
                     dst.bound_min = c.boundMin;
                 if (c.boundMax != null)
@@ -520,6 +520,8 @@ function MapperDatabase() {
             map.srcs = map.sources
             map.srcs.forEach(s => s.signal = addSigDev(s));
             map.dst = map.destinations
+            if (Array.isArray(map.dst))
+                map.dst = map.dst[0];
             map.dst.signal = addSigDev(map.dst)
             delete map.sources;
             delete map.destinations;
@@ -693,13 +695,13 @@ function MapperDatabase() {
                     .replace('d[', 'dst[')
                     .replace('dest[', 'dst[');
                 if (c.srcMin != null)
-                    src.minimum = c.srcMin;
+                    src.min = c.srcMin;
                 if (c.srcMax != null)
-                    src.maximum = c.srcMax;
+                    src.max = c.srcMax;
                 if (c.dstMin != null)
-                    dst.minimum = c.dstMin;
+                    dst.min = c.dstMin;
                 if (c.dstMax != null)
-                    dst.maximum = c.dstMax;
+                    dst.max = c.dstMax;
                 if (c.boundMin != null)
                     dst.bound_min = c.boundMin;
                 if (c.boundMax != null)
@@ -741,6 +743,8 @@ function MapperDatabase() {
             }
             map.srcs = map.sources;
             map.dst = map.destinations;
+            if (Array.isArray(map.dst))
+                map.dst = map.dst[0];
             delete map.sources;
             delete map.destinations;
             if (map.expression) {
@@ -749,16 +753,16 @@ function MapperDatabase() {
                 map.expression = map.expression.replace('src[0]', "x")
                                                .replace('dst[0]', "y")
                                                .replace('dst', "y");
-                console.log(map.expression)
+//                console.log(map.expression)
             }
 
             // fix extrema property names
             function fix_extrema(slot) {
-                if (slot.maximum) {
+                if (slot.maximum !== undefined) {
                     slot.max = slot.maximum;
                     delete slot.maximum;
                 }
-                if (slot.minimum) {
+                if (slot.minimum !== undefined) {
                     slot.min = slot.minimum;
                     delete slot.minimum;
                 }

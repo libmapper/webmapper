@@ -26,13 +26,13 @@ class File {
                 map.expression = c.expression.replace('s[', 'src[')
                                              .replace('d[', 'dst[');
             if (c.srcMin != null)
-                src.minimum = c.srcMin;
+                src.min = c.srcMin;
             if (c.srcMax != null)
-                src.maximum = c.srcMax;
+                src.max = c.srcMax;
             if (c.dstMin != null)
-                dst.minimum = c.dstMin;
+                dst.min = c.dstMin;
             if (c.dstMax != null)
-                dst.maximum = c.dstMax;
+                dst.max = c.dstMax;
             if (c.boundMin != null)
                 dst.bound_min = c.boundMin;
             if (c.boundMax != null)

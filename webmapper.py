@@ -230,16 +230,33 @@ def as_number(value):
         return value
 
 def set_map_properties(props, map):
-    print 'set_map_properties', props
     if not map:
         map = find_map(props['srcs'], props['dst'])
         if not map:
             print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
             return
     for key in props:
-        if key == 'srcs' or key == 'dst':
-            continue
-        if key == 'mode':
+        if key in ['version']:
+            continue;
+        elif key == 'srcs':
+            srcs = props[key]
+            i = 0
+            for srcProps in srcs:
+                # find src slot index
+                src = map.source(i)
+                for srcKey in srcProps:
+                    if srcKey in ['name', 'type', 'length', 'num_instances']:
+                        continue
+                    src.set_property(srcKey, srcProps[srcKey])
+                i = i + 1
+        elif key == 'dst':
+            dstProps = props[key]
+            dst = map.destination()
+            for dstKey in dstProps:
+                if dstKey in ['name', 'type', 'length', 'num_instances']:
+                    continue
+                dst.set_property(dstKey, dstProps[dstKey])
+        elif key == 'mode':
             if props['mode'] == 'linear':
                 map.mode = mapper.MODE_LINEAR
             elif props['mode'] == 'expression':
@@ -253,32 +270,6 @@ def set_map_properties(props, map):
                 map.protocol = mapper.PROTO_TCP
             else:
                 print 'error: unknown protocol ', props['protocol']
-        elif key.startswith('src'):
-            srcidx = -1
-            argidx = -1
-            if key[3] == '[' and key[5:6] == '].':
-                srcidx = int(key[4])
-                argidx = 7
-            elif key[3] == '.':
-                srcidx = 0
-                argidx = 4
-            else:
-                continue
-            subkey = key[argidx:]
-            value = props[key]
-            if subkey == 'min' or subkey == 'max':
-                value = as_number(value)
-            elif subkey == 'bound_min' or subkey == 'bound_max':
-                value = boundaryStrings[value]
-            map.source(srcidx).set_property(subkey, value)
-        elif key.startswith('dst.'):
-            subkey = key[4:]
-            value = props[key]
-            if subkey == 'min' or subkey == 'max':
-                value = as_number(value)
-            elif subkey == 'bound_min' or subkey == 'bound_max':
-                value = boundaryStrings[value]
-            map.destination().set_property(subkey, value)
         else:
             map.set_property(key, props[key])
     map.push()
