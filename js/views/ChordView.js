@@ -611,7 +611,7 @@ class ChordView extends View {
             this.updateDevices();
             if (this.onlineDevs)
                 this.devCount.attr({'text': this.onlineDevs,
-                                    'font-size': 200}).toBack();
+                                    'font-size': 200}).toFront();
             else
                 this.devCount.attr({'text': 'waiting for devices',
                                     'font-size': 100});
