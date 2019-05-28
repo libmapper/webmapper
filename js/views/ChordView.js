@@ -48,7 +48,7 @@ class ChordView extends View {
         this.database.maps.each(function(map) { remove_object_svg(map); });
 
         this.devCount = this.canvas.text(this.mapPane.cx, this.mapPane.cy, " ")
-                                   .attr({'font-size': 200,
+                                   .attr({'font-size': 100,
                                           'opacity': 0.25,
                                           'fill': 'white',
                                           'x': this.mapPane.cx,
@@ -610,11 +610,9 @@ class ChordView extends View {
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
             if (this.onlineDevs)
-                this.devCount.attr({'text': this.onlineDevs,
-                                    'font-size': 200}).toFront();
+                this.devCount.attr({'text': ''});
             else
-                this.devCount.attr({'text': 'waiting for devices',
-                                    'font-size': 100});
+                this.devCount.attr({'text': 'waiting for devices'});
             updated = true;
         }
         if (elements.indexOf('links') >= 0) {

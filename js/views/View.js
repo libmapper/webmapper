@@ -177,8 +177,6 @@ class View {
                     dev.view.animate({'stroke-width': 50}, 0, 'linear');
                     if (dev.view.label)
                         dev.view.label.toFront();
-                    if (self.devCount)
-                        self.devCount.toFront();
                 }
                 hovered = true;
                 self.hoverDev = dev;
@@ -223,8 +221,6 @@ class View {
                     link.dst.view.label.toFront();
                 if (link.dst.staged)
                     link.dst.staged.view.toFront();
-                if (self.devCount)
-                    self.devCount.toFront();
             },
             function() {
                 self.tooltip.hide();

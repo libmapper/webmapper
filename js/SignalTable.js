@@ -607,6 +607,7 @@ class SignalTable {
 
         let devRowType = 'odd';
         let sigRowType = 'odd';
+        let color = null;
         function add_tree(t, tds, target, depth) {
             let first = true;
             let left = _self.location == "left";
@@ -621,6 +622,10 @@ class SignalTable {
                 }
                 else {
                     if (b.leaf && !b.leaf.invisible) {
+                        if (b.leaf.color != color) {
+                            sigRowType = 'odd';
+                            color = b.leaf.color;
+                        }
                         if (_self.location != "left")
                             tds = tds.reverse();
                         let line = "";
@@ -656,7 +661,7 @@ class SignalTable {
                                 line += ">"+tds[j][1]+"</td>";
                             }
                         }
-                        target.append("<tr class='"+devRowType+"' style='background: "+b.leaf.color+"44' id="+b.leaf.id+">"+line+"</tr>");
+                        target.append("<tr class='"+devRowType+"' style='background: "+color+"44' id="+b.leaf.id+">"+line+"</tr>");
                         tds = [[b.num_leaves - 1, i]];
                     }
                     add_tree(b, tds, target, depth + 1);
