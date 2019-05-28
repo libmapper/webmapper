@@ -50,7 +50,25 @@ MapperNodeArray.prototype = {
         return total;
     },
 
-    each : function(func) {
+    some : function(func) {
+        let key;
+        for (key in this.contents) {
+            if (func(this.contents[key]))
+                return true;
+        }
+        return false;
+    },
+
+    every : function(func) {
+        let key;
+        for (key in this.contents) {
+            if (!func(this.contents[key]))
+                return false;
+        }
+        return true;
+    },
+
+    forEach : function(func) {
         let key;
         for (key in this.contents) {
             func(this.contents[key]);
@@ -131,7 +149,7 @@ MapperNodeArray.prototype = {
         let key = obj.key;
         if (key && this.contents[key]) {
             if (this.signals)
-                this.signals.each(function(sig) { this.signals.remove(sig); });
+                this.signals.forEach(function(sig) { this.signals.remove(sig); });
             if (this.cb_func)
                 this.cb_func('removing', this.obj_type, this.contents[key]);
             delete this.contents[key];
@@ -179,7 +197,25 @@ MapperEdgeArray.prototype = {
         return total;
     },
 
-    each : function(func) {
+    some : function(func) {
+        let key;
+        for (key in this.contents) {
+            if (func(this.contents[key]))
+                return true;
+        }
+        return false;
+    },
+
+    every : function(func) {
+        let key;
+        for (key in this.contents) {
+            if (!func(this.contents[key]))
+                return false;
+        }
+        return true;
+    },
+
+    forEach : function(func) {
         let key;
         for (key in this.contents) {
             func(this.contents[key]);
@@ -291,14 +327,17 @@ function MapperDatabase() {
     this.pathToImages = "images/";
 
     this.clearAll = function() {
-        this.maps.each(function(map) { this.maps.remove(map); });
-        this.links.each(function(link) { this.links.remove(link); });
-        this.devices.each(function(dev) { this.devices.remove(dev); });
+        this.maps.forEach(function(map) { this.maps.remove(map); });
+        this.links.forEach(function(link) { this.links.remove(link); });
+        this.devices.forEach(function(dev) { this.devices.remove(dev); });
     };
 
     this.add_devices = function(cmd, devs) {
+        let hidden = this.devices.some(d => d.hidden);
         for (var i in devs) {
-            this.devices.add(devs[i]);
+            let dev = this.devices.add(devs[i]);
+            if (hidden)
+                dev.hidden = true;
             command.send('subscribe', devs[i].name);
         }
     }
@@ -307,15 +346,15 @@ function MapperDatabase() {
         if (!dev)
             return;
         let maps = this.maps;
-        dev.signals.each(function(sig) {
-            maps.each(function(map) {
+        dev.signals.forEach(function(sig) {
+            maps.forEach(function(map) {
                 if (map.srcs.map(s => s.signal).indexOf(sig) >= 0
                     || sig == map.dst.signal)
                     maps.remove(map);
             });
         });
         let links = this.links;
-        links.each(function(link) {
+        links.forEach(function(link) {
             if (link.src == dev || link.dst == dev)
                 links.remove(link);
         });
@@ -580,7 +619,7 @@ function MapperDatabase() {
                      "views": { "signals": []} };
         let numMaps = 0;
 
-        this.maps.each(function(map) {
+        this.maps.forEach(function(map) {
             // currently only includes maps with views
             if (!map.view)
                 return;
@@ -663,8 +702,8 @@ function MapperDatabase() {
         });
         if (!numMaps)
             alert("No maps to save!");
-        this.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (sig.canvasObject)
                     file.views.signals.push({'name': sig.key,
                                              'position': sig.canvasObject});
@@ -773,7 +812,7 @@ function MapperDatabase() {
             srcs = srcs.map(s => s.slice(s.indexOf('/')));
             dst = dst.slice(dst.indexOf('/'));
             let self = this;
-            this.devices.each(function(d1) {
+            this.devices.forEach(function(d1) {
                 if (d1.hidden)
                     return;
                 let srcsigs = srcs.map(s => {
@@ -785,7 +824,7 @@ function MapperDatabase() {
                 if (!srcsigs.every(s => typeof s.key === 'string'))
                     return;
                 let dstsig = null;
-                self.devices.each(function (d2) {
+                self.devices.forEach(function (d2) {
                     if (d2.hidden)
                         return;
                     dstsig = d2.signals.find(d2.name+dst);

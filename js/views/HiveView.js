@@ -30,8 +30,8 @@ class HiveView extends View {
 
         // start with signals at origin
         let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (sig.index && !sig.position)
                     sig.position = self.origin;
             })
@@ -56,7 +56,7 @@ class HiveView extends View {
     drawDevices(duration) {
         let self = this;
         let listIndex = 0;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();
@@ -106,7 +106,7 @@ class HiveView extends View {
                                     'transform': 't'+x+','+y+'r'+angle+',0,30'
                                    }, duration, '>');
 
-            dev.signals.each(function(sig) {
+            dev.signals.forEach(function(sig) {
                 if (!sig.view)
                     return;
                 if (dev.collapsed) {
@@ -172,7 +172,7 @@ class HiveView extends View {
 
     cleanup() {
         super.cleanup();
-        this.database.devices.each(function(dev) {dev.angle = null;});
+        this.database.devices.forEach(function(dev) {dev.angle = null;});
     }
 }
 

@@ -69,7 +69,7 @@ class Mapper
     _mapExists(srckey, dstkey)
     {
         let exists = false;
-        database.maps.each(function(map) 
+        database.maps.forEach(function(map)
         {
             if (exists) return;
             if (map.dst.signal.key != dstkey) return;
@@ -271,7 +271,7 @@ class ConvergentMapper
     _findOverlap(srckeys, dstkey)
     {
         let overlapmap = null;
-        database.maps.each(function(map) {
+        database.maps.forEach(function(map) {
             if (overlapmap !== null && map.srcs.length == 1) return;
             for (let src1 of map.srcs)
             {

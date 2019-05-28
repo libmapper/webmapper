@@ -74,7 +74,7 @@ class ParallelView extends View {
                                 'y': 0,
                                 'transform': 't'+x+','+labely+'r-90,0,30'
                                }, duration, '>');
-        dev.signals.each(function(sig) {
+        dev.signals.forEach(function(sig) {
             if (!sig.view)
                 return;
             // assign position along line
@@ -101,7 +101,7 @@ class ParallelView extends View {
         if (dev)
             self.drawDevice(dev, duration, devInc, self);
         else {
-            this.database.devices.each(function(dev) {
+            this.database.devices.forEach(function(dev) {
                 self.drawDevice(dev, duration, devInc, self);
             });
         }

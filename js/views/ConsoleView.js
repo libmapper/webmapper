@@ -15,18 +15,18 @@ class ConsoleView extends View {
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             // remove signal svg
-            dev.signals.each(remove_object_svg);
+            dev.signals.forEach(remove_object_svg);
             // remove device svg
             remove_object_svg(dev);
         });
 
         // remove link svg
-        this.database.links.each(remove_object_svg);
+        this.database.links.forEach(remove_object_svg);
 
         // remove map svg
-        this.database.maps.each(remove_object_svg);
+        this.database.maps.forEach(remove_object_svg);
 
         this.escaped = false;
 
@@ -247,7 +247,7 @@ class ConsoleView extends View {
                                 echo('Devices (1 of '+devCount+'):');
                             else
                                 echo('Devices ('+devCount+'):');
-                            self.database.devices.each(function(dev) {
+                            self.database.devices.forEach(function(dev) {
                                 if (devFilter && dev !== devFilter)
                                     return;
                                 color = Raphael.hsl(dev.hue, 1, 0.5);
@@ -259,7 +259,7 @@ class ConsoleView extends View {
                                 }
                                 let sigCount = dev['num_inputs'] + dev['num_outputs'];
                                 if (showSignals && sigCount > 0) {
-                                    dev.signals.each(function (sig) {
+                                    dev.signals.forEach(function (sig) {
                                         sigCount -= 1;
                                         let t = sigCount > 0 ? "├─ " : "└─ ";
                                         let s = ' [[;'+color+';]   '+t+sig.name+']';
@@ -280,7 +280,7 @@ class ConsoleView extends View {
                             let linkIdx = 1;
                             let linkCount = self.database.links.size();
                             echo('Network Links ('+linkCount+'):');
-                            self.database.links.each(function (link) {
+                            self.database.links.forEach(function (link) {
                                 let s = ' '+linkIdx+') ';
                                 color = Raphael.hsl(link.src.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+link.src.name+']';
@@ -295,7 +295,7 @@ class ConsoleView extends View {
                             let mapIdx = 1;
                             let mapCount = self.database.maps.size();
                             echo('Maps ('+mapCount+'):');
-                            self.database.maps.each(function (map) {
+                            self.database.maps.forEach(function (map) {
                                 let s = ' '+mapIdx+') ';
                                 let len = map.srcs.length;
                                 if (len > 1)
@@ -331,7 +331,7 @@ class ConsoleView extends View {
                     case 'rm':
                         if (cmd.length == 2) {
                             let index = 0;
-                            self.database.maps.each(function(map) {
+                            self.database.maps.forEach(function(map) {
                                 if (++index == cmd[1]) {
                                     mapper.unmap(map.srcs.map(s => s.key),
                                                  map.dst.key);
@@ -348,7 +348,7 @@ class ConsoleView extends View {
                         let updated = false;
                         if (cmd.length == 2) {
                             let index = 0;
-                            self.database.maps.each(function(map) {
+                            self.database.maps.forEach(function(map) {
                                 if (++index == cmd[1])
                                     updated |= select_obj(map);
                                 else if (map.selected) {
@@ -359,7 +359,7 @@ class ConsoleView extends View {
                         }
                         else if (cmd.length == 3) {
                             let key = cmd[1]+'->'+cmd[2];
-                            self.database.maps.each(function(map) {
+                            self.database.maps.forEach(function(map) {
                                 if (key == map.key)
                                     updated |= select_obj(map);
                                 else if (map.selected) {
@@ -384,7 +384,7 @@ class ConsoleView extends View {
                         if (/^\d*$/.test(cmd[1])) {
                             // arg is map index
                             let index = 0;
-                            self.database.maps.each(function(map) {
+                            self.database.maps.forEach(function(map) {
                                 if (++index == parseInt(cmd[1])) {
                                     msg['srcs'] = map.srcs.map(s => s.signal.key);
                                     msg['dst'] = map.dst.signal.key;
@@ -430,7 +430,7 @@ class ConsoleView extends View {
                 completion: function(string, callback) {
                     let match = [];
                     if (string.indexOf('/') < 0) {
-                        self.database.devices.each(function (dev) {
+                        self.database.devices.forEach(function (dev) {
                             if (dev.name.startsWith(string)) {
                                 match.push(dev.name);
                             }
@@ -442,7 +442,7 @@ class ConsoleView extends View {
                                           console.log(string);
                         let dev = self.database.devices.find(string[0]);
                         if (dev) {
-                            dev.signals.each(function (sig) {
+                            dev.signals.forEach(function (sig) {
                                 if (sig.name.startsWith(string[1])) {
                                     match.push(dev.name+'/'+sig.name);
                                 }
@@ -473,8 +473,8 @@ class ConsoleView extends View {
     cleanup() {
         super.cleanup();
 
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (sig.view) {
                     delete sig.view;
                     sig.view = null;

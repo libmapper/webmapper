@@ -321,7 +321,7 @@ function position(x, y, frame) {
 
 function select_all_maps() {
     let updated = false;
-    database.maps.each(function(map) {
+    database.maps.forEach(function(map) {
         if (map.selected) return;
         map.selected = true;
         if (map.view) map.view.draw(0);
@@ -339,7 +339,7 @@ function deselectAllMaps(tables) {
     }
 
     let updated = false;
-    database.maps.each(function(map) {
+    database.maps.forEach(function(map) {
         if (!map.selected) return;
         map.selected = false;
         if (map.view) map.view.draw(0);

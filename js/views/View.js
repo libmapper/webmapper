@@ -82,10 +82,10 @@ class View {
 
         let self = this;
         let devIndex = 0;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             // update device signals
             let sigIndex = 0;
-            dev.signals.each(function(sig) {
+            dev.signals.forEach(function(sig) {
                 sig.hidden = (dev.hidden == true);
                 let re = sig.direction == 'output' ? self.database.srcRE : self.database.dstRE;
                 if (dev.hidden || (re && !re.test(sig.key))) {
@@ -168,7 +168,7 @@ class View {
                     self.showDevLabel(self, dev, e);
                     if (self.type == 'chord') {
                         // also move associated  links to front
-                        self.database.links.each(function(link) {
+                        self.database.links.forEach(function(link) {
                             if (link.view && (link.src == dev || link.dst == dev))
                                 link.view.toFront();
                         });
@@ -231,11 +231,11 @@ class View {
 
     updateLinks() {
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             dev.linkSrcIndices = [];
             dev.linkDstIndices = [];
         });
-        this.database.links.each(function(link) {
+        this.database.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!src.linkDstIndices.includes(dst.index)) {
@@ -409,8 +409,8 @@ class View {
 
     setAllSigHandlers() {
         let self = this;
-        this.database.devices.each(dev => 
-            dev.signals.each(sig => {
+        this.database.devices.forEach(dev =>
+            dev.signals.forEach(sig => {
                 if (!sig.view) return;
                 self.setSigHover(sig);
                 self.setSigDrag(sig);
@@ -420,8 +420,8 @@ class View {
 
     updateSignals(func) {
         let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (sig.view)
                     sig.view.stop();
 
@@ -474,10 +474,10 @@ class View {
 
     drawSignals(duration) {
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (dev.hidden)
                 return;
-            dev.signals.each(function(sig) {
+            dev.signals.forEach(function(sig) {
                 self.drawSignal(sig, duration);
             });
         });
@@ -509,7 +509,7 @@ class View {
 
     updateMaps() {
         let self = this;
-        this.database.maps.each(function(map) {
+        this.database.maps.forEach(function(map) {
             map.hidden = map.srcs.some(s => s.signal.hidden) || map.dst.signal.hidden;
             if (map.hidden) {
                 remove_object_svg(map);
@@ -523,7 +523,7 @@ class View {
     }
 
     drawMaps(duration, signal) {
-        this.database.maps.each(function(map) {
+        this.database.maps.forEach(function(map) {
             if (!map.view)
                 return;
             if (signal && map.srcs.every(s => s.signal != signal) && map.dst.signal != signal)
@@ -850,7 +850,7 @@ class View {
     _get_map_snap(x1, y1, x2, y2)
     {
         let converging = null;;
-        this.database.maps.each(function(map) {
+        this.database.maps.forEach(function(map) {
             if (converging !== null) return;
             if (map.view && map.view.edge_intersection(x1, y1, x2, y2))
                 converging = map;
@@ -867,7 +867,7 @@ class View {
 
     _snap_to_map(snap_map)
     {
-        this.database.maps.each(map => map.selected = false);
+        this.database.maps.forEach(map => map.selected = false);
         if (this.snapping_to_map()) this.converging.view.draw(0); // unhighlight
         this.converging = snap_map;
         this.converging.selected = true;
@@ -906,7 +906,7 @@ class View {
     setMapPainter(painter) {
         this.mapPainter = (painter === "undefined") ? MapPainter : painter;
         let self = this;
-        this.database.maps.each(function(map) {
+        this.database.maps.forEach(function(map) {
             if (!map.view) return;
             let newview = new self.mapPainter(map, self.canvas, self.frame, self.database);
             newview.copy(map.view);

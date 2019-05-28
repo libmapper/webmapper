@@ -120,11 +120,11 @@ class BalloonView extends View {
     }
 
     drawDevices(duration) {
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             // remove associated svg elements
             remove_object_svg(dev);
             let line_count = 0;
-            dev.signals.each(function(sig) { draw_signal(sig, duration); });
+            dev.signals.forEach(function(sig) { draw_signal(sig, duration); });
         });
     }
 
@@ -136,7 +136,7 @@ class BalloonView extends View {
         this.background.animate({'path': path, 'fill-opacity': 0.5}, duration, '>');
 
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             self.redrawDevice(dev, duration);
         });
 

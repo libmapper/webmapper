@@ -498,7 +498,7 @@ class SignalTable {
 
         var max_depth = 0;
         var tree = {"branches": {}, "num_leaves": 0};
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (dev.hidden) return;
             if (_self.direction == 'output' && dev.num_outputs < 1) return;
             else if (_self.direction == 'input' && dev.num_inputs < 1) return;
@@ -547,7 +547,7 @@ class SignalTable {
                 num_dev_sigs += 1;
             }
 
-            dev.signals.each(function(sig) {
+            dev.signals.forEach(function(sig) {
                 if (sig.canvasObject && _self.ignoreCanvasObjects)
                     return ignore(sig);
                 if (_self.direction &&  _self.direction != sig.direction)
@@ -789,8 +789,8 @@ class SignalTable {
 
     setSigPositions() {
         let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 self.setSigPosition(sig);
             });
         });

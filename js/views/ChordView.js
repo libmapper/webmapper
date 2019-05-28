@@ -36,16 +36,16 @@ class ChordView extends View {
         this.tables.left.hidden = this.tables.right.hidden = true;
 
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (dev.view) {
                 self.setDevClick(dev);
                 self.setDevHover(dev);
             }
             // remove associated svg elements for signals
-            dev.signals.each(function(sig) { remove_object_svg(sig); });
+            dev.signals.forEach(function(sig) { remove_object_svg(sig); });
         });
         // remove associated svg elements for maps
-        this.database.maps.each(function(map) { remove_object_svg(map); });
+        this.database.maps.forEach(function(map) { remove_object_svg(map); });
 
         this.devCount = this.canvas.text(this.mapPane.cx, this.mapPane.cy, " ")
                                    .attr({'font-size': 100,
@@ -84,7 +84,7 @@ class ChordView extends View {
         let dev_num = this.database.devices.size();
         if (dev_num < 1)
             return;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (dev.status == 'offline')
                 self.offlineDevs++;
             else
@@ -104,7 +104,7 @@ class ChordView extends View {
 
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             let offline = (dev.status == 'offline');
             let r = self.radius ? self.radius : 0;
 
@@ -181,11 +181,11 @@ class ChordView extends View {
             }
             else if (hidden === 0) {
                 // 'solo' this device by hiding all others
-                self.database.devices.each(d => d.hidden = (d !== dev));
+                self.database.devices.forEach(d => d.hidden = (d !== dev));
             }
             else if (hidden === self.database.devices.size() - 1) {
                 // unhide all devices
-                self.database.devices.each(d => d.hidden = false);
+                self.database.devices.forEach(d => d.hidden = false);
             }
             else
                 dev.hidden = true;
@@ -361,7 +361,7 @@ class ChordView extends View {
 
     drawDevices(duration) {
         let self = this;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             self.drawDevice(dev, duration, self);
         });
     }
@@ -369,10 +369,10 @@ class ChordView extends View {
     updateLinks() {
         let self = this;
         let tau = Math.PI * 2.0;
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             dev.link_angles = [];
         });
-        this.database.links.each(function(link) {
+        this.database.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!src.view || !dst.view || src == dst)
@@ -385,7 +385,7 @@ class ChordView extends View {
                 dst.link_angles.push(src.view.pstart.angle);
             }
         });
-        this.database.devices.each(function(dev) {
+        this.database.devices.forEach(function(dev) {
             if (!dev.link_angles || dev.link_angles.length <= 1)
                 return;
             // sort
@@ -408,7 +408,7 @@ class ChordView extends View {
                 a.push.apply(a, a.splice(0, i));
             }
         });
-        this.database.links.each(function(link) {
+        this.database.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
@@ -588,7 +588,7 @@ class ChordView extends View {
     drawLinks(duration) {
         let self = this;
 
-        this.database.links.each(function(link) {
+        this.database.links.forEach(function(link) {
             self.drawLink(link, duration, self);
         });
     }
@@ -632,12 +632,12 @@ class ChordView extends View {
         super.cleanup();
         if (this.devCount)
             this.devCount.remove();
-        database.links.each(function(link) {
+        database.links.forEach(function(link) {
             if (!link.view)
                 return;
             remove_object_svg(link, 200);
         });
-        database.devices.each(function(dev) {
+        database.devices.forEach(function(dev) {
             if (!dev.view)
                 return;
             if (dev.view.stick) {

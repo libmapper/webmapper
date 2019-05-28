@@ -179,7 +179,7 @@ class MapProperties {
         var dst_bound_min = null;
         var dst_bound_max = null;
 
-        this.database.maps.filter(this.selected).each(function(map) {
+        this.database.maps.filter(this.selected).forEach(function(map) {
             if (mode == null)
                 mode = map.mode;
             else if (mode != map.mode)
@@ -328,7 +328,7 @@ class MapProperties {
     setMapProperty(key, value) {
         let container = $(this.container);
         let modes = this.mapModeCommands;
-        this.database.maps.filter(this.selected).each(function(map) {
+        this.database.maps.filter(this.selected).forEach(function(map) {
             if (map[key] && (map[key] == value || map[key] == parseFloat(value)))
                 return;
 
@@ -463,7 +463,7 @@ class MapProperties {
             // Split them into sources and destinations
             var srcdevs = [];
             var dstdevs = [];
-            this.database.devices.each(function(dev) {
+            this.database.devices.forEach(function(dev) {
                 if (devs.includes(dev.name)) {
                     if (dev.num_outputs)
                         srcdevs.push(dev.name);

@@ -38,8 +38,8 @@ class CanvasView extends View {
 
         // remove device and unused signal svg
         let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (!sig.canvasObject) {
                     remove_object_svg(sig);
                     return;
@@ -414,8 +414,8 @@ class CanvasView extends View {
 
         // clean up any objects created only for this view
         let self = this;
-        this.database.devices.each(function(dev) {
-            dev.signals.each(function(sig) {
+        this.database.devices.forEach(function(dev) {
+            dev.signals.forEach(function(sig) {
                 if (!sig.view)
                     return;
                 sig.view.undrag();
