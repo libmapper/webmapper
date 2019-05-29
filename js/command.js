@@ -17,7 +17,7 @@ var command = {
         var msg = JSON.parse(text);
         if (msg && msg['id'] != null)
             command.requests.take(msg['id']);
-        command.maintain_requests();
+        command.maintain_requests(false);
         if (msg['cmd']) {
             var hs = command.handlers[msg['cmd']];
             if (hs)
@@ -34,7 +34,7 @@ var command = {
 
     /* Called to make sure the required number of connections are
      * still active. */
-    maintain_requests: function() {
+    maintain_requests: function(repeat) {
         if (command.ws) {
             if (command.ws.is_closed)
                 command.open_websocket();
@@ -42,7 +42,8 @@ var command = {
         else if (!command.ws || !command.ws.is_opened)
             while (command.requests.contents.length < command.num_requests)
                 command.message_request();
-        setTimeout(function() {command.maintain_requests();}, 1000);
+        if (repeat)
+            setTimeout(function() {command.maintain_requests(true);}, 1000);
     },
 
     /* Register a handler for a particular message address. Returns a
@@ -80,7 +81,7 @@ var command = {
     /* Start the command service. */
     start: function() {
         command.open_websocket();
-        setTimeout(function() {command.maintain_requests();}, 100);
+        setTimeout(function() {command.maintain_requests(true);}, 100);
     },
 
     /* Send a message. */
@@ -105,9 +106,9 @@ var command = {
 
         if (command.num_ws_tries == 10) {
             document.title = 'mapperGUI: error connecting to server after 10 tries';
-            setTimeout(function(){
-//                    document.title = 'mapperGUI (connecting...)';
-                }, 10000);
+//            setTimeout(function(){
+////                    document.title = 'mapperGUI (connecting...)';
+//                }, 10000);
             command.num_ws_tries ++;
             return;
         }
