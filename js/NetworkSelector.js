@@ -8,8 +8,7 @@ class NetworkSelector {
                 "<div class='topMenuTitle'><strong>NET</strong></div>"+
                 "<div class='topMenuContainer' style='padding:5px;overflow:visible'>"+
                     "<div id='ifaceMenuLabel' style='padding:5px'>lo0</div>"+
-                            "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
-                        "<tbody><tr><td>lo0</td></tr><tr><td>en1</td></tr></tbody>"+
+                        "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
                     "</table>"+
                 "</div>"+
             "</div>");
@@ -24,11 +23,17 @@ class NetworkSelector {
             $(menu).addClass('show');
 
             $(menu).find('td').one('click', function(td) {
-                $(menu).removeClass('show');
                 let iface = td.currentTarget.innerHTML;
                 // send iface selection to backend
                 command.send('select_network', iface);
             });
+
+            $(document).one('mouseup', function(e) {
+                $(menu).removeClass('show');
+                if ($(menu).has(e.target).length === 0)
+                    $(menu).find('td').off('click');
+            });
+
             e.stopPropagation();
         });
     }
@@ -43,7 +48,8 @@ class NetworkSelector {
                 iface = "<tr><td>"+iface+"</td></tr>";
             $('#ifaceMenu').append(iface);
         }
-        if (this.selected != null && this.selected != this.database.networkInterfaces.selected) {
+        if (this.selected != null
+            && this.selected != this.database.networkInterfaces.selected) {
             location.reload();
         }
         this.selected = this.database.networkInterfaces.selected;

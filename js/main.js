@@ -120,7 +120,7 @@ function initMonitorCommands() {
         netSelector.update();
     });
     command.register("active_network", function(cmd, args) {
-        database.networkInterfaces.selected = args
+        database.networkInterfaces.selected = args;
         netSelector.update();
     });
 }

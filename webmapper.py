@@ -8,6 +8,8 @@ import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
 initialized = False
+db = None
+iface = None
 
 networkInterfaces = {'active': '', 'available': []}
 
@@ -49,8 +51,6 @@ def open_gui(port):
             print 'Error opening web browser, continuing anyway.'
     launcher = threading.Thread(target=launch)
     launcher.start()
-
-db = mapper.database()
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -290,16 +290,6 @@ def on_save(arg):
 def on_load(arg):
     mapperstorage.deserialise(db, arg['sources'], arg['destinations'], arg['loading'])
 
-def select_network(newNetwork):
-    global db
-    if networkInterfaces['active'] == newNetwork:
-        return
-    db.flush(0)
-    networkInterfaces['active'] = newNetwork
-    net = mapper.network(networkInterfaces['active'])
-    db = mapper.database(net)
-    server.send_command("active_network", newNetwork)
-
 def get_networks(arg):
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
     totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
@@ -308,9 +298,23 @@ def get_networks(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             connectedInterfaces.append(i)
-    server.send_command("available_networks", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
+    server.send_command("available_networks", networkInterfaces['available'])
     server.send_command("active_network", networkInterfaces['active'])
+
+def select_network(newNetwork):
+    global db
+    global initialized
+    if db:
+        if networkInterfaces['active'] == newNetwork:
+            # no change
+            return
+        db.flush(0)
+    net = mapper.network(newNetwork)
+    networkInterfaces['active'] = net.interface
+    db = mapper.database(net)
+    get_networks(False)
+    initialized = False
 
 def init_database(arg):
     global db
@@ -388,13 +392,10 @@ server.add_command_handler("load", on_load)
 server.add_command_handler("select_network", select_network)
 server.add_command_handler("get_networks", get_networks)
 
-get_networks(False)
-if ( 'en1' in networkInterfaces['available'] ) :
-    networkInterfaces['active'] = 'en1'
-elif ( 'en0' in networkInterfaces['available'] ):
-    networkInterfaces['active'] = 'en0'
-elif ( 'lo0' in networkInterfaces['available'] ):
-    networkInterfaces['active'] = 'lo0'
+if '--iface' in sys.argv:
+    idx = sys.argv.index('--iface')
+    iface = sys.argv[idx+1]
+select_network(iface)
 
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
