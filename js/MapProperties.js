@@ -9,7 +9,7 @@ class MapProperties {
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
 
         $(this.container).append(
-            "<div' class='topMenu' style='width:calc(100% - 605px);'>"+
+            "<div' class='topMenu' id='mapPropsContainer' style='width:calc(100% - 605px);'>"+
                 "<div id='mapPropsTitle' class='topMenuTitle'><strong>MAP</strong></div>"+
                 "<div id='mapPropsDiv' style='position:absolute;left:0px;top:20px;width:100%;height:100%;'></div>"+
             "</div>");
@@ -58,7 +58,7 @@ class MapProperties {
                     "<input class='range' id='dst_max' style='width:calc(50% - 34px)'></input>"+
                     "<div id='boundary_max' class='boundary boundary_up' type='button'></div>"+
                 "</div>"+
-//                "<div id='dstCalibrate' class='calibrate' type='button'>Calib</div>"+
+                "<div id='muteSwitch' class='mute' type='button'>Mute</div>"+
             "</div>");
 
         this._addHandlers();
@@ -73,7 +73,7 @@ class MapProperties {
         });
 
         // The range input handler
-        $('.topMenu').on({
+        $('#mapPropsContainer').on({
             keydown: function(e) {
                 e.stopPropagation();
                 if (e.which == 13 || e.which == 9) { //'enter' or 'tab' key
@@ -90,7 +90,7 @@ class MapProperties {
         }, 'input');
 
         // The expression input handler
-        $('.topMenu').on({
+        $('#mapPropsContainer').on({
             keydown: function(e) {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
@@ -114,12 +114,12 @@ class MapProperties {
         }, 'textarea');
 
         //For the mode buttons
-        $('.topMenu').on("click", '.mode', function(e) {
+        $('#mapPropsContainer').on("click", '.mode', function(e) {
             e.stopPropagation();
             self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
-        $('.topMenu').on("click", '.protocol', function(e) {
+        $('#mapPropsContainer').on("click", '.protocol', function(e) {
             e.stopPropagation();
             self.setMapProperty("protocol", e.currentTarget.innerHTML);
         });
@@ -138,6 +138,11 @@ class MapProperties {
             self.setMapProperty(e.currentTarget.id, null);
         });
 
+        $('#muteSwitch').click(function(e) {
+            e.stopPropagation();
+            self.setMapProperty("muted", null);
+        });
+
         $('body').on('keydown', function(e) {
             if (e.which == 77)
                 self.setMapProperty("muted", null);
@@ -148,13 +153,14 @@ class MapProperties {
     clearMapProperties() {
         $('.mode').removeClass('sel');
         $('.protocol').removeClass('sel');
-        $('.topMenu .range').val('');
-        $('.topMenu textarea').val('');
+        $('#mapPropsContainer .range').val('');
+        $('#mapPropsContainer textarea').val('');
         $('.boundary').removeAttr('class').addClass('boundary boundary_none');
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
         $('#mapPropsTitle').addClass('disabled');
         $('.calibrate').removeClass('calibratesel');
+        $('#muteSwitch').removeClass('calibratesel');
         $('.range').removeClass('calibratesel');
         $('.expression').removeClass('waiting');
         $('.ranges').children('*').removeClass('waiting');
@@ -168,6 +174,7 @@ class MapProperties {
         this.clearMapProperties();
 
         var mode = null;
+        var muted = null;
         var proto = null;
         var expression = null;
         var src_min = null;
@@ -183,7 +190,12 @@ class MapProperties {
             if (mode == null)
                 mode = map.mode;
             else if (mode != map.mode)
-                mode = 'multiple'
+                mode = 'multiple';
+
+            if (muted == null)
+                muted = map.muted;
+            else if (muted != map.muted)
+                muted = 'multiple';
 
             if (proto == null)
                 proto = map.protocol;
@@ -252,6 +264,13 @@ class MapProperties {
                 $("#ranges").addClass('hidden');
                 $("#expression").removeClass('hidden');
             }
+        }
+
+        if (muted == true || muted == 'multiple') {
+            $('#muteSwitch').addClass('calibratesel');
+        }
+        else {
+            $('#muteSwitch').removeClass('calibratesel');
         }
 
         if (proto != null && proto != 'multiple') {
@@ -432,7 +451,7 @@ class MapProperties {
 
         var l = document.createElement('li');
         l.appendChild(form);
-        $('.topMenu').append(l);
+        $('#mapPropsContainer').append(l);
 
         iframe.onload = function() {
 //            var t = $(iframe.contentDocument.body).text();
@@ -537,7 +556,7 @@ class MapProperties {
         var li = document.createElement('li');
         li.className = 'notification';
         li.innerHTML = msg;
-        $('.topMenu').append(li);
+        $('#mapPropsContainer').append(li);
         setTimeout(function() {
             $(li).fadeOut('slow', function() { $(li).remove();});
         }, 5000);
