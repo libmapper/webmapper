@@ -420,12 +420,9 @@ class MapProperties {
                 msg['mode'] = 'expression';
             }
 
-            // copy src and dst names
-            msg['srcs'] = map.srcs.map(s => s.signal.key);
-            msg['dst'] = map.dst.signal.key;
-
             // send the command, should receive a /mapped message after.
-            command.send("set_map", msg);
+            command.send("set_map", [map.srcs.map(s => s.signal.key),
+                                     map.dst.signal.key, msg]);
         });
     }
 

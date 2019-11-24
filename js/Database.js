@@ -731,8 +731,8 @@ function MapperDatabase() {
                     map.muted = c.mute ? true : false;
                 if (c.expression != null)
                     map.expression = c.expression.replace('s[', 'src[')
-                    .replace('d[', 'dst[')
-                    .replace('dest[', 'dst[');
+                                                 .replace('d[', 'dst[')
+                                                 .replace('dest[', 'dst[');
                 if (c.srcMin != null)
                     src.min = c.srcMin;
                 if (c.srcMax != null)

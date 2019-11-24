@@ -229,15 +229,28 @@ def as_number(value):
             value = value[0]
         return value
 
-def set_map_properties(props, map):
+def set_map_properties(args, map):
+    srckeys, dstkey, props = args
     if not map:
-        map = find_map(props['srcs'], props['dst'])
+        map = find_map(srckeys, dstkey)
         if not map:
-            print "error: couldn't retrieve map ", props['src'], " -> ", props['dst']
+            print "error: couldn't retrieve map ", srckeys, " -> ", dstkey
             return
     for key in props:
         if key in ['version']:
             continue;
+        elif key == 'srcs':
+            srcs = props[key]
+            srcidx = 0
+            for src in srcs:
+                for subkey in src:
+                    value = src[subkey]
+                    if subkey == 'min' or subkey == 'max':
+                        value = as_number(value)
+                    elif subkey == 'bound_min' or subkey == 'bound_max':
+                        value = boundaryStrings[value]
+                map.source(srcidx).set_property(subkey, value)
+                srcidx += 1
         elif key.startswith('src'):
             srcidx = -1
             argidx = -1
@@ -256,6 +269,15 @@ def set_map_properties(props, map):
             elif subkey == 'bound_min' or subkey == 'bound_max':
                 value = boundaryStrings[value]
             map.source(srcidx).set_property(subkey, value)
+        elif key == 'dst':
+            dst = props[key]
+            for subkey in dst:
+                value = dst[subkey]
+                if subkey == 'min' or subkey == 'max':
+                    value = as_number(value)
+                elif subkey == 'bound_min' or subkey == 'bound_max':
+                    value = boundaryStrings[value]
+                map.destination().set_property(subkey, value)
         elif key.startswith('dst.'):
             subkey = key[4:]
             value = props[key]
@@ -359,7 +381,7 @@ def new_map(args):
     else:
         print 'created map: ', srckeys, ' -> ', dstkey
     if props and type(props) is dict:
-        set_map_properties(props, map)
+        set_map_properties(args, map)
     map.push()
 
 def release_map(args):
