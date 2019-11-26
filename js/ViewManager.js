@@ -228,6 +228,7 @@ class ViewManager
         $('#svgDiv').on('mousedown', function(e) {
             if (self.views[self.currentView].dragging)
                 return;
+            $('#container').trigger("sendCachedProperty");
             if (e.shiftKey == false) {
                 deselectAllMaps(self.tables);
             }

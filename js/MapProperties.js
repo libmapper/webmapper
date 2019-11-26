@@ -7,6 +7,7 @@ class MapProperties {
         this.mapModes = ["Linear", "Expression"];
         this.mapProtocols = ["UDP", "TCP"];
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
+        this.cachedProperty = { "key": null, "value": null };
 
         $(this.container).append(
             "<div' class='topMenu' id='mapPropsContainer' style='width:calc(100% - 605px);'>"+
@@ -74,11 +75,16 @@ class MapProperties {
 
         // The range input handler
         $('#mapPropsContainer').on({
-            keydown: function(e) {
+            keydown: function(e) { e.stopPropagation(); },
+            keyup: function(e) {
                 e.stopPropagation();
                 if (e.which == 13 || e.which == 9) { //'enter' or 'tab' key
                     self.setMapProperty($(this).attr('id').split(' ')[0],
                                          this.value);
+                }
+                else {
+                    self.cacheMapProperty($(this).attr('id').split(' ')[0],
+                                          this.value);
                 }
             },
             click: function(e) { e.stopPropagation(); },
@@ -91,19 +97,27 @@ class MapProperties {
 
         // The expression input handler
         $('#mapPropsContainer').on({
-            keydown: function(e) {
+            keydown: function(e) { e.stopPropagation(); },
+            keyup: function(e) {
                 e.stopPropagation();
                 if (e.which == 13) { //'enter' key
-                    if (counter >= 1) {
+                    // check if expression contains a semicolon
+                    if (this.value.indexOf(';') == -1 || counter >= 1) {
                         self.setMapProperty($(this).attr('id').split(' ')[0],
                                             this.value);
-                         counter = 0;
+                        counter = 0;
                     }
-                    else
+                    else {
                         counter += 1;
+                        self.cacheMapProperty($(this).attr('id').split(' ')[0],
+                                              this.value);
+                    }
                 }
-                else
+                else {
                     counter = 0;
+                    self.cacheMapProperty($(this).attr('id').split(' ')[0],
+                                          this.value);
+                }
             },
             click: function(e) { e.stopPropagation(); },
             focusout: function(e) {
@@ -344,8 +358,19 @@ class MapProperties {
             this.updateMapProperties();
     }
 
+    cacheMapProperty(key, value) {
+        this.cachedProperty.key = key;
+        this.cachedProperty.value = value;
+    }
+
+    sendCachedProperty() {
+        if (!this.cachedProperty.key || !this.cachedProperty.value)
+            return;
+        this.setMapProperty(this.cachedProperty.key, this.cachedProperty.value);
+    }
+
     setMapProperty(key, value) {
-        let container = $(this.container);
+        this.cacheMapProperty();
         let modes = this.mapModeCommands;
         this.database.maps.filter(this.selected).forEach(function(map) {
             if (map[key] && (map[key] == value || map[key] == parseFloat(value)))

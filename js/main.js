@@ -64,12 +64,6 @@ function init() {
                         "</div>"+
                      "</div>");
 
-    // init the view
-    $('#container').empty();
-    tooltip = new Tooltip();
-    viewManager = new ViewManager(document.getElementById('container'), database,
-                                  tooltip);
-
     // init the top menu
     $('#TopMenuWrapper').empty()
     saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
@@ -82,6 +76,12 @@ function init() {
                                       database, viewManager);
     netSelector = new NetworkSelector(document.getElementById("TopMenuWrapper"),
                                       database, viewManager);
+
+    // init the view
+    $('#container').empty();
+    tooltip = new Tooltip();
+    viewManager = new ViewManager(document.getElementById('container'), database,
+                                  tooltip);
 
     // init controller
     initMonitorCommands();
@@ -259,7 +259,7 @@ function initViewCommands()
 
 // allows anyone to call updateMapProperties by triggering an event on #container
 function initMapPropertiesCommands() {
-    // asks the view for the selected maps and updates the edit bar
+    // asks the database for the selected maps and updates the edit bar
     $("#container").on("updateMapProperties", function(e) {
         mapProperties.updateMapProperties();
     });
@@ -267,6 +267,11 @@ function initMapPropertiesCommands() {
     // updated the properties for a specific map
     $("#container").on("updateMapPropertiesFor", function(e, key) {
         mapProperties.updateMapPropertiesFor(key);
+    });
+
+    // send out any partially-edited properties when maps are deselected
+    $("#container").on("sendCachedProperty", function(e) {
+        mapProperties.sendCachedProperty();
     });
 }
 
