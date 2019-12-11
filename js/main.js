@@ -64,6 +64,12 @@ function init() {
                         "</div>"+
                      "</div>");
 
+    // init the view
+    $('#container').empty();
+    tooltip = new Tooltip();
+    viewManager = new ViewManager(document.getElementById('container'), database,
+                                  tooltip);
+
     // init the top menu
     $('#TopMenuWrapper').empty()
     saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
