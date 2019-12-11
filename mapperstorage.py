@@ -117,7 +117,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
     if 'mapping' in f:
         f = f['mapping']
     else:
-        print 'malformed file'
+        print('malformed file')
 
     modeIdx = { 'undefined': mapper.MODE_UNDEFINED,
                 'raw': mapper.MODE_RAW,
@@ -134,16 +134,16 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
 
     src_dev = db.device(src_dev_names[0])
     if not src_dev:
-        print "error loading file: couldn't find device ", src_dev_names[0], " in database"
+        print("error loading file: couldn't find device ", src_dev_names[0], " in database")
         return
 
     dst_dev = db.device(dst_dev_names[0])
     if not dst_dev:
-        print "error loading file: couldn't find device ", dst_dev_names[0], " in database"
+        print("error loading file: couldn't find device ", dst_dev_names[0], " in database")
         return
 
     if version == '2.1':
-        print "converting version 2.1 mapping file..."
+        print("converting version 2.1 mapping file...")
         # we need to modify a few things for compatibility
         f['maps'] = []
         for connection in f['connections']:
@@ -194,7 +194,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
 
     # This is a version 2.2 save file
     if version == '2.2':
-        print "loading version 2.2 mapping file..."
+        print("loading version 2.2 mapping file...")
         # todo: we need to enable users to explictly define device matching
         # for now we will just choose the first device...
 
@@ -228,7 +228,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
 
             map = mapper.map(src_sigs[0], dst_sigs[0])
             if not map:
-                print "error creating map"
+                print("error creating map")
                 continue
 
             # set slot properties first
@@ -338,7 +338,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             map.push()
 
     else:
-        print 'Unknown file version'
+        print('Unknown file version')
 
         # TODO: Strictly speaking we should wait until links are
         # acknowledged before continuing with a connection.  An

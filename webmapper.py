@@ -48,7 +48,7 @@ def open_gui(port):
                     return
             webbrowser.open(url)
         except:
-            print 'Error opening web browser, continuing anyway.'
+            print('Error opening web browser, continuing anyway.')
     launcher = threading.Thread(target=launch)
     launcher.start()
 
@@ -126,7 +126,7 @@ def map_props(map):
     props['dst'] = dst
 
     # generate key
-    if num_srcs > 1: 
+    if num_srcs > 1:
         props['key'] = '['+','.join(src_names)+']' + '->' + '['+dst_name+']'
     else: props['key'] = src_names[0] + '->' + dst_name
 
@@ -155,37 +155,37 @@ def map_props(map):
 
 def on_device(dev, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print 'ON_DEVICE (added or modified)', dev_props(dev)
+#        print('ON_DEVICE (added or modified)', dev_props(dev))
         server.send_command("add_devices", [dev_props(dev)])
     elif action == mapper.REMOVED:
-#        print 'ON_DEVICE (removed)', dev_props(dev)
+#        print('ON_DEVICE (removed)', dev_props(dev))
         server.send_command("del_device", dev_props(dev))
     elif action == mapper.EXPIRED:
-#        print 'ON_DEVICE (expired)', dev_props(dev)
+#        print('ON_DEVICE (expired)', dev_props(dev))
         db.flush()
 
 def on_link(link, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print 'ON_LINK (added or modified)', link_props(link)
+#        print('ON_LINK (added or modified)', link_props(link))
         server.send_command("add_links", [link_props(link)])
     elif action == mapper.REMOVED:
-#        print 'ON_LINK (removed)', link_props(link)
+#        print('ON_LINK (removed)', link_props(link))
         server.send_command("del_link", link_props(link))
 
 def on_signal(sig, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print 'ON_SIGNAL (added or modified)', sig_props(sig)
+#        print('ON_SIGNAL (added or modified)', sig_props(sig))
         server.send_command("add_signals", [sig_props(sig)])
     elif action == mapper.REMOVED:
-#        print 'ON_SIGNAL (removed)', sig_props(sig)
+#        print('ON_SIGNAL (removed)', sig_props(sig))
         server.send_command("del_signal", sig_props(sig))
 
 def on_map(map, action):
     if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print 'ON_MAP', '(added)' if action == mapper.ADDED else '(modified)', map_props(map)
+#        print('ON_MAP', '(added)' if action == mapper.ADDED else '(modified)', map_props(map))
         server.send_command("add_maps", [map_props(map)])
     elif action == mapper.REMOVED:
-#        print 'ON_MAP (removed)', map_props(map)
+#        print('ON_MAP (removed)', map_props(map))
         server.send_command("del_map", map_props(map))
 
 def find_sig(fullname):
@@ -195,13 +195,13 @@ def find_sig(fullname):
         sig = dev.signal(names[1])
         return sig
     else:
-        print 'error: could not find device', names[0]
+        print('error: could not find device', names[0])
 
 def find_map(srckeys, dstkey):
     srcs = [find_sig(k) for k in srckeys]
     dst = find_sig(dstkey)
     if not (all(srcs) and dst): 
-        print srckeys, ' and ', dstkey, ' not found on network!'
+        print(srckeys, ' and ', dstkey, ' not found on network!')
         return
     intersect = dst.maps()
     for s in srcs:
@@ -234,7 +234,7 @@ def set_map_properties(args, map):
     if not map:
         map = find_map(srckeys, dstkey)
         if not map:
-            print "error: couldn't retrieve map ", srckeys, " -> ", dstkey
+            print("error: couldn't retrieve map ", srckeys, " -> ", dstkey)
             return
     for key in props:
         if key in ['version']:
@@ -292,14 +292,14 @@ def set_map_properties(args, map):
             elif props['mode'] == 'expression':
                 map.mode = mapper.MODE_EXPRESSION
             else:
-                print 'error: unknown mode ', props['mode']
+                print('error: unknown mode ', props['mode'])
         elif key == 'protocol':
             if props['protocol'] == 'UDP':
                 map.protocol = mapper.PROTO_UDP
             elif props['protocol'] == 'TCP':
                 map.protocol = mapper.PROTO_TCP
             else:
-                print 'error: unknown protocol ', props['protocol']
+                print('error: unknown protocol ', props['protocol'])
         else:
             map.set_property(key, props[key])
     map.push()
@@ -371,15 +371,15 @@ def new_map(args):
     srcs = [find_sig(k) for k in srckeys]
     dst = find_sig(dstkey)
     if not (all(srcs) and dst): 
-        print srckeys, ' and ', dstkey, ' not found on network!'
+        print(srckeys, ' and ', dstkey, ' not found on network!')
         return
 
     map = mapper.map(srcs, dst)
     if not map:
-        print 'error: failed to create map', srckeys, "->", dstkey
+        print('error: failed to create map', srckeys, "->", dstkey)
         return;
     else:
-        print 'created map: ', srckeys, ' -> ', dstkey
+        print('created map: ', srckeys, ' -> ', dstkey)
     if props and type(props) is dict:
         set_map_properties(args, map)
     map.push()

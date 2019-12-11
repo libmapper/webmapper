@@ -122,9 +122,9 @@ var command = {
             else
                 L = L[0];
             if ("WebSocket" in window)
-                command.ws = new WebSocket("ws://" + L + "/sock");
+                command.ws = new WebSocket("ws://" + L + "/chat");
             else if ("MozWebSocket" in window)
-                command.ws = new MozWebSocket("ws://" + L + "/sock");
+                command.ws = new MozWebSocket("ws://" + L + "/chat");
         }
         if (!command.ws) {
             if (console)
