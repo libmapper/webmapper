@@ -349,13 +349,13 @@ def init_database(arg):
         db.add_map_callback(on_map)
         initialized = True
     else:
-        server.send_command("add_devices", map(dev_props, db.devices()))
-        server.send_command("add_links", map(link_props, db.links()))
-        server.send_command("add_signals", map(sig_props, db.signals()))
-        server.send_command("add_maps", map(map_props, db.maps()))
+        server.send_command("add_devices", [dev_props(d) for d in db.devices()])
+        server.send_command("add_links", [link_props(l) for l in db.links()])
+        server.send_command("add_signals", [sig_props(s) for s in db.signals()])
+        server.send_command("add_maps", [map_props(m) for m in db.maps()])
 
 server.add_command_handler("add_devices",
-                           lambda x: ("add_devices", map(dev_props, db.devices())))
+                           lambda x: ("add_devices", [dev_props(d) for d in db.devices()]))
 
 def subscribe(name):
     if name == "all_devices":
@@ -392,13 +392,13 @@ def release_map(args):
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("add_signals",
-                           lambda x: ("add_signals", map(sig_props, db.signals())))
+                           lambda x: ("add_signals", [sig_props(s) for s in db.signals()]))
 
 server.add_command_handler("add_links",
-                           lambda x: ("add_links", map(link_props, db.links())))
+                           lambda x: ("add_links", [link_props(l) for l in db.links()]))
 
 server.add_command_handler("add_maps",
-                           lambda x: ("add_maps", map(map_props, db.maps())))
+                           lambda x: ("add_maps", [map_props(m) for m in db.maps()]))
 
 server.add_command_handler("set_map", lambda x: set_map_properties(x, None))
 
