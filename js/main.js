@@ -64,6 +64,12 @@ function init() {
                         "</div>"+
                      "</div>");
 
+    // init the view
+    $('#container').empty();
+    tooltip = new Tooltip();
+    viewManager = new ViewManager(document.getElementById('container'), database,
+                                  tooltip);
+
     // init the top menu
     $('#TopMenuWrapper').empty()
     saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
@@ -76,12 +82,6 @@ function init() {
                                       database, viewManager);
     netSelector = new NetworkSelector(document.getElementById("TopMenuWrapper"),
                                       database, viewManager);
-
-    // init the view
-    $('#container').empty();
-    tooltip = new Tooltip();
-    viewManager = new ViewManager(document.getElementById('container'), database,
-                                  tooltip);
 
     // init controller
     initMonitorCommands();
