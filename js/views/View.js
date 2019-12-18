@@ -151,11 +151,40 @@ class View {
             action = "unsolo";
         else
             action = dev.hidden ? "unhide" : "hide";
-        self.tooltip.showTable(
-                               dev.status+" device (click to "+action+")", {
-                               name: dev.name,
-                               signals: dev.signals.size()
-                               }, e.x, e.y);
+        // TODO: make this more efficient
+        let filtered = Object.keys(dev)
+                             .filter(k => !['hidden', 'host', 'hue', 'index',
+                                            'key', 'links', 'link_angles', 'name',
+                                            'num_incoming_maps', 'num_outgoing_maps',
+                                            'num_inputs', 'num_links', 'num_outputs',
+                                            'numVisibleSigs', 'port', 'signals',
+                                            'status', 'synced', 'view'].includes(k))
+                             .map(k => Object.assign({}, {[k]: dev[k]}))
+                             .reduce((res, o) => Object.assign(res, o), {});
+        filtered.signals =
+             dev.signals
+                .filter(s => s.direction == "input")
+                .size()
+            +" in, "
+            +dev.signals
+                .filter(s => s.direction == "output")
+                .size()
+            +" out";
+        let maps = self.database.maps;
+        filtered.maps =
+             maps.filter(m => dev === m.dst.signal.device)
+                 .size()
+            +" in, "
+            +maps.filter(m => m.srcs.some(s => s.signal.device === dev))
+                 .size()
+            +" out";
+        filtered.links = dev.num_links;
+        filtered.address = dev.host+':'+dev.port;
+        // sort
+        filtered = Object.keys(filtered)
+                         .sort()
+                         .reduce((r, k) => (r[k] = filtered[k], r), {});
+        self.tooltip.showTable(dev.name+" (click to "+action+")", filtered, e.x, e.y);
     }
 
     setDevHover(dev) {
@@ -206,7 +235,7 @@ class View {
         link.view.hover(
             function(e) {
                 self.tooltip.showTable(
-                    link.status+" link", {
+                    "link", {
                         source: link.src.key,
                         destination: link.dst.key
                     }, e.x, e.y);
@@ -311,15 +340,29 @@ class View {
                        x = sig.position.x;
                        y = sig.position.y;
                     }
-                    self.tooltip.showTable(
-                        sig.device.status+" signal", {
-                            name: sig.key,
-                            direction: sig.direction,
-                            type: typestring,
-                            unit: sig.unit,
-                            minimum: minstring,
-                            maximum: maxstring,
-                        }, x, y);
+                    let filtered = Object.keys(sig)
+                                         .filter(k => !['device', 'force', 'hidden',
+                                                        'index', 'key', 'name',
+                                                        'num_maps', 'num_incoming_maps',
+                                                        'num_instances',
+                                                        'num_outgoing_maps', 'position',
+                                                        'target', 'view'].includes(k))
+                                         .map(k => Object.assign({}, {[k]: sig[k]}))
+                                         .reduce((res, o) => Object.assign(res, o), {});
+                    filtered.instances = sig.num_instances;
+                    let maps = self.database.maps;
+                    filtered.maps =
+                        maps.filter(m => sig === m.dst.signal)
+                            .size()
+                       +" in, "
+                       +maps.filter(m => m.srcs.some(s => s.signal === sig))
+                            .size()
+                       +" out";
+                    // sort
+                    filtered = Object.keys(filtered)
+                                     .sort()
+                                     .reduce((r, k) => (r[k] = filtered[k], r), {});
+                    self.tooltip.showTable(sig.name, filtered, x, y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
@@ -489,13 +532,12 @@ class View {
         map.view.hover(
             function(e) {
                 if (!self.draggingFrom) {
-                    self.tooltip.showTable(
-                        "Map", {
-                            source: map.srcs.map(s => s.signal.key).join(', '),
-                            destination: map.dst.signal.key,
-                            mode: map.mode,
-                            expression: map.expression,
-                        }, e.x, e.y);
+                    let filtered = Object.keys(map)
+                                         .filter(k => !['dst', 'srcs', 'view'].includes(k))
+                                         .sort()
+                                         .map(k => Object.assign({}, {[k]: map[k]}))
+                                         .reduce((res, o) => Object.assign(res, o), {});
+                    self.tooltip.showTable(map.key, filtered, e.x, e.y);
                 }
                 map.view.highlight();
             },
