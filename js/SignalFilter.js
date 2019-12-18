@@ -19,13 +19,14 @@ class SignalFilter{
         let self = this;
         $('#srcSearch, #dstSearch').on({
             keydown: function(e) {
-                e.stopPropagation();
                 if (e.metaKey == true) {
-                    e.preventDefault();
                     if (e.which == 70) {
+                        e.stopPropagation();
+                        e.preventDefault();
                         // remove focus
                         $(this).blur();
                         self.activate();
+                        return;
                     }
                 }
                 // check enter or escape
