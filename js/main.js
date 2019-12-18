@@ -83,12 +83,6 @@ function init() {
     netSelector = new NetworkSelector(document.getElementById("TopMenuWrapper"),
                                       database, viewManager);
 
-    // init the view
-    $('#container').empty();
-    tooltip = new Tooltip();
-    viewManager = new ViewManager(document.getElementById('container'), database,
-                                  tooltip);
-
     // init controller
     initMonitorCommands();
     initViewCommands();
