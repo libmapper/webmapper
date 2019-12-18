@@ -100,9 +100,9 @@ class ConsoleView extends View {
                     case 'num_incoming_maps':
                     case 'num_outgoing_maps':
                     case 'position':
-                    case 'direction':
+                        break;
                     case 'type':
-                    case 'length':
+                        s += " "+key+": "+type_name(sig[key])+";";
                         break;
                     case 'min':
                     case 'max':
@@ -217,6 +217,7 @@ class ConsoleView extends View {
                         echo('      -s    signals');
                         echo('      -l    links');
                         echo('      -m    maps');
+                        echo('      -f    show detailed metadata');
                         echo('  map <srcs> -> <dst>: create a map from <srcs> to <dst>');
                         echo('  unmap <srcs> -> <dst>: remove map from <src> to <dst>');
                         echo('  unmap <index>: remove the map at the specified index');

@@ -517,22 +517,7 @@ class SignalTable {
             function ignore(sig) {}
 
             function add(sig) {
-                let type;
-                switch (sig.type) {
-                    case 'i':
-                        type = 'int';
-                        break;
-                    case 'f':
-                        type = 'float';
-                        break;
-                    case 'd':
-                        type = 'double';
-                        break;
-                    default:
-                        type = '?';
-                        break;
-                }
-
+                let type = type_name(sig.type);
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
 

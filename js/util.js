@@ -427,3 +427,16 @@ function distance(x1, y1, x2, y2) {
 function distance_squared(x1, y1, x2, y2) {
     return norm_squared(x2 - x1, y2 - y1);
 }
+
+function type_name(initial) {
+    switch (initial) {
+        case 'i':
+            return "int";
+        case 'f':
+            return "float";
+        case 'd':
+            return "double";
+        default:
+            return "?";
+    }
+}

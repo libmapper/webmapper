@@ -346,10 +346,11 @@ class View {
                                                         'num_maps', 'num_incoming_maps',
                                                         'num_instances',
                                                         'num_outgoing_maps', 'position',
-                                                        'target', 'view'].includes(k))
+                                                        'target', 'type', 'view'].includes(k))
                                          .map(k => Object.assign({}, {[k]: sig[k]}))
                                          .reduce((res, o) => Object.assign(res, o), {});
                     filtered.instances = sig.num_instances;
+                    filtered.type = type_name(sig.type);
                     let maps = self.database.maps;
                     filtered.maps =
                         maps.filter(m => sig === m.dst.signal)
