@@ -105,6 +105,10 @@ MapperNodeArray.prototype = {
         }
         else {
             if (this.obj_type == 'device') {
+                // "hide" device by default if other devices are hidden
+                if (this.some(d => d.hidden))
+                    obj.hidden = true;
+
                 obj.signals = new MapperNodeArray('signal', this.cb_func);
 
                 // create hue hash
@@ -333,11 +337,8 @@ function MapperDatabase() {
     };
 
     this.add_devices = function(cmd, devs) {
-        let hidden = this.devices.some(d => d.hidden);
         for (var i in devs) {
-            let dev = this.devices.add(devs[i]);
-            if (hidden)
-                dev.hidden = true;
+            this.devices.add(devs[i]);
             command.send('subscribe', devs[i].name);
         }
     }
