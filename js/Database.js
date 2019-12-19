@@ -276,7 +276,25 @@ MapperEdgeArray.prototype = {
         // copy properties from update
         let prop;
         let updated = false;
+        for (i in obj.srcs) {
+            for (prop in obj.srcs[i]) {
+                if (obj.srcs[i].hasOwnProperty(prop)
+                    && !is_equal(existing.srcs[i][prop], obj.srcs[i][prop])) {
+                    existing.srcs[i][prop] = obj.srcs[i][prop];
+                    updated = true;
+                }
+            }
+        }
+        for (prop in obj.dst) {
+            if (obj.dst.hasOwnProperty(prop)
+                && !is_equal(existing.dst[prop], obj.dst[prop])) {
+                existing.dst[prop] = obj.dst[prop];
+                updated = true;
+            }
+        }
         for (prop in obj) {
+            if (prop == 'srcs' || prop == 'dst')
+                continue;
             if (obj.hasOwnProperty(prop)
                 && !is_equal(existing[prop], obj[prop])) {
                 existing[prop] = obj[prop];

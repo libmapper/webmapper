@@ -79,8 +79,7 @@ class MapProperties {
             keyup: function(e) {
                 e.stopPropagation();
                 if (e.which == 13 || e.which == 9) { //'enter' or 'tab' key
-                    self.setMapProperty($(this).attr('id').split(' ')[0],
-                                         this.value);
+                    self.sendCachedProperty();
                 }
                 else {
                     self.cacheMapProperty($(this).attr('id').split(' ')[0],
@@ -90,8 +89,6 @@ class MapProperties {
             click: function(e) { e.stopPropagation(); },
             focusout: function(e) {
                 e.stopPropagation();
-                self.setMapProperty($(this).attr('id').split(' ')[0],
-                                    this.value);
             },
         }, 'input');
 
@@ -370,7 +367,6 @@ class MapProperties {
     }
 
     setMapProperty(key, value) {
-        this.cacheMapProperty();
         let modes = this.mapModeCommands;
         this.database.maps.filter(this.selected).forEach(function(map) {
             if (map[key] && (map[key] == value || map[key] == parseFloat(value)))
@@ -449,6 +445,7 @@ class MapProperties {
             command.send("set_map", [map.srcs.map(s => s.signal.key),
                                      map.dst.signal.key, msg]);
         });
+        this.cachedProperty = { "key": null, "value": null };
     }
 
     on_load() {

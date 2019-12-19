@@ -249,7 +249,7 @@ def set_map_properties(args, map):
                         value = as_number(value)
                     elif subkey == 'bound_min' or subkey == 'bound_max':
                         value = boundaryStrings[value]
-                map.source(srcidx).set_property(subkey, value)
+                    map.source(srcidx).set_property(subkey, value)
                 srcidx += 1
         elif key.startswith('src'):
             srcidx = -1
