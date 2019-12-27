@@ -277,11 +277,15 @@ MapperEdgeArray.prototype = {
         let prop;
         let updated = false;
         for (i in obj.srcs) {
-            for (prop in obj.srcs[i]) {
-                if (obj.srcs[i].hasOwnProperty(prop)
-                    && !is_equal(existing.srcs[i][prop], obj.srcs[i][prop])) {
-                    existing.srcs[i][prop] = obj.srcs[i][prop];
-                    updated = true;
+            if (!existing.srcs[i])
+                existing.srcs[i] = obj.srcs[i];
+            else {
+                for (prop in obj.srcs[i]) {
+                    if (obj.srcs[i].hasOwnProperty(prop)
+                        && !is_equal(existing.srcs[i][prop], obj.srcs[i][prop])) {
+                        existing.srcs[i][prop] = obj.srcs[i][prop];
+                        updated = true;
+                    }
                 }
             }
         }
@@ -807,11 +811,11 @@ function MapperDatabase() {
             delete map.destinations;
             if (map.expression) {
                 // fix expression
-                // TODO: better regexp to avoid conflicts with user vars
-                map.expression = map.expression.replace('src[0]', "x")
-                                               .replace('dst[0]', "y")
-                                               .replace('dst', "y");
-//                console.log(map.expression)
+                let expr = map.expression.replace(/dst\[/g, "y[");
+                expr = expr.replace(/dst\s*=/g, "y=");
+                expr = expr.replace(/src\[/g, "x[");
+                map.expression = expr;
+                console.log(map.expression)
             }
 
             // fix extrema property names

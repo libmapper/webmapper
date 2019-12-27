@@ -86,6 +86,8 @@ def sig_props(sig):
         props['direction'] = 'input'
     else:
         props['direction'] = 'output'
+    if 'type' in props:
+        props['type'] = props['type'].decode('utf-8')
     return props
 
 def full_signame(sig):
@@ -111,6 +113,8 @@ def map_props(map):
             src['bound_min'] = translate_bound(src['bound_min'])
         if 'bound_max' in src:
             src['bound_max'] = translate_bound(src['bound_max'])
+        if 'type' in src:
+            src['type'] = src['type'].decode('utf-8')
         src_names.append(src_name)
         srcs.append(src)
     props['srcs'] = srcs
@@ -123,6 +127,8 @@ def map_props(map):
         dst['bound_min'] = translate_bound(dst['bound_min'])
     if 'bound_max' in dst:
         dst['bound_max'] = translate_bound(dst['bound_max'])
+    if 'type' in dst:
+        dst['type'] = dst['type'].decode('utf-8')
     props['dst'] = dst
 
     # generate key

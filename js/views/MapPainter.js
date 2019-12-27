@@ -291,7 +291,7 @@ class MapPainter {
                 y += offset * dst.vy;
         }
 
-        return {x: x, y: y};
+        return {x: x, y: y, vy: 0};
     }
 
     circle_spec(x, y, radius = 10)

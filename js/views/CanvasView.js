@@ -458,7 +458,7 @@ class CanvasMapPainter extends MapPainter
             node.top = node.y;
             let i = 0;
             for (; i < this.map.srcs.length; i++) {
-                let src = this.map.srcs[i];
+                let src = this.map.srcs[i].signal;
                 if (src.hidden) continue;
                 this.pathspecs[i] = this.canvas_path(src, {position: node,
                                                            canvasObject: true});
@@ -479,16 +479,16 @@ class CanvasMapPainter extends MapPainter
                 x = x * self.canvas.zoom + self.canvas.pan.x;
                 y = y * self.canvas.zoom + self.canvas.pan.y;
             }
-            return {x: x, y: y};
+            return {x: x, y: y, vy: 0};
         }
         let dst = this.map.dst.signal;
         let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
         if (sigs.length === 0) return null;
         sigs = sigs.concat([dst]);
 
-        let x = sigs.map(s => canvasPos(s.signal).x)
+        let x = sigs.map(s => canvasPos(s).x)
                     .reduce((accum, s) => accum + s) / sigs.length;
-        let y = sigs.map(s => canvasPos(s.signal).y)
+        let y = sigs.map(s => canvasPos(s).y)
                     .reduce((accum, s) => accum + s) / sigs.length;
 
         if (offset) {
@@ -498,7 +498,7 @@ class CanvasMapPainter extends MapPainter
                 y += offset * dst.vy;
         }
 
-        return {x: x, y: y};
+        return {x: x, y: y, vy: 0};
     }
 
     vertical(src, dst, minoffset = 30, maxoffset = 200)
