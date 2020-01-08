@@ -180,7 +180,7 @@ class ConvergentMapper
         if (this._signals_have_bounds([src, dst]))
             newx = ConvExpr.scaled(src.min, src.max, dst.min, dst.max, 'new');
         else newx = 'new'
-        return 'y='+ConvExpr.reindex(expr+'+'+newx, srckey, dstmap);
+        return 'y='+ConvExpr.reindex(expr+'+'+newx, src, dstmap);
     }
 
     // (the existing expression) * (src scaled to [0,1] range)
@@ -193,7 +193,7 @@ class ConvergentMapper
         else newx = 'new'
         newx = ConvExpr.paren_wrap(newx);
         expr = ConvExpr.paren_wrap(expr);
-        return 'y='+ConvExpr.reindex(expr+'*'+newx, srckey, dstmap);
+        return 'y='+ConvExpr.reindex(expr+'*'+newx, src, dstmap);
     }
 
     // average of the normalized signals scaled to dst range
@@ -212,7 +212,7 @@ class ConvergentMapper
         for (let i in srcs)
         {
             let src = srcs[i];
-            let x = 'x'+i;
+            let x = ConvExpr.vectorize('x'+i, src, dst);
             let [b, m] = ConvExpr.zero_to_one_params(src.min, src.max);
             offset += b;
             expr += m.toString()+'*'+x+'+';
@@ -256,7 +256,8 @@ class ConvergentMapper
 
     _signals_have_bounds(signals)
     {
-        return signals.every(sig => typeof sig.min !== 'undefined' && typeof sig.max !== 'undefined');
+        return signals.every(sig => typeof sig.min !== 'undefined'
+                                 && typeof sig.max !== 'undefined');
     }
 
     _overlapWithExistingMap(srckeys, dstkey, props)
@@ -316,8 +317,10 @@ class ConvExpr
     static zero_to_one_scaled(min, max, x)
     {
         let [offset, slope] = ConvExpr.zero_to_one_params(min, max);
-        if (isNaN(offset) || isNaN(slope))
+        if (isNaN(offset) || isNaN(slope)) {
             console.log('NaN error');
+            return x;
+        }
         return ConvExpr.offset_slope(offset, slope, x);
     }
 
@@ -338,8 +341,9 @@ class ConvExpr
         return '('+str+')';
     }
 
-    static reindex(expr, srckey, dstmap, srcexprname = 'new')
+    static reindex(expr, src, dstmap, srcexprname = 'new')
     {
+        let srckey = src.key;
         let srcs = dstmap.srcs.map(s => s.signal.key).concat([srckey]).sort();
         let idx = srcs.indexOf(srckey);
         for (let i = 0; i < dstmap.srcs.length; ++i)
@@ -347,7 +351,8 @@ class ConvExpr
             if (i < idx) continue;
             expr = ConvExpr.replace(expr, 'x'+i, 'x'+(i+1));
         }
-        return ConvExpr.replace(expr, srcexprname, 'x'+idx);
+        return ConvExpr.replace(expr, srcexprname,
+                                ConvExpr.vectorize('x'+idx, src, dstmap.dst));
     }
 
     static replace(expr, key, newkey)
@@ -364,6 +369,39 @@ class ConvExpr
             expr = expr.substring(0,idx) + newkey + expr.substring(idx+key.length);
         }
         return expr;
+    }
+
+    static vectorize(x, src, dst) {
+        console.log('vectorize', x, src, dst);
+        if (src.length > dst.length) {
+            console.log('lens:', src.name, src.length, dst.length);
+            // truncate source vector
+            if (1 == dst.length)
+                x = x+'[0]';
+            else
+                x = x+'[0:'+(dst.length-1)+']';
+        }
+        else if (src.length < dst.length) {
+            // pad source vector with zeros
+            let diff = dst.length - src.length;
+            x = '['+x+','+(new Array(diff).fill(0))+']';
+
+//            // Alternatively, fill with repetitions of source (like SC)
+//            let mult = Math.floor(dst.length - src.length);
+//            let mod = dst.length % src.length;
+//            switch (mod) {
+//                case 0:
+//                    x = '['+(Array(mult).fill(x))+']';
+//                    break;
+//                case 1:
+//                    x = '['+(Array(mult).fill(x))+x+'[0]]';
+//                    break;
+//                default:
+//                    x = '['+(Array(mult).fill(x))+x+'[0:'+(mod-1)+']]';
+//                    break;
+//            }
+        }
+        return x;
     }
 
 }

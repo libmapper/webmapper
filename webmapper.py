@@ -13,6 +13,12 @@ iface = None
 
 networkInterfaces = {'active': '', 'available': []}
 
+modes = ['undefined', 'raw', 'linear', 'expression']
+modeStrings = { 'undefined': mapper.MODE_UNDEFINED,
+                'raw': mapper.MODE_RAW,
+                'linear': mapper.MODE_LINEAR,
+                'expression': mapper.MODE_EXPRESSION }
+
 boundaryModes = ['undefined', 'none', 'mute', 'clamp', 'fold', 'wrap']
 boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
                     'none': mapper.BOUND_NONE,
@@ -93,6 +99,11 @@ def sig_props(sig):
 def full_signame(sig):
     return sig.device().name + '/' + sig.name
 
+def translate_mode(mode):
+    if mode < mapper.MODE_UNDEFINED or mode > mapper.MODE_EXPRESSION:
+        mode = mapper.MODE_UNDEFINED
+    return modes[mode]
+
 def translate_bound(bound):
     if bound < mapper.BOUND_UNDEFINED or bound > mapper.BOUND_WRAP:
         bound = mapper.BOUND_UNDEFINED
@@ -152,10 +163,8 @@ def map_props(map):
     del props['is_local']
 
     # translate some other properties
-    if props['mode'] == mapper.MODE_LINEAR:
-        props['mode'] = 'linear'
-    elif props['mode'] == mapper.MODE_EXPRESSION:
-        props['mode'] = 'expression'
+    if 'mode' in props:
+        props['mode'] = translate_mode(props['mode'])
 
     return props
 
