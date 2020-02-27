@@ -560,6 +560,14 @@ class View {
             }
             if (!map.view) {
                 map.view = new self.mapPainter(map, self.canvas, self.frame, self.database);
+                if (map.status === 'staged') {
+                    map.timeout = setTimeout(function() {
+                        if (map.status !== 'staged')
+                            return;
+                        remove_object_svg(map);
+                        self.database.maps.remove(map);
+                    }, 1000);
+                }
                 self.setMapHover(map);
             }
         });

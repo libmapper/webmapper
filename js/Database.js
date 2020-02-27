@@ -413,7 +413,7 @@ function MapperDatabase() {
         // TODO: check for convergent maps and add appropriate links
         let self = this;
         for (var i in maps) {
-//            console.log('trying to add map['+i+']', maps[i]);
+//            console.log('trying to add map['+i+']', maps[i].key, 'status', maps[i].status);
             maps[i].srcs.forEach(s => s.signal = self.find_signal(s.key));
             maps[i].dst.signal = self.find_signal(maps[i].dst.key);
             if (!maps[i].srcs.every(e => e.signal) || !maps[i].dst.signal) {
@@ -605,35 +605,35 @@ function MapperDatabase() {
                 let link_key;
                 let rev = false;
                 if (src.device.name < dst.device.name)
-                link_key = src.device.name + '<->' + dst.device.name;
-            else {
-                link_key = dst.device.name + '<->' + src.device.name;
-                rev = true;
-            }
-            let link = this.links.find(link_key);
-            if (!link) {
-                link = this.links.add({'key': link_key,
-                                       'src': rev ? dst.device : src.device,
-                                       'dst': rev ? src.device : dst.device,
-                                       'maps': [map.key],
-                                       'status': 'offline'});
-                if (src.device.links)
-                    src.device.links.push(link_key);
-                else
-                    src.device.links = [link_key];
-                if (dst.device.links)
-                    dst.device.links.push(link_key);
-                else
-                    dst.device.links = [link_key];
-            }
-            else if (!link.maps.includes(map.key))
-                link.maps.push(map.key);
-            if (link.status != 'active' && map.status == 'active') {
-                link.status = 'active';
-                this.links.cb_func('modified', 'link', link);
+                    link_key = src.device.name + '<->' + dst.device.name;
+                else {
+                    link_key = dst.device.name + '<->' + src.device.name;
+                    rev = true;
+                }
+                let link = this.links.find(link_key);
+                if (!link) {
+                    link = this.links.add({'key': link_key,
+                                           'src': rev ? dst.device : src.device,
+                                           'dst': rev ? src.device : dst.device,
+                                           'maps': [map.key],
+                                           'status': 'offline'});
+                    if (src.device.links)
+                        src.device.links.push(link_key);
+                    else
+                        src.device.links = [link_key];
+                    if (dst.device.links)
+                        dst.device.links.push(link_key);
+                    else
+                        dst.device.links = [link_key];
+                }
+                else if (!link.maps.includes(map.key))
+                    link.maps.push(map.key);
+                if (link.status != 'active' && map.status == 'active') {
+                    link.status = 'active';
+                    this.links.cb_func('modified', 'link', link);
+                }
             }
         }
-    }
     }
 
     this.exportFile = function() {
