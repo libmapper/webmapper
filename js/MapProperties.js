@@ -21,7 +21,8 @@ class MapProperties {
                 "<div id='modes' class='signalControl disabled'>Mode: </div>"+
             "</div>"+
             "<div id='expression' class='signalControl disabled hidden' style='position:absolute;width:calc(100% - 200px);left:200px;top:-20px;height:100%;padding:5px;'>"+
-                "<textarea id='expression 'class='expression' style='width:100%;height:100%;resize:none'></textarea>"+
+                "<textarea id='expression 'class='expression' style='width:90%;height:100%;resize:none;border-radius:4px;border-color:#FFF'></textarea>"+
+                "<div id='curve' class='mode'>Curve</div>"+
             "</div>"+
             "<div class='hidden' id='ranges' style='position:absolute;top:-20px;width:calc(100% - 200px);padding:5px;'></div>");
         
@@ -150,6 +151,12 @@ class MapProperties {
         $('.calibrate').click(function(e) {
             e.stopPropagation();
             self.setMapProperty(e.currentTarget.id, null);
+        });
+
+        $('#curve').click(function(e) {
+            e.stopPropagation();
+            self.view.showCurveGenerator(self.getCurveProperties(),
+                (expr) => self.setMapProperty("expression", expr));
         });
 
         $('#muteSwitch').click(function(e) {
@@ -348,6 +355,30 @@ class MapProperties {
             this.set_boundary($("#boundary_min"), dst_bound_min, 0);
         if (dst_bound_max != null)
             this.set_boundary($("#boundary_max"), dst_bound_max, 1);
+    }
+
+    getCurveProperties() {
+        var curveProps = {
+            src_min: null,
+            src_max: null,
+            dst_min: null,
+            dst_max: null,
+        };
+
+        this.database.maps.filter(this.selected).forEach(function(map) {
+            if (map.srcs.length == 1) {
+                if (curveProps.src_min == null)
+                    curveProps.src_min = map.srcs[0].min;
+                if (curveProps.src_max == null)
+                    curveProps.src_max = map.srcs[0].max;
+            }
+            if (curveProps.dst_min == null)
+                curveProps.dst_min = map.dst.min;
+            if (curveProps.dst_max == null)
+                curveProps.dst_max = map.dst.max;
+        });
+
+        return curveProps;
     }
 
     // object with arguments for the map

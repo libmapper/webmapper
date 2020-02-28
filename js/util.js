@@ -178,6 +178,22 @@ function closest_point(edge, x, y) {
     return best_p;
 }
 
+function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
+    let grow = Math.exp(curve);
+    let a = (dst_max - dst_min) / (1.0 - grow);
+    let b = dst_min + a;
+    let scaled = `(x - ${src_min}) / ${src_max - src_min}`;
+    return `y = ${b} - (${a} * pow(${grow}, ${scaled}))`;
+}
+
+function get_curve_val(x, src_min, src_max, dst_min, dst_max, curve = -4) {
+    let grow = Math.exp(curve);
+    let a = (dst_max - dst_min) / (1.0 - grow);
+    let b = dst_min + a;
+    let scaled = (x - src_min) / (src_max - src_min);
+    return b - (a * Math.pow(grow, scaled));
+}
+
 // from https://stackoverflow.com/a/20392392
 function tryParseJSON (jsonString){
     try {

@@ -439,6 +439,36 @@ form {
     border-bottom-left-radius: 6px;
 }
 
+#curve {
+    padding-left: 5px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+#curveSlider {
+    position: absolute;
+    left: 91.65%;
+    top: 83.3%;
+    -webkit-appearance: none;
+    width: calc(100/120 * 0.9 * 50vh);
+    height: 15px;
+    background: gray;
+    outline: none;
+    border-radius: 15px;
+    transform: rotate(270deg);
+    transform-origin: top left;
+}
+
+#curveSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #FFF;
+  border-radius: 15px;
+  cursor: pointer;
+}
+
 #modeExpression, #protoTCP {
     padding-left: 3px;
     padding-right: 5px;
