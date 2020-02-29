@@ -140,6 +140,10 @@ class ViewManager
         $('#'+viewType+'Button').addClass("viewButtonsel");
     }
 
+    showCurveGenerator(props, onGenerated) {
+        new CurveGenerator(props, onGenerated);
+    }
+
     _add_database_callbacks() {
         let self = this;
         this.database.clear_callbacks();

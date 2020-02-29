@@ -4,7 +4,7 @@ class MapProperties {
         this.database = database;
         this.view = view;
         this.mapModeCommands = {"Linear": 'linear', "Expression": 'expression' };
-        this.mapModes = ["Linear", "Expression"];
+        this.mapModes = ["Linear", "Curve", "Expression"];
         this.mapProtocols = ["UDP", "TCP"];
         this.boundaryIcons = ["none", "right", "left", "mute", "clamp", "wrap"];
         this.cachedProperty = { "key": null, "value": null };
@@ -17,11 +17,11 @@ class MapProperties {
 
         $('#mapPropsDiv').append(
             "<div class='topMenuContainer' style='width:190px;height:100%;'>"+
-                "<div id='protocols' class='signalControl disabled'>Protocol: </div>"+
-                "<div id='modes' class='signalControl disabled'>Mode: </div>"+
+                "<div id='protocols' class='signalControl disabled'></div>"+
+                "<div id='modes' class='signalControl disabled'></div>"+
             "</div>"+
             "<div id='expression' class='signalControl disabled hidden' style='position:absolute;width:calc(100% - 200px);left:200px;top:-20px;height:100%;padding:5px;'>"+
-                "<textarea id='expression 'class='expression' style='width:100%;height:100%;resize:none'></textarea>"+
+                "<textarea id='expression 'class='expression' style='width:80%;height:100%;resize:none'></textarea>"+
             "</div>"+
             "<div class='hidden' id='ranges' style='position:absolute;top:-20px;width:calc(100% - 200px);padding:5px;'></div>");
         
@@ -127,7 +127,16 @@ class MapProperties {
         //For the mode buttons
         $('#mapPropsContainer').on("click", '.mode', function(e) {
             e.stopPropagation();
-            self.setMapProperty("mode", e.currentTarget.innerHTML);
+            let mode = e.currentTarget.innerHTML;
+            if (mode == 'Curve') {
+                $('.mode').removeClass('sel');
+                $('#modeCurve').addClass('sel');
+                // open curve editor
+                self.view.showCurveGenerator(self.getCurveProperties(),
+                    (expr) => self.setMapProperty("expression", expr));
+            }
+            else
+                self.setMapProperty("mode", e.currentTarget.innerHTML);
         });
 
         $('#mapPropsContainer').on("click", '.protocol', function(e) {
@@ -345,6 +354,30 @@ class MapProperties {
             this.set_boundary($("#boundary_min"), dst_bound_min, 0);
         if (dst_bound_max != null)
             this.set_boundary($("#boundary_max"), dst_bound_max, 1);
+    }
+
+    getCurveProperties() {
+        var curveProps = {
+            src_min: null,
+            src_max: null,
+            dst_min: null,
+            dst_max: null,
+        };
+
+        this.database.maps.filter(this.selected).forEach(function(map) {
+            if (map.srcs.length == 1) {
+                if (curveProps.src_min == null)
+                    curveProps.src_min = map.srcs[0].min;
+                if (curveProps.src_max == null)
+                    curveProps.src_max = map.srcs[0].max;
+            }
+            if (curveProps.dst_min == null)
+                curveProps.dst_min = map.dst.min;
+            if (curveProps.dst_max == null)
+                curveProps.dst_max = map.dst.max;
+        });
+
+        return curveProps;
     }
 
     // object with arguments for the map
