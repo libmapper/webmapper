@@ -178,12 +178,89 @@ function closest_point(edge, x, y) {
     return best_p;
 }
 
+// from https://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
+function humanize(x) {
+    let log = Math.log10(Math.abs(x));
+    let sigfig = log < 0 ? -Math.floor(log)+2 : 2;
+    return x.toFixed(sigfig).replace(/\.?0*$/,'');
+}
+
+//function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
+//    let grow = Math.exp(curve);
+//    let a = (dst_max - dst_min) / (1.0 - grow);
+//    let b = dst_min + a;
+//    let scaled;
+//    if (src_min > 0)
+//        scaled = `(x - ${src_min}) * ${humanize(1.0/(src_max - src_min))}`;
+//    else
+//        scaled = `(x + ${-src_min}) * ${humanize(1.0/(src_max - src_min))}`;
+//    if (a > 0)
+//        return `y = ${humanize(b)} - ${humanize(a)} * pow(${humanize(grow)}, ${scaled})`;
+//    return `y = ${humanize(b)} + ${humanize(-a)} * pow(${humanize(grow)}, ${scaled})`;
+//}
+
 function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
     let grow = Math.exp(curve);
     let a = (dst_max - dst_min) / (1.0 - grow);
-    let b = dst_min + a;
-    let scaled = `(x - ${src_min}) / ${src_max - src_min}`;
-    return `y = ${b} - (${a} * pow(${grow}, ${scaled}))`;
+    let b = humanize(dst_min + a);
+
+    let expr = 'y = ';
+    if (b)
+        expr += b;
+    a = humanize(a);
+    if (a == 1)
+        expr += ` - `;
+    else if (a == -1)
+        expr += ` + `;
+    else if (a > 0)
+        expr += ` - ${a} * `;
+    else if (a < 0)
+        expr += ` + ${-a} * `;
+    expr += `pow(${humanize(grow)}, `;
+    if (src_min == 0)
+        expr += 'x';
+    else if (src_min > 0)
+        expr += `(x - ${src_min})`;
+    else
+        expr += `(x + ${-src_min})`;
+    let c = humanize(1.0/(src_max - src_min));
+    if (c == 1)
+        expr += `)`;
+    else
+        expr += ` * ${c})`;
+    return expr;
+}
+
+function generate_curve_display(src_min, src_max, dst_min, dst_max, curve = -4) {
+    let grow = Math.exp(curve);
+    let a = (dst_max - dst_min) / (1.0 - grow);
+    let b = humanize(dst_min + a);
+
+    let expr = '<var>y</var> = ';
+    if (b)
+        expr += b;
+    a = humanize(a);
+    if (a == 1)
+        expr += ` - `;
+    else if (a == -1)
+        expr += ` + `;
+    else if (a > 0)
+        expr += ` - ${a} * `;
+    else if (a < 0)
+        expr += ` + ${-a} * `;
+    expr += humanize(grow) + '<sup>';
+    if (src_min == 0)
+        expr += '<var>x</var>';
+    else if (src_min > 0)
+        expr += `(<var>x</var> - ${src_min})`;
+    else
+        expr += `(<var>x</var> + ${-src_min})`;
+    let c = humanize(1.0/(src_max - src_min));
+    if (c == 1)
+        expr += `</sup>`;
+    else
+        expr += ` * ${c}</sup>`;
+    return expr;
 }
 
 function get_curve_val(x, src_min, src_max, dst_min, dst_max, curve = -4) {
