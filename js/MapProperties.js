@@ -205,6 +205,7 @@ class MapProperties {
         var dst_calibrating = null;
         var dst_bound_min = null;
         var dst_bound_max = null;
+        var src_dst_lengths_differ = false;
 
         this.database.maps.filter(this.selected).forEach(function(map) {
             if (mode == null)
@@ -263,6 +264,9 @@ class MapProperties {
                 dst_bound_max = map.dst.bound_max;
             else if (dst_bound_max != map.dst.bound_max)
                 dst_bound_max = 'multiple';
+
+            if (map.srcs[0].length != map.dst.length)
+                src_dst_lengths_differ = true;
         });
 
         if (mode != null) {
@@ -276,6 +280,8 @@ class MapProperties {
             // capitalize first letter of mode
             mode = mode.charAt(0).toUpperCase() + mode.slice(1);
             $("#mode"+mode).addClass("sel");
+            if (src_dst_lengths_differ)
+                $("#modeCurve").addClass("disabled");
             if (mode == 'Linear') {
                 $("#expression").addClass('hidden');
                 $("#ranges").removeClass('hidden');

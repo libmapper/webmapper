@@ -185,20 +185,6 @@ function humanize(x) {
     return x.toFixed(sigfig).replace(/\.?0*$/,'');
 }
 
-//function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
-//    let grow = Math.exp(curve);
-//    let a = (dst_max - dst_min) / (1.0 - grow);
-//    let b = dst_min + a;
-//    let scaled;
-//    if (src_min > 0)
-//        scaled = `(x - ${src_min}) * ${humanize(1.0/(src_max - src_min))}`;
-//    else
-//        scaled = `(x + ${-src_min}) * ${humanize(1.0/(src_max - src_min))}`;
-//    if (a > 0)
-//        return `y = ${humanize(b)} - ${humanize(a)} * pow(${humanize(grow)}, ${scaled})`;
-//    return `y = ${humanize(b)} + ${humanize(-a)} * pow(${humanize(grow)}, ${scaled})`;
-//}
-
 function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
     let grow = Math.exp(curve);
     let a = (dst_max - dst_min) / (1.0 - grow);

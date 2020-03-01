@@ -19,11 +19,34 @@ class CurveGenerator {
         // Axes
         let box = canvas.rect(10, 10, 100, 100, 2).attr({'stroke': '#FFF', 'stroke-width': 1});
 
+        // Ranges
+        let src_min = 0.0;
+        if (Array.isArray(props.src_min))
+            src_min = props.src_min[0];
+        else if (props.src_min !== 'undefined')
+            src_min = props.src_min;
+        let src_max = 1.0;
+        if (Array.isArray(props.src_max))
+            src_max = props.src_max[0];
+        else if (props.src_max !== 'undefined')
+            src_max = props.src_max;
+        let dst_min = 0.0;
+        if (Array.isArray(props.dst_min))
+            dst_min = props.dst_min[0];
+        else if (props.dst_min !== 'undefined')
+            dst_min = props.dst_min;
+        let dst_max = 1.0;
+        if (Array.isArray(props.dst_max))
+            dst_max = props.dst_max[0];
+        else if (props.dst_max !== 'undefined')
+            dst_max = props.dst_max;
+
         // Axis labels
-        canvas.text(7, 10, props.dst_max.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
-        canvas.text(7, 105, props.dst_min.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
-        canvas.text(15, 115, props.src_min.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
-        canvas.text(110, 115, props.src_max.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
+        console.log('dst_max: ', dst_max);
+        canvas.text(7, 10, dst_max.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
+        canvas.text(7, 105, dst_min.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
+        canvas.text(15, 115, src_min.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
+        canvas.text(110, 115, src_max.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
 
         $('#curveSvg svg').css('overflow', 'visible');
         const reso = 20;
@@ -49,10 +72,8 @@ class CurveGenerator {
             		y = 110.0 - y * 100.0;
                     points[i].attr('cy', y);
                 }
-                let expr = generate_curve_display(props.src_min,
-                                                  props.src_max,
-                                                  props.dst_min,
-                                                  props.dst_max,
+                let expr = generate_curve_display(src_min, src_max,
+                                                  dst_min, dst_max,
                                                   c);
                 $('#curveExprDisplay').empty().append(expr);
                 $('#curveGenerate').removeClass('disabled');
@@ -66,11 +87,7 @@ class CurveGenerator {
         $('#curveGenerate').click(function(e) {
             e.stopPropagation();
             e.preventDefault();
-            let expr = generate_curve(props.src_min,
-                                      props.src_max,
-                                      props.dst_min,
-                                      props.dst_max,
-                                      c);
+            let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
             onGenerated(expr);
             $('#curveEditorWindow').remove();
         });
