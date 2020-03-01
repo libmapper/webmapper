@@ -48,7 +48,7 @@ class CurveGenerator {
         canvas.text(15, 115, src_min.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
         canvas.text(110, 115, src_max.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
 
-        $('#curveSvg svg').css('overflow', 'visible');
+        $('#curveEditor svg').css('overflow', 'visible');
         const reso = 20;
         let points = [];
         for (let i = 0; i <= reso; i++) {
@@ -89,7 +89,6 @@ class CurveGenerator {
             e.preventDefault();
             let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
             onGenerated(expr);
-            $('#curveEditorWindow').remove();
         });
         $('#curveEditorWindow').on('click', function(e) {
             e.stopPropagation();
