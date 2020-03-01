@@ -5,7 +5,7 @@ class CurveGenerator {
             return;
         }
 
-        let c = 0.01;
+        let c = props.curve !== null ? props.curve : 0.01;
 
         let body = $('body');
         $(body).append("<div id='curveEditorWindow' style='position:absolute;left:calc(50% - 30vh);top:25%;background:#494949;width:60vh;height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;border-radius:12px;'></div>");
@@ -42,7 +42,6 @@ class CurveGenerator {
             dst_max = props.dst_max;
 
         // Axis labels
-        console.log('dst_max: ', dst_max);
         canvas.text(7, 10, dst_max.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
         canvas.text(7, 105, dst_min.toFixed(1)).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
         canvas.text(15, 115, src_min.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
@@ -68,7 +67,6 @@ class CurveGenerator {
                 for (let i = 0; i <= reso; i++) {
                     let x = i / reso;
             		let y = get_curve_val(x, 0.0, 1.0, 0.0, 1.0, c);
-            		x = 10.0 + x * 100.0;
             		y = 110.0 - y * 100.0;
                     points[i].attr('cy', y);
                 }
@@ -88,7 +86,7 @@ class CurveGenerator {
             e.stopPropagation();
             e.preventDefault();
             let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
-            onGenerated(expr);
+            onGenerated(expr, c);
         });
         $('#curveEditorWindow').on('click', function(e) {
             e.stopPropagation();

@@ -132,8 +132,10 @@ class MapProperties {
                 $('.mode').removeClass('sel');
                 $('#modeCurve').addClass('sel');
                 // open curve editor
-                self.view.showCurveGenerator(self.getCurveProperties(),
-                    (expr) => self.setMapProperty("expression", expr));
+                self.view.showCurveGenerator(self.getCurveProperties(), function(expr, c) {
+                        self.setMapProperty("expression", expr);
+                        self.setMapProperty("curve", c);
+                    });
             }
             else
                 self.setMapProperty("mode", e.currentTarget.innerHTML);
@@ -368,6 +370,7 @@ class MapProperties {
             src_max: null,
             dst_min: null,
             dst_max: null,
+            curve: null,
         };
 
         this.database.maps.filter(this.selected).forEach(function(map) {
@@ -381,6 +384,8 @@ class MapProperties {
                 curveProps.dst_min = map.dst.min;
             if (curveProps.dst_max == null)
                 curveProps.dst_max = map.dst.max;
+            if (map.curve !== 'undefined')
+                curveProps.curve = map.curve;
         });
 
         return curveProps;
