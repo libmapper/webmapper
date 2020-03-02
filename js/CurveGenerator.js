@@ -81,12 +81,18 @@ class CurveGenerator {
 
         // Generate button
         $('#curveEditorWindow').append("<div id='curveExprDisplay' style='width:90%;text-align:center;color:white;height:3em'>Drag slider to generate a curve</div>"
-                                       +"<div id='curveGenerate' class='button sel disabled' style='width:80%;text-align:center;color:white'>Apply to map</div>");
+                                       +"<div style='width:70%'><div id='curveGenerate' class='button sel disabled' style='width:45%;text-align:center;color:white'>Apply to map</div>"
+                                       +"<div id='curveEditorClose' class='button sel' style='width:45%;text-align:center;color:white;float:right'>Close editor</div></div>");
         $('#curveGenerate').click(function(e) {
             e.stopPropagation();
             e.preventDefault();
             let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
             onGenerated(expr, c);
+        });
+        $('#curveEditorClose').click(function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            $('#curveEditorWindow').remove();
         });
         $('#curveEditorWindow').on('click', function(e) {
             e.stopPropagation();

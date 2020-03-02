@@ -209,6 +209,7 @@ path {
     background: rgba(220, 220, 220, 0.1);
     text-align: center;
     text-decoration: bold;
+    border-radius: 12px 12px 0px 0px;
 }
 
 .topMenuContainer {
@@ -324,6 +325,13 @@ form {
     background-position: -120px 0px;
 }
 /****************/
+
+.button {
+    padding: 3px;
+    color: white;
+    cursor: pointer;
+    border-radius: 12px;
+}
 
 #saveButton, #loadButton {
     cursor: pointer;
