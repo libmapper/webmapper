@@ -412,23 +412,7 @@ class ChordView extends View {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
-                let r = self.radius ? self.radius : 0;
-                let angleInc;
-                if (src.status == 'offline') {
-                    if (src.draggingFrom) {
-                        r += 50;
-                        angleInc = self.onlineInc;
-                    }
-                    else
-                        angleInc = self.offlineInc;
-                }
-                else {
-                    angleInc = self.onlineInc;
-                }
-                let path = [['M', src.view.pstart.x, src.view.pstart.y],
-                            ['A', r, r, angleInc, 0, 1,
-                             src.view.pstop.x, src.view.pstop.y],
-                            ['Z']];
+                let path = circle_path(self.mapPane.cx, self.mapPane.cy, 1);
                 link.view = self.canvas.path(path);
             }
             link.src_index = (src.link_angles.length
