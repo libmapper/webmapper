@@ -454,6 +454,10 @@ form {
     border-bottom-right-radius: 6px;
 }
 
+#modeCurve {
+    padding-left: 3px;
+}
+
 .button {
     padding-right: 3pt;
     margin-bottom: 10px;

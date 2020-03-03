@@ -5,7 +5,7 @@ class CurveGenerator {
             return;
         }
 
-        let c = props.curve !== null ? props.curve : 0.01;
+        let c = (props.curve !== null && props.curve !== undefined) ? props.curve : 0.01;
 
         let body = $('body');
         $(body).append("<div id='curveEditorWindow' style='position:absolute;left:calc(50% - 30vh);top:25%;background:#494949;width:60vh;height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;border-radius:12px;'></div>");
@@ -23,22 +23,22 @@ class CurveGenerator {
         let src_min = 0.0;
         if (Array.isArray(props.src_min))
             src_min = props.src_min[0];
-        else if (props.src_min !== 'undefined')
+        else if (props.src_min !== undefined)
             src_min = props.src_min;
         let src_max = 1.0;
         if (Array.isArray(props.src_max))
             src_max = props.src_max[0];
-        else if (props.src_max !== 'undefined')
+        else if (props.src_max !== undefined)
             src_max = props.src_max;
         let dst_min = 0.0;
         if (Array.isArray(props.dst_min))
             dst_min = props.dst_min[0];
-        else if (props.dst_min !== 'undefined')
+        else if (props.dst_min !== undefined)
             dst_min = props.dst_min;
         let dst_max = 1.0;
         if (Array.isArray(props.dst_max))
             dst_max = props.dst_max[0];
-        else if (props.dst_max !== 'undefined')
+        else if (props.dst_max !== undefined)
             dst_max = props.dst_max;
 
         // Axis labels
@@ -92,6 +92,7 @@ class CurveGenerator {
         $('#curveEditorClose').click(function(e) {
             e.stopPropagation();
             e.preventDefault();
+            onGenerated(null);
             $('#curveEditorWindow').remove();
         });
         $('#curveEditorWindow').on('click', function(e) {
@@ -99,6 +100,8 @@ class CurveGenerator {
         });
         $(body).one('click', function(e) {
             e.stopPropagation();
+            e.preventDefault();
+            onGenerated(null);
             $('#curveEditorWindow').remove();
         });
     }

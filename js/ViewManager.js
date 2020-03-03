@@ -326,6 +326,10 @@ class ViewManager
                     }
                     break;
                 case 27:
+                    if ($('#curveEditorWindow')) {
+                        $('#container').trigger("updateMapProperties");
+                        $('#curveEditorWindow').remove();
+                    }
                     self.views[self.currentView].escape();
                     break;
             }

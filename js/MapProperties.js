@@ -129,13 +129,24 @@ class MapProperties {
             e.stopPropagation();
             let mode = e.currentTarget.innerHTML;
             if (mode == 'Curve') {
+                let sel = $('#modeLinear');
+                if (!$(sel).hasClass('sel'))
+                    sel = $('#modeExpression')
+                if (!$(sel).hasClass('sel'))
+                    sel = null;
                 $('.mode').removeClass('sel');
                 $('#modeCurve').addClass('sel');
                 // open curve editor
                 self.view.showCurveGenerator(self.getCurveProperties(), function(expr, c) {
+                    if (expr !== null) {
                         self.setMapProperty("expression", expr);
                         self.setMapProperty("curve", c);
-                    });
+                    }
+                    else {
+                        $(sel).addClass('sel');
+                        $('#modeCurve').removeClass('sel');
+                    }
+                });
             }
             else
                 self.setMapProperty("mode", e.currentTarget.innerHTML);
