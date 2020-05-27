@@ -9,7 +9,7 @@ During a number of projects we have found that the "mapping" task – in which c
 
 We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
-### Functionality
+## Functionality
 
 Webmapper aims to support the mapping task in three ways:
 
@@ -23,7 +23,9 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 
 * collaborative undo/redo
 
-### To run:
+## To run:
+
+Note: webmapper is developed and works with Chromium/Chrome. It may work with other browsers.
 
 1. Build and install [libmapper][libmapper]
 2. Copy `_mapper.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory.
@@ -33,27 +35,29 @@ All libmapper GUIs function as “dumb terminals” — no handling of mapping c
 
 If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal
 
-### To build standalone application:
+### To build a standalone application for macOS:
 
 1. $ python setup.py py2app
 
-### Saving and loading:
+---
+
+## Saving and loading:
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/file_io.png">
 
 Released versions of Webmapper use "naïve" file loading, in which maps specifications loaded from file are matched against all of the devices currently active on the network. This is intended to support *transportability* of mapping specifications between similar devices if their parameter spaces are structured similarly (cf. the [GDIF project][GDIF]). It also ensures that files will still load if a device receives a different ordinal id than the one used when the file was saved. Unfortunately, this naïve approach may also cause unintended consequences if a file is loaded when multiple instances of an involved device are present – to avoid these problems, see [hiding devices](#hiding_devices) in the description of the Chord View below.
 
-#### In development: map staging
+### In development: map staging
 
 We are working on a new functionality called *map staging*. While the previous naïve approach loaded saved maps against all of the device names in the current tab, loading a file now switches to a new view showing only devices and network links. The file is parsed to retrieve the number of devices involved, and an interactive object is displayed allowing the user to assign device representations from the file to devices that are active on the network. Once the devices have been assigned, clicking on the central file representation launches an attempt to recreate the saved maps.
 
-### Searching/filtering signals
+## Searching/filtering signals
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
 
 Text boxes are provided for filtering source and destination signals by name.
 
-### Creating maps
+## Creating maps
 
 Lines representing inter-signal **maps** may be drawn between signals using drag-and-drop or by clicking on the source signal and then the destination signal.
 
@@ -64,18 +68,20 @@ Webmapper now also supports the creation and representation of *convergent* maps
 3. take the average of all the sources of the convergent map
 4. use the libmapper defined default expression
 
-### Selecting maps
+## Selecting maps
 
 Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Hold down the `Shift` key to select multiple maps.
 
-### Editing map properties
+## Editing map properties
 
-<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
+If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). In addition to specifying whether the map updates will be transported using UDP or TCP, the *mode* of the map can be set to `Linear`, `Curve`, or `Expression`.
 
-If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s):
+### Linear mode
 
-* **Mode:** switch between `Linear` and `Expression` mode.
-* **Expression:** view and edit the expression used for processing values streaming on this map
+In linear mode the following properties can be modified:
+
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_linear.png">
+
 * **Src Range:** view and edit the range (minimum and maximum values) for each source of the selected map. New maps will have these values autopopulated from the source signal's minimum and maximum properties if they are specified. When a map is in `Linear Mode`, these values will be used to calculate an interpolation function.
     * **Range Switch:** the double arrow button located between the Src Range fields can be used to swap the minimum and maximum.
     * **Calib:** Toggle `calibration` to incoming values.
@@ -88,27 +94,40 @@ If a map or maps are selected, the *map property editor* becomes active. This pa
         * `Fold` Value continues in opposite direction
         * `Wrap` Value appears as modulus offset at the opposite boundary
 
-### Global Commands
+### Curve mode
 
-| Shortcut              | Action                    |
-| --------------------- | ------------------------- |
-| cmd + 1-8             | Switch view               |
-| cmd + O               | Open file                 |
-| cmd + S               | Save file                 |
-| cmd + F               | Filter signal names       |
-| cmd + A               | Select all displayed maps |
-| tab                   | Jump between text boxes   |
-| delete, backspace     | Remove selected maps      |
-| +, -                  | Increase/decrease zoom    |
-| ←, ↑, →, ↓            | Pan canvas                |
-| cmd + 0               | Reset pan and zoom        |
-| M                     | Toggle muting for selected maps, or hold down the while creating a new map to set its initial `muted` property to `true`.
+Pressing the `curve` button invokes the curve editor. Dragging the slider up or down will modify the generated curve. Once a curve has been applied to a map the mode will switch to `expression` and the generated expression will take effect. The curve editor can be dismissed by clicking the `close editor` button or by clicking in the UI outside the editor.
 
-#### Scrolling and panning
+<img width="49%" style="padding:0px" src="./doc/screenshots/curve_start.png">
+<img width="49%" style="float:right;padding:0px" src="./doc/screenshots/curve_edit.png">
 
-Scroll and pan using using multitouch gestures, mouse scroll wheel or arrow keys. Scrolling over signal tables will be contrained to the table only, while scrolling and panning over canvas areas is will affect the entire display.
+### Expression mode
 
-#### Zooming
+This mode allows the user to view and edit the expression used for processing values streaming on this map.
+
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_expr.png">
+
+## Global Commands
+
+| Action                        | KDE/Gnome/Windows | macOS
+| ----------------------------- | ----------------- | -----------
+| Switch to view *N, N* = 1...8 | `Ctrl`+*N*        | `⌘ Cmd`+*N*
+| Open file.                    | `Ctrl`+`O`        | `⌘ Cmd`+`O`
+| Save file                     | `Ctrl`+`S`        | `⌘ Cmd`+`S`
+| Filter signal names.          | `Ctrl`+`F`        | `⌘ Cmd`+`F`
+| Select all displayed maps     | `Ctrl`+`A`        | `⌘ Cmd`+`A`
+| Jump between text boxes       | `tab`             | `tab`
+| Remove selected maps          | `del`             | `delete`
+| Increase/decrease zoom        | `+``-`            | `+``-`
+| Pan canvas                    | `←``↑``→``↓`      | `←``↑``→``↓`
+| Reset pan and zoom            | `Ctrl`+`0`        | `⌘ Cmd`+`0`
+| Toggle muting for selected maps, or hold down the while creating a new map to set its initial `muted` property to `true`.  | `M` | `M`
+
+### Scrolling and panning
+
+Scroll and pan using using multitouch gestures, mouse scroll wheel or arrow keys. Scrolling over signal tables will be constrained to the table only, while scrolling and panning over canvas areas is will affect the entire display.
+
+### Zooming
 
 Zoom using multitouch pinch and spread gestures or the `+`/`-` keys. Applying zoom commands over tables will zoom the table only, while zoom commands applied over canvas areas will zoom the entire display.
 
