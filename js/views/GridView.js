@@ -5,9 +5,9 @@
 'use strict';
 
 class GridView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
         super('grid', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip, pie, GridMapPainter);
+              canvas, graph, tooltip, pie, GridMapPainter);
 
         this.escaped = false;
         this.leftExpandWidth = 200;
@@ -37,7 +37,7 @@ class GridView extends View {
         }
 
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(remove_object_svg);
             remove_object_svg(dev);
         });
@@ -150,7 +150,7 @@ class GridView extends View {
         $('svg').css({'left': 0,
                       'top': 0});
 
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view) {
                     delete sig.view;
@@ -163,17 +163,32 @@ class GridView extends View {
 
 class GridMapPainter extends ListMapPainter
 {
-    constructor(map, canvas, frame, database) {super(map, canvas, frame, database);}
+    constructor(map, canvas, frame, graph) {super(map, canvas, frame, graph);}
 
     convergent()
     {
         this.pathspecs = []; // so that there won't be any spare triangles left lying about
-        let dst = this.map.dst.signal.position;
+        let dst = this.map.dst.position;
         for (let i = 0; i < this.map.srcs.length; ++i)
         {
-            let src = this.map.srcs[i].signal.position;
+            let src = this.map.srcs[i].position;
             this.oneToOne(src, dst, i);
         }
+    }
+
+    oneToOne(src, dst, i)
+    {
+        // skip maps if src or dst y is zero, due to filtering
+        if (!src.y || !dst.y) {
+            this.pathspecs[i] = null;
+            return;
+        }
+
+        if (Math.abs(src.x - dst.x) < 1)
+            this.vertical(src, dst, i);
+        else if (Math.abs(src.y - dst.y) < 1)
+            this.horizontal(src, dst, i);
+        else this.betweenTables(src, dst, i);
     }
 
     betweenTables(src, dst, i)
@@ -207,13 +222,23 @@ class GridMapPainter extends ListMapPainter
              ['Z']];
     }
 
+    horizontal(src, dst, i)
+    {
+        // signals are inline horizontally
+        let offset = this.offset(src.x, dst.x);
+        let ctly = src.y + offset * src.vy;
+        console.log('horizontal, ctly=', ctly, offset, src.vy);
+        this.pathspecs[i] = [['M', src.x, src.y],
+                             ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
+    }
+
     // disable drawing convergent maps in grid view for now
     updatePaths()
     {
         let i = 0, len = this.map.srcs.length;
-        let dst = this.map.dst.signal.position;
+        let dst = this.map.dst.position;
         for (; i < len; i++) {
-            this.oneToOne(this.map.srcs[i].signal.position, dst, i);
+            this.oneToOne(this.map.srcs[i].position, dst, i);
         }
     }
 
@@ -227,12 +252,12 @@ class GridMapPainter extends ListMapPainter
             this.attributes[i+len]['stroke-dasharray'] = MapPainter.defaultDashes;
             this.attributes[i+len]['arrow-end'] = 'none';
             this.attributes[i+len]['stroke-linejoin'] = 'round';
-            this.attributes[i+len]['fill'] = this.map.selected ? 
-                                             MapPainter.selectedColor : 
-                                             MapPainter.defaultColor;
+            this.attributes[i+len]['fill'] = (this.map.selected
+                                              ? MapPainter.selectedColor
+                                              : MapPainter.defaultColor );
 
-            let src = this.map.srcs[i].signal.position;
-            let dst = this.map.dst.signal.position;
+            let src = this.map.srcs[i].position;
+            let dst = this.map.dst.position;
             if (src.x == dst.x || src.y == dst.y) continue;
             else this.attributes[i]['arrow-end'] = 'none';
         }

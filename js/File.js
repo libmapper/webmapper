@@ -23,34 +23,26 @@ class File {
             if (c.mute != null)
                 map.muted = c.mute ? true : false;
             if (c.expression != null)
-                map.expression = c.expression.replace('s[', 'src[')
-                                             .replace('d[', 'dst[');
+                map.expr = c.expression.replace('s[', 'src[')
+                                       .replace('d[', 'dst[');
             if (c.srcMin != null)
-                src.min = c.srcMin;
+                src.minimum = c.srcMin;
             if (c.srcMax != null)
-                src.max = c.srcMax;
+                src.maximum = c.srcMax;
             if (c.dstMin != null)
-                dst.min = c.dstMin;
+                dst.minimum = c.dstMin;
             if (c.dstMax != null)
-                dst.max = c.dstMax;
-            if (c.boundMin != null)
-                dst.bound_min = c.boundMin;
-            if (c.boundMax != null)
-                dst.bound_max = c.boundMax;
+                dst.maximum = c.dstMax;
 
             if (c.mode == 'reverse') {
-                map.mode = 'expression';
-                map.expression = 'y=x';
+                map.expr = 'y=x';
                 map.sources = [dst];
                 map.destinations = [src];
             }
             else {
                 if (c.mode == 'calibrate') {
-                    map.mode = 'linear';
-                    dst.calibrating = true;
+                    map.expression = 'linear(x,?,?,-,-)';
                 }
-                else
-                    map.mode = c.mode;
                 map.sources = [src];
                 map.destinations = [dst];
             }
@@ -184,10 +176,10 @@ class File {
         for (var i in staged_file.maps) {
             let map = staged_file[i];
             // fix expression
-            if (map.expression) {
+            if (map.expr) {
                 // TODO: better regexp to avoid conflicts with user vars
-                map.expression = map.expression.replace(/src/g, "x");
-                map.expression = map.expression.replace(/dst/g, "y");
+                map.expr = map.expr.replace(/src/g, "x");
+                map.expr = map.expr.replace(/dst/g, "y");
             }
 
             // TODO: extend to support convergent maps

@@ -2,6 +2,6 @@
 *.swp
 *.pyc
 mapper.py
-_mapper.so
+_mapper*.so
 build
 dist

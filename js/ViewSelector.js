@@ -1,8 +1,8 @@
 class ViewSelector {
     constructor(container, view) {
         $(container).append(
-            "<div id='viewSelectorDiv' class='topMenu' style='width:150px;'>"+
-                "<div class='topMenuTitle'><strong>VIEW</strong></div>"+
+            "<div id='viewSelectorDiv' class='topMenu half' style='width:150px;'>"+
+                "<div class='topMenuTitle half'><strong>VIEW</strong></div>"+
                 "<div class='topMenuContainer' style='padding:0px'>"+
                     "<div>"+
                         "<div id='chordButton' class='viewButton'></div>"+

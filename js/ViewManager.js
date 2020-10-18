@@ -4,10 +4,10 @@
 
 class ViewManager
 {
-    constructor(container, database, tooltip) {
+    constructor(container, graph, tooltip) {
         this.container = container;
         this.frame = fullOffset($(this.container)[0]);
-        this.database = database;
+        this.graph = graph;
         this.tables = { 'left': null, 'right': null };
         this.tooltip = tooltip;
 
@@ -25,12 +25,12 @@ class ViewManager
         this._add_display_tables();
         this._selection_handlers();
         this._keyboard_handlers();
-        this._add_database_callbacks();
+        this._add_graph_callbacks();
         this.pie = new Pie(this.canvas, ConvergentMappingSlices);
 
         let self = this;
-        this.database.devices.forEach(function(dev) { self._update_devices(dev, 'added'); });
-        this.database.maps.forEach(function(map) { self._update_maps(map, 'added'); });
+        this.graph.devices.forEach(function(dev) { self._update_devices(dev, 'added'); });
+        this.graph.maps.forEach(function(map) { self._update_maps(map, 'added'); });
 
         this.currentView = null;
         setTimeout(function() {
@@ -39,7 +39,12 @@ class ViewManager
     }
 
     zoom(x, y, delta) {
-        this.views[this.currentView].zoom(x, y, delta);
+        let view = this.views[this.currentView];
+        if (x === null)
+            x = view.mapPane.cx;
+        if (y === null)
+            y = view.mapPane.cy;
+        view.zoom(x, y, delta);
     }
 
     pan(x, y, delta_x, delta_y) {
@@ -59,11 +64,11 @@ class ViewManager
     filterSignals(searchbar, text) {
         // need to cache regexp here so filtering works across view transitions
         if (searchbar == 'srcSearch') {
-            this.database.srcRE = text ? new RegExp(text, 'i') : new RegExp('.*');
+            this.graph.srcRE = text ? new RegExp(text, 'i') : new RegExp('.*');
             this.views[this.currentView].filterSignals('src');
         }
         else {
-            this.database.dstRE = text ? new RegExp(text, 'i') : new RegExp('.*');
+            this.graph.dstRE = text ? new RegExp(text, 'i') : new RegExp('.*');
             this.views[this.currentView].filterSignals('dst');
         }
     }
@@ -91,40 +96,40 @@ class ViewManager
             switch (viewType) {
                 case 'balloon':
                     view = new BalloonView(this.frame, this.tables, this.canvas,
-                                           this.database, this.tooltip, this.pie);
+                                           this.graph, this.tooltip, this.pie);
                     break;
                 case 'canvas':
                     view = new CanvasView(this.frame, this.tables, this.canvas,
-                                          this.database, this.tooltip, this.pie);
+                                          this.graph, this.tooltip, this.pie);
                     break;
                 case 'graph':
                     view = new GraphView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip, this.pie);
+                                         this.graph, this.tooltip, this.pie);
                     break;
                 case 'grid':
                     view = new GridView(this.frame, this.tables, this.canvas,
-                                        this.database, this.tooltip, this.pie);
+                                        this.graph, this.tooltip, this.pie);
                     break;
                 case 'parallel':
                     view = new ParallelView(this.frame, this.tables, this.canvas,
-                                            this.database, this.tooltip, this.pie);
+                                            this.graph, this.tooltip, this.pie);
                     break;
                 case 'hive':
                     view = new HiveView(this.frame, this.tables, this.canvas,
-                                        this.database, this.tooltip, this.pie);
+                                        this.graph, this.tooltip, this.pie);
                     break;
                 case 'chord':
                     view = new ChordView(this.frame, this.tables, this.canvas,
-                                         this.database, this.tooltip, this.pie);
+                                         this.graph, this.tooltip, this.pie);
                     break;
                 case 'console':
                     view = new ConsoleView(this.frame, this.tables, this.canvas,
-                                           this.database, this.tooltip, this.pie);
+                                           this.graph, this.tooltip, this.pie);
                     break;
                 case 'list':
                 default:
                     view = new ListView(this.frame, this.tables, this.canvas,
-                                        this.database, this.tooltip, this.pie);
+                                        this.graph, this.tooltip, this.pie);
                     break;
             }
             this.views[viewType] = view;
@@ -140,17 +145,24 @@ class ViewManager
         $('#'+viewType+'Button').addClass("viewButtonsel");
     }
 
-    showCurveGenerator(props, onGenerated) {
-        new CurveGenerator(props, onGenerated);
+    showCurveEditor(props, onGenerated) {
+        new CurveEditor(props, onGenerated);
     }
 
-    _add_database_callbacks() {
+    _add_graph_callbacks() {
         let self = this;
-        this.database.clear_callbacks();
-        this.database.add_callback(function(event, type, obj) {
+        this.graph.clear_callbacks();
+        this.graph.add_callback(function(event, type, obj) {
             if (event == 'removing') {
-                if (type == 'map' && obj.view)
-                    obj.view.remove();
+                if (type == 'map') {
+                    console.log("removing map!");
+                    if (obj.selected) {
+                        obj.selected = false;
+                        $('#container').trigger("updateMapProperties");
+                    }
+                    if (obj.view)
+                        obj.view.remove();
+                }
                 remove_object_svg(obj, 0);
                 return;
             }
@@ -172,8 +184,8 @@ class ViewManager
     };
 
     _add_display_tables() {
-        this.tables.left  = new SignalTable($('#container')[0], 'left', this.frame, this.database);
-        this.tables.right = new SignalTable($('#container')[0], 'right', this.frame, this.database);
+        this.tables.left  = new SignalTable($('#container')[0], 'left', this.frame, this.graph);
+        this.tables.right = new SignalTable($('#container')[0], 'right', this.frame, this.graph);
     }
 
     _add_canvas() {
@@ -250,7 +262,7 @@ class ViewManager
 
             // check for edge intersections around point for 'click' selection
             let updated = false;
-            self.database.maps.forEach(function(map) {
+            self.graph.maps.forEach(function(map) {
                 if (!map.view || map.selected)
                     return;
                 if (   map.view.edge_intersection(x1-3, y1-3, x1+3, y1+3)
@@ -274,7 +286,7 @@ class ViewManager
 
                 // check for edge intersections for 'cross' selection
                 updated = false;
-                self.database.maps.forEach(function(map) {
+                self.graph.maps.forEach(function(map) {
                     if (!map.view || map.selected)
                         return;
                     if (map.view.edge_intersection(x1, y1, x2, y2)) {
@@ -309,11 +321,11 @@ class ViewManager
                     /* delete */
                     // do not allow 'delete' key to unmap in console view
                     if (self.currentView == 'console') break;
-                    self.database.maps.forEach(function(map) {
+                    self.graph.maps.forEach(function(map) {
                         if (map.selected)
                         {
-                            let srcs = map.srcs.map(s => s.signal.key);
-                            mapper.unmap(srcs, map.dst.signal.key);
+                            let srcs = map.srcs.map(s => s.key);
+                            mapper.unmap(srcs, map.dst.key);
                             self.tooltip.hide();
                         }
                     });

@@ -5,8 +5,8 @@
 'use strict';
 
 class ConsoleView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('console', frame, tables, canvas, database, tooltip, pie);
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
+        super('console', frame, tables, canvas, graph, tooltip, pie);
 
         // hide left table
         tables.left.adjust(0, 0, 0, frame.height, 0, 500);
@@ -15,7 +15,7 @@ class ConsoleView extends View {
         tables.right.adjust(frame.width, 0, 0, frame.height, 0, 500);
 
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             // remove signal svg
             dev.signals.forEach(remove_object_svg);
             // remove device svg
@@ -23,10 +23,10 @@ class ConsoleView extends View {
         });
 
         // remove link svg
-        this.database.links.forEach(remove_object_svg);
+        this.graph.links.forEach(remove_object_svg);
 
         // remove map svg
-        this.database.maps.forEach(remove_object_svg);
+        this.graph.maps.forEach(remove_object_svg);
 
         this.escaped = false;
 
@@ -124,8 +124,8 @@ class ConsoleView extends View {
         }
 
         function print_slot_props(slot) {
-            let color = Raphael.hsl(slot.signal.device.hue, 1, 0.5);
-            let s = '[[;'+color+';] '+slot.signal.key+':]';
+            let color = Raphael.hsl(slot.device.hue, 1, 0.5);
+            let s = '[[;'+color+';] '+slot.key+':]';
             let keys = Object.keys(slot).sort();
             let v;
             for (var i in keys) {
@@ -139,11 +139,10 @@ class ConsoleView extends View {
                         s += " "+key+": ";
                         v = slot[key];
                         if (Array.isArray(v)) {
-                            len = v.length;
                             s += "[";
                             for (let j in v) {
                                 s += v[j].toFixed(3);
-                                if (j < len-1)
+                                if (j < v.length - 1)
                                     s += ",";
                             }
                             s += "]";
@@ -234,7 +233,7 @@ class ConsoleView extends View {
                             echo("Please specify objects to list or type 'help' for usage.");
                             return;
                         }
-                        let devFilter = cmd.length > 2 ? self.database.devices.find(cmd[2]) : null;
+                        let devFilter = cmd.length > 2 ? self.graph.devices.find(cmd[2]) : null;
                         let showDevices = flags.indexOf('d') > 0;
                         let showSignals = flags.indexOf('s') > 0;
                         let showLinks = flags.indexOf('l') > 0;
@@ -242,13 +241,13 @@ class ConsoleView extends View {
                         let showDetail = flags.indexOf('f') > 0;
                         let color;
                         let devIdx = 1;
-                        let devCount = self.database.devices.size();
+                        let devCount = self.graph.devices.size();
                         if (showDevices || showSignals) {
                             if (devFilter)
                                 echo('Devices (1 of '+devCount+'):');
                             else
                                 echo('Devices ('+devCount+'):');
-                            self.database.devices.forEach(function(dev) {
+                            self.graph.devices.forEach(function(dev) {
                                 if (devFilter && dev !== devFilter)
                                     return;
                                 color = Raphael.hsl(dev.hue, 1, 0.5);
@@ -258,7 +257,7 @@ class ConsoleView extends View {
                                     s += print_dev_props(dev);
                                     echo(s);
                                 }
-                                let sigCount = dev['num_inputs'] + dev['num_outputs'];
+                                let sigCount = dev['num_sigs_in'] + dev['num_sigs_out'];
                                 if (showSignals && sigCount > 0) {
                                     dev.signals.forEach(function (sig) {
                                         sigCount -= 1;
@@ -279,9 +278,9 @@ class ConsoleView extends View {
                         }
                         if (showLinks) {
                             let linkIdx = 1;
-                            let linkCount = self.database.links.size();
+                            let linkCount = self.graph.links.size();
                             echo('Network Links ('+linkCount+'):');
-                            self.database.links.forEach(function (link) {
+                            self.graph.links.forEach(function (link) {
                                 let s = ' '+linkIdx+') ';
                                 color = Raphael.hsl(link.src.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+link.src.name+']';
@@ -294,24 +293,24 @@ class ConsoleView extends View {
                         }
                         if (showMaps) {
                             let mapIdx = 1;
-                            let mapCount = self.database.maps.size();
+                            let mapCount = self.graph.maps.size();
                             echo('Maps ('+mapCount+'):');
-                            self.database.maps.forEach(function (map) {
+                            self.graph.maps.forEach(function (map) {
                                 let s = ' '+mapIdx+') ';
                                 let len = map.srcs.length;
                                 if (len > 1)
                                     s += '[[;white;]\[]';
                                 for (var i in map.srcs) {
-                                    color = Raphael.hsl(map.srcs[i].signal.device.hue, 1, 0.5);
-                                    s += '[[;'+color+';]'+map.srcs[i].signal.device.name+'/'+map.srcs[i].signal.name+']';
+                                    color = Raphael.hsl(map.srcs[i].device.hue, 1, 0.5);
+                                    s += '[[;'+color+';]'+map.srcs[i].device.name+'/'+map.srcs[i].name+']';
                                     if (i < len-1)
                                         s += '[[;white;],]';
                                 }
                                 if (len > 1)
                                     s += '[[;white;]\\]';
                                 s += ' [[;white;]->] ';
-                                color = Raphael.hsl(map.dst.signal.device.hue, 1, 0.5);
-                                s += '[[;'+color+';]'+map.dst.signal.device.name+'/'+map.dst.signal.name+']';
+                                color = Raphael.hsl(map.dst.device.hue, 1, 0.5);
+                                s += '[[;'+color+';]'+map.dst.device.name+'/'+map.dst.name+']';
                                 echo(s);
                                 if (showDetail) {
                                     echo(print_map_props(map));
@@ -332,7 +331,7 @@ class ConsoleView extends View {
                     case 'rm':
                         if (cmd.length == 2) {
                             let index = 0;
-                            self.database.maps.forEach(function(map) {
+                            self.graph.maps.forEach(function(map) {
                                 if (++index == cmd[1]) {
                                     mapper.unmap(map.srcs.map(s => s.key),
                                                  map.dst.key);
@@ -349,7 +348,7 @@ class ConsoleView extends View {
                         let updated = false;
                         if (cmd.length == 2) {
                             let index = 0;
-                            self.database.maps.forEach(function(map) {
+                            self.graph.maps.forEach(function(map) {
                                 if (++index == cmd[1])
                                     updated |= select_obj(map);
                                 else if (map.selected) {
@@ -360,7 +359,7 @@ class ConsoleView extends View {
                         }
                         else if (cmd.length == 3) {
                             let key = cmd[1]+'->'+cmd[2];
-                            self.database.maps.forEach(function(map) {
+                            self.graph.maps.forEach(function(map) {
                                 if (key == map.key)
                                     updated |= select_obj(map);
                                 else if (map.selected) {
@@ -380,23 +379,24 @@ class ConsoleView extends View {
                         break;
                     case 'modify':
                     case 'mod':
+                        let srcs = [];
+                        let dst;
                         let msg = {};
-                        let i = 1;
+                        let argidx = 0;
                         if (/^\d*$/.test(cmd[1])) {
                             // arg is map index
                             let index = 0;
-                            self.database.maps.forEach(function(map) {
+                            self.graph.maps.forEach(function(map) {
                                 if (++index == parseInt(cmd[1])) {
-                                    msg['srcs'] = map.srcs.map(s => s.signal.key);
-                                    msg['dst'] = map.dst.signal.key;
-                                    i = 2;
+                                    srcs = map.srcs.map(s => s.key);
+                                    dst = map.dst.key;
+                                    argidx = 2;
                                 }
                             });
-                            if (i != 2)
+                            if (argidx != 2)
                                 break;
                         }
                         else {
-                            let srcs = []
                             while (cmd[i] != '->') {
                                 if (i >= cmd.length)
                                     return;
@@ -405,15 +405,15 @@ class ConsoleView extends View {
                             }
                             if (++i >= cmd.length)
                                 return;
-                            msg['srcs'] = srcs;
-                            msg['dst'] = cmd[i];
-                            i++;
+                            dst = cmd[i];
+                            argidx++;
                         }
-                        while (i < cmd.length - 1) {
+                        while (argidx < cmd.length - 1) {
                             msg[cmd[i]] = cmd[i+1];
                             i++;
                         }
-                        command.send("set_map", msg);
+                        console.log("MOD?", srcs, dst, msg);
+                        mapper.set(srcs, dst, msg);
                         break;
                     case 'echo':
                         echo(cmd.slice(1).join(' '));
@@ -431,7 +431,7 @@ class ConsoleView extends View {
                 completion: function(string, callback) {
                     let match = [];
                     if (string.indexOf('/') < 0) {
-                        self.database.devices.forEach(function (dev) {
+                        self.graph.devices.forEach(function (dev) {
                             if (dev.name.startsWith(string)) {
                                 match.push(dev.name);
                             }
@@ -441,7 +441,7 @@ class ConsoleView extends View {
                         // need exact device match
                         string = string.split('/', 2);
                                           console.log(string);
-                        let dev = self.database.devices.find(string[0]);
+                        let dev = self.graph.devices.find(string[0]);
                         if (dev) {
                             dev.signals.forEach(function (sig) {
                                 if (sig.name.startsWith(string[1])) {
@@ -455,7 +455,6 @@ class ConsoleView extends View {
                 exit: false
             });
         });
-
         this.resize(null, 500);
     }
 
@@ -474,7 +473,7 @@ class ConsoleView extends View {
     cleanup() {
         super.cleanup();
 
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view) {
                     delete sig.view;

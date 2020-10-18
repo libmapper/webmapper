@@ -1,4 +1,6 @@
 "use strict";
+
+var graph = new Graph();
 var viewManager;
 var mapProperties;
 var sigFilter;
@@ -6,6 +8,7 @@ var saverLoader;
 var netSelector;
 var viewSelector;
 var tooltip;
+var menusHidden = false;
 
 window.onload = init;           // Kick things off
 
@@ -67,21 +70,20 @@ function init() {
     // init the view
     $('#container').empty();
     tooltip = new Tooltip();
-    viewManager = new ViewManager(document.getElementById('container'), database,
-                                  tooltip);
+    viewManager = new ViewManager(document.getElementById('container'), graph, tooltip);
 
     // init the top menu
-    $('#TopMenuWrapper').empty()
-    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapper"),
-                                  database, viewManager);
-    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapper"),
+    $('#TopMenuWrapper').empty().append("<div id='TopMenuWrapperFile'></div>")
+    saverLoader = new SaverLoader(document.getElementById("TopMenuWrapperFile"),
+                                  graph, viewManager);
+    netSelector = new NetworkSelector(document.getElementById("TopMenuWrapperFile"),
+                                      graph, viewManager);
+    viewSelector = new ViewSelector(document.getElementById("TopMenuWrapperFile"),
                                     viewManager);
-    sigFilter = new SignalFilter(document.getElementById("TopMenuWrapper"),
-                                 database, viewManager);
+    sigFilter = new SignalFilter(document.getElementById("TopMenuWrapperFile"),
+                                 graph, viewManager);
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
-                                      database, viewManager);
-    netSelector = new NetworkSelector(document.getElementById("TopMenuWrapper"),
-                                      database, viewManager);
+                                      graph, viewManager);
 
     // init controller
     initMonitorCommands();
@@ -106,8 +108,9 @@ function init() {
         mapProperties.clearMapProperties();
         command.start();
         command.send('refresh');
-        command.send('get_networks');
+        command.send('get_interfaces');
         command.send('subscribe', 'all_devices');
+        command.send('add_devices');
     }, 250);
 }
 
@@ -115,14 +118,30 @@ function init() {
  * initialize the event listeners for events triggered by the monitor
  */
 function initMonitorCommands() {
-    command.register("available_networks", function(cmd, args) {
-        database.networkInterfaces.available = args;
+    command.register("available_interfaces", function(cmd, args) {
+        graph.networkInterfaces.available = args;
         netSelector.update();
     });
-    command.register("active_network", function(cmd, args) {
-        database.networkInterfaces.selected = args;
+    command.register("active_interface", function(cmd, args) {
+        graph.networkInterfaces.selected = args
         netSelector.update();
     });
+}
+
+function toggleMenus() {
+    if (menusHidden) {
+        console.log('showing menus');
+        $('#TopMenuWrapper').removeClass('hidden');
+        $('#container').removeClass('fullScreen');
+        menusHidden = false;
+    }
+    else {
+        console.log('hiding menus');
+        $('#TopMenuWrapper').addClass('hidden');
+        $('#container').addClass('fullScreen');
+        menusHidden = true;
+    }
+    viewManager.on_resize();
 }
 
 /**
@@ -133,6 +152,13 @@ function initViewCommands()
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
             switch (e.which) {
+                case 32:
+                    if (viewManager.currentView == 'console')
+                        break;
+                    // space: show/hide menus
+                    e.preventDefault();
+                    toggleMenus()
+                    break;
                 case 37:
                     // pan left
                     e.preventDefault();
@@ -231,11 +257,11 @@ function initViewCommands()
     let wheeling = false;
     let pageX, pageY, deltaX, deltaY, zooming;
     document.addEventListener('wheel', function(e) {
-        e.preventDefault();
-        if (e.pageY < 80) {
+        if (e.pageY < 140) {
             // not over container
             return;
         }
+        e.preventDefault();
         pageX = e.pageX;
         pageY = e.pageY;
         deltaX = e.deltaX;
@@ -259,7 +285,7 @@ function initViewCommands()
 
 // allows anyone to call updateMapProperties by triggering an event on #container
 function initMapPropertiesCommands() {
-    // asks the database for the selected maps and updates the edit bar
+    // asks the view for the selected maps and updates the edit bar
     $("#container").on("updateMapProperties", function(e) {
         mapProperties.updateMapProperties();
     });

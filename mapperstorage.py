@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 
 import json, re
-import mapper
+import mapper as mpr
 
 #for debugging
 import pdb
-
-boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
-                    'none': mapper.BOUND_NONE,
-                    'mute': mapper.BOUND_MUTE,
-                    'clamp': mapper.BOUND_CLAMP,
-                    'fold': mapper.BOUND_FOLD,
-                    'wrap': mapper.BOUND_WRAP }
 
 def deunicode(o):
     d = dir(o)
@@ -31,19 +24,9 @@ def deunicode(o):
 
 def serialise(db, device):
     new_maps = []
-    modeStr = { mapper.MODE_UNDEFINED: 'undefined',
-                mapper.MODE_RAW: 'raw',
-                mapper.MODE_LINEAR: 'linear',
-                mapper.MODE_EXPRESSION: 'expression' }
-    boundStr = { mapper.BOUND_UNDEFINED: 'undefined',
-                 mapper.BOUND_NONE: 'none',
-                 mapper.BOUND_MUTE: 'mute',
-                 mapper.BOUND_CLAMP: 'clamp',
-                 mapper.BOUND_FOLD: 'fold',
-                 mapper.BOUND_WRAP: 'wrap' }
-    locStr = { mapper.LOC_UNDEFINED: 'undefined',
-               mapper.LOC_SOURCE: 'source',
-               mapper.LOC_DESTINATION: 'destination' }
+    locStr = { mpr.LOC_UNDEFINED: 'undefined',
+               mpr.LOC_SRC: 'src',
+               mpr.LOC_DST: 'dst' }
 
     regexx = re.compile('x([0-9]+)')
     regexy = re.compile('y([0-9]+)')
@@ -52,14 +35,12 @@ def serialise(db, device):
         this_map = m.properties.copy()
         this_map['sources'] = []
         this_map['destinations'] = []
-        if 'mode' in this_map:
-            this_map['mode'] = modeStr[m.mode]
         if 'expression' in this_map:
             # To get proper expression nomenclature
             # dest[0] = src[0] NOT y = x
             this_map['expression'] = m.expression.replace('y', 'dst[0]').replace('x', 'src[0]')
-        if 'process_location' in this_map:
-            this_map['process_location'] = locStr[m.process_location]
+        if 'process_loc' in this_map:
+            this_map['process_loc'] = locStr[m.process_loc]
         if 'is_local' in this_map:
             del this_map['is_local']
         if 'status' in this_map:
@@ -71,25 +52,15 @@ def serialise(db, device):
         if 'num_outputs' in this_map:
             del this_map['num_outputs']
 
-        for i in range(m.num_sources):
-            slot = m.source(i)
-            sig = slot.signal()
-            slot_props = slot.properties.copy()
-            slot_props['name'] = sig.device().name + '/' + sig.name
-            if 'bound_min' in slot_props:
-                slot_props['bound_min'] = boundStr[slot_props['bound_min']]
-            if 'bound_max' in slot_props:
-                slot_props['bound_max'] = boundStr[slot_props['bound_max']]
+        for i in range(m.num_signals(mpr.LOC_SRC)):
+            src = m.signal(mpr.LOC_SRC, i)
+            slot_props = {}
+            slot_props['name'] = src.device().name + '/' + src.name
             this_map['sources'].append(slot_props)
-        for i in range(m.num_destinations):
-            slot = m.destination(i)
-            sig = slot.signal()
-            slot_props = slot.properties.copy()
-            slot_props['name'] = sig.device().name + '/' + sig.name
-            if 'bound_min' in slot_props:
-                slot_props['bound_min'] = boundStr[slot_props['bound_min']]
-            if 'bound_max' in slot_props:
-                slot_props['bound_max'] = boundStr[slot_props['bound_max']]
+        for i in range(m.num_signals(mpr.LOC_DST)):
+            dst = m.signal(mpr.LOC_DST)
+            slot_props = {}
+            slot_props['name'] = dst.device().name + '/' + dst.name
             this_map['destinations'].append(slot_props)
 
         new_maps.append(this_map);
@@ -119,27 +90,18 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
     else:
         print('malformed file')
 
-    modeIdx = { 'undefined': mapper.MODE_UNDEFINED,
-                'raw': mapper.MODE_RAW,
-                'linear': mapper.MODE_LINEAR,
-                'expression': mapper.MODE_EXPRESSION }
-    boundIdx = { 'none': mapper.BOUND_NONE,
-                 'mute': mapper.BOUND_MUTE,
-                 'clamp': mapper.BOUND_CLAMP,
-                 'fold': mapper.BOUND_FOLD,
-                 'wrap': mapper.BOUND_WRAP }
-    locIdx = { 'undefined': mapper.LOC_UNDEFINED,
-               'source': mapper.LOC_SOURCE,
-               'destination': mapper.LOC_DESTINATION }
+    locIdx = { 'undefined': mpr.LOC_UNDEFINED,
+               'source': mpr.LOC_SRC,
+               'destination': mpr.LOC_DST }
 
     src_dev = db.device(src_dev_names[0])
     if not src_dev:
-        print("error loading file: couldn't find device ", src_dev_names[0], " in database")
+        print("error loading file: couldn't find device ", src_dev_names[0], " in graph")
         return
 
     dst_dev = db.device(dst_dev_names[0])
     if not dst_dev:
-        print("error loading file: couldn't find device ", dst_dev_names[0], " in database")
+        print("error loading file: couldn't find device ", dst_dev_names[0], " in graph")
         return
 
     if version == '2.1':
@@ -166,23 +128,15 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                 dst['minimum'] = connection['destMin']
             if connection.has_key('destMax'):
                 dst['maximum'] = connection['destMax']
-            if connection.has_key('boundMin'):
-                dst['bound_min'] = connection['boundMin']
-            if connection.has_key('boundMax'):
-                dst['bound_max'] = connection['boundMax']
 
             mode = connection['mode']
             if mode == 'reverse':
-                map['mode'] = 'expression'
                 map['expression'] = 'y=x'
                 map['sources'] = [ dst ]
                 map['destinations'] = [ src ]
             else:
                 if mode == 'calibrate':
-                    map['mode'] = 'linear'
-                    dst['calibrating'] = true
-                else:
-                    map['mode'] = mode
+                    map['expression'] = 'y=linear(x,?,?,-,-)'
                 map['sources'] = [ src ]
                 map['destinations'] = [ dst ]
 
@@ -226,7 +180,7 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             if not sigs_found:
                 continue
 
-            map = mapper.map(src_sigs[0], dst_sigs[0])
+            map = mpr.map(src_sigs[0], dst_sigs[0])
             if not map:
                 print("error creating map")
                 continue
@@ -234,15 +188,11 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
             # set slot properties first
             index = 0
             for slot_props in map_props['sources']:
-                slot = map.source(index)
+                slot = map.signal(mpr.LOC_SRC, index)
                 for prop in slot_props:
                     if prop == 'name':
                         # do nothing
                         pass
-                    elif prop == 'bound_min':
-                        slot.bound_min = boundaryStrings[slot_props[prop]]
-                    elif prop == 'bound_min':
-                        slot.bound_max = boundaryStrings[slot_props[prop]]
                     elif prop == 'minimum':
                         t = type(slot_props['minimum'])
                         if t is int or t is float:
@@ -274,15 +224,11 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                 index += 1
             index = 0
             for slot_props in map_props['destinations']:
-                slot = map.destination(index)
+                slot = map.signal(mpr.LOC_DST, index)
                 for prop in slot_props:
                     if prop == 'name':
                         # do nothing
                         pass
-                    elif prop == 'bound_min':
-                        slot.bound_min = boundaryStrings[slot_props[prop]]
-                    elif prop == 'bound_min':
-                        slot.bound_max = boundaryStrings[slot_props[prop]]
                     elif prop == 'minimum':
                         t = type(slot_props['minimum'])
                         if t is int or t is float:
@@ -327,11 +273,8 @@ def deserialise(db, src_dev_names, dst_dev_names, mapping_json):
                 elif prop == 'muted':
                     map.muted = map_props['muted']
                 elif prop == 'mode':
-                    mode = map_props['mode']
-                    if mode == 'linear':
-                        map.mode = mapper.MODE_LINEAR
-                    elif mode == 'expression':
-                        map.mode = mapper.MODE_EXPRESSION
+                    # do nothing
+                    print('skipping mode property')
                 else:
                     map.properties[prop] = map_props[prop]
 

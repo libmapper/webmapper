@@ -4,18 +4,18 @@
 
 // public functions
 // resize() // called when window size changes
-// update() // called on changes to the database
+// update() // called on changes to the graph
 // draw() // called by update/pan/scroll events
 // cleanup() // called when view is destroyed
 // type() // returns view type
 
 class View {
-    constructor(type, frame, tables, canvas, database, tooltip, pie, painter) {
+    constructor(type, frame, tables, canvas, graph, tooltip, pie, painter) {
         this.type = type;
         this.frame = frame;
         this.tables = tables,
         this.canvas = canvas;
-        this.database = database;
+        this.graph = graph;
         this.tooltip = tooltip;
         this.pie = pie;
 
@@ -49,6 +49,16 @@ class View {
         this.origin = [this.mapPane.cx, this.mapPane.cy];
 
         this.sigLabel = null;
+
+        if (this.canvas.waiting === undefined) {
+            this.canvas.waiting = this.canvas.text(this.mapPane.cx, this.mapPane.cy, "")
+                                             .attr({'font-size': 100,
+                                                    'opacity': 0.25,
+                                                    'fill': 'white',
+                                                    'x': this.mapPane.cx,
+                                                    'y': this.mapPane.cy});
+            this.canvas.waiting.node.setAttribute('pointer-events', 'none');
+        }
     }
 
     // Subclasses should override the behavior of _resize rather than this one
@@ -60,6 +70,8 @@ class View {
         this._resize(duration);
         this.canvas.setViewBox(0, 0, this.frame.width, this.frame.height, false);
         this.draw(duration);
+        this.canvas.waiting.attr({'x': this.mapPane.cx,
+                                  'y': this.mapPane.cy});
     }
 
     // Define subclass specific resizing related tasks
@@ -80,14 +92,20 @@ class View {
                 this.tables[i].update();
         }
 
+        if (this.graph.devices.size() == 0) {
+            this.canvas.waiting.attr({'text': 'waiting for devices'});
+            return;
+        }
+        this.canvas.waiting.attr({'text': ''});
+
         let self = this;
         let devIndex = 0;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             // update device signals
             let sigIndex = 0;
             dev.signals.forEach(function(sig) {
                 sig.hidden = (dev.hidden == true);
-                let re = sig.direction == 'output' ? self.database.srcRE : self.database.dstRE;
+                let re = sig.direction == 'output' ? self.graph.srcRE : self.graph.dstRE;
                 if (dev.hidden || (re && !re.test(sig.key))) {
                     if (sig.view)
                         sig.view.hide();
@@ -141,9 +159,9 @@ class View {
     }
 
     showDevLabel(self, dev, e) {
-        let hidden = self.database.devices.map(d => d.hidden ? 1 : 0)
-                                          .reduce((a, h) => a + h);
-        let size = self.database.devices.size();
+        let hidden = self.graph.devices.map(d => d.hidden ? 1 : 0)
+                                       .reduce((a, h) => a + h);
+        let size = self.graph.devices.size();
         let action;
         if (hidden == 0)
             action = "solo";
@@ -170,12 +188,12 @@ class View {
                 .filter(s => s.direction == "output")
                 .size()
             +" out";
-        let maps = self.database.maps;
+        let maps = self.graph.maps;
         filtered.maps =
-             maps.filter(m => dev === m.dst.signal.device)
+             maps.filter(m => dev === m.dst.device)
                  .size()
             +" in, "
-            +maps.filter(m => m.srcs.some(s => s.signal.device === dev))
+            +maps.filter(m => m.srcs.some(s => s.device === dev))
                  .size()
             +" out";
         filtered.links = dev.num_links;
@@ -197,7 +215,7 @@ class View {
                     self.showDevLabel(self, dev, e);
                     if (self.type == 'chord') {
                         // also move associated  links to front
-                        self.database.links.forEach(function(link) {
+                        self.graph.links.forEach(function(link) {
                             if (link.view && (link.src == dev || link.dst == dev))
                                 link.view.toFront();
                         });
@@ -235,7 +253,7 @@ class View {
         link.view.hover(
             function(e) {
                 self.tooltip.showTable(
-                    "link", {
+                    link.status+" link", {
                         source: link.src.key,
                         destination: link.dst.key
                     }, e.x, e.y);
@@ -260,11 +278,11 @@ class View {
 
     updateLinks() {
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.linkSrcIndices = [];
             dev.linkDstIndices = [];
         });
-        this.database.links.forEach(function(link) {
+        this.graph.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!src.linkDstIndices.includes(dst.index)) {
@@ -351,12 +369,12 @@ class View {
                                          .reduce((res, o) => Object.assign(res, o), {});
                     filtered.instances = sig.num_instances;
                     filtered.type = type_name(sig.type);
-                    let maps = self.database.maps;
+                    let maps = self.graph.maps;
                     filtered.maps =
-                        maps.filter(m => sig === m.dst.signal)
+                        maps.filter(m => sig === m.dst)
                             .size()
                        +" in, "
-                       +maps.filter(m => m.srcs.some(s => s.signal === sig))
+                       +maps.filter(m => m.srcs.some(s => s === sig))
                             .size()
                        +" out";
                     // sort
@@ -374,7 +392,7 @@ class View {
                     return;
                 }
                 self.snappingTo = sig;
-                self.newMap.dst.signal = sig;
+                self.newMap.dst = sig;
                 self.newMap.view.draw(0);
             },
             function() {
@@ -418,14 +436,13 @@ class View {
                 if (!self.newMap) {
                     self.newMap =
                         {
-                            'srcs': [{'signal': sig}],
-                            'dst': {'signal': {'position': {'x': x, 'y': y},
-                                               'device': {'hidden' : false},
-                                               'view': {}}},
+                            'srcs': [sig],
+                            'dst': {'position': {'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
                             'selected': true,
                             'hidden': false
                         };
-                    self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
+                    self.newMap.view = new self.mapPainter(self.newMap, self.canvas,
+                                                           self.frame, self.graph);
                 }
                 else {
                     if (!self.snapping_to_map()) {
@@ -435,7 +452,7 @@ class View {
                     if (!self._continue_map_snap(x, y))
                     {
                         self._unsnap_to_map();
-                        self.newMap.dst.signal.position = {'x': x, 'y': y};
+                        self.newMap.dst.position = {'x': x, 'y': y};
                     }
                 }
                 self.newMap.view.draw(0);
@@ -453,7 +470,7 @@ class View {
 
     setAllSigHandlers() {
         let self = this;
-        this.database.devices.forEach(dev =>
+        this.graph.devices.forEach(dev =>
             dev.signals.forEach(sig => {
                 if (!sig.view) return;
                 self.setSigHover(sig);
@@ -464,14 +481,14 @@ class View {
 
     updateSignals(func) {
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view)
                     sig.view.stop();
 
                 // check regexp
                 let re = (sig.direction == 'output'
-                          ? self.database.srcRE : self.database.dstRE);
+                          ? self.graph.srcRE : self.graph.dstRE);
                 if (sig.hidden || (re && !re.test(sig.key))) {
                     if (sig.view)
                         sig.view.hide();
@@ -518,7 +535,7 @@ class View {
 
     drawSignals(duration) {
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             if (dev.hidden)
                 return;
             dev.signals.forEach(function(sig) {
@@ -533,12 +550,13 @@ class View {
         map.view.hover(
             function(e) {
                 if (!self.draggingFrom) {
-                    let filtered = Object.keys(map)
-                                         .filter(k => !['dst', 'srcs', 'view'].includes(k))
-                                         .sort()
-                                         .map(k => Object.assign({}, {[k]: map[k]}))
-                                         .reduce((res, o) => Object.assign(res, o), {});
-                    self.tooltip.showTable(map.key, filtered, e.x, e.y);
+                    self.tooltip.showTable(
+                        "Map", {
+                            source: map.srcs.map(s => s.key).join(', '),
+                            destination: map.dst.key,
+                            mode: map.mode,
+                            expression: map.expr,
+                        }, e.x, e.y);
                 }
                 map.view.highlight();
             },
@@ -552,20 +570,20 @@ class View {
 
     updateMaps() {
         let self = this;
-        this.database.maps.forEach(function(map) {
-            map.hidden = map.srcs.some(s => s.signal.hidden) || map.dst.signal.hidden;
+        this.graph.maps.forEach(function(map) {
+            map.hidden = map.srcs.some(s => s.hidden) || map.dst.hidden;
             if (map.hidden) {
                 remove_object_svg(map);
                 return;
             }
             if (!map.view) {
-                map.view = new self.mapPainter(map, self.canvas, self.frame, self.database);
+                map.view = new self.mapPainter(map, self.canvas, self.frame, self.graph);
                 if (map.status === 'staged') {
                     map.timeout = setTimeout(function() {
                         if (map.status !== 'staged')
                             return;
                         remove_object_svg(map);
-                        self.database.maps.remove(map);
+                        self.graph.maps.remove(map);
                     }, 1000);
                 }
                 self.setMapHover(map);
@@ -574,10 +592,10 @@ class View {
     }
 
     drawMaps(duration, signal) {
-        this.database.maps.forEach(function(map) {
+        this.graph.maps.forEach(function(map) {
             if (!map.view)
                 return;
-            if (signal && map.srcs.every(s => s.signal != signal) && map.dst.signal != signal)
+            if (signal && map.srcs.every(s => s != signal) && map.dst != signal)
                 return;
             else map.view.draw(duration);
         });
@@ -739,15 +757,16 @@ class View {
                 deselectAllMaps(self.tables);
                 var src = src_table.getRowFromName(src_row.id);
                 var dst = null;
-                self.draggingFrom = self.database.find_signal(src.id);
+                self.draggingFrom = self.graph.find_signal(src.id);
 
                 self.newMap = 
                 {
-                    'srcs': [{signal: self.draggingFrom}],
-                    'dst': {signal: {position: {x: 0, y: 0}}},
+                    'srcs': [self.draggingFrom],
+                    'dst': {position: {x: 0, y: 0}},
                     'selected': true
                 };
-                self.newMap.view = new self.mapPainter(self.newMap, self.canvas, self.frame, self.database);
+                self.newMap.view = new self.mapPainter(self.newMap, self.canvas,
+                                                       self.frame, self.graph);
 
                 let prev_svgx = e.pageX - self.frame.left;
                 let prev_svgy = e.pageY - self.frame.top;
@@ -770,7 +789,7 @@ class View {
                     let y = e.pageY;
 
                     dst = null;
-                    self.newMap.dst.signal = null;
+                    self.newMap.dst = null;
 
                     for (index in self.tables) {
                         // check if cursor is within snapping range
@@ -778,7 +797,7 @@ class View {
                         dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
                         if (!dst) continue;
                         if (dst.id !== src.id) {
-                            self.newMap.dst.signal = self.database.find_signal(dst.id);
+                            self.newMap.dst = self.graph.find_signal(dst.id);
                             self.tables[index].highlightRow(dst, false);
                         }
                         else {
@@ -789,7 +808,7 @@ class View {
 
                     let svgx = x - self.frame.left;
                     let svgy = y - self.frame.top;
-                    if (!self.newMap.dst.signal) {
+                    if (!self.newMap.dst) {
                         if (!self.snapping_to_map()) {
                             let snapped = self._get_map_snap(prev_svgx, prev_svgy, svgx, svgy);
                             if (snapped !== null) {
@@ -798,7 +817,7 @@ class View {
                         }
                         if (!self._continue_map_snap(svgx, svgy)) {
                             self._unsnap_to_map();
-                            self.newMap.dst.signal = {position: {'x': svgx, 'y': svgy}};
+                            self.newMap.dst = {position: {'x': svgx, 'y': svgy}};
                         }
                     }
                     else self._unsnap_to_map(); // snapping to table
@@ -901,7 +920,7 @@ class View {
     _get_map_snap(x1, y1, x2, y2)
     {
         let converging = null;;
-        this.database.maps.forEach(function(map) {
+        this.graph.maps.forEach(function(map) {
             if (converging !== null) return;
             if (map.view && map.view.edge_intersection(x1, y1, x2, y2))
                 converging = map;
@@ -918,12 +937,12 @@ class View {
 
     _snap_to_map(snap_map)
     {
-        this.database.maps.forEach(map => map.selected = false);
+        this.graph.maps.forEach(map => map.selected = false);
         if (this.snapping_to_map()) this.converging.view.draw(0); // unhighlight
         this.converging = snap_map;
         this.converging.selected = true;
         this.converging.view.draw(0);
-        this.newMap.dst.signal = {position: this._map_snap_position(this.converging)};
+        this.newMap.dst = {position: this._map_snap_position(this.converging)}
     }
 
     _continue_map_snap(x, y, snapdist = 50)
@@ -957,9 +976,9 @@ class View {
     setMapPainter(painter) {
         this.mapPainter = (painter === "undefined") ? MapPainter : painter;
         let self = this;
-        this.database.maps.forEach(function(map) {
+        this.graph.maps.forEach(function(map) {
             if (!map.view) return;
-            let newview = new self.mapPainter(map, self.canvas, self.frame, self.database);
+            let newview = new self.mapPainter(map, self.canvas, self.frame, self.graph);
             newview.copy(map.view);
             map.view = newview;
         });

@@ -1,15 +1,15 @@
-# <img style="padding:10px;float:left" src="./images/libmapper_logo_black_512px.png" width="75px"> Webmapper: a browser-based interface for administration of control-mapping networks
+# <img style="padding:10px;float:left" src="./images/libmapper_logo_black_512px.png" width="75px"> WebMapper: a browser-based interface for administration of control-mapping networks
 
 <br/>
 
-- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West
+- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West, Mathias Bredholt
 - Resources: [Discussion list][group], [libmapper documentation][libmapper]
 
 During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of media synthesizers – is by far the most challenging aspect of designing digital musical instrument or other interactive systems. This problem becomes even worse when attempted in collaborative settings, since collaborators often have different perspectives, vocabularies and tools.
 
 We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
-## Functionality
+### Functionality
 
 Webmapper aims to support the mapping task in three ways:
 
@@ -17,7 +17,7 @@ Webmapper aims to support the mapping task in three ways:
 2. Providing an interactive graphical interface for creating, editing, and destroying data-streaming connections ("maps") between signals. 
 3. Supporting saving and loading of mapping sets, including support for mapping transportability (cf. the [GDIF project][GDIF])
 
-All libmapper GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
+All libmapper-compatible GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
 ### Currently missing:
 
@@ -51,7 +51,7 @@ Released versions of Webmapper use "naïve" file loading, in which maps specific
 
 We are working on a new functionality called *map staging*. While the previous naïve approach loaded saved maps against all of the device names in the current tab, loading a file now switches to a new view showing only devices and network links. The file is parsed to retrieve the number of devices involved, and an interactive object is displayed allowing the user to assign device representations from the file to devices that are active on the network. Once the devices have been assigned, clicking on the central file representation launches an attempt to recreate the saved maps.
 
-## Searching/filtering signals
+### Searching/filtering signals
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/signal_filter.png">
 
@@ -74,38 +74,32 @@ Maps can be selected by either clicking on them or 'crossing' them by clicking a
 
 ## Editing map properties
 
-If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). In addition to specifying whether the map updates will be transported using UDP or TCP, the *mode* of the map can be set to `Linear`, `Curve`, or `Expression`.
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
 
-### Linear mode
+If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). Currently, some map properties can only be edited using the Console view or via hotkeys listed in the chart below.
 
-In linear mode the following properties can be modified:
+| Action                        | KDE/Gnome/Windows | macOS
+| ----------------------------- | ----------------- | -----------
+| Invoke the curve editor.      | `Ctrl`+`C`        | `⌘ Cmd`+`C`
+| Switch selected maps to use UDP networking. | `Ctrl`+`U` | `⌘ Cmd`+`U`
+| Switch selected maps to use TCP networking. | `Ctrl`+`T` | `⌘ Cmd`+`T`
+| Force selected maps to process expressions at the destination. | `Ctrl`+`D` | `⌘ Cmd`+`D`
+| Force selected maps to process expressions at the source (if possible).| `Ctrl`+`D` | `⌘ Cmd`+`D`
+| Toggle the `use_inst` property of selected maps. | `Ctrl`+`I` | `⌘ Cmd`+`I`
+| Toggle muting for selected maps. | `M` | `M`
 
-<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_linear.png">
+### Expression editor
 
-* **Src Range:** view and edit the range (minimum and maximum values) for each source of the selected map. New maps will have these values autopopulated from the source signal's minimum and maximum properties if they are specified. When a map is in `Linear Mode`, these values will be used to calculate an interpolation function.
-    * **Range Switch:** the double arrow button located between the Src Range fields can be used to swap the minimum and maximum.
-    * **Calib:** Toggle `calibration` to incoming values.
-* **Dst Range:** view and edit the range (minimum and maximum values) for each destination of the selected map. New maps will have these values autopopulated from the source signal's minimum and maximum properties if they are specified. When a map is in `Linear Mode`, these values will be used to calculate an interpolation function.
-    * **Range Switch:** the double arrow button located between the Src Range fields can be used to swap the minimum and maximum.
-    * **Boundary Modes:** buttons beside fields for minimum and maximum can be used to switch the `Boundary mode` in case the outgoing value exceeds the specified range:
-        * `None` Value is passed through unchanged
-        * `Mute` Value is muted if it exceeds the range boundary
-        * `Clamp` Value is limited to the range boundary
-        * `Fold` Value continues in opposite direction
-        * `Wrap` Value appears as modulus offset at the opposite boundary
+This mode allows the user to view and edit the expression used for processing values streaming on this map. Please refer to the [expression syntax documentation](./doc/expression_syntax.html) for more information.
 
-### Curve mode
+<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_expr.png">
 
-Pressing the `curve` button invokes the curve editor. Dragging the slider up or down will modify the generated curve. Once a curve has been applied to a map the mode will switch to `expression` and the generated expression will take effect. The curve editor can be dismissed by clicking the `close editor` button or by clicking in the UI outside the editor.
+### Curve editor
+
+Pressing the `C` key while maps are selected invokes the curve editor. Dragging the slider up or down will modify the generated curve. Once a curve has been applied to a map the mode will switch to `expression` and the generated expression will take effect. The curve editor can be dismissed by clicking the `close editor` button or by clicking in the UI outside the editor.
 
 <img width="49%" style="padding:0px" src="./doc/screenshots/curve_start.png">
 <img width="49%" style="float:right;padding:0px" src="./doc/screenshots/curve_edit.png">
-
-### Expression mode
-
-This mode allows the user to view and edit the expression used for processing values streaming on this map.
-
-<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_expr.png">
 
 ## Global Commands
 

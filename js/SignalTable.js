@@ -2,8 +2,8 @@
 
 // An object for the overall display
 class SignalTable {
-    constructor(container, location, frame, database) {
-        this.database = database;
+    constructor(container, location, frame, graph) {
+        this.graph = graph;
         this.location = location;
         this.id = location + 'Table';
         this.detail = true;
@@ -498,10 +498,10 @@ class SignalTable {
 
         var max_depth = 0;
         var tree = {"branches": {}, "num_leaves": 0};
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             if (dev.hidden) return;
-            if (_self.direction == 'output' && dev.num_outputs < 1) return;
-            else if (_self.direction == 'input' && dev.num_inputs < 1) return;
+            if (_self.direction == 'output' && dev.num_sigs_out < 1) return;
+            else if (_self.direction == 'input' && dev.num_sigs_in < 1) return;
 
             let num_dev_sigs = 0;
             let sigs = [];
@@ -517,7 +517,22 @@ class SignalTable {
             function ignore(sig) {}
 
             function add(sig) {
-                let type = type_name(sig.type);
+                let type;
+                switch (sig.type) {
+                    case 'i':
+                        type = 'int';
+                        break;
+                    case 'f':
+                        type = 'float';
+                        break;
+                    case 'd':
+                        type = 'double';
+                        break;
+                    default:
+                        type = '?';
+                        break;
+                }
+
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
 
@@ -537,7 +552,7 @@ class SignalTable {
                     return ignore(sig);
                 if (_self.direction &&  _self.direction != sig.direction)
                     return ignore(sig);
-                let re = sig.direction == 'output' ? _self.database.srcRE : _self.database.dstRE;
+                let re = sig.direction == 'output' ? _self.graph.srcRE : _self.graph.dstRE;
                 if (re && !re.test(sig.key))
                     return hide(sig);
                 add(sig);
@@ -774,7 +789,7 @@ class SignalTable {
 
     setSigPositions() {
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 self.setSigPosition(sig);
             });

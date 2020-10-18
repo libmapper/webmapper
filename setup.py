@@ -16,9 +16,9 @@ options = {'argv_emulation': True, 'iconfile': 'images/libmapper.icns'}
 
 setup(name='WebMapper',
       version='0.2',
-      description='GUI for libmapper OSC network',
-      author='Stephen Sinclair, Aaron Krajeski & Jonathan Wilansky',
-      author_email='aaron.krajeski@music.mcgill.ca',
+      description='Graphical interface for the libmapper distributed mapping graph',
+      author='Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West, Mathias Bredholt',
+      author_email='jmalloch@dal.ca',
       url='http://libmapper.org',
       data_files = data_files,
       options={'py2app': options},

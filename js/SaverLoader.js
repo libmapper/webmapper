@@ -1,5 +1,5 @@
 class SaverLoader {
-    constructor(container, database, view) {
+    constructor(container, graph, view) {
         this.input = $(document.createElement("input"));
         this.input.attr("type", "file");
         this.input.on('change', function(e) {
@@ -17,7 +17,7 @@ class SaverLoader {
                         reader.abort();
                         return;
                     }
-                    if (parsed.fileversion == "2.2") {
+                    if (parsed.fileversion >= "2.2") {
                         if (!parsed.mapping.maps || !parsed.mapping.maps.length) {
                             console.log("error: no maps in file");
                             reader.abort();
@@ -38,7 +38,7 @@ class SaverLoader {
                         reader.abort();
                         return;
                     }
-                    database.loadFileSimple(parsed); //naive loading for now
+                    graph.loadFileSimple(parsed); //naive loading for now
                     //view.switch_view("chord");
                 };
             })(f);
@@ -46,8 +46,8 @@ class SaverLoader {
         });
 
         $(container).append(
-            "<div id='saverLoaderDiv' class='topMenu' style='width:75px;'>"+
-                "<div class='topMenuTitle'><strong>FILE</strong></div>"+
+            "<div id='saverLoaderDiv' class='topMenu half' style='width:75px;'>"+
+                "<div class='topMenuTitle half'><strong>FILE</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div id='saveButton'>Save</div>"+
                     "<div id='loadButton'>Open</div>"+
@@ -57,7 +57,7 @@ class SaverLoader {
         // TODO: add "save as" option
         $('#saveButton').on('click', function(e) {
             e.stopPropagation();
-            let file = database.exportFile();
+            let file = graph.exportFile();
             if (!file)
                 return;
 

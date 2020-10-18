@@ -26,9 +26,16 @@ class Mapper
         }
     }
 
+    set(srckeys, dstkey, props)
+    {
+        props['srcs'] = srckeys;
+        props['dst'] = dstkey;
+        command.send('set_map', props);
+    }
+
     converge(srckey, dstmap, method)
     {
-        if (srckey === dstmap.dst.signal.key || dstmap.srcs.map(s => s.signal.key).indexOf(srckey) >= 0)
+        if (srckey === dstmap.dst.key || dstmap.srcs.map(s => s.key).indexOf(srckey) >= 0)
             return;
         this.convergent.converge(srckey, dstmap, method);
     }
@@ -41,16 +48,13 @@ class Mapper
     _stage(srckeys, dstkey)
     {
         srckeys.sort();
-        let srcs = [];
-        srckeys.forEach(k => srcs.push({signal: database.find_signal(k)}));
-        let m = { 'srcs': srcs,
-                  'dst': {signal: database.find_signal(dstkey)},
+        let m = { 'srcs': srckeys.map(s => graph.find_signal(s)),
+                  'dst': graph.find_signal(dstkey),
                   'key': this.mapKey(srckeys, dstkey),
                   'status': 'staged',
                   'selected': true
                 };
-
-        database.maps.add(m);
+        graph.maps.add(m);
     }
 
     unmap(srckeys, dstkey)
@@ -69,13 +73,13 @@ class Mapper
     _mapExists(srckey, dstkey)
     {
         let exists = false;
-        database.maps.forEach(function(map)
+        graph.maps.forEach(function(map)
         {
             if (exists) return;
-            if (map.dst.signal.key != dstkey) return;
+            if (map.dst.key != dstkey) return;
             for (let src of map.srcs) 
             {
-                if (src.signal.key == srckey)
+                if (src.key == srckey)
                 {
                     exists = true;
                     return;
@@ -135,7 +139,7 @@ class ConvergentMapper
             return;
         }
 
-        if (database.maps.find(this.mapper.mapKey(srckeys, dstkey))) return; // map exists
+        if (graph.maps.find(this.mapper.mapKey(srckeys, dstkey))) return; // map exists
         let overlap = this._overlapWithExistingMaps(srckeys, dstkey, props);
         if (overlap !== null)
         {
@@ -168,7 +172,7 @@ class ConvergentMapper
             case this.method.default:
             default:
         }
-        if (expr !== null) this._converge(srckey, dstmap, {expression: expr});
+        if (expr !== null) this._converge(srckey, dstmap, {expr: expr});
         else this._converge(srckey, dstmap);
     }
 
@@ -225,65 +229,64 @@ class ConvergentMapper
 
     _converge(srckey, dstmap, props)
     {
-        let srckeys = dstmap.srcs.map(src => src.signal.key);
-        this.mapper.unmap(srckeys, dstmap.dst.signal.key);
+        let srckeys = dstmap.srcs.map(src => src.key);
+        this.mapper.unmap(srckeys, dstmap.dst.key);
         srckeys.push(srckey);
-        this.mapper._stage(srckeys, dstmap.dst.signal.key);
+        this.mapper._stage(srckeys, dstmap.dst.key);
 
         // at the time of writing, the python server will not successfully create the
         // following map unless there is a time delay to give the network time to unmap
         // the existing one
 
         setTimeout(function() {
-            this.mapper._map(srckeys, dstmap.dst.signal.key, props);
+            this.mapper._map(srckeys, dstmap.dst.key, props);
         }, 500);
     }
 
     _prep(srckey, dstmap)
     {
-        let src = database.find_signal(srckey);
-        let dst = dstmap.dst.signal;
+        let src = graph.find_signal(srckey);
+        let dst = dstmap.dst;
         if (!src) 
         {
             console.log('error creating convergent map, no src matching', srckey);
             return;
         }
 
-        let expr = dstmap.expression.substring(2);
+        let expr = dstmap.expr.substring(2);
         if (dstmap.srcs.length == 1) expr = ConvExpr.replace(expr, 'x', 'x0');
         return [src, dst, expr];
     }
 
     _signals_have_bounds(signals)
     {
-        return signals.every(sig => typeof sig.min !== 'undefined'
-                                 && typeof sig.max !== 'undefined');
+        return signals.every(sig => typeof sig.min !== 'undefined' && typeof sig.max !== 'undefined');
     }
 
     _overlapWithExistingMap(srckeys, dstkey, props)
     {
         let overlapmap = this._findOverlap(srckeys, dstkey);
         if (overlapmap === null) return null;
-        let overlap = { srcs: [], dst: overlapmap.dst.signal.key };
-        for (let src of overlapmap.srcs) overlap.srcs.push(src.signal.key);
+        let overlap = { srcs: [], dst: overlapmap.dst.key };
+        for (let src of overlapmap.srcs) overlap.srcs.push(src.key);
         return overlap;
     }
     
     _findOverlap(srckeys, dstkey)
     {
         let overlapmap = null;
-        database.maps.forEach(function(map) {
+        graph.maps.forEach(function(map) {
             if (overlapmap !== null && map.srcs.length == 1) return;
             for (let src1 of map.srcs)
             {
                 for (let src2 of srckeys)
                 {
-                    if (map.dst.signal.key == dstkey && src1.signal.key == src2)
+                    if (map.dst.key == dstkey && src1.key == src2)
                     {
                         overlapmap = map;
                         break;
                     }
-                    else if (dstkey == src1.signal.key && src2 == map.dst.signal.key)
+                    else if (dstkey == src1.key && src2 == map.dst.key)
                     {
                         overlapmap = map;
                         break;
@@ -344,7 +347,7 @@ class ConvExpr
     static reindex(expr, src, dstmap, srcexprname = 'new')
     {
         let srckey = src.key;
-        let srcs = dstmap.srcs.map(s => s.signal.key).concat([srckey]).sort();
+        let srcs = dstmap.srcs.map(s => s.key).concat([srckey]).sort();
         let idx = srcs.indexOf(srckey);
         for (let i = 0; i < dstmap.srcs.length; ++i)
         {

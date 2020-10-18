@@ -5,8 +5,8 @@
 'use strict';
 
 class HiveView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('hive', frame, tables, canvas, database, tooltip, pie, HiveMapPainter);
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
+        super('hive', frame, tables, canvas, graph, tooltip, pie, HiveMapPainter);
 
         this.pan = this.canvasPan;
         this.zoom = this.canvasZoom;
@@ -30,7 +30,7 @@ class HiveView extends View {
 
         // start with signals at origin
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.index && !sig.position)
                     sig.position = self.origin;
@@ -56,7 +56,7 @@ class HiveView extends View {
     drawDevices(duration) {
         let self = this;
         let listIndex = 0;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             if (!dev.view)
                 return;
             dev.view.stop();
@@ -142,7 +142,7 @@ class HiveView extends View {
         }
         let updated = false;
         if (elements.indexOf('devices') >= 0 || elements.indexOf('signals') >= 0) {
-            let dev_num = this.database.devices.reduce(function(t, dev) {
+            let dev_num = this.graph.devices.reduce(function(t, dev) {
                 let uncollapsed = dev.collapsed ? 0 : 1;
                 let unhidden = dev.hidden ? 0 : 1;
                 return uncollapsed && unhidden + (t ? t : 0);
@@ -172,14 +172,14 @@ class HiveView extends View {
 
     cleanup() {
         super.cleanup();
-        this.database.devices.forEach(function(dev) {dev.angle = null;});
+        this.graph.devices.forEach(function(dev) {dev.angle = null;});
     }
 }
 
 class HiveMapPainter extends ListMapPainter
 {
-    constructor(map, canvas, frame, database) {
-        super(map, canvas, frame, database); 
+    constructor(map, canvas, frame, graph) {
+        super(map, canvas, frame, graph);
         this.shortenPath = 12;
     }
 
@@ -191,8 +191,8 @@ class HiveMapPainter extends ListMapPainter
         node.y = node.y + (node.y - origin.y) * this.midPointInflation;
 
         // adjust node x so that it won't overlap with a device
-        let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
-        sigs = sigs.concat([this.map.dst.signal]);
+        let sigs = this.map.srcs.filter(s => !s.hidden);
+        sigs = sigs.concat([this.map.dst]);
         for (let s of sigs)
         {
             if (distance(node.x, node.y, s.position.x, s.position.y) < 200)

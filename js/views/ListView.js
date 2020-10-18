@@ -5,9 +5,9 @@
 'use strict';
 
 class ListView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
         super('list', frame, {'left': tables.left, 'right': tables.right},
-              canvas, database, tooltip, pie, ListMapPainter);
+              canvas, graph, tooltip, pie, ListMapPainter);
 
         this.setup();
     }
@@ -35,7 +35,7 @@ class ListView extends View {
         }
 
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(remove_object_svg);
             if (!dev.view)
                 return;
@@ -108,7 +108,7 @@ class ListView extends View {
     cleanup() {
         super.cleanup();
 
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view) {
                     delete sig.view;
@@ -121,9 +121,9 @@ class ListView extends View {
 
 class ListMapPainter extends MapPainter
 {
-    constructor(map, canvas, frame, database)
+    constructor(map, canvas, frame, graph)
     {
-        super(map, canvas, frame, database);
+        super(map, canvas, frame, graph);
     }
 
     oneToOne(src, dst, i)
@@ -136,8 +136,6 @@ class ListMapPainter extends MapPainter
 
         if (Math.abs(src.x - dst.x) < 1)
             this.vertical(src, dst, i);
-        else if (Math.abs(src.y - dst.y) < 1)
-            this.horizontal(src, dst, i);
         else this.betweenTables(src, dst, i);
     }
 
@@ -155,15 +153,6 @@ class ListMapPainter extends MapPainter
         let ctlx = src.x + offset * src.vx;
         this.pathspecs[i] = [['M', src.x, src.y], 
                             ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
-    }
-
-    horizontal(src, dst, i) 
-    {
-        // signals are inline horizontally
-        let offset = this.offset(src.x, dst.x);
-        let ctly = src.y + offset * src.vy;
-        this.pathspecs[i] = [['M', src.x, src.y],
-                            ['C', src.x, ctly, dst.x, ctly, dst.x, dst.y]];
     }
 
     offset(a, b, minoffset = 30, maxoffset = 200)
@@ -184,8 +173,8 @@ class ListMapPainter extends MapPainter
             let i = 0;
             for (; i < num_srcs; ++i)
             {
-                hidden = hidden && this.map.srcs[i].signal.hidden;
-                if (this.map.srcs[i].signal.hidden)
+                hidden = hidden && this.map.srcs[i].hidden;
+                if (this.map.srcs[i].hidden)
                     this.attributes[i]['stroke'] = 'none';
                 this.attributes[i]['arrow-end'] = 'none';
             }
@@ -197,9 +186,9 @@ class ListMapPainter extends MapPainter
             }
             else
             {
-                this.attributes[i+1].fill = this.map.selected ? 
-                                            MapPainter.selectedColor : 
-                                            MapPainter.defaultColor;
+                this.attributes[i+1].fill = this.map.protocol == 'TCP' ?
+                                            MapPainter.tcpColor :
+                                            MapPainter.udpColor;
                 this.attributes[i+1]['arrow-end'] = 'none'
             }
         }

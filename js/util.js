@@ -186,34 +186,14 @@ function humanize(x) {
 }
 
 function generate_curve(src_min, src_max, dst_min, dst_max, curve = -4) {
-    let grow = Math.exp(curve);
-    let a = (dst_max - dst_min) / (1.0 - grow);
-    let b = humanize(dst_min + a);
+    let expr = `sMin=${src_min};sMax=${src_max};dMin=${dst_min};dMax=${dst_max};`;
+    expr += `curve=${curve};grow=exp(curve);`;
+    expr += `a=(dMax-dMin)/(1.0-grow);`; // need to handle division by zero
+    expr += `b=dMin+a;`;
+    expr += `c=1.0/(sMax-sMin);`;
 
-    let expr = 'y = ';
-    if (b)
-        expr += b;
-    a = humanize(a);
-    if (a == 1)
-        expr += ` - `;
-    else if (a == -1)
-        expr += ` + `;
-    else if (a > 0)
-        expr += ` - ${a} * `;
-    else if (a < 0)
-        expr += ` + ${-a} * `;
-    expr += `pow(${humanize(grow)}, `;
-    if (src_min == 0)
-        expr += 'x';
-    else if (src_min > 0)
-        expr += `(x - ${src_min})`;
-    else
-        expr += `(x + ${-src_min})`;
-    let c = humanize(1.0/(src_max - src_min));
-    if (c == 1)
-        expr += `)`;
-    else
-        expr += ` * ${c})`;
+    expr += `y=b-a*pow(grow,(x-sMin)*c);`;
+
     return expr;
 }
 
@@ -250,7 +230,9 @@ function generate_curve_display(src_min, src_max, dst_min, dst_max, curve = -4) 
 }
 
 function get_curve_val(x, src_min, src_max, dst_min, dst_max, curve = -4) {
-    let grow = Math.exp(curve);
+    let grow = Math.exp(1.0 - curve);
+    if (grow == 1.0)
+        grow = 1.00000001;
     let a = (dst_max - dst_min) / (1.0 - grow);
     let b = dst_min + a;
     let scaled = (x - src_min) / (src_max - src_min);
@@ -400,7 +382,7 @@ function position(x, y, frame) {
 
 function select_all_maps() {
     let updated = false;
-    database.maps.forEach(function(map) {
+    graph.maps.forEach(function(map) {
         if (map.selected) return;
         map.selected = true;
         if (map.view) map.view.draw(0);
@@ -418,7 +400,7 @@ function deselectAllMaps(tables) {
     }
 
     let updated = false;
-    database.maps.forEach(function(map) {
+    graph.maps.forEach(function(map) {
         if (!map.selected) return;
         map.selected = false;
         if (map.view) map.view.draw(0);
@@ -505,17 +487,4 @@ function distance(x1, y1, x2, y2) {
 
 function distance_squared(x1, y1, x2, y2) {
     return norm_squared(x2 - x1, y2 - y1);
-}
-
-function type_name(initial) {
-    switch (initial) {
-        case 'i':
-            return "int";
-        case 'f':
-            return "float";
-        case 'd':
-            return "double";
-        default:
-            return "?";
-    }
 }

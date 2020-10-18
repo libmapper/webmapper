@@ -5,8 +5,8 @@
 'use strict';
 
 class ParallelView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('parallel', frame, tables, canvas, database, tooltip, pie,
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
+        super('parallel', frame, tables, canvas, graph, tooltip, pie,
               ParallelMapPainter);
 
         this.pan = this.canvasPan;
@@ -88,7 +88,7 @@ class ParallelView extends View {
     drawDevices(duration, dev) {
         let self = this;
 
-        let dev_num = this.database.devices.reduce(function(t, d) {
+        let dev_num = this.graph.devices.reduce(function(t, d) {
             let unhidden = d.hidden ? 0 : 1;
             return t ? t + unhidden : unhidden;
         });
@@ -101,7 +101,7 @@ class ParallelView extends View {
         if (dev)
             self.drawDevice(dev, duration, devInc, self);
         else {
-            this.database.devices.forEach(function(dev) {
+            this.graph.devices.forEach(function(dev) {
                 self.drawDevice(dev, duration, devInc, self);
             });
         }
@@ -165,8 +165,8 @@ class ParallelView extends View {
 
 class ParallelMapPainter extends ListMapPainter
 {
-    constructor(map, canvas, frame, database) { 
-        super(map, canvas, frame, database); 
+    constructor(map, canvas, frame, graph) {
+        super(map, canvas, frame, graph);
         this.shortenPath = 12;
     }
 
@@ -174,8 +174,8 @@ class ParallelMapPainter extends ListMapPainter
     {
         // adjust node x so that it won't overlap with a device
         let node = super.getNodePosition();
-        let sigs = this.map.srcs.map(s => s.signal).filter(s => !s.hidden);
-        sigs = sigs.concat([this.map.dst.signal]);
+        let sigs = this.map.srcs.filter(s => !s.hidden);
+        sigs = sigs.concat([this.map.dst]);
         for (let s of sigs)
         {
             if (Math.abs(node.x - s.position.x) < 50)

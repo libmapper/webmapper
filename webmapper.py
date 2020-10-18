@@ -1,31 +1,13 @@
 #!/usr/bin/env python
 
 import webmapper_http_server as server
-import mapper
+import mapper as mpr
 import mapperstorage
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 
-initialized = False
-db = None
-iface = None
-
 networkInterfaces = {'active': '', 'available': []}
-
-modes = ['undefined', 'raw', 'linear', 'expression']
-modeStrings = { 'undefined': mapper.MODE_UNDEFINED,
-                'raw': mapper.MODE_RAW,
-                'linear': mapper.MODE_LINEAR,
-                'expression': mapper.MODE_EXPRESSION }
-
-boundaryModes = ['undefined', 'none', 'mute', 'clamp', 'fold', 'wrap']
-boundaryStrings = { 'undefined': mapper.BOUND_UNDEFINED,
-                    'none': mapper.BOUND_NONE,
-                    'mute': mapper.BOUND_MUTE,
-                    'clamp': mapper.BOUND_CLAMP,
-                    'fold': mapper.BOUND_FOLD,
-                    'wrap': mapper.BOUND_WRAP }
 
 dirname = os.path.dirname(__file__)
 if dirname:
@@ -58,11 +40,13 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
+g = mpr.graph()
+
 def dev_props(dev):
     props = dev.properties.copy()
     if 'synced' in props:
         props['synced'] = props['synced'].get_double()
-    props['key'] = dev.name
+    props['key'] = dev['name']
     props['status'] = 'active'
     if 'is_local' in props:
         del props['is_local']
@@ -70,77 +54,51 @@ def dev_props(dev):
         del props['id']
     return props
 
-def link_props(link):
-    props = link.properties.copy()
-    props['src'] = link.device(0).name
-    props['dst'] = link.device(1).name
-    props['key'] = link.device(0).name + '<->' + link.device(1).name
-    props['status'] = 'active'
-    del props['is_local']
-    props['id'] = str(props['id'])
-    return props
-
 def sig_props(sig):
     props = sig.properties.copy()
-    props['device'] = sig.device().name
+    props['device'] = sig.device()['name']
     props['key'] = props['device'] + '/' + props['name']
-    props['num_maps'] = sig.num_maps;
+    props['num_maps'] = len(sig.maps());
     props['status'] = 'active'
     del props['is_local']
     del props['id']
-    if props['direction'] == mapper.DIR_INCOMING:
+    if props['direction'] == mpr.DIR_IN:
         props['direction'] = 'input'
     else:
         props['direction'] = 'output'
-    if 'type' in props:
-        props['type'] = props['type'].decode('utf-8')
+    if props['type'] == mpr.INT32:
+        props['type'] = 'i'
+    elif props['type'] == mpr.FLT:
+        props['type'] = 'f'
+    elif props['type'] == mpr.DBL:
+        props['type'] = 'd'
+    print(props)
     return props
 
 def full_signame(sig):
-    return sig.device().name + '/' + sig.name
-
-def translate_mode(mode):
-    if mode < mapper.MODE_UNDEFINED or mode > mapper.MODE_EXPRESSION:
-        mode = mapper.MODE_UNDEFINED
-    return modes[mode]
-
-def translate_bound(bound):
-    if bound < mapper.BOUND_UNDEFINED or bound > mapper.BOUND_WRAP:
-        bound = mapper.BOUND_UNDEFINED
-    return boundaryModes[bound]
+    return sig.device()['name'] + '/' + sig['name']
 
 def map_props(map):
     props = map.properties.copy()
 
     # add source slot properties
-    num_srcs = props['num_inputs']
+    num_srcs = props['num_sigs_in']
     srcs = []
     src_names = []
-    for i in range(0, num_srcs):
-        src = map.source(i).properties.copy()
-        src_name = full_signame(map.source(i).signal())
+    for sig in map.signals(mpr.LOC_SRC):
+        src = sig.properties.copy()
+        src_name = full_signame(sig)
         src['key'] = src_name
-        if 'bound_min' in src:
-            src['bound_min'] = translate_bound(src['bound_min'])
-        if 'bound_max' in src:
-            src['bound_max'] = translate_bound(src['bound_max'])
-        if 'type' in src:
-            src['type'] = src['type'].decode('utf-8')
         src_names.append(src_name)
         srcs.append(src)
     props['srcs'] = srcs
 
     # add destination slot properties
-    dst_name = full_signame(map.destination().signal())
-    dst = map.destination().properties.copy()
-    dst['key'] = dst_name
-    if 'bound_min' in dst:
-        dst['bound_min'] = translate_bound(dst['bound_min'])
-    if 'bound_max' in dst:
-        dst['bound_max'] = translate_bound(dst['bound_max'])
-    if 'type' in dst:
-        dst['type'] = dst['type'].decode('utf-8')
-    props['dst'] = dst
+    for sig in map.signals(mpr.LOC_DST):
+        dst = sig.properties.copy()
+        dst_name = full_signame(sig)
+        dst['key'] = dst_name
+        props['dst'] = dst
 
     # generate key
     if num_srcs > 1:
@@ -148,66 +106,57 @@ def map_props(map):
     else: props['key'] = src_names[0] + '->' + dst_name
 
     # translate some properties
-    if props['process_location'] == mapper.LOC_SOURCE:
-        props['process_location'] = 'source'
+    if props['process_loc'] == mpr.LOC_SRC:
+        props['process_loc'] = 'src'
     else:
-        props['process_location'] = 'destination'
-    if props['protocol'] == mapper.PROTO_UDP:
+        props['process_loc'] = 'dst'
+    if props['protocol'] == mpr.PROTO_UDP:
         props['protocol'] = 'UDP'
-    elif props['protocol'] == mapper.PROTO_TCP:
+    elif props['protocol'] == mpr.PROTO_TCP:
         props['protocol'] = 'TCP'
     else:
         del props['protocol']
     props['status'] = 'active'
     props['id'] = str(props['id']) # if left as int js will lose precision & invalidate
     del props['is_local']
-
-    # translate some other properties
     if 'mode' in props:
-        props['mode'] = translate_mode(props['mode'])
+        del props['mode']
 
+    print("map_props", props)
     return props
 
-def on_device(dev, action):
-    if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print('ON_DEVICE (added or modified)', dev_props(dev))
+def on_device(type, dev, action):
+    print('ON_DEVICE')
+    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
+        print('NEW DEVICE')
         server.send_command("add_devices", [dev_props(dev)])
-    elif action == mapper.REMOVED:
-#        print('ON_DEVICE (removed)', dev_props(dev))
+    elif action == mpr.OBJ_REM:
         server.send_command("del_device", dev_props(dev))
-    elif action == mapper.EXPIRED:
-#        print('ON_DEVICE (expired)', dev_props(dev))
-        db.flush()
+    elif action == mpr.OBJ_EXP:
+        server.send_command("del_device", dev_props(dev))
 
-def on_link(link, action):
-    if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print('ON_LINK (added or modified)', link_props(link))
-        server.send_command("add_links", [link_props(link)])
-    elif action == mapper.REMOVED:
-#        print('ON_LINK (removed)', link_props(link))
-        server.send_command("del_link", link_props(link))
-
-def on_signal(sig, action):
-    if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print('ON_SIGNAL (added or modified)', sig_props(sig))
+def on_signal(type, sig, action):
+    print('ON_SIGNAL')
+    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
+        print('NEW SIGNAL')
         server.send_command("add_signals", [sig_props(sig)])
-    elif action == mapper.REMOVED:
-#        print('ON_SIGNAL (removed)', sig_props(sig))
+    elif action == mpr.OBJ_REM:
         server.send_command("del_signal", sig_props(sig))
 
-def on_map(map, action):
-    if action == mapper.ADDED or action == mapper.MODIFIED:
-#        print('ON_MAP', '(added)' if action == mapper.ADDED else '(modified)', map_props(map))
+def on_map(type, map, action):
+    print('ON_MAP')
+    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
+        print('NEW MAP')
         server.send_command("add_maps", [map_props(map)])
-    elif action == mapper.REMOVED:
-#        print('ON_MAP (removed)', map_props(map))
+    elif action == mpr.OBJ_REM:
         server.send_command("del_map", map_props(map))
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
-    dev = db.device(names[0])
+    dev = g.devices().filter(mpr.PROP_NAME, names[0]).next()
     if dev:
-        sig = dev.signal(names[1])
+        sig = dev.signals().filter(mpr.PROP_NAME, names[1]).next()
+        print('found sig', sig, 'at', names);
         return sig
     else:
         print('error: could not find device', names[0])
@@ -223,111 +172,68 @@ def find_map(srckeys, dstkey):
         intersect = intersect.intersect(s.maps())
     for m in intersect:
         match = True
-        match = match and m.slot(dst)
+        match = match and (m.index(dst) >= 0)
         if match:
             for s in srcs:
-                match = match and m.slot(s)
+                match = match and (m.index(s) >= 0)
         if match: 
             return m
     return None
 
-def as_number(value):
-    if type(value) is int or type(value) is float:
-        return value
-    else:
-        if type(value) is str:
-            value = value.replace(',',' ').split()
-        numargs = len(value)
-        for i in range(numargs):
-            value[i] = float(value[i])
-        if numargs == 1:
-            value = value[0]
-        return value
-
-def set_map_properties(args, map):
-    srckeys, dstkey, props = args
-    if not map:
-        map = find_map(srckeys, dstkey)
+def set_map_properties(props, map):
+    print('set_map_properties:', props, map)
+    if map == None:
+        map = find_map(props['srcs'], props['dst'])
+        print('found map with', props['srcs'], props['dst'])
         if not map:
-            print("error: couldn't retrieve map ", srckeys, " -> ", dstkey)
+            print("error: couldn't retrieve map ", props['src'], " -> ", props['dst'])
             return
+    if 'src' in props:
+        del props['src']
+    if 'srcs' in props:
+        del props['srcs']
+    if 'dst' in props:
+        del props['dst']
     for key in props:
-        if key in ['version']:
-            continue;
-        elif key == 'srcs':
-            srcs = props[key]
-            srcidx = 0
-            for src in srcs:
-                for subkey in src:
-                    value = src[subkey]
-                    if subkey == 'min' or subkey == 'max':
-                        value = as_number(value)
-                    elif subkey == 'bound_min' or subkey == 'bound_max':
-                        value = boundaryStrings[value]
-                    map.source(srcidx).set_property(subkey, value)
-                srcidx += 1
-        elif key.startswith('src'):
-            srcidx = -1
-            argidx = -1
-            if key[3] == '[' and key[5:6] == '].':
-                srcidx = int(key[4])
-                argidx = 7
-            elif key[3] == '.':
-                srcidx = 0
-                argidx = 4
-            else:
-                continue
-            subkey = key[argidx:]
-            value = props[key]
-            if subkey == 'min' or subkey == 'max':
-                value = as_number(value)
-            elif subkey == 'bound_min' or subkey == 'bound_max':
-                value = boundaryStrings[value]
-            map.source(srcidx).set_property(subkey, value)
-        elif key == 'dst':
-            dst = props[key]
-            for subkey in dst:
-                value = dst[subkey]
-                if subkey == 'min' or subkey == 'max':
-                    value = as_number(value)
-                elif subkey == 'bound_min' or subkey == 'bound_max':
-                    value = boundaryStrings[value]
-                map.destination().set_property(subkey, value)
-        elif key.startswith('dst.'):
-            subkey = key[4:]
-            value = props[key]
-            if subkey == 'min' or subkey == 'max':
-                value = as_number(value)
-            elif subkey == 'bound_min' or subkey == 'bound_max':
-                value = boundaryStrings[value]
-            map.destination().set_property(subkey, value)
-        elif key == 'mode':
-            if props['mode'] == 'linear':
-                map.mode = mapper.MODE_LINEAR
-            elif props['mode'] == 'expression':
-                map.mode = mapper.MODE_EXPRESSION
-            else:
-                print('error: unknown mode ', props['mode'])
+        print('prop', key, props[key])
+        val = props[key]
+        print('prop', key, val)
+        if val == 'true' or val == 'True' or val == 't' or val == 'T':
+            val = True
+        elif val == 'false' or val == 'False' or val == 'f' or val == 'F':
+            val = False
+        elif val == 'null' or val == 'Null':
+            val = None
+        if key == 'expr':
+            map[mpr.PROP_EXPR] = val
+        elif key == 'muted':
+            if val == True or val == False:
+                map[mpr.PROP_MUTED] = val
         elif key == 'protocol':
-            if props['protocol'] == 'UDP':
-                map.protocol = mapper.PROTO_UDP
-            elif props['protocol'] == 'TCP':
-                map.protocol = mapper.PROTO_TCP
-            else:
-                print('error: unknown protocol ', props['protocol'])
+            if val == 'udp' or val == 'UDP':
+                map[mpr.PROP_PROTOCOL] = mpr.PROTO_UDP
+            elif val == 'tcp' or val == 'TCP':
+                map[mpr.PROP_PROTOCOL] = mpr.PROTO_TCP
         else:
-            map.set_property(key, props[key])
+            map[key] = val
     map.push()
 
 def on_save(arg):
-    d = db.device(arg['dev'])
+    d = g.devices().filter(mpr.PROP_NAME, arg['dev']).next()
     fn = d.name+'.json'
-    return fn, mapperstorage.serialise(db, arg['dev'])
+    return fn, mprstorage.serialise(g, arg['dev'])
 
 def on_load(arg):
-    mapperstorage.deserialise(db, arg['sources'], arg['destinations'], arg['loading'])
+    mprstorage.deserialise(g, arg['sources'], arg['destinations'], arg['loading'])
 
-def get_networks(arg):
+def select_interface(iface):
+    print('switching interface to', iface)
+    global g
+    g.set_interface(iface)
+    networkInterfaces['active'] = iface
+    server.send_command("active_interface", iface)
+
+def get_interfaces(arg):
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
     totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
     connectedInterfaces = []
@@ -335,51 +241,38 @@ def get_networks(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             connectedInterfaces.append(i)
+    server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
-    server.send_command("available_networks", networkInterfaces['available'])
-    server.send_command("active_network", networkInterfaces['active'])
+    server.send_command("active_interface", networkInterfaces['active'])
 
-def select_network(newNetwork):
-    global db
-    global initialized
-    if db:
-        if networkInterfaces['active'] == newNetwork:
-            # no change
-            return
-        db.flush(0)
-    net = mapper.network(newNetwork)
-    networkInterfaces['active'] = net.interface
-    db = mapper.database(net)
-    get_networks(False)
-    initialized = False
+def init_graph(arg):
+    print('REFRESH!')
+    global g
+    g.subscribe(mpr.OBJ)
 
-def init_database(arg):
-    global db
-    global initialized
-    if initialized == False:
-        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
-        db.add_device_callback(on_device)
-        db.add_link_callback(on_link)
-        db.add_signal_callback(on_signal)
-        db.add_map_callback(on_map)
-        initialized = True
-    else:
-        server.send_command("add_devices", [dev_props(d) for d in db.devices()])
-        server.send_command("add_links", [link_props(l) for l in db.links()])
-        server.send_command("add_signals", [sig_props(s) for s in db.signals()])
-        server.send_command("add_maps", [map_props(m) for m in db.maps()])
+    # remove old callbacks (if they are registered)
+    g.remove_callback(on_device)
+    g.remove_callback(on_signal)
+    g.remove_callback(on_map)
+
+    # register callbacks
+    g.add_callback(on_device, mpr.DEV)
+    g.add_callback(on_signal, mpr.SIG)
+    g.add_callback(on_map, mpr.MAP)
 
 server.add_command_handler("add_devices",
-                           lambda x: ("add_devices", [dev_props(d) for d in db.devices()]))
+                           lambda x: ("add_devices", [dev_props(d) for d in g.devices()]))
 
-def subscribe(name):
-    if name == "all_devices":
-        db.subscribe(mapper.OBJ_DEVICES | mapper.OBJ_LINKS)
+def subscribe(device):
+    print('subscribe', device)
+    if device == 'all_devices':
+        g.subscribe(mpr.DEV)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = db.device(name)
+        dev = g.devices().filter(mpr.PROP_NAME, device).next()
+        print('found dev:', dev)
         if dev:
-            db.subscribe(dev, mapper.OBJ_ALL)
+            g.subscribe(dev, mpr.OBJ)
 
 def new_map(args):
     srckeys, dstkey, props = args
@@ -389,14 +282,14 @@ def new_map(args):
         print(srckeys, ' and ', dstkey, ' not found on network!')
         return
 
-    map = mapper.map(srcs, dst)
+    map = mpr.map(srcs, dst)
     if not map:
         print('error: failed to create map', srckeys, "->", dstkey)
         return;
     else:
         print('created map: ', srckeys, ' -> ', dstkey)
     if props and type(props) is dict:
-        set_map_properties(args, map)
+        set_map_properties(props, map)
     map.push()
 
 def release_map(args):
@@ -407,13 +300,10 @@ def release_map(args):
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("add_signals",
-                           lambda x: ("add_signals", [sig_props(s) for s in db.signals()]))
-
-server.add_command_handler("add_links",
-                           lambda x: ("add_links", [link_props(l) for l in db.links()]))
+                           lambda x: ("add_signals", [sig_props(s) for s in g.signals()]))
 
 server.add_command_handler("add_maps",
-                           lambda x: ("add_maps", [map_props(m) for m in db.maps()]))
+                           lambda x: ("add_maps", [map_props(m) for m in g.maps()]))
 
 server.add_command_handler("set_map", lambda x: set_map_properties(x, None))
 
@@ -421,18 +311,21 @@ server.add_command_handler("map", lambda x: new_map(x))
 
 server.add_command_handler("unmap", lambda x: release_map(x))
 
-server.add_command_handler("refresh", init_database)
+server.add_command_handler("refresh", init_graph)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
 
-server.add_command_handler("select_network", select_network)
-server.add_command_handler("get_networks", get_networks)
+server.add_command_handler("select_interface", select_interface)
+server.add_command_handler("get_interfaces", get_interfaces)
 
-if '--iface' in sys.argv:
-    idx = sys.argv.index('--iface')
-    iface = sys.argv[idx+1]
-select_network(iface)
+get_interfaces(False)
+if ( 'en1' in networkInterfaces['available'] ) :
+    networkInterfaces['active'] = 'en1'
+elif ( 'en0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'en0'
+elif ( 'lo0' in networkInterfaces['available'] ):
+    networkInterfaces['active'] = 'lo0'
 
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
@@ -444,6 +337,6 @@ on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
 
-server.serve(port=port, poll=lambda: db.poll(100), on_open=on_open,
+server.serve(port=port, poll=lambda: g.poll(100), on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)
 

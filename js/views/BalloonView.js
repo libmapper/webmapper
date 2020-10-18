@@ -5,8 +5,8 @@
 'use strict';
 
 class BalloonView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
-        super(frame, tables, canvas, database, tooltip, pie);
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
+        super(frame, tables, canvas, graph, tooltip, pie);
 
         // hide tables
         tables.left.adjust(0, 0, 0, frame.height, 0, 500);
@@ -120,7 +120,7 @@ class BalloonView extends View {
     }
 
     drawDevices(duration) {
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             // remove associated svg elements
             remove_object_svg(dev);
             let line_count = 0;
@@ -136,7 +136,7 @@ class BalloonView extends View {
         this.background.animate({'path': path, 'fill-opacity': 0.5}, duration, '>');
 
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             self.redrawDevice(dev, duration);
         });
 

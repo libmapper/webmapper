@@ -1,14 +1,15 @@
 class NetworkSelector {
-    constructor(container, database, view) {
-        this.database = database;
-        this.selected = database.networkInterfaces.selected;
+    constructor(container, graph, view) {
+        this.graph = graph;
+        this.selected = graph.networkInterfaces.selected;
 
         $(container).append(
-            "<div id='netSelectorDiv' class='topMenu' style='width:75px;overflow:visible'>"+
-                "<div class='topMenuTitle'><strong>NET</strong></div>"+
+            "<div id='netSelectorDiv' class='topMenu half' style='width:75px;overflow:visible'>"+
+                "<div class='topMenuTitle half'><strong>NET</strong></div>"+
                 "<div class='topMenuContainer' style='padding:5px;overflow:visible'>"+
                     "<div id='ifaceMenuLabel' style='padding:5px'>lo0</div>"+
-                        "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
+                            "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
+                        "<tbody><tr><td>lo0</td></tr><tr><td>en1</td></tr></tbody>"+
                     "</table>"+
                 "</div>"+
             "</div>");
@@ -23,37 +24,29 @@ class NetworkSelector {
             $(menu).addClass('show');
 
             $(menu).find('td').one('click', function(td) {
+                $(menu).removeClass('show');
                 let iface = td.currentTarget.innerHTML;
                 // send iface selection to backend
-                command.send('select_network', iface);
+                command.send('select_interface', iface);
             });
-
-            $(document).one('mouseup', function(e) {
-                $(menu).removeClass('show');
-                if ($(menu).has(e.target).length === 0)
-                    $(menu).find('td').off('click');
-            });
-
             e.stopPropagation();
         });
     }
 
     update() {
         $('#ifaceMenu').empty();
-        for (var i in this.database.networkInterfaces.available) {
-            let iface = this.database.networkInterfaces.available[i];
-            if (iface == this.database.networkInterfaces.selected)
+        for (var i in this.graph.networkInterfaces.available) {
+            let iface = this.graph.networkInterfaces.available[i];
+            if (iface == this.graph.networkInterfaces.selected)
                 iface = "<tr><td class='tdsel'>"+iface+"</td></tr>";
             else
                 iface = "<tr><td>"+iface+"</td></tr>";
             $('#ifaceMenu').append(iface);
         }
-        if (this.selected != null
-            && this.selected != this.database.networkInterfaces.selected) {
+        if (this.selected != null && this.selected != this.graph.networkInterfaces.selected) {
             location.reload();
         }
-        this.selected = this.database.networkInterfaces.selected;
-//        $('#ifaceMenuLabel').text("▶ "+this.selected);
+        this.selected = this.graph.networkInterfaces.selected;
         $('#ifaceMenuLabel').text(this.selected);
     }
 }

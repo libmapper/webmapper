@@ -5,8 +5,8 @@
 'use strict';
 
 class ChordView extends View {
-    constructor(frame, tables, canvas, database, tooltip, pie) {
-        super('chord', frame, tables, canvas, database, tooltip, pie);
+    constructor(frame, tables, canvas, graph, tooltip, pie) {
+        super('chord', frame, tables, canvas, graph, tooltip, pie);
 
         this.radius = 200;
 
@@ -36,7 +36,7 @@ class ChordView extends View {
         this.tables.left.hidden = this.tables.right.hidden = true;
 
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             if (dev.view) {
                 self.setDevClick(dev);
                 self.setDevHover(dev);
@@ -45,7 +45,7 @@ class ChordView extends View {
             dev.signals.forEach(function(sig) { remove_object_svg(sig); });
         });
         // remove associated svg elements for maps
-        this.database.maps.forEach(function(map) { remove_object_svg(map); });
+        this.graph.maps.forEach(function(map) { remove_object_svg(map); });
 
         this.devCount = this.canvas.text(this.mapPane.cx, this.mapPane.cy, " ")
                                    .attr({'font-size': 100,
@@ -81,10 +81,14 @@ class ChordView extends View {
         let self = this;
         this.onlineDevs = 0;
         this.offlineDevs = 0;
-        let dev_num = this.database.devices.size();
-        if (dev_num < 1)
+        let dev_num = this.graph.devices.size();
+        if (dev_num == 0) {
+            this.canvas.waiting.attr({'text': 'waiting for devices'});
             return;
-        this.database.devices.forEach(function(dev) {
+        }
+        this.canvas.waiting.attr({'text': ''});
+
+        this.graph.devices.forEach(function(dev) {
             if (dev.status == 'offline')
                 self.offlineDevs++;
             else
@@ -104,7 +108,7 @@ class ChordView extends View {
 
         let cx = this.mapPane.cx;
         let cy = this.mapPane.cy;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             let offline = (dev.status == 'offline');
             let r = self.radius ? self.radius : 0;
 
@@ -114,18 +118,17 @@ class ChordView extends View {
                 dev.index = onlineIndex++;
             let angleInc = offline ? self.offlineInc : self.onlineInc;
             let numDevs = offline ? self.offlineDevs : self.onlineDevs;
-            let x = cx;
             let angle = (dev.index - 0.45) * angleInc;
             let pstart = {'angle': angle,
-                          'x': x + Math.cos(angle) * r,
+                          'x': cx + Math.cos(angle) * r,
                           'y': cy + Math.sin(angle) * r};
             angle += angleInc * self.gap(numDevs);
             let pstop = {'angle': angle,
-                         'x': x + Math.cos(angle) * r,
+                         'x': cx + Math.cos(angle) * r,
                          'y': cy + Math.sin(angle) * r};
 
             if (!dev.view) {
-                let path = [['M', x, cy]];
+                let path = [['M', cx, cy]];
                 dev.view = self.canvas.path().attr({'path': path,
                                                     'fill-opacity': 0,
                                                     'stroke-opacity': 0,
@@ -152,12 +155,12 @@ class ChordView extends View {
                                      'font-size': 16,
                                      'fill': 'white',
                                      'text-anchor': anchor,
-                                     'x': x,
+                                     'x': cx,
                                      'y': cy});
                 dev.view.label.node.setAttribute('pointer-events', 'none');
             }
             if (!dev.view.stick) {
-                let path = [['M', x, cy]];
+                let path = [['M', cx, cy]];
                 let color = Raphael.hsl(dev.hue, dev.hidden ? 0 : 1, 0.5);
                 dev.view.stick = self.canvas.path().attr({'path': path,
                                                           'stroke': color,
@@ -173,19 +176,19 @@ class ChordView extends View {
         let self = this;
         dev.view.unclick().click(function(e) {
             // check if any other devices are hidden
-            let hidden = self.database.devices.map(d => d.hidden ? 1 : 0)
-                                              .reduce((a, h) => a + h);
+            let hidden = self.graph.devices.map(d => d.hidden ? 1 : 0)
+                                           .reduce((a, h) => a + h);
             if (dev.hidden) {
                 // unhide
                 dev.hidden = false;
             }
             else if (hidden === 0) {
                 // 'solo' this device by hiding all others
-                self.database.devices.forEach(d => d.hidden = (d !== dev));
+                self.graph.devices.forEach(d => d.hidden = (d !== dev));
             }
-            else if (hidden === self.database.devices.size() - 1) {
+            else if (hidden === self.graph.devices.size() - 1) {
                 // unhide all devices
-                self.database.devices.forEach(d => d.hidden = false);
+                self.graph.devices.forEach(d => d.hidden = false);
             }
             else
                 dev.hidden = true;
@@ -225,7 +228,7 @@ class ChordView extends View {
                 dev.view.radius = r;
                 self.drawDevice(dev, 500, self);
                 for (var i in dev.links) {
-                    let link = self.database.links.find(dev.links[i]);
+                    let link = self.graph.links.find(dev.links[i]);
                     if (link)
                         self.drawLink(link, 500, self);
                 }
@@ -270,7 +273,7 @@ class ChordView extends View {
                 dev.view.radius = r;
                 self.drawDevice(dev, 500, self);
                 for (var i in dev.links) {
-                    let link = self.database.links.find(dev.links[i]);
+                    let link = self.graph.links.find(dev.links[i]);
                     if (link)
                         self.drawLink(link, 500, self);
                 }
@@ -361,7 +364,7 @@ class ChordView extends View {
 
     drawDevices(duration) {
         let self = this;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             self.drawDevice(dev, duration, self);
         });
     }
@@ -369,10 +372,10 @@ class ChordView extends View {
     updateLinks() {
         let self = this;
         let tau = Math.PI * 2.0;
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             dev.link_angles = [];
         });
-        this.database.links.forEach(function(link) {
+        this.graph.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!src.view || !dst.view || src == dst)
@@ -385,7 +388,7 @@ class ChordView extends View {
                 dst.link_angles.push(src.view.pstart.angle);
             }
         });
-        this.database.devices.forEach(function(dev) {
+        this.graph.devices.forEach(function(dev) {
             if (!dev.link_angles || dev.link_angles.length <= 1)
                 return;
             // sort
@@ -408,7 +411,7 @@ class ChordView extends View {
                 a.push.apply(a, a.splice(0, i));
             }
         });
-        this.database.links.forEach(function(link) {
+        this.graph.links.forEach(function(link) {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
@@ -572,7 +575,7 @@ class ChordView extends View {
     drawLinks(duration) {
         let self = this;
 
-        this.database.links.forEach(function(link) {
+        this.graph.links.forEach(function(link) {
             self.drawLink(link, duration, self);
         });
     }
@@ -616,12 +619,12 @@ class ChordView extends View {
         super.cleanup();
         if (this.devCount)
             this.devCount.remove();
-        database.links.forEach(function(link) {
+        graph.links.forEach(function(link) {
             if (!link.view)
                 return;
             remove_object_svg(link, 200);
         });
-        database.devices.forEach(function(dev) {
+        graph.devices.forEach(function(dev) {
             if (!dev.view)
                 return;
             if (dev.view.stick) {

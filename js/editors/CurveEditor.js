@@ -1,4 +1,4 @@
-class CurveGenerator {
+class CurveEditor {
     constructor(props, onGenerated) {
         // If curve editor is open, return
         if ($('#curveEditorWindow').length) {
@@ -76,7 +76,6 @@ class CurveGenerator {
                 $('#curveExprDisplay').empty().append(expr);
                 $('#curveGenerate').removeClass('disabled');
             }
-
         });
 
         // Generate button
