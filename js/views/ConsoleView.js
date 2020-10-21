@@ -409,8 +409,8 @@ class ConsoleView extends View {
                             argidx++;
                         }
                         while (argidx < cmd.length - 1) {
-                            msg[cmd[i]] = cmd[i+1];
-                            i++;
+                            msg[cmd[argidx]] = cmd[argidx+1];
+                            argidx++;
                         }
                         console.log("MOD?", srcs, dst, msg);
                         mapper.set(srcs, dst, msg);
