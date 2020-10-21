@@ -248,7 +248,6 @@ def get_interfaces(arg):
 def init_graph(arg):
     print('REFRESH!')
     global g
-    g.subscribe(mpr.OBJ)
 
     # remove old callbacks (if they are registered)
     g.remove_callback(on_device)
@@ -259,6 +258,16 @@ def init_graph(arg):
     g.add_callback(on_device, mpr.DEV)
     g.add_callback(on_signal, mpr.SIG)
     g.add_callback(on_map, mpr.MAP)
+
+    # (re)subscribe: currently this does nothing but could refresh graph database?
+    g.subscribe(mpr.OBJ)
+
+    for d in g.devices():
+        server.send_command("add_devices", [dev_props(d)])
+    for s in g.signals():
+        server.send_command("add_signals", [sig_props(s)])
+    for m in g.maps():
+        server.send_command("add_maps", [map_props(m)])
 
 server.add_command_handler("add_devices",
                            lambda x: ("add_devices", [dev_props(d) for d in g.devices()]))
