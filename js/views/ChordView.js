@@ -415,8 +415,7 @@ class ChordView extends View {
             let src = link.src;
             let dst = link.dst;
             if (!link.view) {
-                let path = circle_path(self.mapPane.cx, self.mapPane.cy, 1);
-                link.view = self.canvas.path(path);
+                link.view = self.canvas.path();
             }
             link.src_index = (src.link_angles.length
                               ? src.link_angles.indexOf(dst.view.pstart.angle)
@@ -518,33 +517,32 @@ class ChordView extends View {
         if (midAngleDeg < 0)
             midAngleDeg += 360;
 
-        let srcColor = 'hsla(' + src.hue + ','+(src.hidden ? 0 : 1)+',0.5,0.75)';
-        let dstColor = 'hsla(' + dst.hue + ','+(dst.hidden ? 0 : 1)+',0.5,0.75)';
+        let srcColor = 'hsl(' + src.hue + ','+(src.hidden ? 0 : 1)+',0.5)';
+        let dstColor = 'hsl(' + dst.hue + ','+(dst.hidden ? 0 : 1)+',0.5)';
         let fillString = midAngleDeg+'-'+srcColor+'-'+dstColor;
 
         let path = [];
         if (src == dst) {
+            r = self.radius * 1.1;
             if (angleInc > 1.1) {
                 angleInc = 1;
-                r = self.radius;
                 angleInc += src.view.pstart.angle;
-                path = [['M', (src.view.pstart.x-cx)*1.1+cx,
-                         (src.view.pstart.y-cy)*1.1+cy],
-                        ['C', (src.view.pstart.x-cx)*1.5+cx,
-                         (src.view.pstart.y-cy)*1.5+cy,
-                         cx + Math.cos(angleInc) * r * 1.5,
-                         cy + Math.sin(angleInc) * r * 1.5,
-                         cx + Math.cos(angleInc) * r * 1.1,
-                         cy + Math.sin(angleInc) * r * 1.1],
-                        ['Z']];
+                path = [['M', (src.view.pstart.x-cx)*1.1+cx, (src.view.pstart.y-cy)*1.1+cy],
+                        ['A', r, r, angleInc, fuzzyEq(angleInc, 6.283, 0.01) ? 1 : 0, 1,
+                         cx + Math.cos(angleInc) * r, cy + Math.sin(angleInc) * r]];
             }
             else {
                 path = [['M', (src.view.pstart.x-cx)*1.1+cx, (src.view.pstart.y-cy)*1.1+cy],
-                        ['C', (src.view.pstart.x-cx)*1.5+cx, (src.view.pstart.y-cy)*1.5+cy,
-                         (src.view.pstop.x-cx)*1.5+cx, (src.view.pstop.y-cy)*1.5+cy,
-                         (src.view.pstop.x-cx)*1.1+cx, (src.view.pstop.y-cy)*1.1+cy],
-                        ['Z']];
+                        ['A', r, r, angleInc, fuzzyEq(angleInc, 6.283, 0.01) ? 1 : 0, 1,
+                         (src.view.pstop.x-cx)*1.1+cx, (src.view.pstop.y-cy)*1.1+cy]];
             }
+
+            let len = Raphael.getTotalLength(path);
+            path = Raphael.getSubpath(path, 20, len-20);
+            link.view.toBack().attr({'stroke-width': 40,
+                                     'stroke': Raphael.hsl(src.hue, src.hidden ? 0 : 1, 0.5),
+                                     'fill': 'none',
+                                     'stroke-linecap': 'round'});
         }
         else {
             let cx1 = cx, cy1 = cy, cx2 = cx, cy2 = cy;
@@ -564,12 +562,20 @@ class ChordView extends View {
             path.push(['A', r, r, dstStopAngle - dstStartAngle, 0, 1, dstStopPos[0], dstStopPos[1]]);
             path.push(['Q', cx2, cy2, srcStartPos[0], srcStartPos[1]]);
             path.push(['Z']);
+
+            link.view.toBack().attr({'stroke-width': 0,
+                                     'fill': fillString});
         }
 
-        link.view.toBack().attr({'stroke-width': 0,
-                                 'fill': fillString})
-                          .animate({'path': path}, duration, '>');
-
+        if (link.view.getTotalLength() == undefined) {
+            link.view.attr({'path': path});
+            $(link.view.node).css("opacity", 0);
+            $(link.view.node).animate({opacity: 0.75}, duration);
+        }
+        else {
+            $(link.view.node).css("opacity", 0.75);
+            link.view.animate({'path': path}, duration, '>');
+        }
     }
 
     drawLinks(duration) {

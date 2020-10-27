@@ -257,7 +257,7 @@ class View {
                         source: link.src.key,
                         destination: link.dst.key
                     }, e.x, e.y);
-                link.view.toFront().animate({'stroke-width': 1}, 0, 'linear');
+                $(link.view.node).css("opacity", 1);
                 link.src.view.toFront();
                 if (link.src.view.label)
                     link.src.view.label.toFront();
@@ -271,7 +271,7 @@ class View {
             },
             function() {
                 self.tooltip.hide();
-                link.view.animate({'stroke-width': 0}, 0, 'linear');
+                $(link.view.node).css("opacity", 0.75);
             }
         );
     }
