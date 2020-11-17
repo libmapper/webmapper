@@ -90,7 +90,7 @@ If a map or maps are selected, the *map property editor* becomes active. This pa
 
 ### Expression editor
 
-This mode allows the user to view and edit the expression used for processing values streaming on this map. Please refer to the [expression syntax documentation](./doc/expression_syntax.html) for more information.
+This mode allows the user to view and edit the expression used for processing values streaming on this map. Please refer to the libmapper [expression syntax documentation](./doc/expression_syntax.md) for more information.
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_expr.png">
 
