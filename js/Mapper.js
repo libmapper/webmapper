@@ -73,14 +73,11 @@ class Mapper
     _mapExists(srckey, dstkey)
     {
         let exists = false;
-        graph.maps.forEach(function(map)
-        {
+        graph.maps.forEach(function(map) {
             if (exists) return;
             if (map.dst.key != dstkey) return;
-            for (let src of map.srcs) 
-            {
-                if (src.key == srckey)
-                {
+            for (let src of map.srcs)  {
+                if (src.key == srckey) {
                     exists = true;
                     return;
                 }
@@ -116,7 +113,10 @@ class ConvergentMapper
 
     valid_method(method)
     {
-        for (let i in this.method) if (method === this.method[i]) return true;
+        for (let i in this.method) {
+            if (method === this.method[i])
+                return true;
+        }
         return false;
     }
 
@@ -139,10 +139,10 @@ class ConvergentMapper
             return;
         }
 
-        if (graph.maps.find(this.mapper.mapKey(srckeys, dstkey))) return; // map exists
+        if (graph.maps.find(this.mapper.mapKey(srckeys, dstkey)))
+            return; // map exists
         let overlap = this._overlapWithExistingMaps(srckeys, dstkey, props);
-        if (overlap !== null)
-        {
+        if (overlap !== null) {
             // unmap the existing convergent map to make way for the new one
             this.mapper.unmap(overlap.srcs, overlap.dst);
         }
@@ -158,8 +158,7 @@ class ConvergentMapper
             console.log("error: unexpected convergent method", method);
         }
         let expr = null;
-        switch (method) 
-        {
+        switch (method) {
             case this.method.sum:
                 expr = this._sum(srckey, dstmap);
                 break;
@@ -172,8 +171,16 @@ class ConvergentMapper
             case this.method.default:
             default:
         }
-        if (expr !== null) this._converge(srckey, dstmap, {expr: expr});
-        else this._converge(srckey, dstmap);
+        if (expr !== null)
+            this._converge(srckey, dstmap, {expr: expr});
+        else
+            this._converge(srckey, dstmap);
+    }
+
+    _insert_after_assignment_expr(expr, insert)
+    {
+        expr = expr.replace(/(y\s*=)([^;]+);*/g, "$1($2)"+insert+";");
+        return expr;
     }
 
     // (the existing expression) + (src scaled to dst range)
@@ -183,8 +190,11 @@ class ConvergentMapper
         let newx;
         if (this._signals_have_bounds([src, dst]))
             newx = ConvExpr.scaled(src.min, src.max, dst.min, dst.max, 'new');
-        else newx = 'new'
-        return 'y='+ConvExpr.reindex(expr+'+'+newx, src, dstmap);
+        else
+            newx = 'new'
+        newx = ConvExpr.paren_wrap(newx);
+        expr = this._insert_after_assignment_expr(expr, '+'+newx);
+        return ConvExpr.reindex(expr, src, dstmap);
     }
 
     // (the existing expression) * (src scaled to [0,1] range)
@@ -194,10 +204,11 @@ class ConvergentMapper
         let newx;
         if (this._signals_have_bounds([src, dst]))
             newx = ConvExpr.zero_to_one_scaled(src.min, src.max, 'new');
-        else newx = 'new'
+        else
+            newx = 'new'
         newx = ConvExpr.paren_wrap(newx);
-        expr = ConvExpr.paren_wrap(expr);
-        return 'y='+ConvExpr.reindex(expr+'*'+newx, src, dstmap);
+        expr = this._insert_after_assignment_expr(expr, '*'+newx);
+        return ConvExpr.reindex(expr, src, dstmap);
     }
 
     // average of the normalized signals scaled to dst range
@@ -240,21 +251,22 @@ class ConvergentMapper
 
         setTimeout(function() {
             this.mapper._map(srckeys, dstmap.dst.key, props);
-        }, 500);
+        }, 200);
     }
 
     _prep(srckey, dstmap)
     {
         let src = graph.find_signal(srckey);
         let dst = dstmap.dst;
-        if (!src) 
-        {
+        if (!src) {
             console.log('error creating convergent map, no src matching', srckey);
             return;
         }
 
-        let expr = dstmap.expr.substring(2);
-        if (dstmap.srcs.length == 1) expr = ConvExpr.replace(expr, 'x', 'x0');
+        let expr = dstmap.expr;
+        if (dstmap.srcs.length == 1) {
+            expr = expr.replace(/\bx(?!\w)/g, "x0");
+        }
         return [src, dst, expr];
     }
 
@@ -351,33 +363,32 @@ class ConvExpr
         let idx = srcs.indexOf(srckey);
         for (let i = 0; i < dstmap.srcs.length; ++i)
         {
-            if (i < idx) continue;
-            expr = ConvExpr.replace(expr, 'x'+i, 'x'+(i+1));
+            if (i < idx)
+                continue;
+            let re = new RegExp("x"+i, "g");
+            expr = expr.replace(re, "x"+(i+1));
         }
-        return ConvExpr.replace(expr, srcexprname,
-                                ConvExpr.vectorize('x'+idx, src, dstmap.dst));
+        let re = new RegExp(srcexprname);
+        expr = expr.replace(re, ConvExpr.vectorize('x'+idx, src, dstmap.dst));
+        return expr;
     }
 
     static replace(expr, key, newkey)
     {
         let idxs = [];
         let idx = expr.indexOf(key);
-        while(idx !== -1) 
-        {
+        while(idx !== -1)  {
             idxs.push(idx);
             idx = expr.indexOf(key,idx+1);
         }
-        for (let idx of idxs)
-        {
+        for (let idx of idxs) {
             expr = expr.substring(0,idx) + newkey + expr.substring(idx+key.length);
         }
         return expr;
     }
 
     static vectorize(x, src, dst) {
-        console.log('vectorize', x, src, dst);
         if (src.length > dst.length) {
-            console.log('lens:', src.name, src.length, dst.length);
             // truncate source vector
             if (1 == dst.length)
                 x = x+'[0]';
@@ -403,6 +414,9 @@ class ConvExpr
 //                    x = '['+(Array(mult).fill(x))+x+'[0:'+(mod-1)+']]';
 //                    break;
 //            }
+
+            // Alternatively, truncate the destination assignment i.e. y[0:N]=x
+            // In this case we also need to adjust vector length of other source signals
         }
         return x;
     }
