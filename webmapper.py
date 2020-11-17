@@ -299,7 +299,8 @@ def new_map(args):
         print('created map: ', srckeys, ' -> ', dstkey)
     if props and type(props) is dict:
         set_map_properties(props, map)
-    map.push()
+    else:
+        map.push()
 
 def release_map(args):
     srckeys, dstkey = args
