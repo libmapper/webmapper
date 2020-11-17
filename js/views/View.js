@@ -449,8 +449,7 @@ class View {
                         let snapped = self._get_map_snap(x-dx, y-dy, x, y);
                         if (snapped !== null) self._snap_to_map(snapped);
                     }
-                    if (!self._continue_map_snap(x, y))
-                    {
+                    if (!self._continue_map_snap(x, y)) {
                         self._unsnap_to_map();
                         self.newMap.dst.position = {'x': x, 'y': y};
                     }
@@ -787,40 +786,37 @@ class View {
 
                     let x = e.pageX;
                     let y = e.pageY;
-
-                    dst = null;
-                    self.newMap.dst = null;
-
-                    for (index in self.tables) {
-                        // check if cursor is within snapping range
-                        let snap_factor = 0.05;
-                        dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
-                        if (!dst) continue;
-                        if (dst.id !== src.id) {
-                            self.newMap.dst = self.graph.find_signal(dst.id);
-                            self.tables[index].highlightRow(dst, false);
-                        }
-                        else {
-                            dst = null;
-                        }
-                        break;
-                    }
-
                     let svgx = x - self.frame.left;
                     let svgy = y - self.frame.top;
-                    if (!self.newMap.dst) {
-                        if (!self.snapping_to_map()) {
-                            let snapped = self._get_map_snap(prev_svgx, prev_svgy, svgx, svgy);
-                            if (snapped !== null) {
-                                self._snap_to_map(snapped); // sets dst to snapped map pos
+
+                    if (!self.snapping_to_map || !self._continue_map_snap(svgx, svgy)) {
+                        self._unsnap_to_map();
+                        let snapped = self._get_map_snap(prev_svgx, prev_svgy, svgx, svgy);
+                        if (snapped !== null) {
+                            self._snap_to_map(snapped);
+                        }
+                        else {
+                            // check table snap
+                            for (index in self.tables) {
+                                // check if cursor is within snapping range
+                                let snap_factor = 0.05;
+                                dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
+                                if (!dst)
+                                    continue;
+                                if (dst.id !== src.id) {
+                                    self.newMap.dst = self.graph.find_signal(dst.id);
+                                    self.tables[index].highlightRow(dst, false);
+                                }
+                                else {
+                                    dst = null;
+                                }
+                                break;
+                            }
+                            if (!dst) {
+                                self.newMap.dst = {position: {x: svgx, y: svgy}};
                             }
                         }
-                        if (!self._continue_map_snap(svgx, svgy)) {
-                            self._unsnap_to_map();
-                            self.newMap.dst = {position: {'x': svgx, 'y': svgy}};
-                        }
                     }
-                    else self._unsnap_to_map(); // snapping to table
 
                     self.newMap.view.draw(0);
                     src_table.highlightRow(src, false);
@@ -855,8 +851,7 @@ class View {
                         }
                         $('svg, .displayTable tbody tr').off('mousemove.drawing');
                     }
-                    if (self.snapping_to_map())
-                    {
+                    if (self.snapping_to_map()) {
                         // switch to pie menu interaction
                         // **so clicking convergent option doesn't start making new map
                         $('.tableDiv').off('mousedown'); 
@@ -938,7 +933,8 @@ class View {
     _snap_to_map(snap_map)
     {
         this.graph.maps.forEach(map => map.selected = false);
-        if (this.snapping_to_map()) this.converging.view.draw(0); // unhighlight
+        if (this.snapping_to_map())
+            this.converging.view.draw(0); // unhighlight
         this.converging = snap_map;
         this.converging.selected = true;
         this.converging.view.draw(0);
@@ -947,15 +943,19 @@ class View {
 
     _continue_map_snap(x, y, snapdist = 50)
     {
-        if (!this.snapping_to_map()) return false; // can't continue if haven't started
+        if (!this.snapping_to_map())
+            return false; // can't continue if haven't started
         let cp = this.converging.view.closest_point(x, y);
-        if (cp.distance < snapdist) return true;
+        if (cp.distance < snapdist) {
+            return true;
+        }
         return false;
     }
 
     _unsnap_to_map()
     {
-        if (!this.snapping_to_map()) return; // can't unsnap if not snapped
+        if (!this.snapping_to_map())
+            return; // can't unsnap if not snapped
         this.converging.selected = false;
         this.converging.view.draw(0);
         this.converging = null;
