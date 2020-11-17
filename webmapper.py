@@ -72,11 +72,14 @@ def sig_props(sig):
         props['type'] = 'f'
     elif props['type'] == mpr.DBL:
         props['type'] = 'd'
-    print(props)
+#    print(props)
     return props
 
 def full_signame(sig):
     return sig.device()['name'] + '/' + sig['name']
+
+def get_key(sig):
+    return sig['key']
 
 def map_props(map):
     props = map.properties.copy()
@@ -91,6 +94,8 @@ def map_props(map):
         src['key'] = src_name
         src_names.append(src_name)
         srcs.append(src)
+    # need to sort sources alphabetically
+    srcs.sort(key=get_key)
     props['srcs'] = srcs
 
     # add destination slot properties
@@ -126,9 +131,9 @@ def map_props(map):
     return props
 
 def on_device(type, dev, action):
-    print('ON_DEVICE')
+#    print('ON_DEVICE')
     if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-        print('NEW DEVICE')
+#        print('NEW DEVICE')
         server.send_command("add_devices", [dev_props(dev)])
     elif action == mpr.OBJ_REM:
         server.send_command("del_device", dev_props(dev))
@@ -136,9 +141,9 @@ def on_device(type, dev, action):
         server.send_command("del_device", dev_props(dev))
 
 def on_signal(type, sig, action):
-    print('ON_SIGNAL')
+#    print('ON_SIGNAL')
     if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-        print('NEW SIGNAL')
+#        print('NEW SIGNAL')
         server.send_command("add_signals", [sig_props(sig)])
     elif action == mpr.OBJ_REM:
         server.send_command("del_signal", sig_props(sig))
@@ -156,7 +161,7 @@ def find_sig(fullname):
     dev = g.devices().filter(mpr.PROP_NAME, names[0]).next()
     if dev:
         sig = dev.signals().filter(mpr.PROP_NAME, names[1]).next()
-        print('found sig', sig, 'at', names);
+#        print('found sig', sig, 'at', names);
         return sig
     else:
         print('error: could not find device', names[0])
