@@ -33,11 +33,21 @@ Note: webmapper is developed and works with Chromium/Chrome. It may work with ot
 4. Terminal will display "serving at port #####"
 5. A browser window should be opened automatically and directed to the correct port.
 
-If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal
+If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal.
 
-### To build a standalone application for macOS:
+### Specifying network interface at launch
 
-1. $ python setup.py py2app
+The network interface can be specified using a command-line argument when launching webmapper:
+
+~~~
+$ python webmapper.py --iface lo0
+~~~
+
+## To build a standalone application for macOS:
+
+~~~
+$ python setup.py py2app
+~~~
 
 ---
 
@@ -73,8 +83,6 @@ Webmapper now also supports the creation and representation of *convergent* maps
 Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Hold down the `Shift` key to select multiple maps.
 
 ## Editing map properties
-
-<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_properties.png">
 
 If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). Currently, some map properties can only be edited using the Console view or via hotkeys listed in the chart below.
 
@@ -233,7 +241,7 @@ In this view, each device is given its own axis arranged vertically in parallel.
 * Shortcut: `Command-8`
 * Status: **stable**
 
-This view presents a "console" for performing text-based interaction with the mapping network.  A separate window on the right displays the currently-active maps.
+This view presents a "console" for performing text-based interaction with the mapping network.
 
 <img width="60%" style="display:block;margin-left:auto;margin-right:auto;padding:0px" src="./doc/screenshots/console.png">
 

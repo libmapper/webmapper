@@ -41,6 +41,9 @@ def open_gui(port):
     launcher.start()
 
 g = mpr.graph()
+if '--iface' in sys.argv:
+    iface = sys.argv[sys.argv.index('--iface')+1]
+    g.set_interface(iface)
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -239,6 +242,7 @@ def select_interface(iface):
     server.send_command("active_interface", iface)
 
 def get_interfaces(arg):
+    global g
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
     totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
     connectedInterfaces = []
@@ -248,6 +252,7 @@ def get_interfaces(arg):
             connectedInterfaces.append(i)
     server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
+    networkInterfaces['active'] = g.get_interface()
     server.send_command("active_interface", networkInterfaces['active'])
 
 def init_graph(arg):
@@ -335,12 +340,6 @@ server.add_command_handler("select_interface", select_interface)
 server.add_command_handler("get_interfaces", get_interfaces)
 
 get_interfaces(False)
-if ( 'en1' in networkInterfaces['available'] ) :
-    networkInterfaces['active'] = 'en1'
-elif ( 'en0' in networkInterfaces['available'] ):
-    networkInterfaces['active'] = 'en0'
-elif ( 'lo0' in networkInterfaces['available'] ):
-    networkInterfaces['active'] = 'lo0'
 
 try:
     port = int(sys.argv[sys.argv.index('--port'):][1])
