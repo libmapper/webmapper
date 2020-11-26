@@ -56,15 +56,20 @@ class MapProperties {
                 let temp, sel = window.getSelection();
                 switch (e.which) {
                     case 37: // left arrow
-                        if (e.target.cellIndex == 3 && sel.anchorOffset == 0) {
+                        if (sel.anchorOffset > 0)
+                            break;
+                        if (e.target.cellIndex == 3) {
                             tr.children('td')[1].focus();
+                        }
+                        else if (e.target.cellIndex == 1 && rowIndex > 0) {
+                            tr.prev().children('td')[3].focus();
                         }
                         break;
                     case 38: // up arrow
-                         if (rowIndex > 0)
+                        if (rowIndex > 0)
                             tr.prev().children('td')[e.target.cellIndex].focus();
-                         // check if row is empty
-                         else {
+                        // check if row is empty
+                        else {
                             // prepend a row to table
                             tr.before("<tr><td class='index'>"+rowIndex+"</td><td class='lhs' contenteditable=true></td><td>=</td><td class='rhs' contenteditable=true></td><td><div class='clear'></div></td><td class='value'></td></tr>");
                             // move focus to new row
@@ -82,14 +87,14 @@ class MapProperties {
                                     $(trs[i]).addClass('even');
                                 }
                             }
-                         }
-                         break;
+                        }
+                        break;
                     case 39: // right arrow
-                         if (sel.anchorOffset == td.text().length) {
+                        if (sel.anchorOffset >= td.text().length) {
                             if (e.target.cellIndex == 1)
                                 tr.children('td')[3].focus();
                             else if (e.target.cellIndex == 3) {
-                                temp = tr.next().children('td')[0];
+                                temp = tr.next().children('td')[1];
                                 if (!temp)
                                     break;
                                 temp.focus();

@@ -497,13 +497,18 @@ function Graph() {
                         case 'device':
                         case 'hidden':
                         case 'index':
+                        case 'jitter':
                         case 'key':
                         case 'name':
                         case 'num_maps':
                         case 'num_maps_in':
                         case 'num_maps_out':
+                        case 'period':
                         case 'position':
                         case 'signal':
+                        case 'status':
+                        case 'steal':
+                        case 'version':
                         case 'view':
                             break;
                         case 'min':
@@ -524,13 +529,18 @@ function Graph() {
                     case 'device':
                     case 'hidden':
                     case 'index':
+                    case 'jitter':
                     case 'key':
                     case 'name':
                     case 'num_maps':
                     case 'num_maps_in':
                     case 'num_maps_out':
+                    case 'period':
                     case 'position':
                     case 'signal':
+                    case 'status':
+                    case 'steal':
+                    case 'version':
                     case 'view':
                         break;
                     case 'min':
@@ -544,7 +554,7 @@ function Graph() {
             m.destinations.push(obj);
             for (var attr in map) {
                 switch (attr) {
-                    // ignore a few properties
+                    // ignore a few properties used by webmapper
                     case 'hidden':
                     case 'id':
                     case 'key':
