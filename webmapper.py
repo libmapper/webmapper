@@ -55,6 +55,12 @@ def dev_props(dev):
         del props['is_local']
     if 'id' in props:
         del props['id']
+    if 'linked' in props and props['linked'] != None:
+        # convert device list to names
+        devnames = [d['name'] for d in props['linked']]
+        props['linked'] = devnames
+    if 'signal' in props:
+        del props['signal']
     return props
 
 def sig_props(sig):
@@ -92,10 +98,8 @@ def map_props(map):
     srcs = []
     src_names = []
     for sig in map.signals(mpr.LOC_SRC):
-        src = sig.properties.copy()
-        src_name = full_signame(sig)
-        src['key'] = src_name
-        src_names.append(src_name)
+        src = sig_props(sig)
+        src_names.append(src['key'])
         srcs.append(src)
     # need to sort sources alphabetically
     srcs.sort(key=get_key)
@@ -103,9 +107,8 @@ def map_props(map):
 
     # add destination slot properties
     for sig in map.signals(mpr.LOC_DST):
-        dst = sig.properties.copy()
-        dst_name = full_signame(sig)
-        dst['key'] = dst_name
+        dst = sig_props(sig)
+        dst_name = dst['key']
         props['dst'] = dst
 
     # generate key
@@ -129,6 +132,10 @@ def map_props(map):
     del props['is_local']
     if 'mode' in props:
         del props['mode']
+    if 'scope' in props and props['scope'] != None:
+        # convert device list to names
+        devnames = [d['name'] for d in props['scope']]
+        props['scope'] = devnames
 
     print("map_props", props)
     return props
