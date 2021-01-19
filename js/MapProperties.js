@@ -384,7 +384,7 @@ class MapProperties {
                 Raphael.getColor.reset();
                 // color variable names
                 for (let key in v) {
-                    let re = new RegExp('(?<![#a-z0-9])'+key, 'g');
+                    let re = new RegExp('(?<![#a-z0-9])'+key+'(?![#a-z0-9])', 'g');
                     let color = Raphael.getColor();
                     e = e.replace(re, "<span style='color:"+color+"'>"+key+"</span>");
                 }
