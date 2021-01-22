@@ -22,7 +22,7 @@ class MapProperties {
             "<div id='expression' class='topMenuContainer' style='background:black;padding:2px;overflow:scroll'>"+
                 "<table id='exprTable'><tbody id='exprTableBody'></tbody></table>"+
             "</div>"+
-                                 "<div id='curve'></div>");
+            "<div id='curve'></div>");
 
         this.cachedProperty = { "key": null, "value": null };
         this._addHandlers();
@@ -313,7 +313,7 @@ class MapProperties {
         $('.signalControl').children('*').removeClass('disabled');
         $('.signalControl').addClass('disabled');
         $('#exprTitle').removeClass('edited').addClass('disabled');
-        $('#curvetitle').removeClass('edited').addClass('disabled');
+        $('#curveTitle').removeClass('edited').addClass('disabled');
         $('.expression').removeClass('waiting');
         $('#exprTable').empty();
     }
@@ -334,7 +334,7 @@ class MapProperties {
         if (selected && selected.size()) {
             // something has been selected
             $('#exprTitle').removeClass('disabled');
-            $('#curveTitle').removeClass('disabled');
+//            $('#curveTitle').removeClass('disabled');
             $('.signalControl').removeClass('disabled');
             $('.signalControl').children('*').removeClass('disabled');
         }
