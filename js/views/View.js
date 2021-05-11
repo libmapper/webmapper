@@ -954,10 +954,11 @@ class View {
 
     _unsnap_to_map()
     {
-        if (!this.snapping_to_map())
+        if (!this.snapping_to_map() || !this.converging)
             return; // can't unsnap if not snapped
         this.converging.selected = false;
-        this.converging.view.draw(0);
+        if (this.converging.view)
+            this.converging.view.draw(0);
         this.converging = null;
     }
 

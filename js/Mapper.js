@@ -60,7 +60,14 @@ class Mapper
     unmap(srckeys, dstkey)
     {
         srckeys.sort();
+        let m = { 'srcs': srckeys.map(s => graph.find_signal(s)),
+                  'dst': graph.find_signal(dstkey),
+                  'key': this.mapKey(srckeys, dstkey),
+                  'status': 'staged',
+                  'selected': true
+                };
         command.send('unmap', [srckeys, dstkey]);
+        graph.del_map("del_map", m);
     }
 
     mapKey(srckeys, dstkey)
