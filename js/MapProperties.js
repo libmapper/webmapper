@@ -159,8 +159,11 @@ class MapProperties {
                             for (let i = 0; i < all.length; i++) {
                                 let key = $(all[i]).children('td').eq(1).text();
                                 let value = $(all[i]).children('td').eq(3).text();
-                                if (key != "" && value != "")
-                                    str += key+'='+value+';';
+                                if (key != "" && value != "") {
+                                    str += key+'='+value;
+                                    if (value.slice(-1) != ';')
+                                        str += ';';
+                                }
                             }
                             console.log('edited expr', str);
                             self.setMapProperty('expr', str);

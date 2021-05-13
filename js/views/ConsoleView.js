@@ -59,10 +59,10 @@ class ConsoleView extends View {
                     case 'link_angles':
                     case 'index':
                     case 'numVisibleSigs':
-                    case 'num_incoming_maps':
-                    case 'num_outgoing_maps':
-                    case 'num_inputs':
-                    case 'num_outputs':
+                    case 'num_maps_in':
+                    case 'num_maps_out':
+                    case 'num_sigs_in':
+                    case 'num_sigs_out':
                     case 'num_links':
                     case 'status':
                     case 'synced':
@@ -73,14 +73,14 @@ class ConsoleView extends View {
                         s += " "+key+": "+dev[key]+";";
                 }
                 if (s.length + s2.length > 140) {
-                    echo(s);
+//                    echo(s);
                     s = '   '+s2;
                 }
                 else
                     s += s2;
             }
-            s += ' sigs: ['+dev['num_inputs']+' in, '+dev['num_outputs']+' out];';
-            s += ' maps: ['+dev['num_incoming_maps']+' in, '+dev['num_outgoing_maps']+' out];';
+            s += ' sigs: ['+dev['num_sigs_in']+' in, '+dev['num_sigs_out']+' out];';
+            s += ' maps: ['+dev['num_maps_in']+' in, '+dev['num_maps_out']+' out];';
             return s;
         }
 
@@ -97,29 +97,39 @@ class ConsoleView extends View {
                     case 'view':
                     case 'index':
                     case 'num_maps':
-                    case 'num_incoming_maps':
-                    case 'num_outgoing_maps':
+                    case 'num_maps_in':
+                    case 'num_maps_out':
                     case 'position':
+                    case 'use_inst':
                         break;
                     case 'type':
                         s += " "+key+": "+type_name(sig[key])+";";
                         break;
                     case 'min':
                     case 'max':
+                        s += " "+key+": ";
                         let v = sig[key];
                         if (Array.isArray(v)) {
+                            s += "[";
                             for (let j in v)
                                 v[j] = v[j].toFixed(3);
+                            s += v+"];";
                         }
                         else
-                            v = v.toFixed(3);
-                        s += " "+key+": "+v+";";
+                            s += v.toFixed(3)+";";
                         break;
+                    case 'period':
+                    case 'jitter':
+                        s += " "+key+": "+sig[key].toFixed(3)*1000+"ms;";
+                        break;
+                    case 'num_instances':
+                        if (sig['use_inst'] == false)
+                            continue;
                     default:
                         s += " "+key+": "+sig[key]+";";
                 }
             }
-            s += ' maps: ['+sig['num_incoming_maps']+' in, '+sig['num_outgoing_maps']+' out]; ';
+            s += ' maps: ['+sig['num_maps_in']+' in, '+sig['num_maps_out']+' out]; ';
             return s;
         }
 

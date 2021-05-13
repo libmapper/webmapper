@@ -172,9 +172,9 @@ class View {
         // TODO: make this more efficient
         let filtered = Object.keys(dev)
                              .filter(k => !['hidden', 'host', 'hue', 'index',
-                                            'key', 'links', 'link_angles', 'name',
-                                            'num_incoming_maps', 'num_outgoing_maps',
-                                            'num_inputs', 'num_links', 'num_outputs',
+                                            'key', 'links', 'linked', 'link_angles', 'name',
+                                            'num_maps_in', 'num_maps_out',
+                                            'num_sigs_in', 'num_links', 'num_sigs_out',
                                             'numVisibleSigs', 'port', 'signals',
                                             'status', 'synced', 'view'].includes(k))
                              .map(k => Object.assign({}, {[k]: dev[k]}))
@@ -196,7 +196,7 @@ class View {
             +maps.filter(m => m.srcs.some(s => s.device === dev))
                  .size()
             +" out";
-        filtered.links = dev.num_links;
+        filtered.links = dev.links.length;
         filtered.address = dev.host+':'+dev.port;
         // sort
         filtered = Object.keys(filtered)
@@ -361,9 +361,9 @@ class View {
                     let filtered = Object.keys(sig)
                                          .filter(k => !['device', 'force', 'hidden',
                                                         'index', 'key', 'name',
-                                                        'num_maps', 'num_incoming_maps',
+                                                        'num_maps', 'num_maps_in',
                                                         'num_instances',
-                                                        'num_outgoing_maps', 'position',
+                                                        'num_maps_out', 'position',
                                                         'target', 'type', 'view'].includes(k))
                                          .map(k => Object.assign({}, {[k]: sig[k]}))
                                          .reduce((res, o) => Object.assign(res, o), {});
