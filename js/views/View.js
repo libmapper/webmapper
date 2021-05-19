@@ -171,16 +171,15 @@ class View {
             action = dev.hidden ? "unhide" : "hide";
         // TODO: make this more efficient
         let filtered = Object.keys(dev)
-                             .filter(k => !['hidden', 'host', 'hue', 'index',
-                                            'key', 'links', 'linked', 'link_angles', 'name',
-                                            'num_maps_in', 'num_maps_out',
-                                            'num_sigs_in', 'num_links', 'num_sigs_out',
-                                            'numVisibleSigs', 'port', 'signals',
-                                            'status', 'synced', 'view'].includes(k))
+                             .filter(k => !['hidden', 'host', 'hue', 'index', 'key', 'links',
+                                            'linked', 'link_angles', 'name', 'num_maps_in',
+                                            'num_maps_out', 'num_sigs_in', 'num_links',
+                                            'num_sigs_out', 'numVisibleSigs', 'ordinal', 'port',
+                                            'signals', 'status', 'synced', 'view'].includes(k))
                              .map(k => Object.assign({}, {[k]: dev[k]}))
                              .reduce((res, o) => Object.assign(res, o), {});
         filtered.signals =
-             dev.signals
+            dev.signals
                 .filter(s => s.direction == "input")
                 .size()
             +" in, "
@@ -196,7 +195,7 @@ class View {
             +maps.filter(m => m.srcs.some(s => s.device === dev))
                  .size()
             +" out";
-        filtered.links = dev.links.length;
+        filtered.links = dev.links ? dev.links.length : 0;
         filtered.address = dev.host+':'+dev.port;
         // sort
         filtered = Object.keys(filtered)
@@ -359,12 +358,12 @@ class View {
                        y = sig.position.y;
                     }
                     let filtered = Object.keys(sig)
-                                         .filter(k => !['device', 'force', 'hidden',
-                                                        'index', 'key', 'name',
-                                                        'num_maps', 'num_maps_in',
-                                                        'num_instances',
-                                                        'num_maps_out', 'position',
-                                                        'target', 'type', 'view'].includes(k))
+                                         .filter(k => !['device', 'force', 'hidden', 'index',
+                                                        'instances', 'jitter', 'key', 'min', 'max',
+                                                        'name', 'num_instances', 'num_maps',
+                                                        'num_maps_in', 'num_maps_out', 'period',
+                                                        'position', 'status', 'use_inst', 'target',
+                                                        'type', 'view'].includes(k))
                                          .map(k => Object.assign({}, {[k]: sig[k]}))
                                          .reduce((res, o) => Object.assign(res, o), {});
                     filtered.instances = sig.num_instances;
@@ -377,6 +376,31 @@ class View {
                        +maps.filter(m => m.srcs.some(s => s === sig))
                             .size()
                        +" out";
+                    if (sig.use_inst == true)
+                        filtered.instances = sig.instances;
+                    if (sig.min !== undefined) {
+                        if (Array.isArray(sig.min)) {
+                            let v = [];
+                            for (let j in sig.min) {
+                                v[j] = sig.min[j].toFixed(3);
+                                console.log("v["+j+"] = "+v[j]+" ("+typeof(v[j])+")");
+                            }
+                            filtered.min = v;
+                        }
+                        else
+                            filtered.min = sig.min.toFixed(3);
+                    }
+                    if (sig.max !== undefined) {
+                        if (Array.isArray(sig.max)) {
+                            let v = [];
+                            for (let j in sig.max)
+                                v[j] = sig.max[j].toFixed(3);
+                        }
+                        else
+                            filtered.max = sig.max.toFixed(3);
+                    }
+                    filtered.period = sig.period.toFixed(4) * 1000 + " ms";
+                    filtered.jitter = (sig.jitter * 1000).toFixed(3) + " ms";
                     // sort
                     filtered = Object.keys(filtered)
                                      .sort()
