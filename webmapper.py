@@ -295,7 +295,7 @@ def subscribe(device):
         g.subscribe(mpr.DEV)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = g.devices().filter(mpr.PROP_NAME, device).next()
+        dev = g.devices().filter(mpr.PROP_NAME, device)[0]
         print('found dev:', dev)
         if dev:
             g.subscribe(dev, mpr.OBJ)
