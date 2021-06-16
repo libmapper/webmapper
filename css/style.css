@@ -193,6 +193,13 @@ path {
     top: -73px;
 }
 
+.CodeMirror {
+    border: 1px solid black;
+    height: 120px;
+    width:60%;
+}
+  
+
 .topMenu.half {
     height: 68px;
     margin-bottom: 4px;
@@ -317,7 +324,7 @@ form {
 
 /****************/
 
-#saveButton, #loadButton, #exprButton, #curveTitle, #ifaceMenuLabel {
+#saveButton, #loadButton, #exprButton, #curveTitle, #ifaceMenuLabel, #exprUpdateButton {
     cursor: pointer;
 }
 

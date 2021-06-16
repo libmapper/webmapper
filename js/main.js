@@ -152,10 +152,11 @@ function initViewCommands()
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
             switch (e.which) {
-                case 32:
+                case 18:
                     if (viewManager.currentView == 'console')
                         break;
-                    // space: show/hide menus
+                    // alt key: show/hide menus
+                    console.log($(document.activeElement).attr('id'))
                     e.preventDefault();
                     toggleMenus()
                     break;
