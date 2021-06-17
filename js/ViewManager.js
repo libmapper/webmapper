@@ -18,6 +18,7 @@ class ViewManager
         this.dstRE = null;
 
         this.views = [];
+        this.isCodeMirror = false;
 
         // remove all previous DOM elements
         $(this.container).empty();
@@ -321,6 +322,7 @@ class ViewManager
                     /* delete */
                     // do not allow 'delete' key to unmap in console view
                     if (self.currentView == 'console') break;
+                    if (self.isCodeMirror) break
                     self.graph.maps.forEach(function(map) {
                         if (map.selected)
                         {

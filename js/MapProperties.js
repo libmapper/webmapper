@@ -5,9 +5,6 @@ class MapProperties {
     this.view = view;
     this.mapProtocols = ["UDP", "TCP"];
 
-    // Default Expression
-    this.expr = "y = x";
-
     $(this.container).append(
       "<div' id='menu-bar' class='topMenu' style='width:25px;'>" +
         "<div id='curveButton' style='width:20px;height:100%'>" +
@@ -21,17 +18,25 @@ class MapProperties {
         "</div>"
     );
 
-    $("#menu-bar").after("<button id='exprUpdate'>Update Expression</button>");
+    $("#menu-bar").after(
+      "<button id='exprUpdate' disabled='true'>Update Expression</button>"
+    );
     $("#menu-bar").after("<div id='editor'></div>");
 
-    // Set up the CodeMirror Editor
-    var editor = CodeMirror(document.querySelector("#editor"), {
+    /*
+      Set up the CodeMirror Editor in the next few lines
+    */
+    this.editor = CodeMirror(document.querySelector("#editor"), {
       lineNumbers: true,
       tabSize: 2,
-      value: this.expr,
-    }).on("change", (editor) => {
-      //   console.log(editor.getValue());
-      this.expr = editor.getValue();
+      value: "",
+    });
+    /*
+      Handle click into codeMirror to ensure other key-bindings do not interfere
+    */
+    this.editor.on("mousedown", () => {
+      console.log("Mouse Down");
+      this.view.isCodeMirror = true;
     });
 
     this.cachedProperty = { key: null, value: null };
@@ -42,13 +47,28 @@ class MapProperties {
     var self = this;
     var counter = 0;
 
+    $(document).click(function (event) {
+      var $target = $(event.target);
+      if ($("#exprUpdate").is($target)) {
+        // Ensure that clicking the `update expression` button does not trigger an exit of CodeMirror
+        return;
+      }
+      if (!$target.closest("#editor").length && $("#editor").is(":visible")) {
+        // Let view manager know that we are no longer working in the code editor
+        $("#exprUpdate").prop("disabled", true);
+        self.editor.setValue("");
+        self.view.isCodeMirror = false;
+      }
+    });
+
     $("#networkSelection").on("change", function (e) {
       command.send("select_network", e.currentTarget.value);
     });
 
     $("#exprUpdate").on("click", function (e) {
-      console.log("TEST: " + self.expr);
-      self.setMapProperty("expr", self.expr);
+      // Attempt to update the expression via libmapper
+      self.setMapProperty("expr", self.editor.getValue(""));
+      // TODO: Handle Error Checking tasks 
     });
 
     $("#curveButton").on("click", function (e) {
@@ -59,222 +79,7 @@ class MapProperties {
       console.log("exprButton clicked!");
     });
 
-    // The expression input handler
-    $("#expression").on(
-      {
-        keydown: function (e) {
-          e.stopPropagation();
-          let table = $(e.currentTarget);
-          let title = $("#exprTitle");
-          let td = $(e.target);
-          let tr = td.parent("tr");
-          let rowIndex = tr.index();
-          let temp,
-            sel = window.getSelection();
-          switch (e.which) {
-            case 37: // left arrow
-              if (sel.anchorOffset > 0) break;
-              if (e.target.cellIndex == 3) {
-                tr.children("td")[1].focus();
-              } else if (e.target.cellIndex == 1 && rowIndex > 0) {
-                tr.prev().children("td")[3].focus();
-              }
-              break;
-            case 38: // up arrow
-              if (rowIndex > 0)
-                tr.prev().children("td")[e.target.cellIndex].focus();
-              // check if row is empty
-              else {
-                // prepend a row to table
-                tr.before(
-                  "<tr><td class='index'>" +
-                    rowIndex +
-                    "</td><td class='lhs' contenteditable=true></td><td>=</td><td class='rhs' contenteditable=true></td><td><div class='clear'></div></td><td class='value'></td></tr>"
-                );
-                // move focus to new row
-                tr.prev().children("td")[1].focus();
-                // renumber remaining rows
-                let trs = table.children("tbody").children("tr");
-                for (let i = rowIndex; i < trs.length; i++) {
-                  $(trs[i]).children("td")[0].textContent = i;
-                  if (i % 2 == 0) {
-                    $(trs[i]).removeClass("even");
-                    $(trs[i]).addClass("odd");
-                  } else {
-                    $(trs[i]).removeClass("odd");
-                    $(trs[i]).addClass("even");
-                  }
-                }
-              }
-              break;
-            case 39: // right arrow
-              if (sel.anchorOffset >= td.text().length) {
-                if (e.target.cellIndex == 1) tr.children("td")[3].focus();
-                else if (e.target.cellIndex == 3) {
-                  temp = tr.next().children("td")[1];
-                  if (!temp) break;
-                  temp.focus();
-                }
-              }
-              break;
-            case 40: // down arrow
-              temp = tr.next().children("td")[e.target.cellIndex];
-              if (!temp) break;
-              temp.focus();
-              break;
-            case 91:
-              break;
-            case 13: {
-              //'enter' key
-              e.preventDefault();
-              // send changes to graph
-              // first check if only literals were changed
-              let edited = $("#exprTable tbody")
-                .children("tr")
-                .filter(".edited");
-              let numbers = /^[-+]?[0-9]+\.[0-9]+$/;
-              let literals_only = true;
-              function asNumberOrArray(s) {
-                if (s[0] == "[") {
-                  // treat as array
-                  s = s.slice(1, s.length - 1);
-                  let a = s.split(",").map(Number);
-                  if (a.some((v) => v != v)) {
-                    console.log("value array", a, "contains NaN!");
-                    return null;
-                  }
-                  return a;
-                }
-                let v = Number(s);
-                if (v != v) {
-                  console.log("value", v, "== NaN!");
-                  return null;
-                }
-              }
-              for (let i = 0; i < edited.length; i++) {
-                let rhs = $(edited[i]).children("td").eq(3).text();
-                console.log("testing subexpr rhs", rhs);
-                if (asNumberOrArray(rhs) == null) {
-                  literals_only = false;
-                  break;
-                }
-              }
-              if (literals_only) {
-                for (let i = 0; i < edited.length; i++) {
-                  let key = $(edited[i]).children("td").eq(1).text();
-                  let value = $(edited[i]).children("td").eq(3).text();
-                  value = asNumberOrArray(value);
-                  console.log("edited literal", key, value);
-                  self.setMapProperty("var@" + key, value);
-                }
-              } else {
-                // need to concatenate entire table and send
-                let all = $("#exprTable tbody").children("tr");
-                let str = "";
-                for (let i = 0; i < all.length; i++) {
-                  let key = $(all[i]).children("td").eq(1).text();
-                  let value = $(all[i]).children("td").eq(3).text();
-                  if (key != "" && value != "") {
-                    str += key + "=" + value;
-                    if (value.slice(-1) != ";") str += ";";
-                  }
-                }
-                console.log("edited expr", str);
-                self.setMapProperty("expr", str);
-              }
-              break;
-            }
-            case 27: {
-              // 'escape' key
-              e.preventDefault();
-              break;
-            }
-            case 9: {
-              // 'tab' key
-              e.preventDefault();
-              if (e.target.cellIndex == 3) {
-                // add another row to table
-                tr.after(
-                  "<tr><td class='index'>" +
-                    (rowIndex + 1) +
-                    "</td><td class='lhs' contenteditable=true></td><td>=</td><td class='rhs' contenteditable=true></td><td><div class='clear'></div></td><td class='value'></td></tr>"
-                );
-                // move focus to new row
-                tr.next().children("td")[1].focus();
-                // renumber remaining rows
-                let trs = table.children("tbody").children("tr");
-                for (let i = rowIndex + 1; i < trs.length; i++) {
-                  $(trs[i]).children("td")[0].textContent = i;
-                  if (i % 2 == 0) {
-                    $(trs[i]).removeClass("even");
-                    $(trs[i]).addClass("odd");
-                  } else {
-                    $(trs[i]).removeClass("odd");
-                    $(trs[i]).addClass("even");
-                  }
-                }
-              } else if (e.target.cellIndex == 1) tr.children("td")[3].focus();
-              break;
-            }
-            case 187: {
-              if (e.shiftKey == false) {
-                // '=' key
-                e.preventDefault();
-                if (e.target.cellIndex != 1) return;
-                tr.children("td")[3].focus();
-                break;
-              }
-            }
-            default: {
-              //                        console.log('e.which:', e.which);
-              counter = 0;
-              // cell has been edited, make background red
-              tr.addClass("edited");
-              title.addClass("edited");
-            }
-          }
-        },
-        keyup: function (e) {
-          if (e.metaKey != true) {
-            $(e.currentTarget).css({ background: "black" });
-          }
-        },
-        click: function (e) {
-          e.stopPropagation();
-          if (!$(e.target).hasClass("clear")) return;
-          let td = $(e.target).parent("td");
-          let tr = td.parent("tr");
-          let rowIndex = tr.index();
-          let trs = $(e.currentTarget).children("tbody").children("tr");
-          if (trs.length > 1) {
-            $(tr).remove();
-            // renumber remaining rows
-            for (let i = rowIndex; i < trs.length; i++) {
-              $(trs[i]).children("td")[0].textContent = i;
-              if (i % 2 == 0) {
-                $(trs[i]).removeClass("even");
-                $(trs[i]).addClass("odd");
-              } else {
-                $(trs[i]).removeClass("odd");
-                $(trs[i]).addClass("even");
-              }
-            }
-          } else {
-            let sibs = td.siblings();
-            sibs.filter(":eq(1),:eq(3)").empty();
-            sibs[1].focus();
-          }
-          tr.addClass("edited");
-          $("#exprTitle").addClass("edited");
-        },
-        focusout: function (e) {
-          //                console.log('table.focusout');
-          //                e.stopPropagation();
-          //                self.setMapProperty('expr', this.value);
-        },
-      },
-      "table"
-    );
+    //TODO: Note -- Expression handler is removed as it is now taken care of via codemirror
 
     $(".topMenu .protocol").on("click", function (e) {
       e.stopPropagation();
@@ -340,7 +145,7 @@ class MapProperties {
     $("#exprTitle").removeClass("edited").addClass("disabled");
     $("#curveTitle").removeClass("edited").addClass("disabled");
     $(".expression").removeClass("waiting");
-    $("#exprTable").empty();
+    // $("#exprTable").empty();
   }
 
   selected(map) {
@@ -383,18 +188,14 @@ class MapProperties {
       $("#proto" + proto).addClass("sel");
     }
 
-    let exprTable = $("#exprTable");
-    exprTable.empty();
-    if (expr == "multiple expressions") {
-      exprTable.css({ "font-style": "italic" });
-      exprTable.append(
-        "<tr class='even'><td class='index'></td><td colspan=3 class='rhs' contenteditable=true>Multiple Expressions</td><td><div class='clear'></div></td><td class='value'></td></tr>"
-      );
-    } else if (expr != null) {
+    if (expr != null) {
       console.log("setting expr to", expr);
+
+      // this.editor.focus(); //TODO: Determine if an onclick of the map should automatically set codemirror to focus. If so, implement properly.
+      this.editor.setValue(expr);
+      $("#exprUpdate").prop("disabled", false);
+
       console.log("vars=", vars);
-      $(".expression").removeClass("waiting");
-      exprTable.css({ "font-style": "normal" });
 
       function colorCode(e, v) {
         Raphael.getColor.reset();
@@ -408,43 +209,6 @@ class MapProperties {
           );
         }
         return e;
-      }
-      expr = expr.split(";");
-      let rowType = "even";
-      for (let i in expr) {
-        if (!expr[i]) continue;
-        // split and color-code by assignment
-        let assignment = expr[i].indexOf("=");
-        let left = expr[i].slice(0, assignment);
-        let tdClass = vars[left] !== undefined ? "literal" : "";
-        let value = vars[left];
-        if (value === undefined) value = "dynamic";
-        else if (Array.isArray(value)) {
-          value = value.map((v) => v.toFixed(3));
-        } else value = value.toFixed(3);
-        left = colorCode(left, vars);
-        let right = expr[i].slice(assignment + 1);
-        if (value != "dynamic") {
-          let replaceVal = Number(right);
-          if (replaceVal == replaceVal) right = value;
-          else right = colorCode(right, vars);
-        } else right = colorCode(right, vars);
-        exprTable.append(
-          "<tr class='" +
-            rowType +
-            "'><td class='index'>" +
-            (parseInt(i) + 1) +
-            "</td><td class='lhs' contenteditable='true'>" +
-            left +
-            "</td><td>=</td><td class='rhs' contenteditable='true' class='" +
-            tdClass +
-            "'>" +
-            right +
-            "</td><td><div class='clear'></div></td><td class='value'>" +
-            value +
-            "</td></tr>"
-        );
-        rowType = rowType == "even" ? "odd" : "even";
       }
     }
   }
