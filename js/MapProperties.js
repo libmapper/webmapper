@@ -29,6 +29,7 @@ class MapProperties {
     this.editor = CodeMirror(document.querySelector("#editor"), {
       lineNumbers: true,
       tabSize: 2,
+      theme: "material-darker",
       value: "",
     });
     /*
@@ -55,8 +56,6 @@ class MapProperties {
       }
       if (!$target.closest("#editor").length && $("#editor").is(":visible")) {
         // Let view manager know that we are no longer working in the code editor
-        $("#exprUpdate").prop("disabled", true);
-        self.editor.setValue("");
         self.view.isCodeMirror = false;
       }
     });
@@ -87,37 +86,48 @@ class MapProperties {
     });
 
     $("body").on("keydown", function (e) {
-      if (e.which == 67) {
-        // 'C'
-        let selected = self.graph.maps.filter((m) => m.selected);
-        if (selected && selected.size()) {
-          self.view.showCurveEditor(
-            self.getCurveProperties(),
-            function (expr, c) {
-              self.setMapProperty("expr", expr);
-              self.setMapProperty("curve", c);
-            }
-          );
+      if (self.editor.hasFocus() == true)
+        return;
+      switch (e.which) {
+        case 67: // 'C'
+        {
+          let selected = self.graph.maps.filter((m) => m.selected);
+          if (selected && selected.size()) {
+            self.view.showCurveEditor(
+              self.getCurveProperties(),
+              function (expr, c) {
+                self.setMapProperty("expr", expr);
+                self.setMapProperty("curve", c);
+              }
+            );
+          }
+          break;
         }
-      } else if (e.which == 68)
-        // 'D'
-        self.setMapProperty("process_location", "destination");
-      else if (e.which == 73)
-        // 'I'
-        self.setMapProperty("use_inst", null);
-      else if (e.which == 77)
-        // 'M'
-        self.setMapProperty("muted", null);
-      else if (e.which == 83)
-        // 'S'
-        self.setMapProperty("process_location", "source");
-      else if (e.which == 84)
-        // 'T'
-        self.setMapProperty("protocol", "TCP");
-      else if (e.which == 85)
-        // 'U'
-        self.setMapProperty("protocol", "UDP");
-    });
+        case 68: // 'D'
+          self.setMapProperty("process_location", "destination");
+          break;
+        case 69: // 'E'
+          e.preventDefault();
+          e.stopPropagation();
+          self.editor.focus();
+          self.view.isCodeMirror = true;
+          break;
+        case 73: // 'I'
+          self.setMapProperty("use_inst", null);
+          break;
+        case 77: // 'M'
+          self.setMapProperty("muted", null);
+          break;
+        case 83: // 'S'
+          self.setMapProperty("process_location", "source");
+          break;
+        case 84: // 'T'
+          self.setMapProperty("protocol", "TCP");
+          break;
+        case 85: // 'U'
+          self.setMapProperty("protocol", "UDP");
+          break;
+      }});
 
     $(".expr_doc_link").click(function (e) {
       // show expression documentation
@@ -145,7 +155,8 @@ class MapProperties {
     $("#exprTitle").removeClass("edited").addClass("disabled");
     $("#curveTitle").removeClass("edited").addClass("disabled");
     $(".expression").removeClass("waiting");
-    // $("#exprTable").empty();
+    this.editor.setValue("");
+    $("#exprUpdate").prop("disabled", true);
   }
 
   selected(map) {
@@ -191,7 +202,6 @@ class MapProperties {
     if (expr != null) {
       console.log("setting expr to", expr);
 
-      // this.editor.focus(); //TODO: Determine if an onclick of the map should automatically set codemirror to focus. If so, implement properly.
       this.editor.setValue(expr);
       $("#exprUpdate").prop("disabled", false);
 
