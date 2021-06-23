@@ -67,7 +67,7 @@ class MapProperties {
     $("#exprUpdate").on("click", function (e) {
       // Attempt to update the expression via libmapper
       self.setMapProperty("expr", self.editor.getValue(""));
-      // TODO: Handle Error Checking tasks 
+      // TODO: Handle Error Checking tasks
     });
 
     $("#curveButton").on("click", function (e) {
@@ -86,11 +86,9 @@ class MapProperties {
     });
 
     $("body").on("keydown", function (e) {
-      if (self.editor.hasFocus() == true)
-        return;
+      if (self.editor.hasFocus() == true) return;
       switch (e.which) {
-        case 67: // 'C'
-        {
+        case 67: { // 'C'
           let selected = self.graph.maps.filter((m) => m.selected);
           if (selected && selected.size()) {
             self.view.showCurveEditor(
@@ -127,7 +125,8 @@ class MapProperties {
         case 85: // 'U'
           self.setMapProperty("protocol", "UDP");
           break;
-      }});
+      }
+    });
 
     $(".expr_doc_link").click(function (e) {
       // show expression documentation
@@ -202,7 +201,8 @@ class MapProperties {
     if (expr != null) {
       console.log("setting expr to", expr);
 
-      this.editor.setValue(expr);
+      // Insert existing expression into codemirror editor with newlines reinserted.
+      this.editor.setValue(expr.replace(/;/g, ";\n"));
       $("#exprUpdate").prop("disabled", false);
 
       console.log("vars=", vars);
