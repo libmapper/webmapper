@@ -195,8 +195,8 @@ path {
 
 .CodeMirror {
     border: 1px solid black;
-    height: 120px;
-    width:60%;
+    height: 140px;
+    width:100%;
 }
   
 
@@ -207,8 +207,8 @@ path {
 }
 
 .topMenu div {
-    display: inline-block;
-    vertical-align: top;
+/*    display: inline-block;*/
+/*    vertical-align: top;*/
     color: white;
 }
 

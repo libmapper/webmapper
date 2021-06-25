@@ -6,22 +6,20 @@ class MapProperties {
     this.mapProtocols = ["UDP", "TCP"];
 
     $(this.container).append(
-      "<div' id='menu-bar' class='topMenu' style='width:25px;'>" +
-        "<div id='curveButton' style='width:20px;height:100%'>" +
-        "<div>" +
-        "<div id='curveTitle' class='topMenuTitle half'><strong>CURVE</strong></div>" +
+      "<div' id='exprDiv' class='topMenu' style='width:calc(100% - 324px);'>" +
+        "<div id='exprTitle' class='topMenuTitle'><strong>EXPR</strong></div>" +
+        "<div id='exprContainer' class='topMenuContainer' style='padding:0px;display:flex;justify-content:space-between;'>" +
+            "<div style='width:70px;height:140px;display: flex;flex-direction: column;flex-wrap: wrap;align-content: space-around;'>" +
+                "<button id='exprUpdate' disabled='true'>Apply</button>" +
+                "<button id='exprClear' disabled='true'>Clear</button>" +
+                "<button id='exprLinear' disabled='true'>Linear</button>" +
+                "<button id='exprCurve' disabled='true'>Curve</button>" +
+                "<button id='exprCalibrate' disabled='true'>Calibrate</button>" +
+            "</div>" +
+          "<div id='editor' style='width:calc(100% - 70px);padding:0px'></div>" +
         "</div>" +
-        "<div id='exprButton' style='width:20px;height:68px'>" +
-        "<div id='exprTitle' class='topMenuTitle half' style='top:53px'><strong>EXPR</strong></div>" +
-        "</div>" +
-        "</div>" +
-        "</div>"
+      "</div>"
     );
-
-    $("#menu-bar").after(
-      "<button id='exprUpdate' disabled='true'>Update Expression</button>"
-    );
-    $("#menu-bar").after("<div id='editor'></div>");
 
     /*
       Set up the CodeMirror Editor in the next few lines
@@ -58,6 +56,26 @@ class MapProperties {
         // Let view manager know that we are no longer working in the code editor
         self.view.isCodeMirror = false;
       }
+      if ($("#exprCurve").is($target)) {
+        self.view.showCurveEditor(
+          self.getCurveProperties(),
+          function (expr, c) {
+            self.setMapProperty("expr", expr);
+            self.setMapProperty("curve", c);
+          }
+        );
+      }
+      else if ($("#exprClear").is($target)) {
+        self.editor.setValue("");
+      }
+      else if ($("#exprLinear").is($target)) {
+        self.editor.setValue("y = linear(x, -, -, -, -);");
+        $("#exprUpdate").prop("disabled", false);
+      }
+      else if ($("#exprCalibrate").is($target)) {
+        self.editor.setValue("y = linear(x, ?, ?, -, -);");
+        $("#exprUpdate").prop("disabled", false);
+      }
     });
 
     $("#networkSelection").on("change", function (e) {
@@ -86,7 +104,16 @@ class MapProperties {
     });
 
     $("body").on("keydown", function (e) {
-      if (self.editor.hasFocus() == true) return;
+      if (self.editor.hasFocus() == true) {
+        if (e.which == 27) { // 'Escape' key
+          self.editor.display.input.blur();
+          self.view.isCodeMirror = false;
+        }
+        else if (e.which < 37 || e.which > 40) { // exclude arrow keys
+          $("#exprUpdate").prop("disabled", false);
+        }
+        return;
+      }
       switch (e.which) {
         case 67: { // 'C'
           let selected = self.graph.maps.filter((m) => m.selected);
@@ -156,6 +183,10 @@ class MapProperties {
     $(".expression").removeClass("waiting");
     this.editor.setValue("");
     $("#exprUpdate").prop("disabled", true);
+    $("#exprClear").prop("disabled", true);
+    $("#exprLinear").prop("disabled", true);
+    $("#exprCurve").prop("disabled", true);
+    $("#exprCalibrate").prop("disabled", true);
   }
 
   selected(map) {
@@ -203,7 +234,10 @@ class MapProperties {
 
       // Insert existing expression into codemirror editor with newlines reinserted.
       this.editor.setValue(expr.replace(/;/g, ";\n"));
-      $("#exprUpdate").prop("disabled", false);
+      $("#exprClear").prop("disabled", false);
+      $("#exprLinear").prop("disabled", false);
+      $("#exprCurve").prop("disabled", false);
+      $("#exprCalibrate").prop("disabled", false);
 
       console.log("vars=", vars);
 
