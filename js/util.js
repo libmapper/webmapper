@@ -230,7 +230,7 @@ function generate_curve_display(src_min, src_max, dst_min, dst_max, curve = -4) 
 }
 
 function get_curve_val(x, src_min, src_max, dst_min, dst_max, curve = -4) {
-    let grow = Math.exp(1.0 - curve);
+    let grow = Math.exp(curve);
     if (grow == 1.0)
         grow = 1.00000001;
     let a = (dst_max - dst_min) / (1.0 - grow);

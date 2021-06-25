@@ -5,7 +5,7 @@ class CurveEditor {
             return;
         }
 
-        let c = (props.curve !== null && props.curve !== undefined) ? props.curve : 0.01;
+        var c = (props.curve !== null && props.curve !== undefined) ? props.curve : 0.01;
 
         let body = $('body');
         $(body).append("<div id='curveEditorWindow' style='position:absolute;left:calc(50% - 30vh);top:25%;background:#494949;width:60vh;height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;border-radius:12px;'></div>");
@@ -47,6 +47,20 @@ class CurveEditor {
         canvas.text(15, 115, src_min.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
         canvas.text(110, 115, src_max.toFixed(1)).attr({'font-size': 5, 'fill': '#FFF'});
 
+        function update() {
+            if (c != 0) {
+                for (let i = 0; i <= reso; i++) {
+                    let x = i / reso;
+                    let y = get_curve_val(x, 0.0, 1.0, 0.0, 1.0, c);
+                    y = 110.0 - y * 100.0;
+                    points[i].attr('cy', y);
+                }
+                let expr = generate_curve_display(src_min, src_max, dst_min, dst_max, c);
+                $('#curveExprDisplay').empty().append(expr);
+                $('#curveGenerate').removeClass('disabled');
+            }
+        };
+
         $('#curveEditor svg').css('overflow', 'visible');
         const reso = 20;
         let points = [];
@@ -62,19 +76,39 @@ class CurveEditor {
         // Slider
         $('#curveEditor').append(`<input id='curveSlider' type='range' min='-16.0' max='16.0' step='0.1' value='${c}' style='position:absolute;left:100%;-webkit-appearance:slider-vertical;height:80%;width:10%;'>`);
         $('#curveSlider').on('input', function(e) {
-            c = $(e.target).val();
-            if (c != 0) {
-                for (let i = 0; i <= reso; i++) {
-                    let x = i / reso;
-            		let y = get_curve_val(x, 0.0, 1.0, 0.0, 1.0, c);
-            		y = 110.0 - y * 100.0;
-                    points[i].attr('cy', y);
-                }
-                let expr = generate_curve_display(src_min, src_max,
-                                                  dst_min, dst_max,
-                                                  c);
-                $('#curveExprDisplay').empty().append(expr);
-                $('#curveGenerate').removeClass('disabled');
+            c = $(e.target).val() * -1;
+            update();
+        });
+
+        // arrow keys
+        $('body').on('keydown', function(e) {
+            switch (e.which) {
+                case 38: // up arrow
+                    e.preventDefault();
+                    e.stopPropagation();
+                    c = c - 0.1;
+                    if (c < -16)
+                        c = -16;
+                    $('#curveSlider').val(c);
+                    update();
+                    break;
+                case 40: // down arrow
+                    e.preventDefault();
+                    e.stopPropagation();
+                    c = c + 0.1;
+                    if (c > 16)
+                        c = 16;
+                    $('#curveSlider').val(c);
+                    update();
+                    break;
+                case 13: // 'enter' key
+                    e.stopPropagation();
+                    e.preventDefault();
+                    let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
+                    onGenerated(expr, c);
+                    break;
+                default:
+                    return;
             }
         });
 
