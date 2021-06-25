@@ -9,12 +9,12 @@ class MapProperties {
       "<div' id='exprDiv' class='topMenu' style='width:calc(100% - 324px);'>" +
         "<div id='exprTitle' class='topMenuTitle'><strong>EXPR</strong></div>" +
         "<div id='exprContainer' class='topMenuContainer' style='padding:0px;display:flex;justify-content:space-between;'>" +
-            "<div style='width:70px;height:140px;display: flex;flex-direction: column;flex-wrap: wrap;align-content: space-around;'>" +
-                "<button id='exprUpdate' disabled='true'>Apply</button>" +
-                "<button id='exprClear' disabled='true'>Clear</button>" +
-                "<button id='exprLinear' disabled='true'>Linear</button>" +
-                "<button id='exprCurve' disabled='true'>Curve</button>" +
-                "<button id='exprCalibrate' disabled='true'>Calibrate</button>" +
+            "<div style='width:70px;padding: 0px;height:140px;display: flex;flex-direction: row;flex-wrap: wrap;align-content: stretch;justify-content: flex-start;'>" +
+                "<button id='exprUpdate' class='exprButton'>Apply</button>" +
+                "<button id='exprClear' class='exprButton'>Clear</button>" +
+                "<button id='exprLinear' class='exprButton'>Linear</button>" +
+                "<button id='exprCurve' class='exprButton'>Curve</button>" +
+                "<button id='exprCalibrate' class='exprButton'>Calibrate</button>" +
             "</div>" +
           "<div id='editor' style='width:calc(100% - 70px);padding:0px'></div>" +
         "</div>" +
@@ -67,6 +67,8 @@ class MapProperties {
       }
       else if ($("#exprClear").is($target)) {
         self.editor.setValue("");
+        self.editor.focus();
+        self.view.isCodeMirror = true;
       }
       else if ($("#exprLinear").is($target)) {
         self.editor.setValue("y = linear(x, -, -, -, -);");
@@ -317,7 +319,7 @@ class MapProperties {
           msg["use_inst"] = !map["use_inst"];
           break;
         case "expr":
-          //                value = value.replace(/\r?\n|\r/g, '');
+          value = value.replace(/\r?\n|\r/g, '');
           // for user friendliness we will automatically insert missing vector indices
           for (var i in map.srcs) {
             console.log(
