@@ -9,22 +9,26 @@ class MapProperties {
       "<div' id='exprDiv' class='topMenu' style='width:calc(100% - 324px);'>" +
         "<div id='exprTitle' class='topMenuTitle'><strong>EXPR</strong></div>" +
         "<div id='exprContainer' class='topMenuContainer' style='padding:0px;display:flex;justify-content:space-between;'>" +
-            "<div style='width:70px;padding: 0px;height:140px;display: flex;flex-direction: row;flex-wrap: wrap;align-content: stretch;justify-content: flex-start;'>" +
-                "<button id='exprUpdate' class='exprButton'>Apply</button>" +
-                "<button id='exprClear' class='exprButton'>Clear</button>" +
-                "<button id='exprLinear' class='exprButton'>Linear</button>" +
-                "<button id='exprCurve' class='exprButton'>Curve</button>" +
-                "<button id='exprCalibrate' class='exprButton'>Calibrate</button>" +
-            "</div>" +
-          "<div id='editor' style='width:calc(100% - 70px);padding:0px'></div>" +
+        "<div style='width:70px;padding: 0px;height:140px;display: flex;flex-direction: row;flex-wrap: wrap;align-content: stretch;justify-content: flex-start;'>" +
+        "<button id='exprUpdate' class='exprButton'>Apply</button>" +
+        "<button id='exprClear' class='exprButton'>Clear</button>" +
+        "<button id='exprLinear' class='exprButton'>Linear</button>" +
+        "<button id='exprCurve' class='exprButton'>Curve</button>" +
+        "<button id='exprCalibrate' class='exprButton'>Calibrate</button>" +
         "</div>" +
-      "</div>"
+        "<div id='editor' style='width:calc(100% - 70px);padding:0px'></div>" +
+        "</div>" +
+        "</div>"
     );
+
+    // Set the syntax rules for the editor in a separate function to avoid clutter.
+    define_syntax_rules();
 
     /*
       Set up the CodeMirror Editor in the next few lines
     */
     this.editor = CodeMirror(document.querySelector("#editor"), {
+      mode: "libmapperExpressions",
       lineNumbers: true,
       tabSize: 2,
       theme: "material-darker",
@@ -64,17 +68,14 @@ class MapProperties {
             self.setMapProperty("curve", c);
           }
         );
-      }
-      else if ($("#exprClear").is($target)) {
+      } else if ($("#exprClear").is($target)) {
         self.editor.setValue("");
         self.editor.focus();
         self.view.isCodeMirror = true;
-      }
-      else if ($("#exprLinear").is($target)) {
+      } else if ($("#exprLinear").is($target)) {
         self.editor.setValue("y = linear(x, -, -, -, -);");
         $("#exprUpdate").prop("disabled", false);
-      }
-      else if ($("#exprCalibrate").is($target)) {
+      } else if ($("#exprCalibrate").is($target)) {
         self.editor.setValue("y = linear(x, ?, ?, -, -);");
         $("#exprUpdate").prop("disabled", false);
       }
@@ -107,17 +108,19 @@ class MapProperties {
 
     $("body").on("keydown", function (e) {
       if (self.editor.hasFocus() == true) {
-        if (e.which == 27) { // 'Escape' key
+        if (e.which == 27) {
+          // 'Escape' key
           self.editor.display.input.blur();
           self.view.isCodeMirror = false;
-        }
-        else if (e.which < 37 || e.which > 40) { // exclude arrow keys
+        } else if (e.which < 37 || e.which > 40) {
+          // exclude arrow keys
           $("#exprUpdate").prop("disabled", false);
         }
         return;
       }
       switch (e.which) {
-        case 67: { // 'C'
+        case 67: {
+          // 'C'
           let selected = self.graph.maps.filter((m) => m.selected);
           if (selected && selected.size()) {
             self.view.showCurveEditor(
@@ -319,7 +322,7 @@ class MapProperties {
           msg["use_inst"] = !map["use_inst"];
           break;
         case "expr":
-          value = value.replace(/\r?\n|\r/g, '');
+          value = value.replace(/\r?\n|\r/g, "");
           // for user friendliness we will automatically insert missing vector indices
           for (var i in map.srcs) {
             console.log(
@@ -462,4 +465,68 @@ class MapProperties {
       $("#saveButton, #loadButton").removeClass("disabled");
     }
   }
+}
+
+function define_syntax_rules() {
+  /**
+   * This function adds basic libmapper expression syntax highlighting to the codemirror editor.
+   *
+   */
+  CodeMirror.defineSimpleMode("libmapperExpressions", {
+    start: [
+      // Handle flavours of X
+      { regex: /x\d*\[\d+\]/, token: "variable" },
+      { regex: /x\d*\[\d+:\d+\]/, token: "variable" },
+      { regex: /x\d*\{-1\}/, token: "variable" },
+      { regex: /x\d*/, token: "variable" },
+
+      // Handle flavours of Y
+      { regex: /y\[\d+\]/, token: "keyword" },
+      { regex: /y\d*\[\d+:\d+\]/, token: "keyword" },
+      { regex: /y\{-1\}/, token: "keyword" },
+      { regex: /y/, token: "keyword" },
+
+      // Handle Numbers
+      {
+        regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+        token: "number",
+      },
+
+      //Handle Function Calls
+      { regex: /\.[a-z$][\w$]*\(\)/, token: "operator" },
+      { regex: /[a-z$][\w$]*\(/, push: "function", token: "operator" },
+
+      // Handle Variables
+      { regex: /[a-z$][\w$]*\{-1\}/, token: "atom" },
+      { regex: /[a-z$][\w$]*/, token: "atom" },
+    ],
+
+    // Handles matching the parameter space of a function call
+    function: [
+      { regex: /[a-z$][\w$]*\(/, push: "function", token: "operator" },
+      { regex: /\)/, token: "operator", pop: true },
+
+      // Handle flavours of X -> within a function
+      { regex: /x\d*\[\d+\]/, token: "variable" },
+      { regex: /x\d*\[\d+:\d+\]/, token: "variable" },
+      { regex: /x\d*\{-1\}/, token: "variable" },
+      { regex: /x\d*/, token: "variable" },
+
+      // Handle flavours of Y -> within a function
+      { regex: /y\[\d+\]/, token: "keyword" },
+      { regex: /y\d*\[\d+:\d+\]/, token: "keyword" },
+      { regex: /y\{-1\}/, token: "keyword" },
+      { regex: /y/, token: "keyword" },
+
+      // Handle Numbers -> within a function
+      {
+        regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+        token: "number",
+      },
+
+      // Handle Variables -> within a function
+      { regex: /[a-z$][\w$]*\{-1\}/, token: "atom" },
+      { regex: /[a-z$][\w$]*/, token: "atom" },
+    ],
+  });
 }
