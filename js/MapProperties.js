@@ -468,12 +468,10 @@ class MapProperties {
 }
 
 function define_syntax_rules() {
-  console.log("Defining CodeMirror Syntax Rules");
-
-  /* Example definition of a simple mode that understands a subset of
-   * JavaScript:
+  /**
+   * This function adds basic libmapper expression syntax highlighting to the codemirror editor.
+   *
    */
-
   CodeMirror.defineSimpleMode("libmapperExpressions", {
     start: [
       // Handle flavours of X
@@ -496,7 +494,7 @@ function define_syntax_rules() {
 
       //Handle Function Calls
       { regex: /\.[a-z$][\w$]*\(\)/, token: "operator" },
-      { regex: /[a-z$][\w$]*\(/, next: "function", token: "operator" },
+      { regex: /[a-z$][\w$]*\(/, push: "function", token: "operator" },
 
       // Handle Variables
       { regex: /[a-z$][\w$]*\{-1\}/, token: "atom" },
@@ -505,13 +503,30 @@ function define_syntax_rules() {
 
     // Handles matching the parameter space of a function call
     function: [
-      { regex: /([\w$]*(,\s*)?)*/, token: "variable", next: "end_function" },
-    ],
+      { regex: /[a-z$][\w$]*\(/, push: "function", token: "operator" },
+      { regex: /\)/, token: "operator", pop: true },
 
-    end_function: [
-      { regex: /\)/, token: "operator", next: "start" },
-      // TODO: Implemented nested function call highlighting!
-      // { regex: /[a-z$][\w$]*\(/, next: "function", token: "operator" },
+      // Handle flavours of X -> within a function
+      { regex: /x\d*\[\d+\]/, token: "variable" },
+      { regex: /x\d*\[\d+:\d+\]/, token: "variable" },
+      { regex: /x\d*\{-1\}/, token: "variable" },
+      { regex: /x\d*/, token: "variable" },
+
+      // Handle flavours of Y -> within a function
+      { regex: /y\[\d+\]/, token: "keyword" },
+      { regex: /y\d*\[\d+:\d+\]/, token: "keyword" },
+      { regex: /y\{-1\}/, token: "keyword" },
+      { regex: /y/, token: "keyword" },
+
+      // Handle Numbers -> within a function
+      {
+        regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+        token: "number",
+      },
+
+      // Handle Variables -> within a function
+      { regex: /[a-z$][\w$]*\{-1\}/, token: "atom" },
+      { regex: /[a-z$][\w$]*/, token: "atom" },
     ],
   });
 }
