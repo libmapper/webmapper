@@ -441,10 +441,12 @@ class SignalTable {
             let tds = $(tr).children('td').not('.invisible');
             this.expandWidth = 0;
             if (this.location == 'left') {
+                this.expandWidth = 15;
                 for (var i = 0; i < tds.length - 1; i++)
                     this.expandWidth += tds[i].offsetWidth;
             }
             else {
+                this.expandWidth = 15;
                 for (var i = 1; i < tds.length; i++)
                     this.expandWidth += tds[i].offsetWidth;
             }

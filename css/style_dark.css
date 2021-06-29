@@ -81,7 +81,9 @@ thead, #networkMenu {
     height: calc(100% - 20px);
     width: 100%;
     position: relative;
-    overflow: auto;
+/*    overflow: auto;*/
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 /* tertiary highlight selection */
@@ -105,6 +107,14 @@ td.filler {
     overflow: hidden;
 /*    padding-left: 2px;*/
 /*    border: 2px solid transparent;*/
+}
+
+#leftTable .tableScroller {
+    direction: rtl;
+}
+
+#leftTable .displayTable {
+    direction: ltr;
 }
 
 #leftTable .displayTable td {
@@ -421,10 +431,10 @@ form {
     /*    background-color: rgba(200, 200, 200, 0.8);*/
     background-color: black;
 }
-
-.tdsel {
-    font-weight: bold;
-}
+/**/
+/*.tdsel {*/
+/*    font-weight: bold;*/
+/*}*/
 
 #protoUDP {
     padding-left: 5px;
@@ -862,61 +872,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:inline-table;}
-
-.literal {
-    color: blue;
-/*    background: lightgray;*/
-}
-
-#exprTable {
-    width:100%;
-    height:100%;
-    color:white;
-    background:black;
-    padding: none;
-    border-collapse: collapse;
-}
-
-#exprTable td {
-    padding: none;
-    font-family: monospace;
-}
-
-#exprTable .even {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-#exprTable .index {
-    border-right: 1px solid white;
-    cursor: pointer;
-}
-
-#exprTable .value {
-    border-left: 1px solid white;
-}
-
-#exprTable .rhs {
-    width: 100%;
-    cursor: text;
-}
-
-#exprTable .lhs {
-    text-align: right;
-    cursor: text;
-}
-
-#exprTable .edited {
-    color: red;
-}
-
-#exprTable .clear {
-    background: url(/images/clear.png);
-    width: 15px;
-    height: 15px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position-y: center;
-}
 
 .exprButton {
     width: 70px;
