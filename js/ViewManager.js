@@ -19,6 +19,7 @@ class ViewManager
 
         this.views = [];
         this.isCodeMirror = false;
+        this.isCurveEditor = false;
 
         // remove all previous DOM elements
         $(this.container).empty();
@@ -147,7 +148,9 @@ class ViewManager
     }
 
     showCurveEditor(props, onGenerated) {
-        new CurveEditor(props, onGenerated);
+        this.curveEditor = new CurveEditor(this, props, onGenerated);
+        this.isCurveEditor = true;
+        this.isCodeMirror = false;
     }
 
     _add_graph_callbacks() {

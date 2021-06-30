@@ -91,14 +91,6 @@ class MapProperties {
       // TODO: Handle Error Checking tasks
     });
 
-    $("#curveButton").on("click", function (e) {
-      console.log("curveButton clicked!");
-    });
-
-    $("#exprButton").on("click", function (e) {
-      console.log("exprButton clicked!");
-    });
-
     //TODO: Note -- Expression handler is removed as it is now taken care of via codemirror
 
     $(".topMenu .protocol").on("click", function (e) {
@@ -112,11 +104,16 @@ class MapProperties {
           // 'Escape' key
           self.editor.display.input.blur();
           self.view.isCodeMirror = false;
+        } else if (e.metaKey == true && e.which == 13) {
+          self.setMapProperty("expr", self.editor.getValue(""));
         } else if (e.which < 37 || e.which > 40) {
           // exclude arrow keys
           $("#exprUpdate").prop("disabled", false);
         }
         return;
+      }
+      else if (self.view.isCurveEditor && e.metaKey == true && e.which == 13) {
+          self.view.curveEditor.apply();
       }
       switch (e.which) {
         case 67: {
@@ -210,7 +207,6 @@ class MapProperties {
     if (selected && selected.size()) {
       // something has been selected
       $("#exprTitle").removeClass("disabled");
-      //            $('#curveTitle').removeClass('disabled');
       $(".signalControl").removeClass("disabled");
       $(".signalControl").children("*").removeClass("disabled");
     } else return;

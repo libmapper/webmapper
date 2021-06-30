@@ -151,7 +151,6 @@ function initViewCommands()
 {
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
-            
             switch (e.which) {
                 case 18:
                     if (viewManager.currentView == 'console')
@@ -159,31 +158,39 @@ function initViewCommands()
                     // alt key: show/hide menus
                     console.log($(document.activeElement).attr('id'))
                     e.preventDefault();
-                    if(viewManager.isCodeMirror) break;
+                    if (viewManager.isCodeMirror) break;
                     toggleMenus()
                     break;
                 case 37:
                     // pan left
                     e.preventDefault();
-                    if(viewManager.isCodeMirror) break;
+                    if (viewManager.isCodeMirror) break;
                     viewManager.pan(null, null, 10, 0);
                     break;
                 case 39:
                     // pan right
                     e.preventDefault();
-                    if(viewManager.isCodeMirror) break;
+                    if (viewManager.isCodeMirror) break;
                     viewManager.pan(null, null, -10, 0);
                     break;
                 case 38:
                     // pan up
                     e.preventDefault();
-                    if(viewManager.isCodeMirror) break;
+                    if (viewManager.isCodeMirror) break;
+                    else if (viewManager.isCurveEditor) {
+                        viewManager.curveEditor.incr();
+                        break;
+                    }
                     viewManager.pan(null, null, 0, 10);
                     break;
                 case 40:
                     // pan down
                     e.preventDefault();
-                    if(viewManager.isCodeMirror) break;
+                    if (viewManager.isCodeMirror) break;
+                    else if (viewManager.isCurveEditor) {
+                        viewManager.curveEditor.decr();
+                        break;
+                    }
                     viewManager.pan(null, null, 0, -10);
                     break;
             }

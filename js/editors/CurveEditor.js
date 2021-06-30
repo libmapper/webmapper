@@ -1,5 +1,5 @@
 class CurveEditor {
-    constructor(props, onGenerated) {
+    constructor(viewManager, props, onGenerated) {
         // If curve editor is open, return
         if ($('#curveEditorWindow').length) {
             return;
@@ -61,6 +61,27 @@ class CurveEditor {
             }
         };
 
+        this.incr = function() {
+            c = c - 0.1;
+            if (c < -16)
+                c = -16;
+            $('#curveSlider').val(c);
+            update();
+        }
+
+        this.decr = function() {
+            c = c + 0.1;
+            if (c > 16)
+                c = 16;
+            $('#curveSlider').val(c);
+            update();
+        }
+
+        this.apply = function() {
+            let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
+            onGenerated(expr, c);
+        }
+
         $('#curveEditor svg').css('overflow', 'visible');
         const reso = 20;
         let points = [];
@@ -80,38 +101,6 @@ class CurveEditor {
             update();
         });
 
-        // arrow keys
-        $('body').on('keydown', function(e) {
-            switch (e.which) {
-                case 38: // up arrow
-                    e.preventDefault();
-                    e.stopPropagation();
-                    c = c - 0.1;
-                    if (c < -16)
-                        c = -16;
-                    $('#curveSlider').val(c);
-                    update();
-                    break;
-                case 40: // down arrow
-                    e.preventDefault();
-                    e.stopPropagation();
-                    c = c + 0.1;
-                    if (c > 16)
-                        c = 16;
-                    $('#curveSlider').val(c);
-                    update();
-                    break;
-                case 13: // 'enter' key
-                    e.stopPropagation();
-                    e.preventDefault();
-                    let expr = generate_curve(src_min, src_max, dst_min, dst_max, c);
-                    onGenerated(expr, c);
-                    break;
-                default:
-                    return;
-            }
-        });
-
         // Generate button
         $('#curveEditorWindow').append("<div id='curveExprDisplay' style='width:90%;text-align:center;color:white;height:3em'>Drag slider to generate a curve</div>"
                                        +"<div style='width:70%'><div id='curveGenerate' class='button sel disabled' style='width:45%;text-align:center;color:white'>Apply to map</div>"
@@ -125,7 +114,7 @@ class CurveEditor {
         $('#curveEditorClose').click(function(e) {
             e.stopPropagation();
             e.preventDefault();
-            onGenerated(null);
+            viewManager.isCurveEditor = false;
             $('#curveEditorWindow').remove();
         });
         $('#curveEditorWindow').on('click', function(e) {
@@ -134,7 +123,7 @@ class CurveEditor {
         $(body).one('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
-            onGenerated(null);
+            viewManager.isCurveEditor = false;
             $('#curveEditorWindow').remove();
         });
     }
