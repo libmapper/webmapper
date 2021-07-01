@@ -229,6 +229,9 @@ def set_map_properties(props, map):
                 map[mpr.PROP_PROTOCOL] = mpr.PROTO_UDP
             elif val == 'tcp' or val == 'TCP':
                 map[mpr.PROP_PROTOCOL] = mpr.PROTO_TCP
+        elif key == 'scope':
+            # skip for now
+            print("skipping scope property for now")
         else:
             map[key] = val
     map.push()

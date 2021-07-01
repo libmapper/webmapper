@@ -558,7 +558,10 @@ function Graph() {
                     case 'hidden':
                     case 'id':
                     case 'key':
+                    case 'num_sigs_in':
+                    case 'selected':
                     case 'status':
+                    case 'timeout':
                     case 'view':
                         break;
                     case 'src':
