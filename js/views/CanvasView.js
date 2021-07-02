@@ -21,17 +21,20 @@ class CanvasView extends View {
         this.setMapPainter(CanvasMapPainter);
 
         // set left table properties
-        this.tables.left.hidden = false;
-        this.tables.left.filterByDirection('both');
-        this.tables.left.showDetail(true);
-        this.tables.left.expand = true;
-        this.tables.left.ignoreCanvasObjects = true;
+        let t = this.tables.left;
+        t.hidden = false;
+        t.filterByDirection('both');
+        t.showDetail(true);
+        t.expand = true;
+        t.filler = false;
+        t.ignoreCanvasObjects = true;
+        t.scrolled = 0;
+        t.zoomed = 1;
         // update table to remove rows with associated canvasObjects
-        this.tables.left.update();
+        t.update();
 
         // hide right table
-        this.tables.right.adjust(this.frame.width, 0, 0,
-                                 this.frame.height, 0, 500, null, 0, 0);
+        this.tables.right.adjust(this.frame.width, 0, 0, this.frame.height, 0, 500, null, 0, 0);
         this.tables.right.hidden = true;
 
         this.setCanvasTableDrag();

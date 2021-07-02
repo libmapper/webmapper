@@ -32,6 +32,7 @@ class GridView extends View {
             t.hidden = false;
             t.showDetail(false);
             t.expand = true;
+            t.filler = true;
             t.scrolled = 0;
             t.zoomed = 1;
         }

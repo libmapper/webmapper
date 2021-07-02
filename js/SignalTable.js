@@ -10,6 +10,7 @@ class SignalTable {
         this.direction = null;
         this.snap = 'right';
         this.expand = false;
+        this.filler = false;
         this.scrolled = 0;
         this.zoomed = 1;
 
@@ -441,12 +442,12 @@ class SignalTable {
             let tds = $(tr).children('td').not('.invisible');
             this.expandWidth = 0;
             if (this.location == 'left') {
-                this.expandWidth = 15;
-                for (var i = 0; i < tds.length - 1; i++)
+                let len = tds.length - (this.filler ? 1 : 0);
+                for (var i = 0; i < len; i++) {
                     this.expandWidth += tds[i].offsetWidth;
+                }
             }
             else {
-                this.expandWidth = 15;
                 for (var i = 1; i < tds.length; i++)
                     this.expandWidth += tds[i].offsetWidth;
             }
@@ -637,7 +638,7 @@ class SignalTable {
                             let idx = parseInt(j);
                             let leaf = left ? (j == len-1) : (j == 0);
                             let device = left ? (j == 0) : (j == len-1);
-                            if (leaf && _self.expand && !left)
+                            if (leaf && _self.filler && !left)
                                 line += "<td class='"+sigRowType+" filler'></td>";
                             line += "<td";
                             if (leaf) {
@@ -646,7 +647,7 @@ class SignalTable {
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
                                 line += ">"+tds[j][1]+" ("+b.leaf.unit+")</td>";
-                                if (_self.expand && _self.location == "left")
+                                if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
                             }
