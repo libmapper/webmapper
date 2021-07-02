@@ -224,6 +224,11 @@ def set_map_properties(props, map):
         elif key == 'muted':
             if val == True or val == False:
                 map[mpr.PROP_MUTED] = val
+        elif key == 'process_loc':
+            if val == 'src':
+                map[mpr.PROP_PROCESS_LOC] = mpr.LOC_SRC
+            elif val == 'dst':
+                map[mpr.PROP_PROCESS_LOC] = mpr.LOC_DST
         elif key == 'protocol':
             if val == 'udp' or val == 'UDP':
                 map[mpr.PROP_PROTOCOL] = mpr.PROTO_UDP

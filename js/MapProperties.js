@@ -131,7 +131,7 @@ class MapProperties {
           break;
         }
         case 68: // 'D'
-          self.setMapProperty("process_location", "destination");
+          self.setMapProperty("process_loc", "dst");
           break;
         case 69: // 'E'
           e.preventDefault();
@@ -146,7 +146,7 @@ class MapProperties {
           self.setMapProperty("muted", null);
           break;
         case 83: // 'S'
-          self.setMapProperty("process_location", "source");
+          self.setMapProperty("process_loc", "src");
           break;
         case 84: // 'T'
           self.setMapProperty("protocol", "TCP");
