@@ -86,21 +86,24 @@ Maps can be selected by either clicking on them or 'crossing' them by clicking a
 
 If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). Currently, some map properties can only be edited using the Console view or via hotkeys listed in the chart below.
 
-| Action                        | KDE/Gnome/Windows | macOS
-| ----------------------------- | ----------------- | -----------
-| Invoke the curve editor.      | `Ctrl`+`C`        | `⌘ Cmd`+`C`
-| Switch selected maps to use UDP networking. | `Ctrl`+`U` | `⌘ Cmd`+`U`
-| Switch selected maps to use TCP networking. | `Ctrl`+`T` | `⌘ Cmd`+`T`
-| Force selected maps to process expressions at the destination. | `Ctrl`+`D` | `⌘ Cmd`+`D`
-| Force selected maps to process expressions at the source (if possible).| `Ctrl`+`D` | `⌘ Cmd`+`D`
-| Toggle the `use_inst` property of selected maps. | `Ctrl`+`I` | `⌘ Cmd`+`I`
-| Toggle muting for selected maps. | `M` | `M`
+| Action                                                        | Key
+| ------------------------------------------------------------- | ---
+| Invoke the curve editor.                                      | `C`
+| Focus on expression editor                                    | `E`
+| Switch selected maps to use UDP networking.                   | `U`
+| Switch selected maps to use TCP networking.                   | `T`
+| Force selected maps to process expressions at the destination. | `D`
+| Force selected maps to process expressions at the source (if possible).| `S`
+| Toggle the `use_inst` property of selected maps.              | `I`
+| Toggle muting for selected maps.                              | `M`
 
 ### Expression editor
 
 This mode allows the user to view and edit the expression used for processing values streaming on this map. Please refer to the libmapper [expression syntax documentation](./doc/expression_syntax.md) for more information.
 
-<img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/map_props_expr.png">
+Changes to the map expression can be applied to the map by clicking on the `Apply` button to the left of the editor or by using the shortcut keys `Meta`+`Return`.
+
+<img style="padding:0px;vertical-align:middle" src="./doc/screenshots/expression_editor.png">
 
 ### Curve editor
 
