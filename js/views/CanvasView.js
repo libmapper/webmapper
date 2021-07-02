@@ -530,7 +530,7 @@ class CanvasMapPainter extends MapPainter
         if (src.canvasObject) {
             let offset = srcPos.width * 0.5;
             src_x = srcPos.left + offset;
-            src_cx = srcPos.left + offset * 2;
+            src_cx = srcPos.left + offset * 3;
             src_y = srcPos.top;
         }
         else {
@@ -542,7 +542,7 @@ class CanvasMapPainter extends MapPainter
         if (dst.canvasObject) {
             let offset = dstPos.width * -0.5;
             dst_x = dstPos.left + offset;
-            dst_cx = dstPos.left + offset * 2;
+            dst_cx = dstPos.left + offset * 3;
             dst_y = dstPos.top;
         }
         else {
