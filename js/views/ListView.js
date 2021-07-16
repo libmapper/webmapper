@@ -143,7 +143,7 @@ class ListMapPainter extends MapPainter
     {
         let mpx = dstPos ? dst.x : (src.x + dst.x) * 0.5;
         this.pathspecs[i] = [['M', src.x, src.y],
-                            ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
     }
 
     vertical(src, dst, i) 
@@ -152,7 +152,7 @@ class ListMapPainter extends MapPainter
         let offset = this.offset(src.y, dst.y);
         let ctlx = src.x + offset * src.vx;
         this.pathspecs[i] = [['M', src.x, src.y], 
-                            ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
+                             ['C', ctlx, src.y, ctlx, dst.y, dst.x, dst.y]];
     }
 
     offset(a, b, minoffset = 30, maxoffset = 200)

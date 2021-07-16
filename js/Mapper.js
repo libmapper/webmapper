@@ -54,7 +54,7 @@ class Mapper
                   'status': 'staged',
                   'selected': true
                 };
-        graph.maps.add(m);
+        graph.maps.add(m, 1);
     }
 
     unmap(srckeys, dstkey)
@@ -67,7 +67,7 @@ class Mapper
                   'selected': true
                 };
         command.send('unmap', [srckeys, dstkey]);
-        graph.del_map("del_map", m);
+        graph.del_maps("del_maps", [m]);
     }
 
     mapKey(srckeys, dstkey)

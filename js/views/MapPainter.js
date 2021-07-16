@@ -294,7 +294,7 @@ class MapPainter {
         return {x: x, y: y, vy: 0};
     }
 
-    circle_spec(x, y, radius = 10)
+    circle_spec(x, y, radius = 7)
     {
         return [['M', x - radius, y],
                 ['A', radius, radius, 0, 0, 0, x + radius, y],
@@ -319,6 +319,6 @@ MapPainter.mutedDashes = '-';
 MapPainter.defaultDashes = '';
 MapPainter.stagedOpacity = 0.5;
 MapPainter.defaultOpacity = 1.0;
-MapPainter.boldStrokeWidth = 5;
+MapPainter.boldStrokeWidth = 4;
 MapPainter.defaultStrokeWidth = 4;
 MapPainter.shortenPath = 0;

@@ -16,6 +16,13 @@ if dirname:
 if 'tracing' in sys.argv[1:]:
     server.tracing = True
 
+new_devs = {}
+del_devs = {}
+new_sigs = {}
+del_sigs = {}
+new_maps = {}
+del_maps = {}
+
 def open_gui(port):
     url = 'http://localhost:%d'%port
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
@@ -137,34 +144,36 @@ def map_props(map):
         devnames = [d['name'] for d in props['scope']]
         props['scope'] = devnames
 
-    print("map_props", props)
+#    print("map_props", props)
     return props
 
 def on_device(type, dev, action):
 #    print('ON_DEVICE')
+    dev = dev_props(dev)
     if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
 #        print('NEW DEVICE')
-        server.send_command("add_devices", [dev_props(dev)])
-    elif action == mpr.OBJ_REM:
-        server.send_command("del_device", dev_props(dev))
-    elif action == mpr.OBJ_EXP:
-        server.send_command("del_device", dev_props(dev))
+        new_devs[dev['key']] = dev
+    elif action == mpr.OBJ_REM or action == mpr.OBJ_EXP:
+        # TODO: just send keys instead or entire object
+        del_devs[dev['key']] = dev;
 
 def on_signal(type, sig, action):
 #    print('ON_SIGNAL')
+    sig = sig_props(sig)
     if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
 #        print('NEW SIGNAL')
-        server.send_command("add_signals", [sig_props(sig)])
+        new_sigs[sig['key']] = sig
     elif action == mpr.OBJ_REM:
-        server.send_command("del_signal", sig_props(sig))
+        del_sigs[sig['key']] = sig
 
 def on_map(type, map, action):
-    print('ON_MAP')
+#    print('ON_MAP')
+    map = map_props(map)
     if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-        print('NEW MAP')
-        server.send_command("add_maps", [map_props(map)])
+#        print('NEW MAP')
+        new_maps[map['key']] = map
     elif action == mpr.OBJ_REM:
-        server.send_command("del_map", map_props(map))
+        del_maps[map['key']] = map
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
@@ -196,10 +205,10 @@ def find_map(srckeys, dstkey):
     return None
 
 def set_map_properties(props, map):
-    print('set_map_properties:', props, map)
+#    print('set_map_properties:', props, map)
     if map == None:
         map = find_map(props['srcs'], props['dst'])
-        print('found map with', props['srcs'], props['dst'])
+#        print('found map with', props['srcs'], props['dst'])
         if not map:
             print("error: couldn't retrieve map ", props['src'], " -> ", props['dst'])
             return
@@ -210,9 +219,9 @@ def set_map_properties(props, map):
     if 'dst' in props:
         del props['dst']
     for key in props:
-        print('prop', key, props[key])
+#        print('prop', key, props[key])
         val = props[key]
-        print('prop', key, val)
+#        print('prop', key, val)
         if val == 'true' or val == 'True' or val == 't' or val == 'T':
             val = True
         elif val == 'false' or val == 'False' or val == 'f' or val == 'F':
@@ -332,6 +341,29 @@ def release_map(args):
     m = find_map(srckeys, dstkey)
     if m != None: m.release()
 
+def poll_and_push():
+    global g
+    g.poll(50)
+    if len(new_devs) > 0:
+        server.send_command("add_devices", list(new_devs.values()))
+        new_devs.clear()
+    if len(del_devs) > 0:
+        server.send_command("del_devices", list(del_devs.values()))
+        del_devs.clear()
+    if len(new_sigs) > 0:
+        server.send_command("add_signals", list(new_sigs.values()))
+        new_sigs.clear()
+    if len(del_sigs) > 0:
+        server.send_command("del_signals", list(del_sigs.values()))
+        del_sigs.clear()
+    if len(new_maps) > 0:
+        server.send_command("add_maps", list(new_maps.values()))
+        new_maps.clear()
+    if len(del_maps) > 0:
+        server.send_command("del_maps", list(del_maps.values()))
+        del_maps.clear()
+
+
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("add_signals",
@@ -366,6 +398,6 @@ on_open = lambda: ()
 if not '--no-browser' in sys.argv and not '-n' in sys.argv:
     on_open = lambda: open_gui(port)
 
-server.serve(port=port, poll=lambda: g.poll(100), on_open=on_open,
+server.serve(port=port, poll=poll_and_push, on_open=on_open,
              quit_on_disconnect=not '--stay-alive' in sys.argv)
 

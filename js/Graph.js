@@ -86,7 +86,7 @@ NodeArray.prototype = {
         return size;
     },
 
-    add : function(obj) {
+    add : function(obj, last) {
 //        console.log(this.obj_type+'s.add', obj);
         let key = obj.key;
         if (!key)
@@ -103,7 +103,7 @@ NodeArray.prototype = {
                 }
             }
             if (updated && this.cb_func)
-                this.cb_func('modified', this.obj_type, existing);
+                this.cb_func('modified', this.obj_type, existing, last);
         }
         else {
             if (this.obj_type == 'device') {
@@ -142,21 +142,21 @@ NodeArray.prototype = {
             this.contents = ordered;
 
             if (this.cb_func)
-                this.cb_func('added', this.obj_type, this.contents[key]);
+                this.cb_func('added', this.obj_type, this.contents[key], last);
         }
         return this.contents[key];
     },
 
-    remove : function(obj) {
+    remove : function(obj, last) {
         let key = obj.key;
         if (key && this.contents[key]) {
             if (this.signals)
                 this.signals.forEach(function(sig) { this.signals.remove(sig); });
             if (this.cb_func)
-                this.cb_func('removing', this.obj_type, this.contents[key]);
+                this.cb_func('removing', this.obj_type, this.contents[key], last);
             delete this.contents[key];
             if (this.cb_func)
-                this.cb_func('removed', this.obj_type, {'key': key});
+                this.cb_func('removed', this.obj_type, {'key': key}, last);
         }
         return key;
     },
@@ -233,7 +233,7 @@ EdgeArray.prototype = {
         return size;
     },
 
-    add : function(obj) {
+    add : function(obj, last) {
         // console.log(this.obj_type+'s.add', obj.key, obj);
         let key = obj.key;
         let id = obj.id;
@@ -252,25 +252,25 @@ EdgeArray.prototype = {
                         break;
                     }
                     else if (existing !== edge) {
-                        this._merge(existing, edge);
+                        this._merge(existing, edge, last);
                         this.remove(this.contents[i]);
                     }
                 }
             }
         }
         if (existing) {
-            this._merge(existing, obj);
+            this._merge(existing, obj, last);
         }
         else {
             this.contents[key] = obj;
             if (this.cb_func)
-                this.cb_func('added', this.obj_type, this.contents[key]);
+                this.cb_func('added', this.obj_type, this.contents[key], last);
         }
         // console.log(this.obj_type+"s contents: ", this.contents);
         return this.contents[key];
     },
 
-    _merge : function(existing, obj) {
+    _merge : function(existing, obj, last) {
         // copy properties from update
         let prop;
         let updated = false;
@@ -282,18 +282,18 @@ EdgeArray.prototype = {
             }
         }
         if (updated && this.cb_func) {
-            this.cb_func('modified', this.obj_type, existing);
+            this.cb_func('modified', this.obj_type, existing, last);
         }
     },
 
-    remove : function(obj) {
+    remove : function(obj, last) {
         let key = obj.key;
         if (key && this.contents[key]) {
             if (this.cb_func)
-                this.cb_func('removing', this.obj_type, this.contents[key]);
+                this.cb_func('removing', this.obj_type, this.contents[key], last);
             delete this.contents[key];
             if (this.cb_func)
-                this.cb_func('removed', this.obj_type, {'key': key});
+                this.cb_func('removed', this.obj_type, {'key': key}, last);
         }
         return key;
     },
@@ -308,9 +308,9 @@ function Graph() {
     this.add_callback = function(f) {
         callbacks.push(f);
     };
-    this.cb_handler = function(event, type, obj) {
+    this.cb_handler = function(event, type, obj, repaint) {
         for (var i in callbacks) {
-            callbacks[i](event, type, obj);
+            callbacks[i](event, type, obj, repaint);
         }
     };
     this.clear_callbacks = function() {
@@ -336,48 +336,55 @@ function Graph() {
 
     this.add_devices = function(cmd, devs) {
         let hidden = this.devices.some(d => d.hidden);
+        let last = devs.length - 1;
         for (var i in devs) {
-            let dev = this.devices.add(devs[i]);
+            let dev = this.devices.add(devs[i], i == last);
             if (hidden)
                 dev.hidden = true;
             console.log('subscribing to device', dev.name)
             command.send('subscribe', dev.name);
         }
     }
-    this.del_device = function(cmd, dev) {
-        dev = this.devices.find(dev.name);
-        if (!dev)
-            return;
-        let maps = this.maps;
-        dev.signals.forEach(function(sig) {
-            maps.forEach(function(map) {
-                if (map.srcs.indexOf(sig) >= 0 || sig == map.dst)
-                    maps.remove(map);
+    this.del_devices = function(cmd, devs) {
+        let last = devs.length - 1;
+        for (var i in devs) {
+            dev = this.devices.find(devs[i].name);
+            if (!dev)
+                return;
+            let maps = this.maps;
+            dev.signals.forEach(function(sig) {
+                maps.forEach(function(map) {
+                    if (map.srcs.indexOf(sig) >= 0 || sig == map.dst)
+                        maps.remove(map);
+                });
             });
-        });
-        let links = this.links;
-        links.forEach(function(link) {
-            if (link.src == dev || link.dst == dev)
-                links.remove(link);
-        });
-        this.devices.remove(dev);
+            let links = this.links;
+            links.forEach(function(link) {
+                if (link.src == dev || link.dst == dev)
+                    links.remove(link);
+            });
+            this.devices.remove(dev, i == last);
+        }
     }
     this.add_signals = function(cmd, sigs) {
+        let last = sigs.length - 1;
         for (var i in sigs) {
             let dev = this.devices.find(sigs[i].device);
             if (!dev) {
-                console.log("error adding signal: couldn't find device",
-                            sigs[i].device);
+                console.log("error adding signal: couldn't find device", sigs[i].device);
                 return;
             }
             sigs[i].device = dev;
-            dev.signals.add(sigs[i]);
+            dev.signals.add(sigs[i], i == last);
         }
     }
-    this.del_signal = function(cmd, sig) {
-        let dev = this.devices.find(sig.device);
-        if (dev)
-            dev.signals.remove(sig);
+    this.del_signals = function(cmd, sigs) {
+        let last = sigs.length - 1;
+        for (var i in sigs) {
+            let dev = this.devices.find(sigs[i].device);
+            if (dev)
+                dev.signals.remove(sigs[i], i == last);
+        }
     }
     this.find_signal = function(name) {
         name = name.split('/');
@@ -391,18 +398,17 @@ function Graph() {
     this.add_maps = function(cmd, maps) {
         // TODO: check for convergent maps and add appropriate links
         let self = this;
+        let last = maps.length - 1;
         for (var i in maps) {
-            console.log('trying to add map['+i+']', maps[i]);
             for (j in maps[i].srcs) {
                 maps[i].srcs[j] = self.find_signal(maps[i].srcs[j].key)
             }
             maps[i].dst = self.find_signal(maps[i].dst.key);
             if (!maps[i].srcs || !maps[i].dst) {
-                console.log("error adding map: couldn't find signals",
-                            maps[i].srcs, maps[i].dst);
+                console.log("error adding map: couldn't find signals", maps[i].srcs, maps[i].dst);
                 return;
             }
-            let map = this.maps.add(maps[i]);
+            let map = this.maps.add(maps[i], i == last);
             if (!map) {
                 console.log("error adding map:", maps[i]);
                 return;
@@ -426,7 +432,7 @@ function Graph() {
                                            'src': rev ? dst.device : src.device,
                                            'dst': rev ? src.device : dst.device,
                                            'maps': [map.key],
-                                           'status': map.status});
+                                           'status': map.status}, 1);
                     if (src.device.links)
                         src.device.links.push(link_key);
                     else
@@ -440,39 +446,42 @@ function Graph() {
                     link.maps.push(map.key);
                 if (link.status != 'active' && map.status == 'active') {
                     link.status = 'active';
-                    this.links.cb_func('modified', 'link', link);
+                    this.links.cb_func('modified', 'link', link, i == last);
                 }
             }
         }
     }
-    this.del_map = function(cmd, map) {
-        map = this.maps.find(map.key);
-        if (!map)
-            return;
-        for (var j in map.srcs) {
-            let src = map.srcs[j];
-            let link_key;
-            if (src.device.name < map.dst.device.name)
-                link_key = src.device.name + '<->' + map.dst.device.name;
-            else
-                link_key = map.dst.device.name + '<->' + src.device.name;
-            let link = this.links.find(link_key);
-            if (link) {
-                let index = link.maps.indexOf(map.key);
-                if (index > -1)
-                    link.maps.splice(index, 1);
-                if (link.maps.length == 0) {
-                    index = link.src.links.indexOf(link_key);
+    this.del_maps = function(cmd, maps) {
+        let last = maps.length - 1;
+        for (var i in maps) {
+            map = this.maps.find(maps[i].key);
+            if (!map)
+                return;
+            for (var j in map.srcs) {
+                let src = map.srcs[j];
+                let link_key;
+                if (src.device.name < map.dst.device.name)
+                    link_key = src.device.name + '<->' + map.dst.device.name;
+                else
+                    link_key = map.dst.device.name + '<->' + src.device.name;
+                let link = this.links.find(link_key);
+                if (link) {
+                    let index = link.maps.indexOf(map.key);
                     if (index > -1)
-                        link.src.links.splice(index, 1);
-                    index = link.dst.links.indexOf(link_key);
-                    if (index > -1)
-                        link.dst.links.splice(index, 1);
-                    this.links.remove(link);
+                        link.maps.splice(index, 1);
+                    if (link.maps.length == 0) {
+                        index = link.src.links.indexOf(link_key);
+                        if (index > -1)
+                            link.src.links.splice(index, 1);
+                        index = link.dst.links.indexOf(link_key);
+                        if (index > -1)
+                            link.dst.links.splice(index, 1);
+                        this.links.remove(link);
+                    }
                 }
             }
+            this.maps.remove(map, i == last);
         }
-        this.maps.remove(map);
     }
 
     this.exportFile = function() {
@@ -750,18 +759,18 @@ function Graph() {
 
     // delete handlers in case of refresh
     command.unregister("add_devices");
-    command.unregister("del_device");
+    command.unregister("del_devices");
     command.unregister("add_signals");
-    command.unregister("del_signal");
+    command.unregister("del_signals");
     command.unregister("add_maps");
-    command.unregister("del_map");
+    command.unregister("del_maps");
 
     command.register("add_devices", this.add_devices.bind(this));
-    command.register("del_device", this.del_device.bind(this));
+    command.register("del_devices", this.del_devices.bind(this));
     command.register("add_signals", this.add_signals.bind(this));
-    command.register("del_signal", this.del_signal.bind(this));
+    command.register("del_signals", this.del_signals.bind(this));
     command.register("add_maps", this.add_maps.bind(this));
-    command.register("del_map", this.del_map.bind(this));
+    command.register("del_maps", this.del_maps.bind(this));
 };
 
 var graph = new Graph();

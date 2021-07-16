@@ -156,32 +156,39 @@ class ViewManager
     _add_graph_callbacks() {
         let self = this;
         this.graph.clear_callbacks();
-        this.graph.add_callback(function(event, type, obj) {
+        this.graph.add_callback(function(event, type, obj, repaint) {
             if (event == 'removing') {
                 if (type == 'map') {
-                    console.log("removing map!");
                     if (obj.selected) {
                         obj.selected = false;
                         $('#container').trigger("updateMapProperties");
                     }
+                    remove_object_svg(obj, 0);
                     if (obj.view)
                         obj.view.remove();
+                }
+                else if (type == 'device') {
+                    obj.signals.forEach(function(sig) {
+                        remove_object_svg(sig, 0);
+                        if (sig.view)
+                            sig.view.remove();
+                    });
                 }
                 remove_object_svg(obj, 0);
                 return;
             }
             switch (type) {
                 case 'device':
-                    self._update_devices(obj, event);
+                    self._update_devices(obj, event, repaint);
                     break;
                 case 'link':
-                    self._update_links(obj, event);
+                    self._update_links(obj, event, repaint);
                     break;
                 case 'signal':
-                    self._update_signals(obj, event, true);
+                    self._update_signals(obj, event, repaint);
                     break;
                 case 'map':
-                    self._update_maps(obj, event);
+                    self._update_maps(obj, event, repaint);
                     break;
             }
         });
@@ -199,14 +206,15 @@ class ViewManager
         this.canvas = Raphael($('#svgDiv')[0], '100%', '100%');
     };
 
-    _update_devices(dev, event) {
+    _update_devices(dev, event, repaint) {
         if (event == 'added' && !dev.view) {
             dev.signals.forEach(function(sig) {
                 this._update_signals(sig, 'added', false);
             });
-            this.views[this.currentView].update('devices');
+            if (repaint)
+                this.views[this.currentView].update('devices');
         }
-        else if (event == 'removed')
+        else if (event == 'removed' && repaint)
             this.views[this.currentView].update('devices');
     }
 
@@ -216,29 +224,32 @@ class ViewManager
             if (repaint)
                 this.views[this.currentView].update('signals');
         }
-        else if (event == 'modified' || event == 'removed')
+        else if (event == 'modified' || event == 'removed' && repaint)
             this.views[this.currentView].update('signals');
     }
 
-    _update_links(link, event) {
-        this.views[this.currentView].update('links');
+    _update_links(link, event, repaint) {
+        if (repaint)
+            this.views[this.currentView].update('links');
     }
 
-    _update_maps(map, event) {
+    _update_maps(map, event, repaint) {
         switch (event) {
             case 'added':
-                if (!map.view)
+                if (!map.view && repaint)
                     this.views[this.currentView].update('maps');
                 break;
             case 'modified':
                 if (map.view) {
                     if (map.selected)
                         $('#container').trigger("updateMapPropertiesFor", map.key);
-                    this.views[this.currentView].update('maps');
+                    if (repaint)
+                        this.views[this.currentView].update('maps');
                 }
                 break;
             case 'removed':
-                this.views[this.currentView].update('maps');
+                if (repaint)
+                    this.views[this.currentView].update('maps');
                 break;
         }
     }
