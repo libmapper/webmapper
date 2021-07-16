@@ -307,15 +307,13 @@ server.add_command_handler("add_devices",
                            lambda x: ("add_devices", [dev_props(d) for d in g.devices()]))
 
 def subscribe(device):
-    print('subscribe', device)
     if device == 'all_devices':
         g.subscribe(mpr.DEV)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = g.devices().filter(mpr.PROP_NAME, device).next()
-        print('found dev:', dev)
+        dev = g.devices().filter(mpr.PROP_NAME, device)
         if dev:
-            g.subscribe(dev, mpr.OBJ)
+            g.subscribe(dev.next(), mpr.OBJ)
 
 def new_map(args):
     srckeys, dstkey, props = args
