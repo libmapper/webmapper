@@ -42,8 +42,8 @@ class ParallelView extends View {
     drawDevice(dev, duration, devInc, self) {
         if (!dev.view)
             return;
-        let height = self.mapPane.height * (dev.view.zoom ? dev.view.zoom : 1.0);
         dev.view.stop();
+        let height = self.mapPane.height * (dev.view.zoom ? dev.view.zoom : 1.0);
         let numSigs = dev.numVisibleSigs - 1;
         let sigInc = numSigs > 1 ? height / (numSigs - 1) : height;
 

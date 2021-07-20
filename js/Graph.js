@@ -335,7 +335,7 @@ function Graph() {
     };
 
     this.add_devices = function(cmd, devs) {
-        let hidden = this.devices.some(d => d.hidden);
+        let hidden = this.devices.some(d => d.hidden == true);
         let last = devs.length - 1;
         for (var i in devs) {
             let dev = this.devices.add(devs[i], i == last);
