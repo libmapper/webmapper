@@ -56,7 +56,8 @@ class View {
                                                     'opacity': 0.25,
                                                     'fill': 'white',
                                                     'x': this.mapPane.cx,
-                                                    'y': this.mapPane.cy});
+                                                    'y': this.mapPane.cy,
+                                                    'text': 'waiting for devices'});
             this.canvas.waiting.node.setAttribute('pointer-events', 'none');
         }
     }
@@ -93,10 +94,10 @@ class View {
         }
 
         if (this.graph.devices.size() == 0) {
-            this.canvas.waiting.attr({'text': 'waiting for devices'});
+            this.canvas.waiting.show();
             return;
         }
-        this.canvas.waiting.attr({'text': ''});
+        this.canvas.waiting.hide();
 
         let self = this;
         let devIndex = 0;

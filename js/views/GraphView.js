@@ -677,9 +677,9 @@ class GraphView extends View {
         let updated = false;
         if (elements.indexOf('devices') >= 0) {
             if (this.graph.devices.size() == 0)
-                this.canvas.waiting.attr({'text': 'waiting for devices'});
+                this.canvas.waiting.show();
             else
-                this.canvas.waiting.attr({'text': ''});
+                this.canvas.waiting.hide();
         }
         if (elements.indexOf('signals') >= 0) {
             this.updateSignals(function(sig) {

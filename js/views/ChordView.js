@@ -83,10 +83,10 @@ class ChordView extends View {
         this.offlineDevs = 0;
         let dev_num = this.graph.devices.size();
         if (dev_num == 0) {
-            this.canvas.waiting.attr({'text': 'waiting for devices'});
+            this.canvas.waiting.show();
             return;
         }
-        this.canvas.waiting.attr({'text': ''});
+        this.canvas.waiting.hide();
 
         this.graph.devices.forEach(function(dev) {
             if (dev.status == 'offline')
