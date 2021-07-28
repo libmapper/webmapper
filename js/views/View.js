@@ -462,7 +462,7 @@ class View {
                     self.newMap =
                         {
                             'srcs': [sig],
-                            'dst': {'position': {'x': x, 'y': y}, 'device': {'hidden' : false}, 'view': {}},
+                            'dst': {'position': {x: x, y: y, vx: 0, vy: 0}, 'device': {'hidden' : false}, 'view': {}},
                             'selected': true,
                             'hidden': false
                         };
@@ -476,7 +476,7 @@ class View {
                     }
                     if (!self._continue_map_snap(x, y)) {
                         self._unsnap_to_map();
-                        self.newMap.dst.position = {'x': x, 'y': y};
+                        self.newMap.dst.position = {x: x, y: y, vx: 0, vy: 0};
                     }
                 }
                 self.newMap.view.draw(0);
@@ -786,7 +786,7 @@ class View {
                 self.newMap = 
                 {
                     'srcs': [self.draggingFrom],
-                    'dst': {position: {x: 0, y: 0}},
+                    'dst': {position: {x: 0, y: 0, vx: 0, vy: 0}},
                     'selected': true
                 };
                 self.newMap.view = new self.mapPainter(self.newMap, self.canvas,
@@ -838,7 +838,7 @@ class View {
                                 break;
                             }
                             if (!dst) {
-                                self.newMap.dst = {position: {x: svgx, y: svgy}};
+                                self.newMap.dst = {position: {x: svgx, y: svgy, vx: 0, vy: 0}};
                             }
                         }
                     }
@@ -952,7 +952,10 @@ class View {
     {
         let selected_path = map.view.intersected;
         let selected_len = selected_path.getTotalLength();
-        return selected_path.getPointAtLength(selected_len / 2);
+        let pos = selected_path.getPointAtLength(selected_len / 2);
+        pos.vx = 0;
+        pos.vy = 0;
+        return pos;
     }
 
     _snap_to_map(snap_map)

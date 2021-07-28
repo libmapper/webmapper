@@ -136,14 +136,25 @@ class ListMapPainter extends MapPainter
 
         if (Math.abs(src.x - dst.x) < 1)
             this.vertical(src, dst, i);
-        else this.betweenTables(src, dst, i);
+        else
+            this.betweenTables(src, dst, i);
     }
 
     betweenTables(src, dst, i, dstPos)
     {
-        let mpx = dstPos ? dst.x : (src.x + dst.x) * 0.5;
-        this.pathspecs[i] = [['M', src.x, src.y],
-                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        let mpx = this.frame.cx;
+        if (src.isnode)
+            mpx = dstPos ? dst.x : (src.x + dst.x) * 0.5;
+
+        if (dst.isnode == true) {
+            let offset = 50;
+            this.pathspecs[i] = [['M', src.x, src.y],
+                                 ['C', mpx, src.y, dst.x + dst.vx * offset, dst.y, dst.x, dst.y]];
+        }
+        else {
+            this.pathspecs[i] = [['M', src.x, src.y],
+                                 ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        }
     }
 
     vertical(src, dst, i) 
@@ -196,7 +207,9 @@ class ListMapPainter extends MapPainter
     }
 
     getNodePosition() {
-        return super.getNodePosition(50);
+        let offset = 50;
+        let dst = this.map.dst.position;
+        return {x: dst.x + dst.vx * offset, y: dst.y, vx: dst.vx, vy: 0, isnode: 1};
     }
 }
 

@@ -213,7 +213,7 @@ class MapPainter {
                 attributes = this.attributes[0];
 
             // hide arrowhead if path is short to avoid Raphael error message
-            if (len < 50)
+            if (len < 30)
                 attributes['arrow-end'] = 'none';
 
             if (typeof path === 'undefined' || path[0] == null) 
@@ -291,7 +291,7 @@ class MapPainter {
                 y += offset * dst.vy;
         }
 
-        return {x: x, y: y, vy: 0};
+        return {x: x, y: y, vx: x < dst.x ? -1 : 1, vy: 0, isnode: true};
     }
 
     circle_spec(x, y, radius = 7)
