@@ -365,6 +365,7 @@ function remove_object_svg(obj, duration) {
         obj.view.stopPoint = null;
     }
     obj.view.stop();
+    obj.view.unclick();
     obj.view.unhover();
     obj.view.undrag();
     if (duration)

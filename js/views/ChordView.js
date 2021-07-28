@@ -623,6 +623,8 @@ class ChordView extends View {
 
     cleanup() {
         super.cleanup();
+
+        // clean up any objects created only for this view
         if (this.devCount)
             this.devCount.remove();
         graph.links.forEach(function(link) {
@@ -630,19 +632,7 @@ class ChordView extends View {
                 return;
             remove_object_svg(link, 200);
         });
-        graph.devices.forEach(function(dev) {
-            if (!dev.view)
-                return;
-            if (dev.view.stick) {
-                dev.view.stick.remove();
-                dev.view.stick = null;
-            }
-            dev.view.unclick();
-            dev.view.unhover();
-        });
 
         $('#signalFilterDiv').removeClass('disabled');
-
-        // clean up any objects created only for this view
     }
 }
