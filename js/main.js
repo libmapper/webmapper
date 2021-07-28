@@ -152,7 +152,7 @@ function initViewCommands()
     $('body').on('keydown.list', function(e) {
         if (e.metaKey != true) {
             switch (e.which) {
-                case 18:
+                case 32:
                     if (viewManager.currentView == 'console')
                         break;
                     // alt key: show/hide menus
