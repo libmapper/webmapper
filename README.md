@@ -40,13 +40,21 @@ If the browser doesn't open, open it manually and type "localhost:#####" into th
 The network interface can be specified using a command-line argument when launching webmapper:
 
 ~~~
-$ python webmapper.py --iface lo0
+python webmapper.py --iface lo0
+~~~
+
+### Running without a local front end
+
+By default webmapper will open a browser window when it is launched, but there may be situations for which this is not the correct behaviour, such as running the webmapper back-end on a computer without a display and running the front-end remotely. The flag `--no-browser` will prevent webmapper from trying to open a browser window locally. The flag `--stay-alive` keeps webmapper runnning after a connected front-end disconnects.
+
+~~~
+python webmapper.py --no-browser --stay-alive
 ~~~
 
 ## To build a standalone application for macOS:
 
 ~~~
-$ python setup.py py2app
+python setup.py py2app
 ~~~
 
 ---
@@ -151,7 +159,6 @@ We have explored several alternative visualization and interaction techniques, w
 ### <img style="padding:0px;vertical-align:middle" src="./images/chord_icon_black.png" width="25px"> Chord view
 
 * Shortcut: `Command-1`
-* Status: **development**
 
 This view displays only devices and network links between them. It can be used to gain an overview of the mapping network. Hovering over a device or link representation will cause an information box to appear displaying additional metadata.
 
@@ -164,7 +171,6 @@ Devices can be "hidden" from the rest of the views by clicking on them. This wil
 ### <img style="padding:0px;vertical-align:middle" src="./images/list_icon_black.png" width="25px"> List view
 
 * Shortcut: `Command-2`
-* Status: **stable**
 
 The primary view used in our mapping GUIs is based on the common structure of diagrams used to describe DMI mapping in the literature – a bipartite graph representation of the maps, in which sources of data appear on the left-hand side of the visualization and destinations (or "sinks") for data appear on the right.
 
@@ -177,7 +183,6 @@ The lists of source and destination signals are arranged hierarchically. Groups 
 ### <img style="padding:0px;vertical-align:middle" src="./images/grid_icon_black.png" width="25px"> Grid view
 
 * Shortcut: `Command-3`
-* Status: **development**
 
 In this view, `source` signals are listed along the left side of a grid, while `destination` signals are listed along the top. Maps connecting the signals are drawn as triangles at the intersection of their sources and destination, with the point of the triangle indicating the direction of dataflow: **up** for maps flowing from a signal in the left table to a signal in the top table, or **left** for maps flowing from the top to the left. In the case of maps involving only signals in one table, there is no intersection point and the maps are drawing using directed edges as in the **List View**.
 
@@ -191,7 +196,6 @@ The lists of source and destination signals are arranged hierarchically. Groups 
 ### <img style="padding:0px;vertical-align:middle" src="./images/canvas_icon_black.png" width="25px"> Canvas view
 
 * Shortcut: `Command-4`
-* Status: **development**
 
 The canvas view is loosely modeled after the UI for the application [Input Configurator (ICon)][ICon] by Pierre Dragecevic and Stéphane Huot. In this view, both input and output signals appear in a list on the left side, and can be dragged into the main canvas area.
 
@@ -207,7 +211,6 @@ The canvas view is loosely modeled after the UI for the application [Input Confi
 ### <img style="padding:0px;vertical-align:middle" src="./images/graph_icon_black.png" width="25px"> Graph view
 
 * Shortcut: `Command-5`
-* Status: **development**
 
 The graph view plots signals on a 2D graph, with x and y axes chosen by the
 user from the signals' properties. Interestingly, some signal properties
@@ -224,7 +227,6 @@ may have more than one location on the graph.
 ### <img style="padding:0px;vertical-align:middle" src="./images/hive_icon_black.png" width="25px"> Hive plot view
 
 * Shortcut: `Command-6`
-* Status: **development**
 
 In this view, each device is given its own axis arranged radially. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
@@ -233,7 +235,6 @@ In this view, each device is given its own axis arranged radially. Signals belon
 ### <img style="padding:0px;vertical-align:middle" src="./images/parallel_icon_black.png" width="25px"> Parallel coordinate view
 
 * Shortcut: `Command-7`
-* Status: **development**
 
 In this view, each device is given its own axis arranged vertically in parallel. Signals belonging to a device are displayed as nodes distributed evenly along the device axis.
 
@@ -242,7 +243,6 @@ In this view, each device is given its own axis arranged vertically in parallel.
 ### <img style="padding:0px;vertical-align:middle" src="./images/console_icon_black.png" width="25px"> Console view
 
 * Shortcut: `Command-8`
-* Status: **stable**
 
 This view presents a "console" for performing text-based interaction with the mapping network.
 
