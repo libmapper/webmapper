@@ -635,7 +635,12 @@ class ChordView extends View {
         graph.devices.forEach(function(dev) {
             if (!dev.view)
                 return;
+            if (dev.view.stick) {
+                dev.view.stick.remove();
+                dev.view.stick = null;
+            }
             dev.view.unclick();
+            dev.view.unhover();
         });
 
         $('#signalFilterDiv').removeClass('disabled');

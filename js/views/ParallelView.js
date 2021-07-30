@@ -206,7 +206,10 @@ class ParallelMapPainter extends ListMapPainter
 
         if (Math.abs(src.x - dst.x) < 1)
             this.vertical(src, dst, i);
-        else
-            this.betweenTables(src, dst, i);
+        else {
+            let mpx = i ? dst.x : (src.x + dst.x) * 0.5;
+            this.pathspecs[i] = [['M', src.x, src.y],
+                                 ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
+        }
     }
 }
