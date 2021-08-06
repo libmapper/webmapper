@@ -172,11 +172,13 @@ class MapPainter {
             // TODO: see if these properties can be moved to CSS
             this.attributes[i] = 
             { 'stroke': (this.map.selected ? MapPainter.selectedColor : MapPainter.defaultColor )
-            , 'stroke-dasharray': (this.map.use_inst ? MapPainter.mutedDashes : MapPainter.defaultDashes)
-            , 'stroke-opacity': (this.map.muted || this.map.status == 'staged' ? MapPainter.mutedOpacity : MapPainter.defaultOpacity)
+            , 'stroke-dasharray': (this.map.use_inst && (count <= 1 || i < count-1)
+                                   ? MapPainter.instDashes : MapPainter.defaultDashes)
+            , 'stroke-opacity': (this.map.muted || this.map.status == 'staged'
+                                 ? MapPainter.mutedOpacity : MapPainter.defaultOpacity)
             , 'stroke-width': (this.map.selected ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
             , 'fill': 'none'
-            , 'arrow-start': (this.map.protocol == 'TCP' ? 'oval' : 'none')
+            , 'arrow-start': (this.map.protocol == 'TCP' && (count <= 2 || i < count-2) ? 'oval' : 'none')
             , 'arrow-end': 'block-wide-long'
             };
         }
@@ -315,7 +317,7 @@ class MapPainter {
 // to change the way default maps look globally
 MapPainter.selectedColor = 'red';
 MapPainter.defaultColor = 'white';
-MapPainter.mutedDashes = '.';
+MapPainter.instDashes = '.';
 MapPainter.defaultDashes = '';
 MapPainter.mutedOpacity = 0.3;
 MapPainter.defaultOpacity = 1.0;

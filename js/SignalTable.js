@@ -537,11 +537,13 @@ class SignalTable {
 
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
+                let insts = (sig.num_inst == 'unknown' || sig.num_inst <= 1) ? '' : ' × ' + sig.num_inst;
 
                 sigs.push({
                     id: sig.key,
                     name: sig.name,
-                    unit: typelen+unit, 
+                    insts: insts,
+                    unit: typelen + unit,
                     direction: sig.direction,
                     color: Raphael.hsl(dev.hue, 1, 0.5)
                 });
@@ -645,7 +647,7 @@ class SignalTable {
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
-                                line += ">"+tds[j][1]+" ("+b.leaf.unit+")</td>";
+                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
