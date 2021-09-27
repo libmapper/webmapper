@@ -234,7 +234,7 @@ class ConvergentMapper
         for (let i in srcs)
         {
             let src = srcs[i];
-            let x = ConvExpr.vectorize('x'+i, src, dst);
+            let x = ConvExpr.vectorize('x$'+i, src, dst);
             let [b, m] = ConvExpr.zero_to_one_params(src.min, src.max);
             offset += b;
             expr += m.toString()+'*'+x+'+';
@@ -272,7 +272,7 @@ class ConvergentMapper
 
         let expr = dstmap.expr;
         if (dstmap.srcs.length == 1) {
-            expr = expr.replace(/\bx(?!\w)/g, "x0");
+            expr = expr.replace(/\bx(?!\w)/g, "x$0");
         }
         return [src, dst, expr];
     }
@@ -372,11 +372,11 @@ class ConvExpr
         {
             if (i < idx)
                 continue;
-            let re = new RegExp("x"+i, "g");
-            expr = expr.replace(re, "x"+(i+1));
+            let re = new RegExp("x$"+i, "g");
+            expr = expr.replace(re, "x$"+(i+1));
         }
         let re = new RegExp(srcexprname);
-        expr = expr.replace(re, ConvExpr.vectorize('x'+idx, src, dstmap.dst));
+        expr = expr.replace(re, ConvExpr.vectorize('x$'+idx, src, dstmap.dst));
         return expr;
     }
 
