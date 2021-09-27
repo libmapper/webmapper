@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import webmapper_http_server as server
-import mapper as mpr
+import libmapper as mpr
 import mapperstorage
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import json, re
-import mapper as mpr
+import libmapper as mpr
 
 #for debugging
 import pdb
