@@ -367,7 +367,8 @@ class View {
                                                         'type', 'view'].includes(k))
                                          .map(k => Object.assign({}, {[k]: sig[k]}))
                                          .reduce((res, o) => Object.assign(res, o), {});
-                    filtered.instances = sig.num_instances;
+                    filtered.instances = sig.num_inst;
+                    delete filtered.num_inst;
                     filtered.type = type_name(sig.type);
                     let maps = self.graph.maps;
                     filtered.maps =
