@@ -28,7 +28,7 @@ All libmapper-compatible GUIs function as “dumb terminals” — no handling o
 Note: webmapper is developed and works with Chromium/Chrome. It may work with other browsers.
 
 1. Build and install [libmapper][libmapper]
-2. Copy `_mapper.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory.
+2. Copy `_libmapper.cpython-XXX-XXXX.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory (`XXX-XXXX` will actually be something like `37m-darwin`).
 3. Run webmapper.py from terminal
 4. Terminal will display "serving at port #####"
 5. A browser window should be opened automatically and directed to the correct port.
