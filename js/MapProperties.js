@@ -115,43 +115,57 @@ class MapProperties {
       else if (self.view.isCurveEditor && e.metaKey == true && e.which == 13) {
           self.view.curveEditor.apply();
       }
+      let selected = self.graph.maps.filter((m) => m.selected);
       switch (e.which) {
         case 67: {
           // 'C'
-          let selected = self.graph.maps.filter((m) => m.selected);
-          if (selected && selected.size()) {
-            self.view.showCurveEditor(
-              self.getCurveProperties(),
-              function (expr, c) {
-                self.setMapProperty("expr", expr);
-                self.setMapProperty("curve", c);
-              }
-            );
-          }
+          if (!selected || !selected.size())
+            break;
+          self.view.showCurveEditor(
+            self.getCurveProperties(),
+            function (expr, c) {
+              self.setMapProperty("expr", expr);
+              self.setMapProperty("curve", c);
+            }
+          );
           break;
         }
         case 68: // 'D'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("process_loc", "dst");
           break;
         case 69: // 'E'
+          if (!selected || !selected.size())
+              break;
           e.preventDefault();
           e.stopPropagation();
           self.editor.focus();
           self.view.isCodeMirror = true;
           break;
         case 73: // 'I'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("use_inst", null);
           break;
         case 77: // 'M'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("muted", null);
           break;
         case 83: // 'S'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("process_loc", "src");
           break;
         case 84: // 'T'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("protocol", "TCP");
           break;
         case 85: // 'U'
+          if (!selected || !selected.size())
+            break;
           self.setMapProperty("protocol", "UDP");
           break;
       }
