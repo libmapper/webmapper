@@ -180,6 +180,8 @@ function closest_point(edge, x, y) {
 
 // from https://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
 function humanize(x) {
+    if (x == 0)
+        return 0;
     let log = Math.log10(Math.abs(x));
     let sigfig = log < 0 ? -Math.floor(log)+2 : 2;
     return x.toFixed(sigfig).replace(/\.?0*$/,'');

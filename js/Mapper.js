@@ -230,18 +230,46 @@ class ConvergentMapper
         if (!this._signals_have_bounds(srcs.concat([dst]))) return null; 
 
         expr = 'y=(';
-        let offset = 0;
+        let srcmaxlen = srcs[0].length;
+        for (let i = 1; i < srcs.length; i++) {
+            if (srcs[i].length > srcmaxlen)
+            srcmaxlen = srcs[i].length
+        }
+        let offset = (new Array(srcmaxlen).fill(0));
         for (let i in srcs)
         {
             let src = srcs[i];
-            let x = ConvExpr.vectorize('x$'+i, src, dst);
+            let x = 'x$'+i;
             let [b, m] = ConvExpr.zero_to_one_params(src.min, src.max);
-            offset += b;
-            expr += m.toString()+'*'+x+'+';
+            if (b.length == undefined)
+                offset[0] += b;
+            else {
+                for (let j = 0; j < srcmaxlen; j++)
+                    offset[j] += b[j % b.length];
+            }
+            if (m.length == undefined)
+                expr += m.toString()+'*'+x+'+';
+            else
+                expr += '[' + m.toString()+']*'+x+'+';
         }
-        expr += offset.toString() + ')';
-        expr += '*' + (dst.max - dst.min).toString() + '/' + srcs.length;
-        expr += '+' + dst.min.toString();
+        if (offset.length == undefined)
+            expr += offset.toString() + ')';
+        else
+            expr += '[' + offset.toString() + '])';
+
+        expr += '*';
+        if (dst.min.length == undefined) {
+            expr += (dst.max - dst.min).toString() + '/' + srcs.length;
+            expr += dst.min.toString();
+        }
+        else {
+            expr += "[";
+            for (let i = 0; i < dst.min.length; i++) {
+                let comma = i < (dst.min.length - 1) ? "," : "";
+                expr += humanize(dst.max[i] - dst.min[i]) + comma;
+            }
+            expr += "]/" + srcs.length;
+        }
         return expr;
     }
 
@@ -325,12 +353,42 @@ class ConvExpr
     static scaled(xmin, xmax, ymin, ymax, x)
     {
         let [inneroffset, innerslope] = ConvExpr.zero_to_one_params(xmin, xmax);
-        let outerslope = ymax - ymin;
+        let outerslope;
+        if (ymax.length == undefined) {
+            outerslope = ymax - ymin;
+        }
+        else {
+            outerslope = [];
+            for (let i = 0; i < ymax.length; i++) {
+                outerslope[i] = ymax[i] - ymin[i];
+            }
+        }
         let outeroffset = ymin;
-        let offset = inneroffset*outerslope + outeroffset;
-        let slope = innerslope*outerslope;
-        if (isNaN(offset) || isNaN(slope))
-            console.log('NaN error');
+
+        let xlen = xmin.length == undefined ? 1 : xmin.length;
+        let ylen = ymin.length == undefined ? 1 : ymin.length;
+        let maxlen = xlen > ylen ? xlen : ylen;
+        if (maxlen == 1) {
+            let offset = inneroffset * outerslope + outeroffset;
+            let slope = innerslope * outerslope;
+            return ConvExpr.offset_slope(offset, slope, x);
+        }
+        let offset = [];
+        let slope = [];
+        if (xmin.length == undefined) {
+            inneroffset = [inneroffset];
+            innerslope = [innerslope];
+        }
+        if (ymin.length == undefined) {
+            outeroffset = [outeroffset];
+            outerslope = [outerslope];
+        }
+        for (let i = 0; i < maxlen; i++) {
+            offset[i] = (  inneroffset[i % inneroffset.length]
+                         * outerslope[i % outerslope.length]
+                         + outeroffset[i % outeroffset.length]);
+            slope[i] = (innerslope[i % innerslope.length] * outerslope[i % outerslope.length]);
+        }
         return ConvExpr.offset_slope(offset, slope, x);
     }
 
@@ -348,13 +406,21 @@ class ConvExpr
 
     static zero_to_one_params(min, max)
     {
-        let offset = min / (max - min);
-        let slope  = 1 / (max - min);
+        if (min.length == undefined)
+            return [min / (max - min), 1 / (max - min)];
+        let offset = [];
+        let slope = [];
+        for (let i = 0; i < min.length; i++) {
+            offset[i] = humanize(min[i] / (max[i] - min[i]));
+            slope[i] = humanize(1 / (max[i] - min[i]));
+        }
         return [offset, slope];
     }
 
     static offset_slope(offset, slope, x)
     {
+        if (offset.length > 1 || slope.length > 1)
+            return '[' + slope.toString() + ']*' + x + '+[' + offset.toString() + ']';
         return slope.toString() + '*' + x + '+' + offset.toString();
     }
 
@@ -376,7 +442,7 @@ class ConvExpr
             expr = expr.replace(re, "x$"+(i+1));
         }
         let re = new RegExp(srcexprname);
-        expr = expr.replace(re, ConvExpr.vectorize('x$'+idx, src, dstmap.dst));
+        expr = expr.replace(re, 'x$'+idx);
         return expr;
     }
 
@@ -392,40 +458,6 @@ class ConvExpr
             expr = expr.substring(0,idx) + newkey + expr.substring(idx+key.length);
         }
         return expr;
-    }
-
-    static vectorize(x, src, dst) {
-        if (src.length > dst.length) {
-            // truncate source vector
-            if (1 == dst.length)
-                x = x+'[0]';
-            else
-                x = x+'[0:'+(dst.length-1)+']';
-        }
-        else if (src.length < dst.length) {
-            // pad source vector with zeros
-            let diff = dst.length - src.length;
-            x = '['+x+','+(new Array(diff).fill(0))+']';
-
-//            // Alternatively, fill with repetitions of source (like SC)
-//            let mult = Math.floor(dst.length - src.length);
-//            let mod = dst.length % src.length;
-//            switch (mod) {
-//                case 0:
-//                    x = '['+(Array(mult).fill(x))+']';
-//                    break;
-//                case 1:
-//                    x = '['+(Array(mult).fill(x))+x+'[0]]';
-//                    break;
-//                default:
-//                    x = '['+(Array(mult).fill(x))+x+'[0:'+(mod-1)+']]';
-//                    break;
-//            }
-
-            // Alternatively, truncate the destination assignment i.e. y[0:N]=x
-            // In this case we also need to adjust vector length of other source signals
-        }
-        return x;
     }
 
 }
