@@ -260,10 +260,10 @@ class MapPainter {
             if (l) {
                 let p = Raphael.getPointAtLength(this.pathspecs[i], 20);
                 if (this.labels.length <= i) {
-                    this.labels[i] = this.canvas.text(p.x, p.y, 'x'+i).attr(attrs);
+                    this.labels[i] = this.canvas.text(p.x - 5, p.y - 15, 'x$'+i).attr(attrs);
                 }
                 else {
-                    this.labels[i].attr({'x': p.x, 'y': p.y});
+                    this.labels[i].attr({'x': p.x - 5, 'y': p.y - 15});
                 }
             }
             else if (this.labels[i]) {
