@@ -56,38 +56,35 @@ def dev_props(dev):
     props = dev.properties.copy()
     if 'synced' in props:
         props['synced'] = props['synced'].get_double()
-    props['key'] = dev['name']
-    props['status'] = 'active'
+    props['key'] = props['name']
+    props['status'] = props['status'].name
     if 'is_local' in props:
         del props['is_local']
     if 'id' in props:
         del props['id']
-    if 'linked' in props and props['linked'] != None:
-        # convert device list to names
-        devnames = [d['name'] for d in props['linked']]
-        props['linked'] = devnames
+    if 'linked' in props:
+        linked = props['linked']
+        if linked != None:
+            # convert device list to names
+            devnames = [d['name'] for d in props['linked']]
+            props['linked'] = devnames
     if 'signal' in props:
         del props['signal']
     return props
 
 def sig_props(sig):
     props = sig.properties.copy()
-    props['device'] = sig.device()['name']
+    dev = sig.device()
+    props['device'] = dev['name']
     props['key'] = props['device'] + '/' + props['name']
     props['num_maps'] = len(sig.maps());
-    props['status'] = 'active'
+    if 'status' in props:
+        props['status'] = props['status'].name
     del props['is_local']
     del props['id']
-    if props['direction'] == mpr.DIR_IN:
-        props['direction'] = 'input'
-    else:
-        props['direction'] = 'output'
-    if props['type'] == mpr.INT32:
-        props['type'] = 'i'
-    elif props['type'] == mpr.FLT:
-        props['type'] = 'f'
-    elif props['type'] == mpr.DBL:
-        props['type'] = 'd'
+    props['direction'] = props['direction'].name
+    props['steal'] = props['steal'].name
+    props['type'] = props['type'].name
 #    print(props)
     return props
 
@@ -99,42 +96,31 @@ def get_key(sig):
 
 def map_props(map):
     props = map.properties.copy()
-
     # add source slot properties
     num_srcs = props['num_sigs_in']
     srcs = []
     src_names = []
-    for sig in map.signals(mpr.LOC_SRC):
+    for sig in map.signals(mpr.Location.SOURCE):
         src = sig_props(sig)
         src_names.append(src['key'])
         srcs.append(src)
     # need to sort sources alphabetically
     srcs.sort(key=get_key)
     props['srcs'] = srcs
-
     # add destination slot properties
-    for sig in map.signals(mpr.LOC_DST):
+    for sig in map.signals(mpr.Location.DESTINATION):
         dst = sig_props(sig)
         dst_name = dst['key']
         props['dst'] = dst
-
     # generate key
     if num_srcs > 1:
         props['key'] = '['+','.join(src_names)+']' + '->' + '['+dst_name+']'
     else: props['key'] = src_names[0] + '->' + dst_name
 
     # translate some properties
-    if props['process_loc'] == mpr.LOC_SRC:
-        props['process_loc'] = 'src'
-    else:
-        props['process_loc'] = 'dst'
-    if props['protocol'] == mpr.PROTO_UDP:
-        props['protocol'] = 'UDP'
-    elif props['protocol'] == mpr.PROTO_TCP:
-        props['protocol'] = 'TCP'
-    else:
-        del props['protocol']
-    props['status'] = 'active'
+    props['process_loc'] = props['process_loc'].name
+    props['protocol'] = props['protocol'].name
+    props['status'] = props['status'].name
     props['id'] = str(props['id']) # if left as int js will lose precision & invalidate
     del props['is_local']
     if 'mode' in props:
@@ -143,47 +129,43 @@ def map_props(map):
         # convert device list to names
         devnames = [d['name'] for d in props['scope']]
         props['scope'] = devnames
-
 #    print("map_props", props)
     return props
 
-def on_device(type, dev, action):
+def on_device(type, dev, event):
 #    print('ON_DEVICE')
     dev = dev_props(dev)
-    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-#        print('NEW DEVICE')
+    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
         new_devs[dev['key']] = dev
-    elif action == mpr.OBJ_REM or action == mpr.OBJ_EXP:
+    elif event == mpr.graph.Event.REMOVED or event == mpr.graph.Event.EXPIRED:
         # TODO: just send keys instead or entire object
         del_devs[dev['key']] = dev;
 
-def on_signal(type, sig, action):
+def on_signal(type, sig, event):
 #    print('ON_SIGNAL')
     sig = sig_props(sig)
-    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-#        print('NEW SIGNAL')
+    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
         new_sigs[sig['key']] = sig
-    elif action == mpr.OBJ_REM:
+    elif event == mpr.graph.Event.REMOVED:
         del_sigs[sig['key']] = sig
 
-def on_map(type, map, action):
+def on_map(type, map, event):
 #    print('ON_MAP')
     map = map_props(map)
-    if action == mpr.OBJ_NEW or action == mpr.OBJ_MOD:
-#        print('NEW MAP')
+    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
         new_maps[map['key']] = map
-    elif action == mpr.OBJ_REM:
+    elif event == mpr.graph.Event.REMOVED:
         del_maps[map['key']] = map
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
-    dev = g.devices().filter(mpr.PROP_NAME, names[0]).next()
+    dev = g.devices().filter(mpr.Property.NAME, names[0]).next()
     if dev:
-        sig = dev.signals().filter(mpr.PROP_NAME, names[1]).next()
-#        print('found sig', sig, 'at', names);
+        sig = dev.signals().filter(mpr.Property.NAME, names[1]).next()
         return sig
     else:
         print('error: could not find device', names[0])
+        return None
 
 def find_map(srckeys, dstkey):
     srcs = [find_sig(k) for k in srckeys]
@@ -200,7 +182,7 @@ def find_map(srckeys, dstkey):
         if match:
             for s in srcs:
                 match = match and (m.index(s) >= 0)
-        if match: 
+        if match:
             return m
     return None
 
@@ -229,20 +211,20 @@ def set_map_properties(props, map):
         elif val == 'null' or val == 'Null':
             val = None
         if key == 'expr':
-            map[mpr.PROP_EXPR] = val
+            map[mpr.Property.EXPRESSION] = val
         elif key == 'muted':
             if val == True or val == False:
-                map[mpr.PROP_MUTED] = val
+                map[mpr.Property.MUTED] = val
         elif key == 'process_loc':
             if val == 'src':
-                map[mpr.PROP_PROCESS_LOC] = mpr.LOC_SRC
+                map[mpr.Property.PROCESS_LOCATION] = mpr.Location.SOURCE
             elif val == 'dst':
-                map[mpr.PROP_PROCESS_LOC] = mpr.LOC_DST
+                map[mpr.Property.PROCESS_LOCATION] = mpr.Location.DESTINATION
         elif key == 'protocol':
             if val == 'udp' or val == 'UDP':
-                map[mpr.PROP_PROTOCOL] = mpr.PROTO_UDP
+                map[mpr.Property.PROTOCOL] = mpr.Protocol.UDP
             elif val == 'tcp' or val == 'TCP':
-                map[mpr.PROP_PROTOCOL] = mpr.PROTO_TCP
+                map[mpr.Property.PROTOCOL] = mpr.Protocol.TCP
         elif key == 'scope':
             # skip for now
             print("skipping scope property for now")
@@ -251,7 +233,7 @@ def set_map_properties(props, map):
     map.push()
 
 def on_save(arg):
-    d = g.devices().filter(mpr.PROP_NAME, arg['dev']).next()
+    d = g.devices().filter(mpr.Property.NAME, arg['dev']).next()
     fn = d.name+'.json'
     return fn, mprstorage.serialise(g, arg['dev'])
 
@@ -289,12 +271,12 @@ def init_graph(arg):
     g.remove_callback(on_map)
 
     # register callbacks
-    g.add_callback(on_device, mpr.DEV)
-    g.add_callback(on_signal, mpr.SIG)
-    g.add_callback(on_map, mpr.MAP)
+    g.add_callback(on_device, mpr.Type.DEVICE)
+    g.add_callback(on_signal, mpr.Type.SIGNAL)
+    g.add_callback(on_map, mpr.Type.MAP)
 
     # (re)subscribe: currently this does nothing but could refresh graph database?
-    g.subscribe(mpr.OBJ)
+    g.subscribe(None, mpr.Type.OBJECT, -1)
 
     for d in g.devices():
         server.send_command("add_devices", [dev_props(d)])
@@ -303,17 +285,21 @@ def init_graph(arg):
     for m in g.maps():
         server.send_command("add_maps", [map_props(m)])
 
+init_graph(0)
+
 server.add_command_handler("add_devices",
                            lambda x: ("add_devices", [dev_props(d) for d in g.devices()]))
 
 def subscribe(device):
     if device == 'all_devices':
-        g.subscribe(mpr.DEV)
+        g.subscribe(None, mpr.Type.DEVICE, -1)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = g.devices().filter(mpr.PROP_NAME, device)
+        dev = g.devices().filter(mpr.Property.NAME, device)
         if dev:
-            g.subscribe(dev.next(), mpr.OBJ)
+            g.subscribe(dev.next(), mpr.Type.OBJECT, -1)
+        else:
+            print("no device matching name", device)
 
 def new_map(args):
     srckeys, dstkey, props = args
