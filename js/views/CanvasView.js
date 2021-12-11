@@ -23,7 +23,7 @@ class CanvasView extends View {
         // set left table properties
         let t = this.tables.left;
         t.hidden = false;
-        t.filterByDirection('both');
+        t.filterByDirection('BOTH');
         t.showDetail(true);
         t.expand = true;
         t.filler = false;

@@ -149,10 +149,10 @@ class SignalTable {
     updateTitle() {
         let title = null;
         switch (this.direction) {
-            case 'output':
+            case 'OUTGOING':
                 title = this.frame.width > 200 ? 'SOURCES' : 'SRC';
                 break;
-            case 'input':
+            case 'INCOMING':
                 title = this.frame.width > 200 ? 'DESTINATIONS' : 'DST';
                 break;
             default:
@@ -172,7 +172,7 @@ class SignalTable {
     filterByDirection(dir) {
         if (!dir)
             return;
-        this.direction = (dir == 'both') ? null : dir;
+        this.direction = (dir == 'BOTH') ? null : dir;
         this.updateTitle();
     }
 
@@ -521,13 +521,13 @@ class SignalTable {
             function add(sig) {
                 let type;
                 switch (sig.type) {
-                    case 'i':
+                    case 'INT32':
                         type = 'int';
                         break;
-                    case 'f':
+                    case 'FLOAT':
                         type = 'float';
                         break;
-                    case 'd':
+                    case 'DOUBLE':
                         type = 'double';
                         break;
                     default:
@@ -556,7 +556,7 @@ class SignalTable {
                     return ignore(sig);
                 if (_self.direction &&  _self.direction != sig.direction)
                     return ignore(sig);
-                let re = sig.direction == 'output' ? _self.graph.srcRE : _self.graph.dstRE;
+                let re = sig.direction == 'OUTGOING' ? _self.graph.srcRE : _self.graph.dstRE;
                 if (re && !re.test(sig.key))
                     return hide(sig);
                 add(sig);

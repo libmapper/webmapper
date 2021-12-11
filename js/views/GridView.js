@@ -20,11 +20,11 @@ class GridView extends View {
         this.setTableDrag();
 
         // set left table properties
-        this.tables.left.filterByDirection('output');
+        this.tables.left.filterByDirection('OUTGOING');
 
         // set right table properties
         this.tables.right.snap = 'bottom';
-        this.tables.right.filterByDirection('input');
+        this.tables.right.filterByDirection('INCOMING');
 
         // set global table properties
         for (var i in this.tables) {
