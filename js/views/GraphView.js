@@ -619,7 +619,7 @@ class GraphView extends View {
             else
                 path = path.concat(circle);
         }
-        let is_output = sig.direction == 'output';
+        let is_output = sig.direction == 'OUTGOING';
         let color = Raphael.hsl(sig.device.hue, 1, 0.5);
         if (duration) {
             sig.view.animate({'path': path,

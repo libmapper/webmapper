@@ -106,7 +106,7 @@ class View {
             let sigIndex = 0;
             dev.signals.forEach(function(sig) {
                 sig.hidden = (dev.hidden == true);
-                let re = sig.direction == 'output' ? self.graph.srcRE : self.graph.dstRE;
+                let re = sig.direction == 'OUTGOING' ? self.graph.srcRE : self.graph.dstRE;
                 if (dev.hidden || (re && !re.test(sig.key))) {
                     if (sig.view)
                         sig.view.hide();
@@ -181,11 +181,11 @@ class View {
                              .reduce((res, o) => Object.assign(res, o), {});
         filtered.signals =
             dev.signals
-                .filter(s => s.direction == "input")
+                .filter(s => s.direction == "INCOMING")
                 .size()
             +" in, "
             +dev.signals
-                .filter(s => s.direction == "output")
+                .filter(s => s.direction == "OUTGOING")
                 .size()
             +" out";
         let maps = self.graph.maps;
@@ -512,7 +512,7 @@ class View {
                     sig.view.stop();
 
                 // check regexp
-                let re = (sig.direction == 'output'
+                let re = (sig.direction == 'OUTGOING'
                           ? self.graph.srcRE : self.graph.dstRE);
                 if (sig.hidden || (re && !re.test(sig.key))) {
                     if (sig.view)
@@ -545,7 +545,7 @@ class View {
             return;
         sig.view.stop();
         let pos = sig.position;
-        let is_output = sig.direction == 'output';
+        let is_output = sig.direction == 'OUTGOING';
 
         let path = circle_path(pos.x, pos.y, 10);
         let color = Raphael.hsl(sig.device.hue, 1, 0.5);
@@ -708,7 +708,7 @@ class View {
     }
 
     filterSignals(direction) {
-        direction = direction == 'src' ? 'output' : 'input';
+        direction = direction == 'src' ? 'OUTGOING' : 'INCOMING';
         let index, updated = false;
         switch (this.type) {
             case 'list':

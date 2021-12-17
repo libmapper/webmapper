@@ -47,7 +47,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch)
     launcher.start()
 
-g = mpr.graph()
+g = mpr.Graph()
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
     g.set_interface(iface)
@@ -135,26 +135,26 @@ def map_props(map):
 def on_device(type, dev, event):
 #    print('ON_DEVICE')
     dev = dev_props(dev)
-    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
+    if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_devs[dev['key']] = dev
-    elif event == mpr.graph.Event.REMOVED or event == mpr.graph.Event.EXPIRED:
+    elif event == mpr.Graph.Event.REMOVED or event == mpr.Graph.Event.EXPIRED:
         # TODO: just send keys instead or entire object
         del_devs[dev['key']] = dev;
 
 def on_signal(type, sig, event):
 #    print('ON_SIGNAL')
     sig = sig_props(sig)
-    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
+    if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_sigs[sig['key']] = sig
-    elif event == mpr.graph.Event.REMOVED:
+    elif event == mpr.Graph.Event.REMOVED:
         del_sigs[sig['key']] = sig
 
 def on_map(type, map, event):
 #    print('ON_MAP')
     map = map_props(map)
-    if event == mpr.graph.Event.NEW or event == mpr.graph.Event.MODIFIED:
+    if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_maps[map['key']] = map
-    elif event == mpr.graph.Event.REMOVED:
+    elif event == mpr.Graph.Event.REMOVED:
         del_maps[map['key']] = map
 
 def find_sig(fullname):
@@ -309,7 +309,7 @@ def new_map(args):
         print(srckeys, ' and ', dstkey, ' not found on network!')
         return
 
-    map = mpr.map(srcs, dst)
+    map = mpr.Map(srcs, dst)
     if not map:
         print('error: failed to create map', srckeys, "->", dstkey)
         return;
