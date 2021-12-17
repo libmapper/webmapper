@@ -429,6 +429,19 @@ class CanvasView extends View {
                 // cache canvas object positions
                 // TODO: use signalPainter instead?
             });
+            // try looking up device <td> positions in left and right tables
+            let path = [];
+            let width = 40;
+            let td = $("#leftTableScroller td[id='"+dev.name+"']");
+            if (td.length) {
+                path.push(['M', self.leftExpandWidth, td[0].offsetTop + td[0].offsetHeight],
+                          ['l', 0, -td[0].offsetHeight]);
+                width = td[0].offsetWidth;
+                if (!dev.view)
+                    dev.view = self.canvas.path();
+                dev.view.attr({ 'path': path,
+                                'stroke-width': 0 });
+            }
         });
         this.tables.left.update();
     }

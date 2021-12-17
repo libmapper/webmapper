@@ -151,6 +151,7 @@ class GridView extends View {
         $('svg').css({'left': 0,
                       'top': 0});
 
+        let self = this;
         this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view) {
@@ -158,6 +159,28 @@ class GridView extends View {
                     sig.view = null;
                 }
             });
+            // try looking up device <td> positions in left and right tables
+            let path = [];
+            let width = 40;
+            let td = $("#leftTableScroller td[id='"+dev.name+"']");
+            if (td.length) {
+                path.push(['M', self.leftExpandWidth, self.rightExpandWidth + td[0].offsetTop + td[0].offsetHeight],
+                          ['l', 0, -td[0].offsetHeight]);
+                width = td[0].offsetWidth;
+            }
+            td = $("#rightTableScroller td[id='"+dev.name+"']");
+            if (td.length) {
+                path.push(['M', self.leftExpandWidth + td[0].offsetTop, self.rightExpandWidth],
+                          ['l', td[0].offsetHeight, 0]);
+                width = td[0].offsetWidth;
+            }
+            console.log(path);
+            if (path.length) {
+                if (!dev.view)
+                    dev.view = self.canvas.path();
+                dev.view.attr({ 'path': path,
+                                'stroke-width': 0 });
+            }
         });
     }
 }

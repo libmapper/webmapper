@@ -108,6 +108,7 @@ class ListView extends View {
     cleanup() {
         super.cleanup();
 
+        let self = this;
         this.graph.devices.forEach(function(dev) {
             dev.signals.forEach(function(sig) {
                 if (sig.view) {
@@ -115,6 +116,27 @@ class ListView extends View {
                     sig.view = null;
                 }
             });
+            // try looking up device <td> positions in left and right tables
+            let path = [];
+            let width = 40;
+            let td = $("#leftTableScroller td[id='"+dev.name+"']");
+            if (td.length) {
+                path.push(['M', self.frame.width * 0.4, td[0].offsetTop + td[0].offsetHeight],
+                          ['l', 0, -td[0].offsetHeight]);
+                width = td[0].offsetWidth;
+            }
+            td = $("#rightTableScroller td[id='"+dev.name+"']");
+            if (td.length) {
+                path.push(['M', self.frame.width * 0.6, td[0].offsetTop],
+                          ['l', 0, td[0].offsetHeight]);
+                width = td[0].offsetWidth;
+            }
+            if (path.length) {
+                if (!dev.view)
+                    dev.view = self.canvas.path();
+                dev.view.attr({ 'path': path,
+                                'stroke-width': 0 });
+            }
         });
     }
 }
