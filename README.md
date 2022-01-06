@@ -23,15 +23,18 @@ All libmapper-compatible GUIs function as “dumb terminals” — no handling o
 
 * collaborative undo/redo
 
-## To run:
+## To run standalone application
+
+Simply open the application. It should automatically scan the network for devices and signals.
+
+## To run from source:
 
 Note: webmapper is developed and works with Chromium/Chrome. It may work with other browsers.
 
 1. Build and install [libmapper][libmapper]
-2. Copy `_libmapper.cpython-XXX-XXXX.so` and `mapper.py` from the directory /libmapper/swig into /webmapper directory (`XXX-XXXX` will actually be something like `37m-darwin`).
-3. Run webmapper.py from terminal
-4. Terminal will display "serving at port #####"
-5. A browser window should be opened automatically and directed to the correct port.
+2. Run webmapper.py from terminal
+3. Terminal will display "serving at port #####"
+4. A browser window should be opened automatically and directed to the correct port.
 
 If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal.
 
@@ -88,7 +91,7 @@ Webmapper now also supports the creation and representation of *convergent* maps
 
 ## Selecting maps
 
-Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Hold down the `Shift` key to select multiple maps.
+Maps can be selected by either clicking on them or 'crossing' them by clicking and dragging through the map. Keep dragging or hold down the `Shift` key to select multiple maps.
 
 ## Editing map properties
 
