@@ -294,7 +294,7 @@ class ConsoleView extends View {
                                 let s = ' '+linkIdx+') ';
                                 color = Raphael.hsl(link.src.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+link.src.name+']';
-                                s += '[[;white;]<->]';
+                                s += '[[;white;] <-> ]';
                                 color = Raphael.hsl(link.dst.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+link.dst.name+']';
                                 echo(s);
