@@ -216,11 +216,11 @@ class SignalTable {
 
         if (this.snap == 'bottom') {
             //pos.left += this.frame.left + 20;
-            return {get left(){ return getTD().position().left + self.frame.left + 20},
+            return {get left(){ return getTD().offset().left},
                     top: 0,
                     get width() {return getTD().height()},
                     get height() {return self.frame.width},
-                    get x() {let td = getTD(); return td ? td.position().left + self.frame.left + 20 + td.height() * 0.5 : null},
+                    get x() {let td = getTD(); return td ? td.offset().left + td.height() * 0.5 : null},
                     get y() {return self.frame.width},
                     get vx() {return Math.cos(self.frame.angle)},
                     get vy() {return -Math.sin(self.frame.angle)},
@@ -231,11 +231,11 @@ class SignalTable {
             //pos.left = this.frame.left;
             let snap = this.snap == 'left' ? -1 : 1;
             return {get left() {return self.frame.left;},
-                    get top() {return getTD().position().top + self.frame.top + 20;},
+                    get top() {return getTD().offset().top + self.frame.top - self.div.offset().top;},
                     get width() {return self.frame.width},
                     get height() {return getTD().height();},
                     get x() {return self.snap == 'left' ? self.frame.left : self.frame.left + self.frame.width},
-                    get y() {let td = getTD(); return td ? td.position().top + self.frame.top + 20 + td.height() * 0.5 : null},
+                    get y() {let td = getTD(); return td ? td.offset().top + self.frame.top - self.div.offset().top + td.height() * 0.5 : null},
                     get vx() {return Math.cos(self.frame.angle) * snap},
                     get vy() {return -Math.sin(self.frame.angle)},
                     id: id};
