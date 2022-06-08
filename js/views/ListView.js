@@ -97,7 +97,7 @@ class ListView extends View {
 
     pan(x, y, delta_x, delta_y) {
         if (this.tablePan(x, y, delta_x, delta_y))
-            this.drawMaps();
+            this.drawMaps(0);
     }
 
     zoom(x, y, delta) {

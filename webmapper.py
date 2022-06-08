@@ -159,10 +159,13 @@ def on_map(type, map, event):
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
-    dev = g.devices().filter(mpr.Property.NAME, names[0]).next()
+    dev = g.devices().filter(mpr.Property.NAME, names[0])
     if dev:
-        sig = dev.signals().filter(mpr.Property.NAME, names[1]).next()
-        return sig
+        sig = dev.next().signals().filter(mpr.Property.NAME, names[1])
+        if not sig:
+            print('error: could not find signal', names[1])
+            return None
+        return sig.next()
     else:
         print('error: could not find device', names[0])
         return None
@@ -231,6 +234,25 @@ def set_map_properties(props, map):
         else:
             map[key] = val
     map.push()
+
+def set_sig_properties(props):
+#    check how arbitrary metadata are set – can we use this instead?
+    print('set_sig_properties()', props)
+
+    # find sig by name
+    sig = find_sig(props['name'])
+    if not sig:
+        return
+    print('found sig: ', sig)
+    del props['name']
+
+    # set metadata
+    for key in props:
+        if key == 'value':
+            print('trying to set remote signal value!')
+            sig.set_value(props[key])
+        else:
+            sig[key] = props[key]
 
 def on_save(arg):
     d = g.devices().filter(mpr.Property.NAME, arg['dev']).next()
@@ -352,6 +374,8 @@ server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("add_signals",
                            lambda x: ("add_signals", [sig_props(s) for s in g.signals()]))
+
+server.add_command_handler("set_sig", lambda x: set_sig_properties(x))
 
 server.add_command_handler("add_maps",
                            lambda x: ("add_maps", [map_props(m) for m in g.maps()]))

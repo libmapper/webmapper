@@ -195,8 +195,8 @@ class ViewManager
     };
 
     _add_display_tables() {
-        this.tables.left  = new SignalTable($('#container')[0], 'left', this.frame, this.graph);
-        this.tables.right = new SignalTable($('#container')[0], 'right', this.frame, this.graph);
+        this.tables.left  = new SignalTable($('#container')[0], 'left', this.frame, this.graph, this);
+        this.tables.right = new SignalTable($('#container')[0], 'right', this.frame, this.graph, this);
     }
 
     _add_canvas() {
@@ -362,5 +362,11 @@ class ViewManager
                     break;
             }
         });
+    }
+
+    escape() {
+        console.log("ViewManager.escape()");
+        let view = this.views[this.currentView];
+        view.escape();
     }
 }

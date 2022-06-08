@@ -2,8 +2,9 @@
 
 // An object for the overall display
 class SignalTable {
-    constructor(container, location, frame, graph) {
+    constructor(container, location, frame, graph, viewManager) {
         this.graph = graph;
+        this.viewManager = viewManager;
         this.location = location;
         this.id = location + 'Table';
         this.detail = true;
@@ -681,6 +682,55 @@ class SignalTable {
         this.grow();
 
         $(tds).off('click');
+        $(tds).on('dblclick', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            _self.viewManager.escape();
+
+            let id = $(e.currentTarget)[0].id + '_edit';
+            $(e.currentTarget).append("<input id="+id+" style='margin-left:10px'>");
+            $("#"+$.escapeSelector(id)).on({
+                click: function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    _self.viewManager.escape();
+                },
+                keydown: function(e) {
+                    e.stopPropagation();
+                    // check enter or escape
+                    switch (e.which) {
+                        case 13:
+                            let signame = e.currentTarget.id;
+                            signame = signame.slice(0, signame.length-5);
+                            let val = $(this).val();
+
+                            // remove brackets if any
+                            if (val[0] == '[')
+                                val = val.slice(1)
+                            if (val[val.length-1] == ']')
+                                val = val.slice(0, val.length-1)
+
+                            // split at commas
+                            val = val.split(",");
+
+                            let valid = true;
+                            for (let i in val) {
+                                val[i] = Number(val[i]);
+                                if (isNaN(val[i]))
+                                    valid = false;
+                            }
+
+                            if (valid) {
+//                                console.log("set_sig", {name: signame, value: val});
+                                command.send("set_sig", {name: signame, value: val});
+                            }
+                        case 27:
+                            $(this).remove();
+                            break;
+                    }
+                },
+            });
+        });
         $(tds).on('click', function(e) {
             if ($(e.currentTarget).hasClass('leaf')) {
                 // can't collapse leaves
