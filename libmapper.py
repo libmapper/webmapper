@@ -554,7 +554,7 @@ class Object:
                                                byref(_type), byref(_val), byref(_pub))
         else:
             return None
-        if prop == 0 or prop == 0x0200:
+        if prop == 0 or prop == 0x02000:
             return None
         prop = Property(prop)
 

@@ -83,7 +83,7 @@ def sig_props(sig):
     del props['is_local']
     del props['id']
     props['direction'] = props['direction'].name
-    props['steal'] = props['steal'].name
+    props['steal'] = props['steal']
     props['type'] = props['type'].name
 #    print(props)
     return props
