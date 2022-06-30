@@ -539,12 +539,17 @@ class SignalTable {
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
                 let insts = (sig.num_inst == 'unknown' || sig.num_inst <= 1) ? '' : ' × ' + sig.num_inst;
+                let range = (sig.min || sig.max) ? ' ' + sig.min + '..' + sig.max : '';
+                if (sig.type == 'FLOAT') {
+                    range = (sig.min || sig.max) ? ' ' + sig.min.toFixed(2) + '..' + sig.max.toFixed(2) : '';
+                }
 
                 sigs.push({
                     id: sig.key,
                     name: sig.name,
                     insts: insts,
                     unit: typelen + unit,
+                    range: range,
                     direction: sig.direction,
                     color: Raphael.hsl(dev.hue, 1, 0.5)
                 });
@@ -648,7 +653,7 @@ class SignalTable {
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
-                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")</td>";
+                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+b.leaf.range+")</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
@@ -688,7 +693,9 @@ class SignalTable {
             _self.viewManager.escape();
 
             let id = $(e.currentTarget)[0].id + '_edit';
-            $(e.currentTarget).append("<input id="+id+" style='margin-left:10px'>");
+            if (!$("input[id='" + id + "']").length) {
+                $(e.currentTarget).append("<input id="+id+" style='margin-left:10px' placeholder='new value (esc to cancel)'>");
+            }
             $("#"+$.escapeSelector(id)).on({
                 click: function(e) {
                     e.stopPropagation();
@@ -721,7 +728,6 @@ class SignalTable {
                             }
 
                             if (valid) {
-//                                console.log("set_sig", {name: signame, value: val});
                                 command.send("set_sig", {name: signame, value: val});
                             }
                         case 27:
