@@ -539,10 +539,58 @@ class SignalTable {
                 let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
                 let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
                 let insts = (sig.num_inst == 'unknown' || sig.num_inst <= 1) ? '' : ' × ' + sig.num_inst;
-                let range = (sig.min || sig.max) ? ' ' + sig.min + '..' + sig.max : '';
-                if (sig.type == 'FLOAT') {
-                    range = (sig.min || sig.max) ? ' ' + sig.min.toFixed(2) + '..' + sig.max.toFixed(2) : '';
-                }
+
+                function print_extrema(v, round) {
+                    let s = "";
+                    if (Array.isArray(v)) {
+                        let uniform = true;
+                        for (let i = 1; i < v.length; i++) {
+                            if (v[i] != v[0]) {
+                                uniform = false;
+                                break;
+                            }
+                        }
+                        s += "[";
+                        if (uniform)
+                            s += (round ? parseFloat(v[0].toFixed(2)) : v[0]) + "]";
+                        else {
+                            let i = 0;
+                            while (s.length < 20) {
+                                s += round ? parseFloat(v[i].toFixed(2)) : v[i];
+                                ++i;
+                                if (i >= v.length)
+                                    break;
+                                s += ", ";
+                            }
+                            if (i >= v.length)
+                                s += "]";
+                            else
+                                s += "...]"
+                        }
+                    }
+                    else if (round)
+                        s += parseFloat(v.toFixed(2));
+                    else
+                        s += v;
+                    return s;
+                };
+
+                let range = "";
+                if (sig.min)
+                    range += print_extrema(sig.min, sig.type != 'INT32') + " ≤ ";
+                if (sig.min || sig.max)
+                    range += "<i>v</i>";
+                if (sig.max)
+                    range += " ≤ " + print_extrema(sig.max, sig.type != 'INT32');
+
+                // alternate metadata presentation
+//                let range = "";
+//                if (sig.min)
+//                    range += "min: " + print_extrema(sig.min, sig.type != 'INT32');
+//                if (sig.min || sig.max)
+//                    range += "<br/>";
+//                if (sig.max)
+//                    range += "max: " + print_extrema(sig.max, sig.type != 'INT32');
 
                 sigs.push({
                     id: sig.key,
@@ -653,7 +701,7 @@ class SignalTable {
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
-                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+b.leaf.range+")</td>";
+                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")<br\>"+b.leaf.range+"</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
