@@ -47,6 +47,7 @@ body {
     background: rgba(220, 220, 220, 0.1);
     color: white;
     overflow: hidden;
+    cursor: crosshair;
 }
 
 /* grays */
