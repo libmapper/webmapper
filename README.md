@@ -7,7 +7,7 @@
 
 During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of media synthesizers – is by far the most challenging aspect of designing digital musical instrument or other interactive systems. This problem becomes even worse when attempted in collaborative settings, since collaborators often have different perspectives, vocabularies and tools.
 
-We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
+We have developed tools for supporting this task, including the [Digital Orchestra Toolbox][DOT] for MaxMSP and the software library [libmapper][libmapper]. The latter project enables the creation of a network of distributed "devices" which may be sources of real-time control data (instruments) and/or destinations for control data (e.g. sound synthesizers). The software library handles device discovery, stream translation (e.g. type coercion, vector padding or truncation) and network transportation, but does not attempt to create mappings automatically. Instead, the mapping designer(s) use the library to create maps between distributed signals, usually using a graphical user interface to interact with the mapping network. To date, GUIs for libmapper have been implemented in MaxMSP, Javascript/HTML5, C++/Qt, and Python/wxWidgets. **Webmapper** is one of these interfaces, implemented as a Python back-end using libmapper's Python bindings to interact with the libmapper network, and a front-end running in a web browser as HTML and Javascript.
 
 ### Functionality
 
@@ -82,7 +82,7 @@ Text boxes are provided for filtering source and destination signals by name.
 
 Lines representing inter-signal **maps** may be drawn between signals using drag-and-drop or by clicking on the source signal and then the destination signal.
 
-Webmapper now also supports the creation and representation of *convergent* maps. If you click and drag a signal as you would usually do when making a mapping you should notice that the map you are creating will snap to existing map edges as you drag the mouse over them. If you release the mouse while snapping to an existing map, a radial menu will appear offering several preset convergent mapping methods:
+Webmapper also supports the creation and representation of *convergent* maps. If you click and drag a signal as you would usually do when making a map you should notice that the map you are creating will snap to existing map edges as you drag the mouse over them. If you release the mouse while snapped to an existing map, a radial menu will appear offering several preset convergent mapping methods:
 
 1. add the new signal to the existing expression
 2. multiply the existing expression by the new signal
@@ -97,13 +97,13 @@ Maps can be selected by either clicking on them or 'crossing' them by clicking a
 
 If a map or maps are selected, the *map property editor* becomes active. This part of the UI contains widgets for viewing and changing the properties of the selected map(s). Currently, some map properties can only be edited using the Console view or via hotkeys listed in the chart below.
 
-| Action                                                        | Key
+| Action (while maps are selected)                              | Key
 | ------------------------------------------------------------- | ---
 | Invoke the curve editor.                                      | `C`
 | Focus on expression editor                                    | `E`
 | Switch selected maps to use UDP networking.                   | `U`
 | Switch selected maps to use TCP networking.                   | `T`
-| Force selected maps to process expressions at the destination. | `D`
+| Force selected maps to process expressions at the destination.| `D`
 | Force selected maps to process expressions at the source (if possible).| `S`
 | Toggle the `use_inst` property of selected maps.              | `I`
 | Toggle muting for selected maps.                              | `M`
@@ -118,7 +118,7 @@ Changes to the map expression can be applied to the map by clicking on the `Appl
 
 ### Curve editor
 
-Pressing the `C` key while maps are selected invokes the curve editor. Dragging the slider up or down will modify the generated curve. Once a curve has been applied to a map the mode will switch to `expression` and the generated expression will take effect. The curve editor can be dismissed by clicking the `close editor` button or by clicking in the UI outside the editor.
+Pressing the `C` key while maps are selected invokes the curve editor. Dragging the slider up or down will modify the generated curve. Once a curve has been applied to a map the generated expression will take effect. The curve editor can be dismissed by clicking the `close editor` button or by clicking in the UI outside the editor.
 
 <img width="49%" style="padding:0px" src="./doc/screenshots/curve_start.png">
 <img width="49%" style="float:right;padding:0px" src="./doc/screenshots/curve_edit.png">
