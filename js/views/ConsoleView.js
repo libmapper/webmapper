@@ -85,30 +85,35 @@ class ConsoleView extends View {
         }
 
         function print_sig_props(sig) {
-            let s = ""
+            let s = "";
             let keys = Object.keys(sig).sort();
             for (let i in keys) {
                 let key = keys[i];
+                let v;
                 switch (key) {
                     case 'device':
-                    case 'status':
+                    case 'hidden':
+                    case 'index':
                     case 'key':
                     case 'name':
-                    case 'view':
-                    case 'index':
                     case 'num_maps':
                     case 'num_maps_in':
                     case 'num_maps_out':
                     case 'position':
-                    case 'use_inst':
+                    case 'view':
                         break;
                     case 'type':
                         s += " "+key+": "+type_name(sig[key])+";";
                         break;
+                    case 'ephemeral':
+                    case 'use_inst':
+                        v = sig[key] == 'true' ? 'T' : 'F';
+                        s += " "+key+": "+v+";";
+                        break;
                     case 'min':
                     case 'max':
                         s += " "+key+": ";
-                        let v = sig[key];
+                        v = sig[key];
                         if (Array.isArray(v)) {
                             s += "[";
                             for (let j in v)
@@ -133,47 +138,6 @@ class ConsoleView extends View {
             return s;
         }
 
-        function print_slot_props(slot) {
-            let color = Raphael.hsl(slot.device.hue, 1, 0.5);
-            let s = '[[;'+color+';] '+slot.key+':]';
-            let keys = Object.keys(slot).sort();
-            let v;
-            for (var i in keys) {
-                let key = keys[i];
-                switch (key) {
-                    case 'position':
-                    case 'signal':
-                        break;
-                    case 'min':
-                    case 'max':
-                        s += " "+key+": ";
-                        v = slot[key];
-                        if (Array.isArray(v)) {
-                            s += "[";
-                            for (let j in v) {
-                                s += v[j].toFixed(3);
-                                if (j < v.length - 1)
-                                    s += ",";
-                            }
-                            s += "]";
-                        }
-                        else
-                            s += v.toFixed(3);
-                        s += ";";
-                        break;
-                    case 'calibrating':
-                    case 'causes_update':
-                    case 'use_instances':
-                        v = slot[key] == 'true' ? 'T' : 'F';
-                        s += " "+key+": "+v+";";
-                        break;
-                    default:
-                        s += " "+key+": "+slot[key]+";";
-                }
-            }
-            return s;
-        }
-
         function print_map_props(map) {
             let s = '   ';
             let keys = Object.keys(map).sort();
@@ -188,9 +152,11 @@ class ConsoleView extends View {
                     case 'key':
                     case 'view':
                     case 'hidden':
+                    case 'selected':
                     case 'status':
                         break;
                     case 'muted':
+                    case 'use_inst':
                         v = map[key] == 'true' ? 'T' : 'F';
                         s2 += " "+key+": "+v+";";
                         break;
@@ -205,8 +171,8 @@ class ConsoleView extends View {
                     s += s2;
             }
             for (var i in map.srcs)
-                s += "\n    src"+i+":"+print_slot_props(map.srcs[i]);
-            s += "\n    dst:"+print_slot_props(map.dst);
+                s += "\n    src"+i+":"+print_sig_props(map.srcs[i]);
+            s += "\n    dst:"+print_sig_props(map.dst);
 
             return s;
         }
