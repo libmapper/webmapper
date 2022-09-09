@@ -39,6 +39,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    icon='C:\\Users\\brady\\Documents\\Github\\webmapper\\images\\webmapperlogo.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

@@ -1,0 +1,71 @@
+name: C/C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: install libmapper
+      run: pip install libmapper
+    - name: build standalone
+      run:
+        pyinstaller webmapper.spec
+        && tar -zcvf webmapperStandalone-ubuntu.tar.gz dist/webmapper
+    - uses: actions/upload-artifact@v3
+      with:
+        path: webmapperStandalone-ubuntu.tar.gz
+
+  MacOS-Latest:
+    runs-on: macOS-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: install libmapper
+      run: pip install libmapper
+    - name: build standalone
+      run:
+        pyinstaller webmapper.spec
+        && tar -zcvf webmapperStandalone-osx.zip dist/webmapper
+    - uses: actions/upload-artifact@v3
+      with:
+        path: webmapperStandalone-osx.zip
+
+  MacOS-10:
+    runs-on: macOS-10.15
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: install libmapper
+      run: pip install libmapper
+    - name: build standalone
+      run:
+        pyinstaller webmapper.spec
+        && zip -vr webmapperStandalone-osx10.zip dist/webmapper
+    - uses: actions/upload-artifact@v3
+      with:
+        path: webmapperStandalone-osx10.zip
+
+  Windows-Latest:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: install libmapper
+      run: pip install libmapper
+    - name: build standalone
+      run:
+        pyinstaller webmapper.spec
+        && Compress-Archive -Path ./dist/webmapper -DestinationPath ./webmapperStandalone-win64.zip
+    - uses: actions/upload-artifact@v3
+      with:
+        path: webmapperStandalone-win64.zip
