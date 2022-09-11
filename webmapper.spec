@@ -1,7 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import sys
+from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
+
+binaries = []
+binaries += collect_dynamic_libs('libmapper')
 
 added_files=[
     ('html', 'html'),
@@ -14,7 +18,7 @@ added_files=[
 a = Analysis(
     ['webmapper.py'],
     pathex=[],
-    binaries=[],
+    binaries=binaries,
     datas=added_files,
     hiddenimports=[],
     hookspath=[],
@@ -39,7 +43,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    icon='C:\\Users\\brady\\Documents\\Github\\webmapper\\images\\webmapperlogo.ico',
+    icon='images\\webmapperlogo.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -56,3 +60,8 @@ coll = COLLECT(
     upx_exclude=[],
     name='webmapper',
 )
+# Build a .app if on OS X
+if sys.platform == 'darwin':
+   app = BUNDLE(exe,
+                name='webmapper.app',
+                icon=None)
