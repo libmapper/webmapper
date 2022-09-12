@@ -1,11 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
 from PyInstaller.utils.hooks import collect_dynamic_libs
+import libmapper
 
 block_cipher = None
 
 binaries = []
 binaries += collect_dynamic_libs('libmapper')
+if sys.platform != 'win32':
+    binaries += [(os.path.join(os.path.dirname(libmapper.__file__), "..", 'libmapper.libs'), 'libmapper.libs')]
 
 added_files=[
     ('html', 'html'),
@@ -38,7 +41,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='webmapper',
-    debug=False,
+    debug=True,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
