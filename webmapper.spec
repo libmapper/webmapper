@@ -7,7 +7,7 @@ block_cipher = None
 
 binaries = []
 binaries += collect_dynamic_libs('libmapper')
-if sys.platform != 'win32':
+if sys.platform == 'linux':
     binaries += [(os.path.join(os.path.dirname(libmapper.__file__), "..", 'libmapper.libs'), 'libmapper.libs')]
 
 added_files=[

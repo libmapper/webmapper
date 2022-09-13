@@ -17,10 +17,10 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-        && tar -zcvf webmapperStandalone-ubuntu.tar.gz dist/webmapper
     - uses: actions/upload-artifact@v3
       with:
-        path: webmapperStandalone-ubuntu.tar.gz
+        name: webmapper-ubuntu-standalone
+        path: dist/webmapper
 
   MacOS-Latest:
     runs-on: macOS-latest
@@ -39,10 +39,10 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-        && tar -zcvf webmapperStandalone-osx.zip dist/webmapper
     - uses: actions/upload-artifact@v3
       with:
-        path: webmapperStandalone-osx.zip
+        name: webmapper-macosx-standalone
+        path: dist/webmapper
 
   Windows-Latest:
     runs-on: windows-latest
@@ -58,7 +58,7 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-        && Compress-Archive -Path ./dist/webmapper -DestinationPath ./webmapperStandalone-win64.zip
     - uses: actions/upload-artifact@v3
       with:
-        path: webmapperStandalone-win64.zip
+        name: webmapper-win64-standalone
+        path: dist/webmapper
