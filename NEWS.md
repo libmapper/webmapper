@@ -2,7 +2,7 @@
 
 ## Version 2.3
 
-We are pleased to announce th release of version 2.3 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware. This marks the first numbered (rather than dated) release of WebMapper, which will now be released regularly in sync with the libmapper repository.
+We are pleased to announce the release of version 2.3 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware. This marks the first numbered (rather than dated) release of WebMapper, which will now be released regularly in sync with the libmapper repository.
 
 Since the last release in 2019, a large number of improvements and bugfixes have been performed. Some of the more important changes are outlined below:
 

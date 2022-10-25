@@ -2,7 +2,7 @@
 
 <br/>
 
-- Contributors: Stephen Sinclair, Joseph Malloch, Vijay Rudraraju, Aaron Krajeski, Jon Wilansky, Johnty Wang, Travis West, Mathias Bredholt
+- Contributors: Stephen Sinclair, Joseph Malloch, Aaron Krajeski, Jon Wilansky, Travis West, Brady Boettcher, Johnty Wang, Matt Peachey, Mathias Bredholt, Christian Frisson, and Marcello Giordano
 - Resources: [Discussion list][group], [libmapper documentation][libmapper]
 
 During a number of projects we have found that the "mapping" task – in which correspondences are designed between sensor/gesture signals and the control parameters of media synthesizers – is by far the most challenging aspect of designing digital musical instrument or other interactive systems. This problem becomes even worse when attempted in collaborative settings, since collaborators often have different perspectives, vocabularies and tools.
