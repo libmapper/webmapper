@@ -54,25 +54,32 @@ class SaverLoader {
                 "</div>"+
             "</div>");
      
-        // TODO: add "save as" option
         $('#saveButton').on('click', function(e) {
             e.stopPropagation();
-            let file = graph.exportFile();
-            if (!file)
-                return;
-
-            let link = document.createElement('a');
-            let blob = new Blob([JSON.stringify(file, null, '\t')]);
-            let url = URL.createObjectURL(blob);
-            link.href = url;
-            link.setAttribute('download', 'mapping.json');
-            link.click();
+            // TODO: allow entry of description, values, views, etc.
+            command.send("save", ["", "", [], []]);
         });
 
         var self = this;
         $('#loadButton').click(function(e) {
             e.stopPropagation();
             self.fileOpenDialog();
+        });
+
+        command.unregister("save_session");
+        // Called once mappersession has gathered the session json
+        command.register("save_session", async function(cmd, args) {
+            console.log(args);
+            const handle = await showSaveFilePicker({
+                suggestedName: 'mapping.json',
+                types: [{
+                    description: 'Mapping session',
+                    accept: {'application/json': ['.json']},
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(JSON.stringify(args));
+            await writable.close();
         });
     }
 

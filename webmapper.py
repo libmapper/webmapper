@@ -2,7 +2,7 @@
 
 import webmapper_http_server as server
 import libmapper as mpr
-import mapperstorage
+import mappersession as session
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
@@ -254,10 +254,9 @@ def set_sig_properties(props):
         else:
             sig[key] = props[key]
 
-def on_save(arg):
-    d = g.devices().filter(mpr.Property.NAME, arg['dev']).next()
-    fn = d.name+'.json'
-    return fn, mprstorage.serialise(g, arg['dev'])
+def on_save(args):
+    sessionJson = session.save("", "", [], [])
+    server.send_command("save_session", sessionJson)
 
 def on_load(arg):
     mprstorage.deserialise(g, arg['sources'], arg['destinations'], arg['loading'])
