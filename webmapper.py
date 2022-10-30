@@ -44,7 +44,7 @@ def open_gui(port):
             webbrowser.open(url)
         except:
             print('Error opening web browser, continuing anyway.')
-    launcher = threading.Thread(target=launch)
+    launcher = threading.Thread(target=launch, daemon=True)
     launcher.start()
 
 g = mpr.Graph()
