@@ -411,5 +411,4 @@ def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: (),
 
     print("shutting down...")
     httpd.shutdown()
-    http_thread.join()
     print('bye.')
