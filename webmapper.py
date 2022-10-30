@@ -44,7 +44,7 @@ def open_gui(port):
             webbrowser.open(url)
         except:
             print('Error opening web browser, continuing anyway.')
-    launcher = threading.Thread(target=launch)
+    launcher = threading.Thread(target=launch, daemon=True)
     launcher.start()
 
 g = mpr.Graph()
@@ -258,8 +258,8 @@ def on_save(args):
     sessionJson = session.save("", "", [], [])
     server.send_command("save_session", sessionJson)
 
-def on_load(arg):
-    mprstorage.deserialise(g, arg['sources'], arg['destinations'], arg['loading'])
+def on_load(args):
+    views = session.load_json(args[0], args[1], True)
 
 def select_interface(iface):
     print('switching interface to', iface)
