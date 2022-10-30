@@ -397,7 +397,7 @@ def serve(port=8000, poll=lambda: time.sleep(10), on_open=lambda: (),
     httpd = ReuseTCPServer(('', port), MprHTTPServer)
     on_open()
 
-    http_thread = threading.Thread(target=httpd.serve_forever)
+    http_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     http_thread.start()
 
     print("serving at port", port)
