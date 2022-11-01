@@ -6,6 +6,8 @@ import mapperstorage
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
+if 'win32' in sys.platform:
+    import winreg as wr
 
 networkInterfaces = {'active': '', 'available': []}
 
@@ -50,7 +52,10 @@ def open_gui(port):
 g = mpr.Graph()
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
-    g.set_interface(iface)
+    if 'win32' in sys.platform:
+        g.set_interface(win32_get_guid_from_name(iface))
+    else:
+        g.set_interface(iface)
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -262,11 +267,42 @@ def on_save(arg):
 def on_load(arg):
     mprstorage.deserialise(g, arg['sources'], arg['destinations'], arg['loading'])
 
+# Returns a readable network interface name from a win32 guid
+def win32_get_name_from_guid(iface_guid):
+    reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
+    iface_name = "Unknown"
+    reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+    try:
+        reg_subkey = wr.OpenKey(reg_key, iface_guid + r'\Connection')
+        iface_name = wr.QueryValueEx(reg_subkey, 'Name')[0]
+    except FileNotFoundError:
+        pass
+    return iface_name
+
+# Returns win32 guids from a network interface's readable name
+def win32_get_guid_from_name(iface_name):
+    iface_guids = networkInterfaces['available']
+    reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
+    reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+    for i in range(len(iface_guids)):
+        try:
+            reg_subkey = wr.OpenKey(reg_key, iface_guids[i] + r'\Connection')
+            if iface_name == wr.QueryValueEx(reg_subkey, 'Name')[0]:
+                return iface_guids[i]
+        except FileNotFoundError:
+            pass
+    return 'Unknown'
+
 def select_interface(iface):
-    print('switching interface to', iface)
     global g
-    g.set_interface(iface)
-    networkInterfaces['active'] = iface
+    if 'win32' in sys.platform:
+        guid = win32_get_guid_from_name(iface)
+        g.set_interface(guid)
+        networkInterfaces['active'] = guid
+    else:
+        g.set_interface(iface)
+        networkInterfaces['active'] = iface
+    print('switching interface to', g.get_interface())
     server.send_command("active_interface", iface)
 
 def get_interfaces(arg):
@@ -278,10 +314,20 @@ def get_interfaces(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             connectedInterfaces.append(i)
-    server.send_command("available_interfaces", connectedInterfaces)
+    if 'win32' in sys.platform:
+        connectedNames = []
+        for i in range(len(connectedInterfaces)):
+            connectedNames.append(win32_get_name_from_guid(connectedInterfaces[i]))
+        server.send_command("available_interfaces", connectedNames)
+        print(connectedNames)
+    else:
+        server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
     networkInterfaces['active'] = g.get_interface()
-    server.send_command("active_interface", networkInterfaces['active'])
+    if 'win32' in sys.platform:
+        server.send_command("active_interface", win32_get_name_from_guid(networkInterfaces['active']))
+    else:
+        server.send_command("active_interface", networkInterfaces['active'])
 
 def init_graph(arg):
     print('REFRESH!')
