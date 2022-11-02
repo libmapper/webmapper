@@ -270,7 +270,7 @@ def on_load(arg):
 # Returns a readable network interface name from a win32 guid
 def win32_get_name_from_guid(iface_guid):
     reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
-    iface_name = "Unknown"
+    iface_name = ""
     reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
     try:
         reg_subkey = wr.OpenKey(reg_key, iface_guid + r'\Connection')
@@ -291,7 +291,7 @@ def win32_get_guid_from_name(iface_name):
                 return iface_guids[i]
         except FileNotFoundError:
             pass
-    return 'Unknown'
+    return ""
 
 def select_interface(iface):
     global g
@@ -302,7 +302,6 @@ def select_interface(iface):
     else:
         g.set_interface(iface)
         networkInterfaces['active'] = iface
-    print('switching interface to', g.get_interface())
     server.send_command("active_interface", iface)
 
 def get_interfaces(arg):
@@ -317,7 +316,9 @@ def get_interfaces(arg):
     if 'win32' in sys.platform:
         connectedNames = []
         for i in range(len(connectedInterfaces)):
-            connectedNames.append(win32_get_name_from_guid(connectedInterfaces[i]))
+            ifaceName = win32_get_name_from_guid(connectedInterfaces[i])
+            if ifaceName != "":
+                connectedNames.append(ifaceName)
         server.send_command("available_interfaces", connectedNames)
         print(connectedNames)
     else:
