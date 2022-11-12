@@ -259,7 +259,10 @@ def on_save(args):
     server.send_command("save_session", sessionJson)
 
 def on_load(args):
-    views = session.load_json(args[0], args[1], True)
+    views = session.load_json(args[0], True, True)
+
+def on_clear(args):
+    session.clear()
 
 def select_interface(iface):
     print('switching interface to', iface)
@@ -389,6 +392,7 @@ server.add_command_handler("refresh", init_graph)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
+server.add_command_handler("clear", on_clear)
 
 server.add_command_handler("select_interface", select_interface)
 server.add_command_handler("get_interfaces", get_interfaces)

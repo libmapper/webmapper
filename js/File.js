@@ -2,6 +2,8 @@
 //              File Class              //
 //++++++++++++++++++++++++++++++++++++++//
 
+// Note: Not used in favor of mapersession python module, can probably delete at some point
+
 'use strict';
 
 class File {

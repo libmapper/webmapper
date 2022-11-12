@@ -1,13 +1,26 @@
 class SaverLoader {
     constructor(container, graph, view) {
         $(container).append(
-            "<div id='saverLoaderDiv' class='topMenu half' style='width:75px;'>"+
+            "<div id='saverLoaderDiv' class='topMenu half' style='width:225px;'>"+
                 "<div class='topMenuTitle half'><strong>FILE</strong></div>"+
                 "<div class='topMenuContainer'>"+
-                    "<div id='saveButton'>Save</div>"+
-                    "<div id='loadButton'>Open</div>"+
+                    "<div style='width:100%;height:30%'>"+
+                      "<div id='loadButton' style='width:50%;display:inline-block'>Open</div>"+
+                      "<div id='saveButton' style='width:50%;display:inline-block'>Save</div>"+
+                    "</div>"+
+                    "<div style='padding:0px'>"+
+                        "<button id='unloadFile' style='padding-right:5px;display:inline-block'>Unload</button>"+
+                        "<p id='fileName' style='width:50%;display:inline-block;float right'>No file loaded</p>"+
+                    "</div>"+
                 "</div>"+
             "</div>");
+        $('#unloadFile').prop("disabled", true);
+        $('#unloadFile').on('click', function(e) {
+            e.stopPropagation();
+            command.send("clear");
+            $('#unloadFile').prop("disabled", true);
+            $('#fileName').text("No file loaded");
+        });
      
         $('#saveButton').on('click', function(e) {
             e.stopPropagation();
@@ -28,9 +41,12 @@ class SaverLoader {
                 }],
             });
             const data = await handle.getFile();
+            console.log(data.name);
+            $('#fileName').text(data.name.replace(/\.[^/.]+$/, ""));
             let sessionText = await data.text();
             let parsed = tryParseJSON(sessionText);
-            command.send("load", [parsed, false]);
+            command.send("load", [parsed]);
+            $('#unloadFile').prop("disabled", false);
         });
 
         command.unregister("save_session");
