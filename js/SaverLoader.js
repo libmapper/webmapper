@@ -9,8 +9,8 @@ class SaverLoader {
                       "<div id='saveButton' style='width:50%;display:inline-block'>Save</div>"+
                     "</div>"+
                     "<div style='padding:0px'>"+
-                        "<button id='unloadFile' style='padding-right:5px;display:inline-block'>Unload</button>"+
-                        "<p id='fileName' style='width:50%;display:inline-block;float right'>No file loaded</p>"+
+                        "<button id='unloadFile' style='display:inline-block'>Unload</button>"+
+                        "<p id='fileName' style='display:inline-block;float left;padding-left:10px'>No file loaded</p>"+
                     "</div>"+
                 "</div>"+
             "</div>");
