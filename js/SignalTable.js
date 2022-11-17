@@ -861,7 +861,7 @@ class SignalTable {
         $("img[id*='viewSignalButton']").click(function(e) {
             e.stopPropagation();
             e.preventDefault();
-            console.log($(this).parent()[0].id);
+            _self.viewManager.showSignalMonitor($(this).parent()[0].id);
         });
 
         $(tds).hover(function(e) {

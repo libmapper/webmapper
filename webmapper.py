@@ -48,6 +48,14 @@ def open_gui(port):
     launcher.start()
 
 g = mpr.Graph()
+webmapper_dev = mpr.Device("webmapper")
+
+def monitor_handler(sig, event, id, val, timetag):
+    print(sig[mpr.Property.NAME], ": ", val)
+    server.send_command("update_sig_monitor", val)
+
+monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1,
+                        mpr.Type.FLOAT, None, -100000, 100000, None, monitor_handler)
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
     g.set_interface(iface)
@@ -254,6 +262,22 @@ def set_sig_properties(props):
         else:
             sig[key] = props[key]
 
+def start_monitor_sig(sig_name):
+    global monitor_sig
+    print("Monitoring signal: ", sig_name)
+    stop_monitor_sig(None)
+    print(webmapper_dev[mpr.Property.NAME])
+    print(monitor_sig[mpr.Property.NAME])
+    webmapper_sig_name = (webmapper_dev[mpr.Property.NAME] + "/" + monitor_sig[mpr.Property.NAME])
+    new_map([[sig_name], webmapper_sig_name, {"expr": "y=x"}])
+
+def stop_monitor_sig(args):
+    global monitor_sig
+    # Clear any maps to the 'monitor_sig' signal
+    for map in monitor_sig.maps():
+        map.release()
+        map.push()
+
 def on_save(arg):
     d = g.devices().filter(mpr.Property.NAME, arg['dev']).next()
     fn = d.name+'.json'
@@ -349,7 +373,8 @@ def release_map(args):
 
 def poll_and_push():
     global g
-    g.poll(50)
+    g.poll(40)
+    webmapper_dev.poll(10)
     if len(new_devs) > 0:
         server.send_command("add_devices", list(new_devs.values()))
         new_devs.clear()
@@ -376,6 +401,8 @@ server.add_command_handler("add_signals",
                            lambda x: ("add_signals", [sig_props(s) for s in g.signals()]))
 
 server.add_command_handler("set_sig", lambda x: set_sig_properties(x))
+server.add_command_handler("monitor_sig", start_monitor_sig)
+server.add_command_handler("stop_monitor_sig", stop_monitor_sig)
 
 server.add_command_handler("add_maps",
                            lambda x: ("add_maps", [map_props(m) for m in g.maps()]))
