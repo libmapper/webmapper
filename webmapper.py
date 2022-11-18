@@ -51,7 +51,6 @@ g = mpr.Graph()
 webmapper_dev = mpr.Device("webmapper")
 
 def monitor_handler(sig, event, id, val, timetag):
-    print(sig[mpr.Property.NAME], ": ", val)
     server.send_command("update_sig_monitor", val)
 
 monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1,
@@ -147,7 +146,7 @@ def on_device(type, dev, event):
         new_devs[dev['key']] = dev
     elif event == mpr.Graph.Event.REMOVED or event == mpr.Graph.Event.EXPIRED:
         # TODO: just send keys instead or entire object
-        del_devs[dev['key']] = dev;
+        del_devs[dev['key']] = dev
 
 def on_signal(type, sig, event):
 #    print('ON_SIGNAL')
@@ -266,8 +265,6 @@ def start_monitor_sig(sig_name):
     global monitor_sig
     print("Monitoring signal: ", sig_name)
     stop_monitor_sig(None)
-    print(webmapper_dev[mpr.Property.NAME])
-    print(monitor_sig[mpr.Property.NAME])
     webmapper_sig_name = (webmapper_dev[mpr.Property.NAME] + "/" + monitor_sig[mpr.Property.NAME])
     new_map([[sig_name], webmapper_sig_name, {"expr": "y=x"}])
 

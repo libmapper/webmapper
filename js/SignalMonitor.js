@@ -20,27 +20,28 @@ class SignalMonitor {
         let box = canvas.rect(10, 10, 100, 100, 2).attr({'stroke': '#FFF', 'stroke-width': 1});
 
         // Axis labels
-        const reso = 20;
-        canvas.text(7, 10, reso).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
-        canvas.text(7, 105, 0).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
-        canvas.text(15, 115, 0).attr({'font-size': 5, 'fill': '#FFF'});
-        canvas.text(110, 115, reso).attr({'font-size': 5, 'fill': '#FFF'});
-
-        function update() {
-            
-        };
+        const bufSize = 20;
 
         $('#signalMonitor svg').css('overflow', 'visible');
     
         let points = [];
-        for (let i = 0; i <= reso; i++) {
-            let x = i / reso;
-            let y = i / reso;
+        let values = [];
+        let curIdx = 0; // index of most recent value
+        for (let i = 0; i < bufSize; i++) {
+            let x = i / bufSize;
+            let y = 0.0;
             x = 10.0 + x * 100.0;
             y = 110.0 - y * 100.0;
             let circ = canvas.circle(x, y, 1).attr({'fill': '#FFF', 'stroke': '#FFF'});
             points.push(circ);
+            values.push(0);
         }
+        let curMin = 0;
+        let curMax = 1;
+        let xLabelMin = canvas.text(15, 115, 'n-20').attr({'font-size': 5, 'fill': '#FFF'});
+        let xLabelMax = canvas.text(110, 115, 'n').attr({'font-size': 5, 'fill': '#FFF'});
+        let yLabelMax = canvas.text(7, 10, curMax).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
+        let yLabelMin = canvas.text(7, 105, curMin).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
 
         // Generate button
         $('#signalMonitorWindow').append("<div id='curveExprDisplay' style='width:90%;text-align:center;color:white;height:3em'>"+sigName+"</div>"
@@ -64,6 +65,25 @@ class SignalMonitor {
 
         command.unregister("update_sig_monitor");
 
-        command.register("update_sig_monitor", this.update.bind(this));
+        command.register("update_sig_monitor", function(cmd, curValue) {
+            // Update min and max
+            if (curValue < curMin) {
+                curMin = curValue;
+                yLabelMin.attr('text', curMin);
+            } else if (curValue > curMax) {
+                curMax = curValue;
+                yLabelMax.attr('text', curMax);
+            }
+            curIdx = (curIdx + 1) % bufSize; // Increment current index
+            values[curIdx] = curValue;
+            for (let i = 0; i < bufSize; i++) {
+                let valIdx = (i + curIdx + 1) % bufSize;
+                let y = normalize(values[valIdx], curMin, curMax);
+                y = 110.0 - y * 100.0;
+                points[i].attr('cy', y);
+            }
+        });
+
+        function normalize(val, min, max) { return (val - min) / (max - min); }
     }
 }
