@@ -25,6 +25,20 @@ del_sigs = {}
 new_maps = {}
 del_maps = {}
 
+# Returns win32 guids from a network interface's readable name
+def win32_get_guid_from_name(iface_name):
+    iface_guids = networkInterfaces['available']
+    reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
+    reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
+    for i in range(len(iface_guids)):
+        try:
+            reg_subkey = wr.OpenKey(reg_key, iface_guids[i] + r'\Connection')
+            if iface_name == wr.QueryValueEx(reg_subkey, 'Name')[0]:
+                return iface_guids[i]
+        except FileNotFoundError:
+            pass
+    return ""
+
 def open_gui(port):
     url = 'http://localhost:%d'%port
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
@@ -279,20 +293,6 @@ def win32_get_name_from_guid(iface_guid):
         pass
     return iface_name
 
-# Returns win32 guids from a network interface's readable name
-def win32_get_guid_from_name(iface_name):
-    iface_guids = networkInterfaces['available']
-    reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
-    reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
-    for i in range(len(iface_guids)):
-        try:
-            reg_subkey = wr.OpenKey(reg_key, iface_guids[i] + r'\Connection')
-            if iface_name == wr.QueryValueEx(reg_subkey, 'Name')[0]:
-                return iface_guids[i]
-        except FileNotFoundError:
-            pass
-    return ""
-
 def select_interface(iface):
     global g
     if 'win32' in sys.platform:
@@ -321,6 +321,7 @@ def get_interfaces(arg):
                 connectedNames.append(ifaceName)
         server.send_command("available_interfaces", connectedNames)
         print(connectedNames)
+        print(connectedInterfaces)
     else:
         server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
