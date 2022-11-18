@@ -320,8 +320,6 @@ def get_interfaces(arg):
             if ifaceName != "":
                 connectedNames.append(ifaceName)
         server.send_command("available_interfaces", connectedNames)
-        print(connectedNames)
-        print(connectedInterfaces)
     else:
         server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
