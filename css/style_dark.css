@@ -238,6 +238,7 @@ path {
     background: rgba(220, 220, 220, 0.2);
     text-align: center;
     text-decoration: bold;
+    padding-top: 2px;
     border-top-right-radius: 12px;
     border-top-left-radius: 12px;
 }
@@ -420,6 +421,10 @@ form {
 
 #saveLoadDiv a {
     color: black;
+}
+
+#sessionTitle {
+    font-size: 13px;
 }
 
 .protocol {

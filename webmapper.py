@@ -259,7 +259,8 @@ def on_save(args):
     server.send_command("save_session", sessionJson)
 
 def on_load(args):
-    views = session.load_json(args[0], True, True)
+    print("Clear: ", args[1])
+    views = session.load_json(args[0], True, args[1])
 
 def on_clear(args):
     session.clear()
