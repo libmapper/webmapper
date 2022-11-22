@@ -45,7 +45,7 @@ class SaverLoader {
             let parsed = tryParseJSON(sessionText);
             
             $.confirm({
-                title: 'Clear all connections before loading?',
+                title: 'Clear active sessions?',
                 content: '',
                 buttons: {
                     yes: function () {
