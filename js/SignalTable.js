@@ -536,7 +536,7 @@ class SignalTable {
                         break;
                 }
 
-                let unit = sig.unit == 'unknown' ? '' : sig.unit;
+                let unit = (sig.unit == 'unknown') || (sig.unit == 'un') ? '' : sig.unit;
 
                 function print_extrema(v, round) {
                     let s = "";
@@ -693,8 +693,10 @@ class SignalTable {
                                 // Create signal metadata string for tooltip
                                 let metadata = "Name: " + b.leaf.name + "\n";
                                 metadata += "Type: " + b.leaf.type;
+                                let sigLen = "";
                                 if (b.leaf.length > 1) {
-                                    metadata += " [" + b.leaf.length + "]\n";
+                                    sigLen = " [" + b.leaf.length + "]";
+                                    metadata += sigLen + "\n";
                                 } else {
                                     metadata += "\n";
                                 }
@@ -712,7 +714,7 @@ class SignalTable {
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
-                                line += ">"+tds[j][1]+"</td>";
+                                line += ">"+tds[j][1]+sigLen+"</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
