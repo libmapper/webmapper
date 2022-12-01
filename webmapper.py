@@ -2,7 +2,7 @@
 
 import webmapper_http_server as server
 import libmapper as mpr
-import mapperstorage
+import mappersession as session
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
@@ -273,13 +273,16 @@ def set_sig_properties(props):
         else:
             sig[key] = props[key]
 
-def on_save(arg):
-    d = g.devices().filter(mpr.Property.NAME, arg['dev']).next()
-    fn = d.name+'.json'
-    return fn, mprstorage.serialise(g, arg['dev'])
+def on_save(args):
+    sessionJson = session.save("", "", [], [])
+    server.send_command("save_session", sessionJson)
 
-def on_load(arg):
-    mprstorage.deserialise(g, arg['sources'], arg['destinations'], arg['loading'])
+def on_load(args):
+    print("Clear: ", args[1])
+    views = session.load_json(args[0], True, args[1])
+
+def on_clear(args):
+    session.clear()
 
 # Returns a readable network interface name from a win32 guid
 def win32_get_name_from_guid(iface_guid):
@@ -436,6 +439,7 @@ server.add_command_handler("refresh", init_graph)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
+server.add_command_handler("clear", on_clear)
 
 server.add_command_handler("select_interface", select_interface)
 server.add_command_handler("get_interfaces", get_interfaces)
