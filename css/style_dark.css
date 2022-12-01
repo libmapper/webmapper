@@ -406,6 +406,12 @@ form {
     background-image: url(/images/chord_icon_white.png);
 }
 
+#viewSignalButton {
+    width: 30px;
+    height: 30px;
+    display: none;
+}
+
 #consoleButton {
     background-image: url(/images/console_icon_white.png);
 }

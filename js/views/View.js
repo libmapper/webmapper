@@ -759,7 +759,7 @@ class View {
         // then it becomes the destination for the map.
         $('.tableDiv').off('mousedown');
         $('.tableDiv').on('mousedown', 'td.leaf', function(e) {
-            if (self.draggingFrom)
+            if (self.draggingFrom || e.target.id == 'viewSignalButton')
                 return;
             self.escaped = false;
 

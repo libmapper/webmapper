@@ -701,7 +701,9 @@ class SignalTable {
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
-                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")<br\>"+b.leaf.range+"</td>";
+                                let viewFloatDir = left ? "left" : "right";
+                                let viewButton = "<img id='viewSignalButton' style='float:"+viewFloatDir+"' src='/images/view_icon_white.png'>";
+                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")<br\>"+b.leaf.range+viewButton+"</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
@@ -719,6 +721,7 @@ class SignalTable {
                                 line += ">"+tds[j][1]+"</td>";
                             }
                         }
+                        line += "<div id='viewSignalButton' class='viewButton'></div>";
                         target.append("<tr class='"+devRowType+"' style='background: "+color+"44' id="+b.leaf.id+">"+line+"</tr>");
                         tds = [[b.num_leaves - 1, i]];
                     }
@@ -852,6 +855,22 @@ class SignalTable {
                 if (_self.resizeHandler)
                     _self.resizeHandler();
             }
+        });
+
+        // View signal clicking
+        $("img[id*='viewSignalButton']").click(function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            _self.viewManager.showSignalMonitor($(this).parent()[0].id);
+        });
+
+        $(tds).hover(function(e) {
+            // Mouse enter
+            $(e.currentTarget).find("#viewSignalButton").show();
+        },
+        function(e) {
+            // Mouse leave
+            $(e.currentTarget).find("#viewSignalButton").hide();
         });
 
         this.setSigPositions();

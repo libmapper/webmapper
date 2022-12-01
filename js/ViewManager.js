@@ -153,6 +153,10 @@ class ViewManager
         this.isCodeMirror = false;
     }
 
+    showSignalMonitor(sigName) {
+        this.signalMonitor = new SignalMonitor(this, sigName);
+    }
+
     _add_graph_callbacks() {
         let self = this;
         this.graph.clear_callbacks();

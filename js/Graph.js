@@ -338,6 +338,8 @@ function Graph() {
         let hidden = this.devices.some(d => d.hidden == true);
         let last = devs.length - 1;
         for (var i in devs) {
+            // Skip if webmapper device
+            if (devs[i].name.includes('webmapper')) continue;
             let dev = this.devices.add(devs[i], i == last);
             if (hidden)
                 dev.hidden = true;
@@ -369,6 +371,8 @@ function Graph() {
     this.add_signals = function(cmd, sigs) {
         let last = sigs.length - 1;
         for (var i in sigs) {
+            // Skip if from webmapper device
+            if (sigs[i].device.includes('webmapper')) continue;
             let dev = this.devices.find(sigs[i].device);
             if (!dev) {
                 console.log("error adding signal: couldn't find device", sigs[i].device);
