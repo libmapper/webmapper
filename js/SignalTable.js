@@ -536,9 +536,7 @@ class SignalTable {
                         break;
                 }
 
-                let typelen = sig.length == 1 ? type : type + '[' + sig.length + ']';
-                let unit = sig.unit == 'unknown' ? '' : ' ('+sig.unit+')';
-                let insts = (sig.num_inst == 'unknown' || sig.num_inst <= 1) ? '' : ' × ' + sig.num_inst;
+                let unit = (sig.unit == 'unknown') || (sig.unit == 'un') ? '' : sig.unit;
 
                 function print_extrema(v, round) {
                     let s = "";
@@ -575,14 +573,6 @@ class SignalTable {
                     return s;
                 };
 
-                let range = "";
-                if (sig.min)
-                    range += print_extrema(sig.min, sig.type != 'INT32') + " ≤ ";
-                if (sig.min || sig.max)
-                    range += "<i>v</i>";
-                if (sig.max)
-                    range += " ≤ " + print_extrema(sig.max, sig.type != 'INT32');
-
                 // alternate metadata presentation
 //                let range = "";
 //                if (sig.min)
@@ -595,9 +585,12 @@ class SignalTable {
                 sigs.push({
                     id: sig.key,
                     name: sig.name,
-                    insts: insts,
-                    unit: typelen + unit,
-                    range: range,
+                    min: sig.min,
+                    max: sig.max,
+                    type: type,
+                    length: sig.length,
+                    insts: sig.num_inst,
+                    unit: unit,
                     direction: sig.direction,
                     color: Raphael.hsl(dev.hue, 1, 0.5)
                 });
@@ -697,13 +690,33 @@ class SignalTable {
                                 line += "<td class='"+sigRowType+" filler'></td>";
                             line += "<td";
                             if (leaf) {
+                                // Create signal metadata string for tooltip
+                                let metadata = "Name: " + b.leaf.name + "\n";
+                                metadata += "Type: " + b.leaf.type;
+                                let sigLen = "";
+                                if (b.leaf.length > 1) {
+                                    sigLen = " [" + b.leaf.length + "]";
+                                    metadata += sigLen + "\n";
+                                } else {
+                                    metadata += "\n";
+                                }
+                                if (b.leaf.unit != '') {
+                                    metadata += "Unit: " + b.leaf.unit + "\n";
+                                }
+                                metadata += "Minimum: " + b.leaf.min + "\n";
+                                metadata += "Maximum: " + b.leaf.max + "\n";
+                                if (b.leaf.insts > 1) {
+                                    metadata += "Num instances: " + b.leaf.insts + "\n";
+                                }
+
+                                line += " title='"+metadata+"'";
                                 line += " class='leaf "+sigRowType+"'";
                                 line += " id='"+b.leaf.id+"'";
                                 if (depth < max_depth)
                                     line += " colspan="+(max_depth-depth);
                                 let viewFloatDir = left ? "left" : "right";
                                 let viewButton = "<img id='viewSignalButton' style='float:"+viewFloatDir+"' src='/images/view_icon_white.png'>";
-                                line += ">"+tds[j][1]+b.leaf.insts+" ("+b.leaf.unit+")<br\>"+b.leaf.range+viewButton+"</td>";
+                                line += ">"+tds[j][1]+sigLen+"</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
