@@ -73,7 +73,14 @@ class MapProperties {
         self.editor.focus();
         self.view.isCodeMirror = true;
       } else if ($("#exprLinear").is($target)) {
-        self.editor.setValue("y = linear(x, -, -, -, -);");
+        let selected = self.graph.maps.filter((m) => m.selected);
+        if (Object.keys(selected.contents).length == 1) {
+          let map = Object.values(selected.contents)[0];
+          self.editor.setValue("y = linear(x, "+ map.srcs[0].min +", "+ map.srcs[0].max +
+                               ", "+ map.dst.min +", "+ map.dst.max +");");
+        } else {
+          self.editor.setValue("y = linear(x, -, -, -, -);");
+        }
         $("#exprUpdate").prop("disabled", false);
       } else if ($("#exprCalibrate").is($target)) {
         self.editor.setValue("y = linear(x, ?, ?, -, -);");
