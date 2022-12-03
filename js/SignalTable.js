@@ -716,7 +716,7 @@ class SignalTable {
                                     line += " colspan="+(max_depth-depth);
                                 let viewFloatDir = left ? "left" : "right";
                                 let viewButton = "<img id='viewSignalButton' style='float:"+viewFloatDir+"' src='/images/view_icon_white.png'>";
-                                line += ">"+tds[j][1]+sigLen+"</td>";
+                                line += ">"+tds[j][1]+sigLen+viewButton+"</td>";
                                 if (_self.filler && _self.location == "left")
                                     line += "<td class='"+sigRowType+" filler'></td>";
                                 sigRowType = (sigRowType == 'odd') ? 'even' : 'odd';
