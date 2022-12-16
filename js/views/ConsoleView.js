@@ -116,8 +116,10 @@ class ConsoleView extends View {
                         v = sig[key];
                         if (Array.isArray(v)) {
                             s += "[";
-                            for (let j in v)
-                                v[j] = v[j].toFixed(3);
+                            if (sig.type != 'INT32') {
+                                for (let j in v)
+                                    v[j] = parseFloat(v[j].toFixed(3));
+                            }
                             s += v+"];";
                         }
                         else
