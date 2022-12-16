@@ -45,7 +45,7 @@ class SaverLoader {
             let parsed = tryParseJSON(sessionText);
             
             $.confirm({
-                title: 'Clear active sessions?',
+                title: 'Clear active maps?',
                 content: '',
                 buttons: {
                     yes: function () {
