@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_all
 import libmapper
 
 block_cipher = None
 
 binaries = []
-binaries += collect_dynamic_libs('libmapper')
+hiddenimports = ['netifaces']
+#binaries += collect_dynamic_libs('libmapper')
+seshDatas, seshBinaries, seshHidden = collect_all('mappersession')
+mapDatas, mapBinaries, mapHidden = collect_all('libmapper')
+binaries += seshBinaries
+binaries += mapBinaries
+hiddenimports += seshHidden
+hiddenimports += mapHidden
 if sys.platform == 'linux':
     binaries += [(os.path.join(os.path.dirname(libmapper.__file__), "..", 'libmapper.libs'), 'libmapper.libs')]
 
@@ -17,13 +24,15 @@ added_files=[
     ('images', 'images'),
     ('includes', 'includes')
     ]
+added_files += seshDatas
+added_files += mapDatas
 
 a = Analysis(
     ['webmapper.py'],
     pathex=[],
     binaries=binaries,
     datas=added_files,
-    hiddenimports=[],
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
