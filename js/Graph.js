@@ -234,14 +234,14 @@ EdgeArray.prototype = {
     },
 
     add : function(obj, last) {
-        // console.log(this.obj_type+'s.add', obj.key, obj);
+//         console.log(this.obj_type+'s.add', obj.key, obj);
         let key = obj.key;
         let id = obj.id;
         if (!key)
             return null;
 
         let existing = this.contents[key];
-        if (typeof id !== 'undefined') {
+        if (typeof id !== 'undefined' && id != 0) {
             for (let i in this.contents) {
                 let edge = this.contents[i];
                 if (edge.id == id) {
@@ -274,6 +274,20 @@ EdgeArray.prototype = {
         // copy properties from update
         let prop;
         let updated = false;
+        // may need to remove some properties
+        for (prop in existing) {
+            if (!existing.hasOwnProperty(prop) || obj[prop] != undefined)
+                continue;
+            switch (prop) {
+                case 'hidden':
+                case 'view':
+                case 'selected':
+                    break;
+                default:
+                    delete existing[prop];
+                    updated = true;
+            }
+        }
         for (prop in obj) {
             if (obj.hasOwnProperty(prop)
                 && !is_equal(existing[prop], obj[prop])) {

@@ -118,16 +118,16 @@ class ConsoleView extends View {
                             s += "[";
                             if (sig.type != 'INT32') {
                                 for (let j in v)
-                                    v[j] = parseFloat(v[j].toFixed(3));
+                                    v[j] = parseFloat(v[j]).toFixed(3);
                             }
                             s += v+"];";
                         }
                         else
-                            s += v.toFixed(3)+";";
+                            s += Number.parseFloat(v).toFixed(3)+";";
                         break;
                     case 'period':
                     case 'jitter':
-                        s += " "+key+": "+sig[key].toFixed(3)*1000+"ms;";
+                        s += " "+key+": "+Number.parseFloat(sig[key]).toFixed(3)*1000+"ms;";
                         break;
                     case 'num_instances':
                         if (sig['use_inst'] == false)

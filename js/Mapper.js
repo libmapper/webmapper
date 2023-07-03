@@ -30,6 +30,7 @@ class Mapper
     {
         props['srcs'] = srckeys;
         props['dst'] = dstkey;
+        console.log("sending command: ", 'set_map', props);
         command.send('set_map', props);
     }
 

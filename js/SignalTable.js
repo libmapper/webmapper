@@ -550,11 +550,11 @@ class SignalTable {
                         }
                         s += "[";
                         if (uniform)
-                            s += (round ? parseFloat(v[0].toFixed(2)) : v[0]) + "]";
+                            s += (round ? parseFloat(v[0]).toFixed(2) : parseFloat(v[0])) + "]";
                         else {
                             let i = 0;
                             while (s.length < 20) {
-                                s += round ? parseFloat(v[i].toFixed(2)) : v[i];
+                                s += round ? parseFloat(v[i]).toFixed(2) : parseFloat(v[i]);
                                 ++i;
                                 if (i >= v.length)
                                     break;
@@ -567,7 +567,7 @@ class SignalTable {
                         }
                     }
                     else if (round)
-                        s += parseFloat(v.toFixed(2));
+                        s += parseFloat(v).toFixed(2);
                     else
                         s += v;
                     return s;
