@@ -69,7 +69,7 @@ class SaverLoader {
                 }],
             });
             const writable = await handle.createWritable();
-            await writable.write(JSON.stringify(args));
+            await writable.write(JSON.stringify(args, null, '    '));
             await writable.close();
         });
     }
