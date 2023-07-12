@@ -192,6 +192,9 @@ class ChordView extends View {
             }
             else
                 dev.hidden = true;
+            self.graph.devices.forEach(d => command.send("set_dev", { "name"    : d.name,
+                                                                      "hidden"  : d.hidden,
+                                                                      "publish" : false }));
             self.showDevLabel(self, dev, e);
             self.draw(0);
         });

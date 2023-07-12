@@ -273,6 +273,28 @@ def set_map_properties(props, map):
             map[key] = val
     map.push()
 
+def set_dev_properties(props):
+    print('set_dev_properties()', props)
+
+    # find dev by name
+    dev = graph.devices().filter(mpr.Property.NAME, props['name'])
+    if not dev:
+        return
+    dev = dev.next()
+
+    print('found dev: ', dev)
+    del props['name']
+
+    pub = False
+    if 'publish' in props:
+        publish = props['publish']
+        del props['publish']
+
+    # set metadata
+    for key in props:
+        dev.set_property(key, props[key], publish=pub)
+    dev.push()
+
 def set_sig_properties(props):
 #    check how arbitrary metadata are set – can we use this instead?
     print('set_sig_properties()', props)
@@ -454,6 +476,8 @@ def poll_and_push():
 
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
+
+server.add_command_handler("set_dev", lambda x: set_dev_properties(x))
 
 server.add_command_handler("add_signals",
                            lambda x: ("add_signals", [sig_props(s) for s in graph.signals()]))
