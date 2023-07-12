@@ -2,12 +2,24 @@
 
 import webmapper_http_server as server
 import libmapper as mpr
-import mappersession as session
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 if 'win32' in sys.platform:
     import winreg as wr
+
+try:
+    import mappersession as session
+except:
+    try:
+        sys.path.append(
+                        os.path.join(os.path.join(os.getcwd(),
+                                                  os.path.dirname(sys.argv[0])),
+                                     '../mappersession/src/mappersession'))
+        import mappersession as session
+    except:
+        print('Error importing mappersession module.')
+        sys.exit(1)
 
 networkInterfaces = {'active': '', 'available': []}
 
