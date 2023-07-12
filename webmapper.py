@@ -315,7 +315,8 @@ def set_sig_properties(props):
             sig[key] = props[key]
 
 def on_save(args):
-    sessionJson = session.save("", "", [], [])
+    global graph
+    sessionJson = session.save("", "", [], [], graph=graph)
     server.send_command("save_session", sessionJson)
 
 def start_monitor_sig(sig_name):
@@ -333,11 +334,12 @@ def stop_monitor_sig(args):
         map.push()
 
 def on_load(args):
-    print("Clear: ", args[1])
-    views = session.load_json(args[0], True, args[1])
+    global graph
+    views = session.load_json(args[0], args[1], graph=graph)
 
-def on_clear(args):
-    session.clear()
+def on_unload(args):
+    global graph
+    session.unload(args[0], graph=graph)
 
 # Returns a readable network interface name from a win32 guid
 def win32_get_name_from_guid(iface_guid):
@@ -499,7 +501,7 @@ server.add_command_handler("refresh", init_graph)
 
 server.add_command_handler("save", on_save)
 server.add_command_handler("load", on_load)
-server.add_command_handler("clear", on_clear)
+server.add_command_handler("unload", on_unload)
 
 server.add_command_handler("select_interface", select_interface)
 server.add_command_handler("get_interfaces", get_interfaces)

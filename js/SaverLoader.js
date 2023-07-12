@@ -5,18 +5,18 @@ class SaverLoader {
                 "<div id='sessionTitle' class='topMenuTitle half'><strong>SESSION</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div style='width:100%;height:30%'>"+
-                      "<div id='loadButton' style='width:50%;display:inline-block'>Open</div>"+
+                      "<div id='loadButton' style='width:50%;display:inline-block'>Load</div>"+
                       "<div id='saveButton' style='width:50%;display:inline-block'>Save</div>"+
                     "</div>"+
                     "<div style='padding:0px'>"+
-                        "<button id='unloadFile' style='display:inline-block'>Clear</button>"+
+                        "<button id='unloadFile' style='display:inline-block'>Unload</button>"+
                         "<p id='fileName' style='display:inline-block;float left;padding-left:10px'>No file loaded</p>"+
                     "</div>"+
                 "</div>"+
             "</div>");
         $('#unloadFile').on('click', function(e) {
             e.stopPropagation();
-            command.send("clear");
+            command.send("unload", [$('#fileName').text()]);
             $('#fileName').text("No file loaded");
         });
      
@@ -43,19 +43,8 @@ class SaverLoader {
             $('#fileName').text(data.name.replace(/\.[^/.]+$/, ""));
             let sessionText = await data.text();
             let parsed = tryParseJSON(sessionText);
-            
-            $.confirm({
-                title: 'Clear active maps?',
-                content: '',
-                buttons: {
-                    yes: function () {
-                        command.send("load", [parsed, true]);
-                    },
-                    no: function () {
-                        command.send("load", [parsed, false]);
-                    }
-                }
-            });
+
+            command.send("load", [parsed, $('#fileName').text()]);
         });
 
         command.unregister("save_session");
