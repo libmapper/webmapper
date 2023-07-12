@@ -63,7 +63,7 @@ def open_gui(port):
     launcher = threading.Thread(target=launch, daemon=True)
     launcher.start()
 
-g = mpr.Graph()
+graph = mpr.Graph()
 webmapper_dev = mpr.Device("webmapper")
 
 def monitor_handler(sig, event, id, val, timetag):
@@ -74,9 +74,9 @@ monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1,
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
     if 'win32' in sys.platform:
-        g.set_interface(win32_get_guid_from_name(iface))
+        graph.set_interface(win32_get_guid_from_name(iface))
     else:
-        g.set_interface(iface)
+        graph.set_interface(iface)
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -185,7 +185,7 @@ def on_map(type, map, event):
 
 def find_sig(fullname):
     names = fullname.split('/', 1)
-    dev = g.devices().filter(mpr.Property.NAME, names[0])
+    dev = graph.devices().filter(mpr.Property.NAME, names[0])
     if dev:
         sig = dev.next().signals().filter(mpr.Property.NAME, names[1])
         if not sig:
@@ -318,18 +318,18 @@ def win32_get_name_from_guid(iface_guid):
     return iface_name
 
 def select_interface(iface):
-    global g
+    global graph
     if 'win32' in sys.platform:
         guid = win32_get_guid_from_name(iface)
-        g.set_interface(guid)
+        graph.set_interface(guid)
         networkInterfaces['active'] = guid
     else:
-        g.set_interface(iface)
+        graph.set_interface(iface)
         networkInterfaces['active'] = iface
     server.send_command("active_interface", iface)
 
 def get_interfaces(arg):
-    global g
+    global graph
     location = netifaces.AF_INET    # A computer specific integer for internet addresses
     totalInterfaces = netifaces.interfaces() # A list of all possible interfaces
     connectedInterfaces = []
@@ -347,7 +347,7 @@ def get_interfaces(arg):
     else:
         server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['available'] = connectedInterfaces
-    networkInterfaces['active'] = g.get_interface()
+    networkInterfaces['active'] = graph.get_interface()
     if 'win32' in sys.platform:
         server.send_command("active_interface", win32_get_name_from_guid(networkInterfaces['active']))
     else:
@@ -355,41 +355,41 @@ def get_interfaces(arg):
 
 def init_graph(arg):
     print('REFRESH!')
-    global g
+    global graph
 
     # remove old callbacks (if they are registered)
-    g.remove_callback(on_device)
-    g.remove_callback(on_signal)
-    g.remove_callback(on_map)
+    graph.remove_callback(on_device)
+    graph.remove_callback(on_signal)
+    graph.remove_callback(on_map)
 
     # register callbacks
-    g.add_callback(on_device, mpr.Type.DEVICE)
-    g.add_callback(on_signal, mpr.Type.SIGNAL)
-    g.add_callback(on_map, mpr.Type.MAP)
+    graph.add_callback(on_device, mpr.Type.DEVICE)
+    graph.add_callback(on_signal, mpr.Type.SIGNAL)
+    graph.add_callback(on_map, mpr.Type.MAP)
 
     # (re)subscribe: currently this does nothing but could refresh graph database?
-    g.subscribe(None, mpr.Type.OBJECT, -1)
+    graph.subscribe(None, mpr.Type.OBJECT, -1)
 
-    for d in g.devices():
+    for d in graph.devices():
         server.send_command("add_devices", [dev_props(d)])
-    for s in g.signals():
+    for s in graph.signals():
         server.send_command("add_signals", [sig_props(s)])
-    for m in g.maps():
+    for m in graph.maps():
         server.send_command("add_maps", [map_props(m)])
 
 init_graph(0)
 
 server.add_command_handler("add_devices",
-                           lambda x: ("add_devices", [dev_props(d) for d in g.devices()]))
+                           lambda x: ("add_devices", [dev_props(d) for d in graph.devices()]))
 
 def subscribe(device):
     if device == 'all_devices':
-        g.subscribe(None, mpr.Type.DEVICE, -1)
+        graph.subscribe(None, mpr.Type.DEVICE, -1)
     else:
         # todo: only subscribe to inputs and outputs as needed
-        dev = g.devices().filter(mpr.Property.NAME, device)
+        dev = graph.devices().filter(mpr.Property.NAME, device)
         if dev:
-            g.subscribe(dev.next(), mpr.Type.OBJECT, -1)
+            graph.subscribe(dev.next(), mpr.Type.OBJECT, -1)
         else:
             print("no device matching name", device)
 
@@ -418,8 +418,8 @@ def release_map(args):
     if m != None: m.release()
 
 def poll_and_push():
-    global g
-    g.poll(40)
+    global graph
+    graph.poll(40)
     webmapper_dev.poll(10)
     if len(new_devs) > 0:
         server.send_command("add_devices", list(new_devs.values()))
@@ -444,14 +444,14 @@ def poll_and_push():
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 
 server.add_command_handler("add_signals",
-                           lambda x: ("add_signals", [sig_props(s) for s in g.signals()]))
+                           lambda x: ("add_signals", [sig_props(s) for s in graph.signals()]))
 
 server.add_command_handler("set_sig", lambda x: set_sig_properties(x))
 server.add_command_handler("monitor_sig", start_monitor_sig)
 server.add_command_handler("stop_monitor_sig", stop_monitor_sig)
 
 server.add_command_handler("add_maps",
-                           lambda x: ("add_maps", [map_props(m) for m in g.maps()]))
+                           lambda x: ("add_maps", [map_props(m) for m in graph.maps()]))
 
 server.add_command_handler("set_map", lambda x: set_map_properties(x, None))
 
