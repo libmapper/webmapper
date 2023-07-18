@@ -285,7 +285,7 @@ class ConsoleView extends View {
                                         s += '[[;white;],]';
                                 }
                                 if (len > 1)
-                                    s += '[[;white;]\\]';
+                                    s += '[[;white;]\\]]';
                                 s += ' [[;white;]->] ';
                                 color = Raphael.hsl(map.dst.device.hue, 1, 0.5);
                                 s += '[[;'+color+';]'+map.dst.device.name+'/'+map.dst.name+']';
