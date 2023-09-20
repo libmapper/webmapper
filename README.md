@@ -15,7 +15,7 @@ Webmapper aims to support the mapping task in three ways:
 
 1. Aiding discovery and exploration of active devices and their signals. Currently 8 different "views" of the mapping network are available, each using a different visualization approach.
 2. Providing an interactive graphical interface for creating, editing, and destroying data-streaming connections ("maps") between signals. 
-3. Supporting saving and loading of mapping sets, including support for mapping transportability (cf. the [GDIF project][GDIF])
+3. Supporting saving and loading of mapping sets (sometimes referred to as 'sessions'), including support for mapping transportability (cf. the [GDIF project][GDIF])
 
 All libmapper-compatible GUIs function as “dumb terminals” — no handling of mapping commands takes place in the GUI, but rather they are only responsible for representing the current state of the network, and issuing commands on behalf of the user. This means that an arbitrary number of GUIs can be open simultaneously supporting both remote network management and collaborative creation and editing during the mapping task.
 
@@ -31,10 +31,11 @@ Simply open the application. It should automatically scan the network for device
 
 Note: webmapper is developed and works with Chromium/Chrome. It may work with other browsers.
 
-1. Build and install [libmapper][libmapper]
-2. Run webmapper.py from terminal
-3. Terminal will display "serving at port #####"
-4. A browser window should be opened automatically and directed to the correct port.
+1. Build and install [libmapper][libmapper] or `pip3 install libmapper`
+2. Download [mappersession][mappersession] or `pip3 install mappersession`
+3. Run webmapper.py from terminal
+4. Terminal will display "serving at port #####"
+5. A browser window should be opened automatically and directed to the correct port.
 
 If the browser doesn't open, open it manually and type "localhost:#####" into the address bar, where ##### is the same string of numbers displayed in the terminal.
 
@@ -66,11 +67,13 @@ python setup.py py2app
 
 <img height="60px" style="padding:0px;vertical-align:middle" src="./doc/screenshots/file_io.png">
 
-Released versions of Webmapper use "naïve" file loading, in which maps specifications loaded from file are matched against all of the devices currently active on the network. This is intended to support *transportability* of mapping specifications between similar devices if their parameter spaces are structured similarly (cf. the [GDIF project][GDIF]). It also ensures that files will still load if a device receives a different ordinal id than the one used when the file was saved. Unfortunately, this naïve approach may also cause unintended consequences if a file is loaded when multiple instances of an involved device are present – to avoid these problems, see [hiding devices](#hiding_devices) in the description of the Chord View below.
+Released versions of Webmapper use "naïve" file loading, in which maps specifications loaded from file are matched against all of the devices currently known to Webmapper that have not been 'hidden' using the Chord or Console views. This is intended to support *transportability* of mapping specifications between similar devices if their parameter spaces are structured similarly (cf. the [GDIF project][GDIF]). It also ensures that files will still load if a device receives a different ordinal id than the one used when the file was saved. Unfortunately, this naïve approach may also cause unintended consequences if a file is loaded when multiple instances of an involved device are present – to avoid these problems, see [hiding devices](#hiding_devices) in the description of the Chord View below.
 
 ### In development: map staging
 
 We are working on a new functionality called *map staging*. While the previous naïve approach loaded saved maps against all of the device names in the current tab, loading a file now switches to a new view showing only devices and network links. The file is parsed to retrieve the number of devices involved, and an interactive object is displayed allowing the user to assign device representations from the file to devices that are active on the network. Once the devices have been assigned, clicking on the central file representation launches an attempt to recreate the saved maps.
+
+The [mappersession][mappersession] module currently supports including an optional "device map" argument when loading a file, specifying how devices in the file should be mapped onto currently active devices. A graphical interface for building this "device map" remains to be implemented.
 
 ### Searching/filtering signals
 
@@ -256,6 +259,7 @@ This view presents a "console" for performing text-based interaction with the ma
 Status: planning
 
 [libmapper]: https://github.com/libmapper/libmapper
+[mappersession]: https://github.com/libmapper/mappersession
 [GDIF]: http://www.idmil.org/projects/gdif
 [ICon]: http://inputconf.sourceforge.net/
 [DOT]: http://idmil.org/dot

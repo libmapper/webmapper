@@ -1,5 +1,27 @@
 # WebMapper News
 
+## Version 2.4.4
+
+We are pleased to announce the release of version 2.4.4 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Changes since the last release include:
+
+-  Improvements to drawing of maps in the Hive Plot and Paralle Coordinate Plot views. These improvments are especially noticeable when drawing convergent maps.
+- Revision of the Saver/Loader widget in the top toolbar. This widget now displays all active mapping sessions in a drop-down menu, and enables 'unloading' each session individually.
+-  Fixes for display of vector signal extrema (minimum and maximum values) in the mouseover metadata table. 
+
+## Version 2.4.3
+
+We are pleased to announce the release of version 2.4.3 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Since the release of version 2.3, a large number of improvements and bugfixes have been performed. Some of the more important changes are outlined below:
+
+- the Python backend was ported to use the new [mappersession](https://github.com/libmapper/mappersession) module. This work included standardisation of the mapping session file structure, improvements to loading legacy file versions, and the addition of libmapper control signals for loading and unloading session files. Some of the new features supported by mappersession are not yet used by webmapper but will support future improvements.
+- simplification of the signal table view by moving some signal metadata into a tooltip. Configuration of which metadata are included in the table will be a user-defined preference in future versions.
+- A simple plot of live signal values can be invoked from the List view.
+- improvements to the CI and build scripts
+- numerous small bugfixes and visual tweaks
+
 ## Version 2.3
 
 We are pleased to announce the release of version 2.3 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware. This marks the first numbered (rather than dated) release of WebMapper, which will now be released regularly in sync with the libmapper repository.
