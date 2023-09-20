@@ -194,6 +194,10 @@ class ViewManager
                 case 'map':
                     self._update_maps(obj, event, repaint);
                     break;
+                case 'session':
+                    console.log("got graph sessions callback!");
+                    self._update_sessions();
+                    break;
             }
         });
     };
@@ -256,6 +260,11 @@ class ViewManager
                     this.views[this.currentView].update('maps');
                 break;
         }
+    }
+
+    _update_sessions() {
+        console.log("ViewManager._update_sessions()");
+        $('#container').trigger("updateSessions");
     }
 
     _selection_handlers() {

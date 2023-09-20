@@ -4,7 +4,7 @@ class SignalFilter{
         this.graph = graph;
         this.viewManager = viewManager;
         $(this.container).append(
-            "<div id='signalFilterDiv' class='topMenu half' style='width:150px'>"+
+            "<div id='signalFilterDiv' class='topMenu half' style='width:230px'>"+
                 "<div class='topMenuTitle half'><strong>FILTER</strong></div>"+
                 "<div class='topMenuContainer'>"+
                     "<div>srcs: "+

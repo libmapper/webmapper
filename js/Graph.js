@@ -334,6 +334,7 @@ function Graph() {
     this.devices = new NodeArray('device', this.cb_handler);
     this.links = new EdgeArray('link', this.cb_handler);
     this.maps = new EdgeArray('map', this.cb_handler);
+    this.active_sessions = [];
 
     this.networkInterfaces = {'selected': null, 'available': []};
 
@@ -501,6 +502,10 @@ function Graph() {
             this.maps.remove(map, i == last);
         }
     }
+    this.update_sessions = function(cmd, sessions) {
+        this.active_sessions = sessions;
+        this.cb_handler('modified', 'session');
+    }
 
     // delete handlers in case of refresh
     command.unregister("add_devices");
@@ -509,6 +514,7 @@ function Graph() {
     command.unregister("del_signals");
     command.unregister("add_maps");
     command.unregister("del_maps");
+    command.unregister("sessions");
 
     command.register("add_devices", this.add_devices.bind(this));
     command.register("del_devices", this.del_devices.bind(this));
@@ -516,6 +522,7 @@ function Graph() {
     command.register("del_signals", this.del_signals.bind(this));
     command.register("add_maps", this.add_maps.bind(this));
     command.register("del_maps", this.del_maps.bind(this));
+    command.register("sessions", this.update_sessions.bind(this));
 };
 
 var graph = new Graph();

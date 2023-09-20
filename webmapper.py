@@ -1,12 +1,25 @@
 #!/usr/bin/env python
 
 import webmapper_http_server as server
-import libmapper as mpr
 import netifaces # a library to find available network interfaces
 import sys, os, os.path, threading, json, re, pdb
 from random import randint
 if 'win32' in sys.platform:
     import winreg as wr
+
+try:
+    import libmapper as mpr
+except:
+    try:
+        sys.path.append(
+                        os.path.join(os.path.join(os.getcwd(),
+                                                  os.path.dirname(sys.argv[0])),
+                                     '../libmapper/bindings/python/'))
+        import libmapper as mpr
+        print('Using local libmapper repo')
+    except:
+        print('Error importing libmapper module!!.')
+        sys.exit(1)
 
 try:
     import mappersession as session
@@ -17,6 +30,7 @@ except:
                                                   os.path.dirname(sys.argv[0])),
                                      '../mappersession/src/mappersession'))
         import mappersession as session
+        print('Using local mappersession repo')
     except:
         print('Error importing mappersession module.')
         sys.exit(1)
@@ -295,6 +309,10 @@ def set_dev_properties(props):
         dev.set_property(key, props[key], publish=pub)
     dev.push()
 
+    if 'hidden' in props:
+        # need to refresh session tags
+        server.send_command("sessions", session.tags(graph=graph))
+
 def set_sig_properties(props):
 #    check how arbitrary metadata are set – can we use this instead?
     print('set_sig_properties()', props)
@@ -318,6 +336,7 @@ def on_save(args):
     global graph
     sessionJson = session.save("", "", [], [], graph=graph)
     server.send_command("save_session", sessionJson)
+    # also need to tag maps with new session name
 
 def start_monitor_sig(sig_name):
     global monitor_sig
@@ -412,6 +431,7 @@ def init_graph(arg):
         server.send_command("add_signals", [sig_props(s)])
     for m in graph.maps():
         server.send_command("add_maps", [map_props(m)])
+    server.send_command("sessions", session.tags(graph=graph))
 
 init_graph(0)
 
@@ -457,6 +477,7 @@ def poll_and_push():
     global graph
     graph.poll(40)
     webmapper_dev.poll(10)
+    update_sessions = False
     if len(new_devs) > 0:
         server.send_command("add_devices", list(new_devs.values()))
         new_devs.clear()
@@ -472,10 +493,13 @@ def poll_and_push():
     if len(new_maps) > 0:
         server.send_command("add_maps", list(new_maps.values()))
         new_maps.clear()
+        update_sessions = True
     if len(del_maps) > 0:
         server.send_command("del_maps", list(del_maps.values()))
         del_maps.clear()
-
+        update_sessions = True
+    if update_sessions:
+        server.send_command("sessions", session.tags(graph=graph))
 
 server.add_command_handler("subscribe", lambda x: subscribe(x))
 

@@ -1,23 +1,40 @@
 class SaverLoader {
     constructor(container, graph, view) {
         $(container).append(
-            "<div id='saverLoaderDiv' class='topMenu half' style='width:225px;'>"+
+            "<div id='saverLoaderDiv' class='topMenu half' style='width:155px;overflow:visible;'>"+
                 "<div id='sessionTitle' class='topMenuTitle half'><strong>SESSION</strong></div>"+
-                "<div class='topMenuContainer'>"+
-                    "<div style='width:100%;height:30%'>"+
+                "<div class='topMenuContainer' style='overflow:visible;'>"+
+                    "<div>"+
                       "<div id='loadButton' style='width:50%;display:inline-block'>Load</div>"+
                       "<div id='saveButton' style='width:50%;display:inline-block'>Save</div>"+
                     "</div>"+
-                    "<div style='padding:0px'>"+
-                        "<div id='unloadFile' style='width:50%;display:inline-block'>Unload</div>"+
-                        "<p id='fileName' style='width:50%;display:inline-block;float left;padding-left:10px'>No file loaded</p>"+
+                    "<div style='overflow:visible;'>"+
+                        "<div id='unloadButton' class='disabled' style='width:100%;'>Unload</div>"+
+                        "<table id='sessionMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
+                            "<tbody></tbody>"+
+                        "</table>"+
+                        "<p id='fileName' style='visibility:hidden;'>No file loaded</p>"+
                     "</div>"+
                 "</div>"+
             "</div>");
-        $('#unloadFile').on('click', function(e) {
+
+        $('#unloadButton').on('click', function(e) {
+            console.log('unloadButton clicked!');
+            let menu = $('#sessionMenu');
+            if ($(menu).hasClass('show')) {
+                $(menu).removeClass('show');
+                $(menu).find('td').off('click');
+                return;
+            }
+            $(menu).addClass('show');
+
+            $(menu).find('td').one('click', function(td) {
+                $(menu).removeClass('show');
+                let session = td.currentTarget.innerText;
+                console.log("sending command unload", session);
+                command.send("unload", [session]);
+            });
             e.stopPropagation();
-            command.send("unload", [$('#fileName').text()]);
-            $('#fileName').text("No file loaded");
         });
      
         $('#saveButton').on('click', function(e) {
@@ -44,6 +61,7 @@ class SaverLoader {
             let sessionText = await data.text();
             let parsed = tryParseJSON(sessionText);
 
+            console.log("sending command: load,", [parsed, $('#fileName').text()]);
             command.send("load", [parsed, $('#fileName').text()]);
         });
 
@@ -65,5 +83,28 @@ class SaverLoader {
 
     save() {
         $('#saveButton').trigger("click");
+    }
+
+    updateSessions() {
+        console.log("saverLoader.updateSessions()!");
+        $('#sessionMenu').empty();
+        let active_sessions = graph.active_sessions;
+        if (active_sessions.length > 0) {
+            for (var i in active_sessions) {
+                console.log("  adding session", active_sessions[i], "to the list");
+                $('#sessionMenu').append("<tr><td>"+active_sessions[i]+"</td></tr>");
+            }
+            $('#sessionMenu').removeClass('disabled');
+            $('#unloadButton').removeClass('disabled');
+            if (active_sessions.length == 1)
+                $('#unloadButton').text('Unload ('+active_sessions.length+" tag)");
+            else
+                $('#unloadButton').text('Unload ('+active_sessions.length+" tags)");
+        }
+        else {
+            $('#sessionMenu').addClass('disabled');
+            $('#unloadButton').addClass('disabled');
+            $('#unloadButton').text('Unload');
+        }
     }
 }

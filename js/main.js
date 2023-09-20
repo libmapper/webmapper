@@ -76,10 +76,10 @@ function init() {
     $('#TopMenuWrapper').empty().append("<div id='TopMenuWrapperFile'></div>")
     saverLoader = new SaverLoader(document.getElementById("TopMenuWrapperFile"),
                                   graph, viewManager);
-    netSelector = new NetworkSelector(document.getElementById("TopMenuWrapperFile"),
-                                      graph, viewManager);
     viewSelector = new ViewSelector(document.getElementById("TopMenuWrapperFile"),
                                     viewManager);
+    netSelector = new NetworkSelector(document.getElementById("TopMenuWrapperFile"),
+                                      graph, viewManager);
     sigFilter = new SignalFilter(document.getElementById("TopMenuWrapperFile"),
                                  graph, viewManager);
     mapProperties = new MapProperties(document.getElementById("TopMenuWrapper"),
@@ -312,6 +312,11 @@ function initMapPropertiesCommands() {
     // send out any partially-edited properties when maps are deselected
     $("#container").on("sendCachedProperty", function(e) {
         mapProperties.sendCachedProperty();
+    });
+
+    // send out any partially-edited properties when maps are deselected
+    $("#container").on("updateSessions", function(e) {
+        saverLoader.updateSessions();
     });
 }
 

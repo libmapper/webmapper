@@ -8,7 +8,7 @@ class NetworkSelector {
                 "<div class='topMenuTitle half'><strong>NET</strong></div>"+
                 "<div class='topMenuContainer' style='padding:5px;overflow:visible'>"+
                     "<div id='ifaceMenuLabel' style='padding:5px'>lo0</div>"+
-                            "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
+                    "<table id='ifaceMenu' class='dropdown-content' style='right:0px;min-width:55px'>"+
                         "<tbody><tr><td>lo0</td></tr><tr><td>en1</td></tr></tbody>"+
                     "</table>"+
                 "</div>"+
