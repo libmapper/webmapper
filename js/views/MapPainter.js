@@ -9,7 +9,7 @@ class MapPainter {
         this.paths = [];
         this.attributes = [];
         this._highlight = false;
-        this.midPointInflation = 0.2;
+        this.midPointInflation = 0.1;
         this.labels = [];
         this.updateAttributes(); // in case paths rely on certain attributes e.g. in grid view
     }
@@ -117,7 +117,7 @@ class MapPainter {
     {
         let best_dist = null; 
         let best_point = null;
-        for(let p of this.paths)
+        for (let p of this.paths)
         {
             if (p === null) continue;
             let point = closest_point(p, x, y);

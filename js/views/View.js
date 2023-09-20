@@ -536,6 +536,7 @@ class View {
                     self.setSigHover(sig);
                 }
                 sig.view.show();
+                sig.hidden = false;
             });
         });
     }

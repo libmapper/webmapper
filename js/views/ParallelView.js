@@ -172,19 +172,17 @@ class ParallelMapPainter extends ListMapPainter
 
     getNodePosition()
     {
-        // adjust node x so that it won't overlap with a device
-        let node = super.getNodePosition();
-        let sigs = this.map.srcs.filter(s => !s.hidden);
-        sigs = sigs.concat([this.map.dst]);
-        for (let s of sigs)
-        {
-            if (Math.abs(node.x - s.position.x) < 50)
-            {
-                node.x += 50;
-                node.y += 50;
-            }
-        }
-        return node;
+        let dst = this.map.dst.position;
+        let sigs = this.map.srcs.filter(s => !s.hidden).map(s => s.position);
+        if (sigs.length === 0) return null;
+        sigs = sigs.concat([dst]);
+
+        let minx = sigs.map(s => s.x).reduce((min, s) => Math.min(min, s));
+        let maxx = sigs.map(s => s.x).reduce((max, s) => Math.max(max, s));
+        let x = (minx + maxx) * 0.5;
+        let y = sigs.map(s => s.y).reduce((accum, s) => accum + s) / sigs.length;
+
+        return {x: x, y: y, vx: dst.vx, vy: 0, isnode: true};
     }
 
     offset(a, b, minoffset = 30, maxoffset = 200)
@@ -198,18 +196,8 @@ class ParallelMapPainter extends ListMapPainter
 
     oneToOne(src, dst, i)
     {
-        // skip maps if src or dst y is zero, due to filtering
-        if (!src.y || !dst.y) {
-            this.pathspecs[i] = null;
-            return;
-        }
-
-        if (Math.abs(src.x - dst.x) < 1)
-            this.vertical(src, dst, i);
-        else {
-            let mpx = i ? dst.x : (src.x + dst.x) * 0.5;
-            this.pathspecs[i] = [['M', src.x, src.y],
-                                 ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
-        }
+        let mpx = (src.x + dst.x) * 0.5;
+        this.pathspecs[i] = [['M', src.x, src.y],
+                             ['C', mpx, src.y, mpx, dst.y, dst.x, dst.y]];
     }
 }

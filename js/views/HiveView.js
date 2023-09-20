@@ -114,8 +114,9 @@ class HiveView extends View {
                     return;
                 }
                 // assign position along line
-                sig.position.x = self.mapPane.left + self.mapPane.width * inc * (sig.index + 2) * Math.cos(dev.angle);
-                sig.position.y = self.mapPane.top + self.mapPane.height + self.mapPane.height * inc * (sig.index + 2) * Math.sin(dev.angle);
+                sig.mag = inc * (sig.index + 2);
+                sig.position.x = self.mapPane.left + self.mapPane.width * sig.mag * Math.cos(dev.angle);
+                sig.position.y = self.mapPane.top + self.mapPane.height + self.mapPane.height * sig.mag * Math.sin(dev.angle);
                 self.drawSignal(sig, duration);
             });
         });
@@ -172,7 +173,12 @@ class HiveView extends View {
 
     cleanup() {
         super.cleanup();
-        this.graph.devices.forEach(function(dev) {dev.angle = null;});
+        this.graph.devices.forEach(function(dev) {
+            dev.angle = null;
+            dev.signals.forEach(function(sig) {
+                sig.mag = null;
+            });
+        });
     }
 }
 
@@ -185,23 +191,28 @@ class HiveMapPainter extends ListMapPainter
 
     getNodePosition()
     {
-        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
-        let node = super.getNodePosition();
-        node.x = node.x + (node.x - origin.x) * this.midPointInflation;
-        node.y = node.y + (node.y - origin.y) * this.midPointInflation;
-
-        // adjust node x so that it won't overlap with a device
+        let dst = this.map.dst;
         let sigs = this.map.srcs.filter(s => !s.hidden);
-        sigs = sigs.concat([this.map.dst]);
-        for (let s of sigs)
-        {
-            if (distance(node.x, node.y, s.position.x, s.position.y) < 200)
-            {
-                node.x += 50;
-                node.y += 50;
-            }
-        }
-        return node;
+        if (sigs.length === 0) return null;
+
+        let mags = sigs.map(s => s.mag);
+        mags.push(dst.mag);
+        let max_mag = mags.reduce((max, m) => Math.max(max, m));
+
+        let angles = sigs.map(s => s.device.angle);
+        angles.push(dst.device.angle);
+        let min_angle = angles.reduce((min, a) => Math.min(min, a));
+        let max_angle = angles.reduce((max, a) => Math.max(max, a));
+        let mid_angle = (min_angle + max_angle) * 0.5;
+
+        console.log("max mag:", max_mag, mags);
+
+        let box = {left: this.frame.left + 50, top: 50, width: this.frame.width - 100, height: this.frame.height - 100};
+
+        let x = box.left + box.width * max_mag * Math.cos(mid_angle);
+        let y = box.top + box.height + box.height * max_mag * Math.sin(mid_angle);
+
+        return {x: x, y: y, vx: Math.sin(mid_angle), vy: Math.cos(mid_angle), isnode: true};
     }
 
     oneToOne(src, dst, i)
@@ -214,7 +225,7 @@ class HiveMapPainter extends ListMapPainter
 
         // draw a curved line from src to dst
         let mid = {x: (src.x + dst.x) * 0.5, y: (src.y + dst.y) * 0.5};
-        let origin = {x: this.frame.left, y: this.frame.top + this.frame.height};
+        let origin = {x: this.frame.left - 100, y: this.frame.top + this.frame.height - 100};
 
         mid.x = mid.x + (mid.x - origin.x) * this.midPointInflation;
         mid.y = mid.y + (mid.y - origin.y) * this.midPointInflation;
