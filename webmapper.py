@@ -51,20 +51,6 @@ del_sigs = {}
 new_maps = {}
 del_maps = {}
 
-# Returns win32 guids from a network interface's readable name
-def win32_get_guid_from_name(iface_name):
-    iface_guids = networkInterfaces['available']
-    reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
-    reg_key = wr.OpenKey(reg, r'SYSTEM\CurrentControlSet\Control\Network\{4d36e972-e325-11ce-bfc1-08002be10318}')
-    for i in range(len(iface_guids)):
-        try:
-            reg_subkey = wr.OpenKey(reg_key, iface_guids[i] + r'\Connection')
-            if iface_name == wr.QueryValueEx(reg_subkey, 'Name')[0]:
-                return iface_guids[i]
-        except FileNotFoundError:
-            pass
-    return ""
-
 def open_gui(port):
     url = 'http://localhost:%d'%port
     apps = ['~\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe --app=%s',
@@ -99,10 +85,7 @@ monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1,
                         mpr.Type.FLOAT, None, -100000, 100000, None, monitor_handler)
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
-    if 'win32' in sys.platform:
-        graph.set_interface(win32_get_guid_from_name(iface))
-    else:
-        graph.set_interface(iface)
+    graph.set_interface(iface)
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -374,13 +357,9 @@ def win32_get_name_from_guid(iface_guid):
 
 def select_interface(iface):
     global graph
-    if 'win32' in sys.platform:
-        guid = win32_get_guid_from_name(iface)
-        graph.set_interface(guid)
-        networkInterfaces['active'] = guid
-    else:
-        graph.set_interface(iface)
-        networkInterfaces['active'] = iface
+    graph.set_interface(iface)
+    iface = graph.get_interface()
+    networkInterfaces['active'] = iface
     server.send_command("active_interface", iface)
 
 def get_interfaces(arg):
@@ -391,22 +370,16 @@ def get_interfaces(arg):
     for i in totalInterfaces:
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
-            connectedInterfaces.append(i)
-    if 'win32' in sys.platform:
-        connectedNames = []
-        for i in range(len(connectedInterfaces)):
-            ifaceName = win32_get_name_from_guid(connectedInterfaces[i])
-            if ifaceName != "":
-                connectedNames.append(ifaceName)
-        server.send_command("available_interfaces", connectedNames)
-    else:
-        server.send_command("available_interfaces", connectedInterfaces)
+            if 'win32' in sys.platform:
+                ifaceName = win32_get_name_from_guid(connectedInterfaces[i])
+                if ifaceName != "":
+                    connectedInterfaces.append(ifaceName)
+            else:
+                connectedInterfaces.append(i)
     networkInterfaces['available'] = connectedInterfaces
+    server.send_command("available_interfaces", connectedInterfaces)
     networkInterfaces['active'] = graph.get_interface()
-    if 'win32' in sys.platform:
-        server.send_command("active_interface", win32_get_name_from_guid(networkInterfaces['active']))
-    else:
-        server.send_command("active_interface", networkInterfaces['active'])
+    server.send_command("active_interface", networkInterfaces['active'])
 
 def init_graph(arg):
     print('REFRESH!')
