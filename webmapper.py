@@ -371,7 +371,7 @@ def get_interfaces(arg):
         addrs = netifaces.ifaddresses(i)
         if location in addrs:       # Test to see if the interface is actually connected
             if 'win32' in sys.platform:
-                ifaceName = win32_get_name_from_guid(connectedInterfaces[i])
+                ifaceName = win32_get_name_from_guid(i)
                 if ifaceName != "":
                     connectedInterfaces.append(ifaceName)
             else:
