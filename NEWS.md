@@ -1,5 +1,13 @@
 # WebMapper News
 
+## Version 2.4.5
+
+We are pleased to announce the release of version 2.4.5 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Changes since the last release include:
+
+- Enabled switching network interfaces on Windows. This feature updates the package dependency requirements to [libmapper 2.4.5](https://pypi.org/project/libmapper/2.4.5/) and [mappersession 0.0.14](https://pypi.org/project/mappersession/0.0.14/). Translation to human-friendly interface names is now handled by libmapper.
+
 ## Version 2.4.4
 
 We are pleased to announce the release of version 2.4.4 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
