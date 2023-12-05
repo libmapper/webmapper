@@ -76,13 +76,16 @@ def open_gui(port):
     launcher.start()
 
 graph = mpr.Graph()
-webmapper_dev = mpr.Device("webmapper")
+webmapper_dev = mpr.Device("webmapper", graph)
+webmapper_dev['display'] = False
 
 def monitor_handler(sig, event, id, val, timetag):
     server.send_command("update_sig_monitor", val)
 
-monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1,
-                        mpr.Type.FLOAT, None, -100000, 100000, None, monitor_handler)
+monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1, mpr.Type.FLOAT,
+                                       None, -100000, 100000, None, monitor_handler)
+monitor_sig['display'] = False
+
 if '--iface' in sys.argv:
     iface = sys.argv[sys.argv.index('--iface')+1]
     graph.set_interface(iface)
@@ -168,7 +171,7 @@ def map_props(map):
     return props
 
 def on_device(type, dev, event):
-#    print('ON_DEVICE')
+#    print('ON_DEVICE:', event, dev)
     dev = dev_props(dev)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_devs[dev['key']] = dev
@@ -177,7 +180,7 @@ def on_device(type, dev, event):
         del_devs[dev['key']] = dev
 
 def on_signal(type, sig, event):
-#    print('ON_SIGNAL')
+#    print('ON_SIGNAL:', event)
     sig = sig_props(sig)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_sigs[sig['key']] = sig
@@ -185,7 +188,7 @@ def on_signal(type, sig, event):
         del_sigs[sig['key']] = sig
 
 def on_map(type, map, event):
-#    print('ON_MAP')
+#    print('ON_MAP:', event)
     map = map_props(map)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_maps[map['key']] = map
@@ -399,8 +402,12 @@ def init_graph(arg):
     graph.subscribe(None, mpr.Type.OBJECT, -1)
 
     for d in graph.devices():
+        if 'display' in d and d['display'] == False:
+            continue
         server.send_command("add_devices", [dev_props(d)])
     for s in graph.signals():
+        if 'display' in s and s['display'] == False:
+            continue
         server.send_command("add_signals", [sig_props(s)])
     for m in graph.maps():
         server.send_command("add_maps", [map_props(m)])
@@ -409,7 +416,7 @@ def init_graph(arg):
 init_graph(0)
 
 server.add_command_handler("add_devices",
-                           lambda x: ("add_devices", [dev_props(d) for d in graph.devices()]))
+                           lambda x: ("add_devices", [dev_props(d) for d in graph.devices().filter('display', True, mpr.Operator.NOT_EQUAL)]))
 
 def subscribe(device):
     if device == 'all_devices':
