@@ -242,7 +242,7 @@ class ConsoleView extends View {
                                         let t = sigCount > 0 ? "├─ " : "└─ ";
                                         let s = ' [[;'+color+';]   '+t+sig.name+']';
                                         s += ' ('+(sig['direction']=='output'?'out, ':'in, ');
-                                        s += sig['type']+sig['length']+')';
+                                        s += sig['type']+'['+sig['length']+'])';
                                         echo(s);
                                         if (showDetail) {
                                             s = sigCount > 0 ? '    [[;'+color+';]|] ' : '      ';

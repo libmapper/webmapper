@@ -494,12 +494,16 @@ function distance_squared(x1, y1, x2, y2) {
 function type_name(initial) {
     switch (initial) {
         case 'i':
+        case 'INT32':
             return "int";
         case 'f':
+        case 'FLOAT':
             return "float";
         case 'd':
+        case 'DOUBLE':
             return "double";
         default:
+            console.log("unexpected type: ", initial);
             return "?";
     }
 }
