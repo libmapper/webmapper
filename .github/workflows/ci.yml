@@ -6,7 +6,7 @@ jobs:
   Linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: install dependencies
@@ -17,7 +17,7 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: webmapper-ubuntu-standalone
         path: dist/webmapper
@@ -28,7 +28,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: install dependencies
@@ -39,7 +39,7 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: webmapper-macosx-standalone
         path: dist/webmapper
@@ -47,7 +47,7 @@ jobs:
   Windows-Latest:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: install dependencies
@@ -58,7 +58,7 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: webmapper-win64-standalone
         path: dist/webmapper
