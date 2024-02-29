@@ -82,7 +82,7 @@ webmapper_dev['display'] = False
 def monitor_handler(sig, event, id, val, timetag):
     server.send_command("update_sig_monitor", val)
 
-monitor_sig = webmapper_dev.add_signal(mpr.Direction.INCOMING, "monitor", 1, mpr.Type.FLOAT,
+monitor_sig = webmapper_dev.add_signal(mpr.Signal.Direction.INCOMING, "monitor", 1, mpr.Type.FLOAT,
                                        None, -100000, 100000, None, monitor_handler)
 monitor_sig['display'] = False
 
@@ -138,7 +138,7 @@ def map_props(map):
     num_srcs = props['num_sigs_in']
     srcs = []
     src_names = []
-    for sig in map.signals(mpr.Location.SOURCE):
+    for sig in map.signals(mpr.Map.Location.SOURCE):
         src = sig_props(sig)
         src_names.append(src['key'])
         srcs.append(src)
@@ -146,7 +146,7 @@ def map_props(map):
     srcs.sort(key=get_key)
     props['srcs'] = srcs
     # add destination slot properties
-    for sig in map.signals(mpr.Location.DESTINATION):
+    for sig in map.signals(mpr.Map.Location.DESTINATION):
         dst = sig_props(sig)
         dst_name = dst['key']
         props['dst'] = dst
@@ -258,14 +258,14 @@ def set_map_properties(props, map):
                 map[mpr.Property.MUTED] = val
         elif key == 'process_loc':
             if val == 'src':
-                map[mpr.Property.PROCESS_LOCATION] = mpr.Location.SOURCE
+                map[mpr.Property.PROCESS_LOCATION] = mpr.Map.Location.SOURCE
             elif val == 'dst':
-                map[mpr.Property.PROCESS_LOCATION] = mpr.Location.DESTINATION
+                map[mpr.Property.PROCESS_LOCATION] = mpr.Map.Location.DESTINATION
         elif key == 'protocol':
             if val == 'udp' or val == 'UDP':
-                map[mpr.Property.PROTOCOL] = mpr.Protocol.UDP
+                map[mpr.Property.PROTOCOL] = mpr.Map.Protocol.UDP
             elif val == 'tcp' or val == 'TCP':
-                map[mpr.Property.PROTOCOL] = mpr.Protocol.TCP
+                map[mpr.Property.PROTOCOL] = mpr.Map.Protocol.TCP
         elif key == 'scope':
             # skip for now
             print("skipping scope property for now")
