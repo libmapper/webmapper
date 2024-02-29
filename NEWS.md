@@ -1,5 +1,17 @@
 # WebMapper News
 
+## Version 2.4.6
+
+We are pleased to announce the release of version 2.4.6 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Changes since the last release include:
+
+- Filter local monitor signals at Python backend instead of js frontend; use custom `display` property instead of device name to indicate whether signals should be forwarded to front end.
+- Small fix for signal property formatting in Console View.
+- updates for libmapper v2.4.6 (removed deprecated enum values)
+
+This version updates the package dependency requirements to [libmapper 2.4.6](https://pypi.org/project/libmapper/2.4.6/) and [mappersession 0.0.15](https://pypi.org/project/mappersession/0.0.15/).
+
 ## Version 2.4.5
 
 We are pleased to announce the release of version 2.4.5 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
