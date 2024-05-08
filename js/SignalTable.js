@@ -735,7 +735,7 @@ class SignalTable {
                             }
                         }
                         line += "<div id='viewSignalButton' class='viewButton'></div>";
-                        target.append("<tr class='"+devRowType+"' style='background: "+color+"44' id="+b.leaf.id+">"+line+"</tr>");
+                        target.append("<tr class='"+devRowType+"' style='background: "+color+"44' id='"+b.leaf.id+"'>"+line+"</tr>");
                         tds = [[b.num_leaves - 1, i]];
                     }
                     add_tree(b, tds, target, depth + 1);
