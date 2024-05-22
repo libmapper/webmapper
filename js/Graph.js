@@ -109,27 +109,45 @@ NodeArray.prototype = {
             if (this.obj_type == 'device') {
                 obj.signals = new NodeArray('signal', this.cb_func);
 
-                // create hue hash
-                hueHash = function(str) {
-                    var hash = 0, i, chr;
-                    if (str.length === 0) return '#000000';
-                    // separate name and ordinal
-                    let ord_idx = str.lastIndexOf('.');
-                    let ord = str.slice(ord_idx+1);
-                    str = str.slice(0, ord_idx);
-                    for (i = 0; i < str.length; i++) {
-                        chr   = str.charCodeAt(i);
-                        hash  = ((hash << 5) - hash) + (1 << chr);
-                        hash &= 0xFFFFFF; // Constrain to 48bits
+                if ('color.rgb' in obj && 3 == obj['color.rgb'].length) {
+                    let rgb = obj['color.rgb'];
+                    let hsl = Raphael.rgb2hsl({r:rgb[0], g:rgb[1], b:rgb[2]});
+                    obj.hue = hsl.h;
+                }
+                else if ('color.hue' in obj) {
+                    let hue = obj['color.hue'];
+                    if (1 == hue.length)
+                        obj.hue = hue;
+                    else
+                        obj.hue = hue[0];
+                    if (obj.hue > 1) {
+                        // constrain and normalize
+                        obj.hue = (obj.hue & 0xFFFFFF) / 0xFFFFFF;
                     }
-                    // add ordinal, multiplied to be visually discriminable
-                    hash += parseInt(ord) * 600000;
-                    // constrain and normalize
-                    hash = (hash & 0xFFFFFF) / 0xFFFFFF;
-                    // convert to hue
-                    return hash;
-                };
-                obj.hue = hueHash(key);
+                }
+                else {
+                    // create hue hash
+                    hueHash = function(str) {
+                        var hash = 0, i, chr;
+                        if (str.length === 0) return 0x000000;
+                        // separate name and ordinal
+                        let ord_idx = str.lastIndexOf('.');
+                        let ord = str.slice(ord_idx+1);
+                        str = str.slice(0, ord_idx);
+                        for (i = 0; i < str.length; i++) {
+                            chr   = str.charCodeAt(i);
+                            hash  = ((hash << 5) - hash) + (1 << chr);
+                            hash &= 0xFFFFFF; // Constrain to 48bits
+                        }
+                        // add ordinal, multiplied to be visually discriminable
+                        hash += parseInt(ord) * 600000;
+                        // constrain and normalize
+                        hash = (hash & 0xFFFFFF) / 0xFFFFFF;
+                        // convert to hue
+                        return hash;
+                    };
+                    obj.hue = hueHash(key);
+                }
             }
             this.contents[key] = obj;
 
