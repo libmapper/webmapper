@@ -67,12 +67,12 @@ class GridView extends View {
 
     _resize(duration) {
         let self = this;
-        this.tables.left.adjust(0, this.rightExpandWidth-20, this.leftExpandWidth,
-                                this.frame.height - this.rightExpandWidth + 20,
+        this.tables.left.adjust(0, this.rightExpandWidth-6, this.leftExpandWidth,
+                                this.frame.height - this.rightExpandWidth + 6,
                                 0, duration, null, 0, this.frame.width);
-        this.tables.right.adjust(this.leftExpandWidth-20, this.rightExpandWidth,
+        this.tables.right.adjust(this.leftExpandWidth-6, this.rightExpandWidth,
                                  this.rightExpandWidth,
-                                 this.frame.width - this.leftExpandWidth + 20,
+                                 this.frame.width - this.leftExpandWidth + 6,
                                  -Math.PI * 0.5, duration,
                                  function() {self.draw(500)},
                                  this.rightExpandWidth-this.frame.height,
