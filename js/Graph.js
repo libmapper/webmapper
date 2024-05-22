@@ -371,9 +371,9 @@ function Graph() {
         let hidden = this.devices.some(d => d.hidden == true);
         let last = devs.length - 1;
         for (var i in devs) {
-            let dev = this.devices.add(devs[i], i == last);
             if (hidden)
-                dev.hidden = true;
+                devs[i].hidden = true;
+            let dev = this.devices.add(devs[i], i == last);
             console.log('subscribing to device', dev.name)
             command.send('subscribe', dev.name);
         }
