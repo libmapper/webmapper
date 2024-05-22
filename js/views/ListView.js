@@ -29,6 +29,7 @@ class ListView extends View {
             t.hidden = false;
             t.showDetail(true);
             t.expand = false;
+            t.filler = false;
             t.scrolled = 0;
             t.zoomed = 1;
             t.update();
