@@ -290,6 +290,9 @@ def set_dev_properties(props):
         publish = props['publish']
         del props['publish']
 
+    if 'hidden' in props:
+        del props['hidden']
+
     # set metadata
     for key in props:
         dev.set_property(key, props[key], publish=pub)
