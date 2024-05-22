@@ -22,8 +22,8 @@ jobs:
         name: webmapper-ubuntu-standalone
         path: dist/webmapper
 
-  MacOS-Latest:
-    runs-on: macOS-latest
+  MacOS:
+    runs-on: macOS-13
     env:
       CC: clang
       CXX: clang++
