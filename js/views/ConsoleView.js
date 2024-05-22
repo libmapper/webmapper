@@ -107,7 +107,7 @@ class ConsoleView extends View {
                         break;
                     case 'ephemeral':
                     case 'use_inst':
-                        v = sig[key] == 'true' ? 'T' : 'F';
+                        v = sig[key] == true ? 'T' : 'F';
                         s += " "+key+": "+v+";";
                         break;
                     case 'min':
@@ -159,7 +159,7 @@ class ConsoleView extends View {
                         break;
                     case 'muted':
                     case 'use_inst':
-                        v = map[key] == 'true' ? 'T' : 'F';
+                        v = map[key] == true ? 'T' : 'F';
                         s2 += " "+key+": "+v+";";
                         break;
                     default:
