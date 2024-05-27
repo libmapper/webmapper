@@ -38,6 +38,7 @@ class SignalMonitor {
         }
         let curMin = 0;
         let curMax = 1;
+        let updateRanges = false;
         let xLabelMin = canvas.text(15, 115, 'n-20').attr({'font-size': 5, 'fill': '#FFF'});
         let xLabelMax = canvas.text(110, 115, 'n').attr({'font-size': 5, 'fill': '#FFF'});
         let yLabelMax = canvas.text(7, 10, curMax).attr({'font-size': 5, 'text-anchor': 'end', 'fill': '#FFF'});
@@ -69,19 +70,36 @@ class SignalMonitor {
             // Update min and max
             if (curValue < curMin) {
                 curMin = curValue;
-                yLabelMin.attr('text', curMin);
+                updateRanges = true;
             } else if (curValue > curMax) {
                 curMax = curValue;
+                updateRanges = true;
+            }
+            if (updateRanges) {
+                yLabelMin.attr('text', curMin);
                 yLabelMax.attr('text', curMax);
+                updateRanges = false;
             }
             curIdx = (curIdx + 1) % bufSize; // Increment current index
             values[curIdx] = curValue;
+            let newMin = curValue;
+            let newMax = curValue;
             for (let i = 0; i < bufSize; i++) {
-                let valIdx = (i + curIdx + 1) % bufSize;
-                let y = normalize(values[valIdx], curMin, curMax);
+                let value = values[(i + curIdx + 1) % bufSize];
+                if (value > newMax) {
+                    newMax = value;
+                    updateRanges = true;
+                }
+                else if (value < newMin) {
+                    newMin = value;
+                    updateRanges = true;
+                }
+                let y = normalize(value, curMin, curMax);
                 y = 110.0 - y * 100.0;
                 points[i].attr('cy', y);
             }
+            curMin = newMin;
+            curMax = newMax;
         });
 
         function normalize(val, min, max) { return (val - min) / (max - min); }
