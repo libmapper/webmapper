@@ -202,7 +202,7 @@ class View {
         filtered = Object.keys(filtered)
                          .sort()
                          .reduce((r, k) => (r[k] = filtered[k], r), {});
-        self.tooltip.showTable(dev.name+" (click to "+action+")", filtered, e.x, e.y);
+        self.tooltip.showTable(dev.key, dev.name+" (click to "+action+")", filtered, e.x, e.y);
     }
 
     setDevHover(dev) {
@@ -253,6 +253,7 @@ class View {
         link.view.hover(
             function(e) {
                 self.tooltip.showTable(
+                    link.key,
                     link.status+" link", {
                         source: link.src.key,
                         destination: link.dst.key
@@ -376,7 +377,7 @@ class View {
                     filtered = Object.keys(filtered)
                                      .sort()
                                      .reduce((r, k) => (r[k] = filtered[k], r), {});
-                    self.tooltip.showTable(sig.device.name+":"+sig.name, filtered, x, y);
+                    self.tooltip.showTable(sig.key, sig.device.name+":"+sig.name, filtered, x, y);
                     sig.view.animate({'stroke-width': 15}, 0, 'linear');
                 }
                 self.hoverDev = sig.device;
@@ -546,6 +547,7 @@ class View {
             function(e) {
                 if (!self.draggingFrom) {
                     self.tooltip.showTable(
+                        map.key,
                         "Map", {
                             source: map.srcs.map(s => s.key).join(', '),
                             destination: map.dst.key,

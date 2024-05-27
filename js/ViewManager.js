@@ -199,6 +199,11 @@ class ViewManager
                     self._update_sessions();
                     break;
             }
+            if (event == 'removed') {
+                // check here if tooltip is visible and has same key as the removed object
+                if (self.tooltip.is_visible && self.tooltip.key == obj.key)
+                    self.tooltip.hide();
+            }
         });
     };
 

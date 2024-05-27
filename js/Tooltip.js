@@ -5,9 +5,11 @@ class Tooltip {
         $('body').append("<div id='tooltip'></div>");
         this._div = $('#tooltip');
         this.margin = 20;
+        this.is_visible = false;
     }
 
-    showTable(header, data, x, y) {
+    showTable(parent_key, header, data, x, y) {
+        this.key = parent_key;
         this._div.stop(true, false)
                  .empty()
                  .append(Tooltip._makeInfoTable(header, data))
@@ -16,6 +18,7 @@ class Tooltip {
                        'top': this._vPosition(y, 0),
                        'opacity': 1,
                        'z-index': 10});
+        this.is_visible = true;
     }
 
     hide(immediate) {
@@ -23,6 +26,7 @@ class Tooltip {
         if (immediate) dur = 0;
         this._div.animate({opacity: 0}, {duration: dur});
         this._div.css({'z-index': -10});
+        this.is_visible = false;
     }
 
     showBrief(line, x, y) {
