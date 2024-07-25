@@ -1,5 +1,24 @@
 # WebMapper News
 
+## Version 2.4.8
+
+We are pleased to announce the release of version 2.4.8 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Changes since the last release include:
+
+- Fixed List View bug preventing drag/drop if signal or device name contained a space character.
+- Enabled using 'color' property from device as an alternative to the name hash.
+- Fix for handling 'hidden' property of new devices when devices have been soloed in Chord View.
+- Only enable signal value on-time tweaks for 'input' signals since 'outputs' will ignore the update anyway.
+- Fix for handling boolean values for some properties in Console View.
+- Fix for table alignment in Grid View.
+- Ensure filler cells in signal tables (used in Grid View) are removed when transitioning to List View.
+- Do not allow device 'hidden' property (used locally for filtering views) to propagate to the libmapper graph.
+- Update signal monitor ranges based on current window.
+- Cache object parent key in tooltip; ensure orphaned tooltips are removed.
+
+This version updates the package dependency requirements to [libmapper 2.4.8](https://pypi.org/project/libmapper/2.4.8/) and [mappersession 0.0.15](https://pypi.org/project/mappersession/0.0.15/).
+
 ## Version 2.4.6
 
 We are pleased to announce the release of version 2.4.6 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
