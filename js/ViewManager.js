@@ -227,6 +227,8 @@ class ViewManager
             if (repaint)
                 this.views[this.currentView].update('devices');
         }
+        else if (event == 'modified' && repaint)
+            this.views[this.currentView].update('devices');
         else if (event == 'removed' && repaint)
             this.views[this.currentView].update('devices');
     }

@@ -91,6 +91,24 @@ NodeArray.prototype = {
         let key = obj.key;
         if (!key)
             return null;
+
+        if ('color.rgb' in obj && 3 == obj['color.rgb'].length) {
+            let rgb = obj['color.rgb'];
+            let hsl = Raphael.rgb2hsl({r:rgb[0], g:rgb[1], b:rgb[2]});
+            obj.hue = hsl.h;
+        }
+        else if ('color.hue' in obj) {
+            let hue = obj['color.hue'];
+            if (Array.isArray(hue))
+                obj.hue = hue[0];
+            else
+                obj.hue = hue;
+            if (obj.hue > 1) {
+                // constrain and normalize
+                obj.hue = (obj.hue & 0xFFFFFF) / 0xFFFFFF;
+            }
+        }
+
         if (key in this.contents) {
             let prop, existing = this.contents[key];
             let updated = false;
@@ -109,23 +127,7 @@ NodeArray.prototype = {
             if (this.obj_type == 'device') {
                 obj.signals = new NodeArray('signal', this.cb_func);
 
-                if ('color.rgb' in obj && 3 == obj['color.rgb'].length) {
-                    let rgb = obj['color.rgb'];
-                    let hsl = Raphael.rgb2hsl({r:rgb[0], g:rgb[1], b:rgb[2]});
-                    obj.hue = hsl.h;
-                }
-                else if ('color.hue' in obj) {
-                    let hue = obj['color.hue'];
-                    if (1 == hue.length)
-                        obj.hue = hue;
-                    else
-                        obj.hue = hue[0];
-                    if (obj.hue > 1) {
-                        // constrain and normalize
-                        obj.hue = (obj.hue & 0xFFFFFF) / 0xFFFFFF;
-                    }
-                }
-                else {
+                if (!('hue' in obj) || obj.hue == 'undefined') {
                     // create hue hash
                     hueHash = function(str) {
                         var hash = 0, i, chr;
