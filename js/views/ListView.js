@@ -165,9 +165,10 @@ class ListMapPainter extends MapPainter
 
     betweenTables(src, dst, i, dstPos)
     {
-        let mpx = this.frame.cx;
-        if (src.isnode)
-            mpx = dstPos ? dst.x : (src.x + dst.x) * 0.5;
+        let mpx = (src.x + dst.x) * 0.5;
+        if (src.isnode && dstPos) {
+            mpx = dst.x;
+        }
 
         if (dst.isnode == true) {
             let offset = 50;
