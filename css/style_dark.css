@@ -84,7 +84,7 @@ thead, #networkMenu {
     position: relative;
 /*    overflow: auto;*/
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 /* tertiary highlight selection */

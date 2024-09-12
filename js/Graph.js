@@ -182,7 +182,11 @@ NodeArray.prototype = {
     },
 
     find : function(key) {
-        return this.contents[key];
+        if (key in this.contents)
+            return this.contents[key];
+        else
+            console.log('no item matching key:', key);
+        return null;
     }
 };
 

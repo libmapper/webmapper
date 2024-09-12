@@ -172,6 +172,8 @@ def map_props(map):
 
 def on_device(type, dev, event):
 #    print('ON_DEVICE:', event, dev)
+    if dev['is_local']:
+        return
     dev = dev_props(dev)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_devs[dev['key']] = dev
@@ -181,6 +183,8 @@ def on_device(type, dev, event):
 
 def on_signal(type, sig, event):
 #    print('ON_SIGNAL:', event)
+    if sig['is_local']:
+        return
     sig = sig_props(sig)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_sigs[sig['key']] = sig
@@ -188,7 +192,9 @@ def on_signal(type, sig, event):
         del_sigs[sig['key']] = sig
 
 def on_map(type, map, event):
-#    print('ON_MAP:', event)
+#    print('ON_MAP:', event, type, map)
+    if map['is_local']:
+        return
     map = map_props(map)
     if event == mpr.Graph.Event.NEW or event == mpr.Graph.Event.MODIFIED:
         new_maps[map['key']] = map
