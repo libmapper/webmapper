@@ -86,7 +86,6 @@ class SaverLoader {
     }
 
     updateSessions() {
-        console.log("saverLoader.updateSessions()!");
         $('#sessionMenu').empty();
         let active_sessions = graph.active_sessions;
         if (active_sessions.length > 0) {

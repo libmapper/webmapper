@@ -1,3 +1,3 @@
 netifaces==0.11.0
-libmapper==2.4.6
+libmapper==2.4.11
 mappersession==0.0.15

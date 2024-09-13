@@ -47,14 +47,6 @@ class ChordView extends View {
         // remove associated svg elements for maps
         this.graph.maps.forEach(function(map) { remove_object_svg(map); });
 
-        this.devCount = this.canvas.text(this.mapPane.cx, this.mapPane.cy, " ")
-                                   .attr({'font-size': 100,
-                                          'opacity': 0.25,
-                                          'fill': 'white',
-                                          'x': this.mapPane.cx,
-                                          'y': this.mapPane.cy});
-        this.devCount.node.setAttribute('pointer-events', 'none');
-
         this.updateDevices();
         this.resize();
     }
@@ -68,9 +60,6 @@ class ChordView extends View {
         this.mapPane.cy = this.frame.height * 0.5;
 
         this.radius = Math.min(this.frame.width, this.frame.height) * 0.25;
-
-        this.devCount.attr({'x': this.mapPane.cx,
-                            'y': this.mapPane.cy});
     }
 
     gap(numDevs) {
@@ -605,10 +594,6 @@ class ChordView extends View {
         let updated = false;
         if (elements.indexOf('devices') >= 0) {
             this.updateDevices();
-            if (this.onlineDevs)
-                this.devCount.attr({'text': ''});
-            else
-                this.devCount.attr({'text': 'waiting for devices'});
             updated = true;
         }
         if (elements.indexOf('links') >= 0) {
@@ -628,8 +613,6 @@ class ChordView extends View {
         super.cleanup();
 
         // clean up any objects created only for this view
-        if (this.devCount)
-            this.devCount.remove();
         graph.links.forEach(function(link) {
             if (!link.view)
                 return;
@@ -641,6 +624,10 @@ class ChordView extends View {
             if (dev.view.stick) {
                 dev.view.stick.remove();
                 dev.view.stick = null;
+            }
+            if (dev.view.label) {
+                dev.view.label.remove();
+                dev.view.label = null;
             }
             dev.view.unclick();
             dev.view.unhover();

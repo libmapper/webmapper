@@ -181,28 +181,35 @@ class ViewManager
                 remove_object_svg(obj, 0);
                 return;
             }
+            if (event == 'removed') {
+                // check here if tooltip is visible and has same key as the removed object
+                if (self.tooltip.is_visible && self.tooltip.key == obj.key)
+                    self.tooltip.hide();
+            }
+
             switch (type) {
                 case 'device':
-                    self._update_devices(obj, event, repaint);
+                    // only graph view might use device properties
+                    if (event != 'modified' || this.currentView == 'graph')
+                        self._update_devices(obj, event, repaint);
                     break;
                 case 'link':
-                    self._update_links(obj, event, repaint);
+                    if (event != 'modified' && this.currentView == 'chord')
+                        self._update_links(obj, event, repaint);
                     break;
                 case 'signal':
-                    self._update_signals(obj, event, repaint);
+                    // only graph view might use signal properties
+                    if (this.currentView == 'chord' || this.currentView == 'console')
+                        break;
+                    if (event != 'modified' || this.currentView == 'graph')
+                        self._update_signals(obj, event, repaint);
                     break;
                 case 'map':
                     self._update_maps(obj, event, repaint);
                     break;
                 case 'session':
-                    console.log("got graph sessions callback!");
                     self._update_sessions();
                     break;
-            }
-            if (event == 'removed') {
-                // check here if tooltip is visible and has same key as the removed object
-                if (self.tooltip.is_visible && self.tooltip.key == obj.key)
-                    self.tooltip.hide();
             }
         });
     };
@@ -270,7 +277,6 @@ class ViewManager
     }
 
     _update_sessions() {
-        console.log("ViewManager._update_sessions()");
         $('#container').trigger("updateSessions");
     }
 
