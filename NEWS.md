@@ -1,5 +1,18 @@
 # WebMapper News
 
+## Version 2.4.12
+
+We are pleased to announce the release of version 2.4.12 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
+
+Changes since the last release:
+
+- Fixed ListView map midpoint calculation on window resize.
+- Fixed scrollbar css.
+- Hid local device and signals (i.e. `webmapper.N` device and `monitor` signal).
+- Throttled some update messages to reduce unnecessary redrawing. ListView no longer resets SignalTable pan/zoom when maps are modified.
+
+This version updates the package dependency requirements to [libmapper 2.4.12](https://pypi.org/project/libmapper/2.4.12/) and [mappersession 0.0.15](https://pypi.org/project/mappersession/0.0.15/).
+
 ## Version 2.4.8
 
 We are pleased to announce the release of version 2.4.8 of WebMapper, a Python + HTML5 user interface for exploring and managing the distributed network formed by [libmapper](http://www.libmapper.org/)-enabled software and hardware.
