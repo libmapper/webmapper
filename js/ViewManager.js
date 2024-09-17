@@ -190,18 +190,18 @@ class ViewManager
             switch (type) {
                 case 'device':
                     // only graph view might use device properties
-                    if (event != 'modified' || this.currentView == 'graph')
+                    if (event != 'modified' || self.currentView == 'graph')
                         self._update_devices(obj, event, repaint);
                     break;
                 case 'link':
-                    if (event != 'modified' && this.currentView == 'chord')
+                    if (event != 'modified' && self.currentView == 'chord')
                         self._update_links(obj, event, repaint);
                     break;
                 case 'signal':
                     // only graph view might use signal properties
-                    if (this.currentView == 'chord' || this.currentView == 'console')
+                    if (self.currentView == 'chord' || self.currentView == 'console')
                         break;
-                    if (event != 'modified' || this.currentView == 'graph')
+                    if (event != 'modified' || self.currentView == 'graph')
                         self._update_signals(obj, event, repaint);
                     break;
                 case 'map':
