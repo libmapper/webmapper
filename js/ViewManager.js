@@ -198,11 +198,12 @@ class ViewManager
                         self._update_links(obj, event, repaint);
                     break;
                 case 'signal':
-                    // only graph view might use signal properties
+                    // chord and console views don't display live signal properties
                     if (self.currentView == 'chord' || self.currentView == 'console')
                         break;
-                    if (event != 'modified' || self.currentView == 'graph')
-                        self._update_signals(obj, event, repaint);
+                    if (event == 'modified' && (self.currentView == 'hive' || self.currentView == 'parallel'))
+                        break;
+                    self._update_signals(obj, event, repaint);
                     break;
                 case 'map':
                     self._update_maps(obj, event, repaint);

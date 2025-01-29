@@ -592,7 +592,7 @@ class SignalTable {
                     insts: sig.num_inst,
                     unit: unit,
                     direction: sig.direction,
-                    color: Raphael.hsl(dev.hue, 1, 0.5)
+                    color: Raphael.hsl(sig.hue ? sig.hue : dev.hue, 1, 0.5)
                 });
 
                 num_dev_sigs += 1;
