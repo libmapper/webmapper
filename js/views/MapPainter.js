@@ -178,8 +178,8 @@ class MapPainter {
                                  ? MapPainter.mutedOpacity : MapPainter.defaultOpacity)
             , 'stroke-width': (this.map.selected ? MapPainter.boldStrokeWidth : MapPainter.defaultStrokeWidth)
             , 'fill': 'none'
-            , 'arrow-start': (this.map.protocol == 'TCP' && (count <= 2 || i < count-2) ? 'oval' : 'none')
-            , 'arrow-end': 'block-wide-long'
+            , 'arrow-start': (this.map.process_loc == 'SOURCE' && (count <= 2 || i < count-2) ? 'oval' : 'none')
+            , 'arrow-end': (this.map.protocol == 'TCP' && (count <= 2 || i < count-2) ? 'classic-wide-long' : 'block-wide-long')
             };
         }
     }
