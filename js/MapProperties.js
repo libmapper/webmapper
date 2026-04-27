@@ -100,20 +100,42 @@ class MapProperties {
 
     $("body").on("keydown", function (e) {
       if (self.editor.hasFocus() == true) {
-        if (e.which == 27) {
-          // 'Escape' key
-          self.editor.display.input.blur();
-          self.view.isCodeMirror = false;
-        } else if (e.metaKey == true && e.which == 13) {
-          self.setMapProperty("expr", self.editor.getValue(""));
-        } else if (e.which < 37 || e.which > 40) {
-          // exclude arrow keys
-          $("#exprUpdate").prop("disabled", false);
+        switch (e.which) {
+          case 27:
+            // 'Escape' key
+            self.editor.display.input.blur();
+            self.view.isCodeMirror = false;
+            break;
+          case 13:
+            // 'Return/Enter' key
+            if (e.metaKey == true) {
+              // push expression changes to the graph
+              e.preventDefault();
+              self.setMapProperty("expr", self.editor.getValue(""));
+            }
+            break;
+          case 37:
+          case 38:
+          case 39:
+          case 40:
+            // arrow keys; do nothing
+            break;
+          case 65:
+            if (e.metaKey == true) {
+              e.stopPropagation();
+              e.preventDefault();
+              self.editor.execCommand("selectAll");
+            }
+            break;
+          default:
+            // mark expression as updated and enable the "apply" button
+            $("#exprUpdate").prop("disabled", false);
+            break;
         }
         return;
       }
       else if (self.view.isCurveEditor && e.metaKey == true && e.which == 13) {
-          self.view.curveEditor.apply();
+        self.view.curveEditor.apply();
       }
       let selected = self.graph.maps.filter((m) => m.selected);
       switch (e.which) {

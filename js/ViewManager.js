@@ -362,8 +362,10 @@ class ViewManager
                     }
                     /* delete */
                     // do not allow 'delete' key to unmap in console view
-                    if (self.currentView == 'console') break;
-                    if (self.isCodeMirror) break
+                    if (self.currentView == 'console')
+                        break;
+                    if (self.isCodeMirror)
+                        break;
                     self.graph.maps.forEach(function(map) {
                         if (map.selected)
                         {
@@ -375,6 +377,8 @@ class ViewManager
                     deselectAllMaps(self.tables);
                     break;
                 case 65:
+                    if (self.isCodeMirror)
+                        break;
                     if (e.metaKey == true) { // Select all 'cmd+a'
                         e.preventDefault();
                         select_all_maps();
