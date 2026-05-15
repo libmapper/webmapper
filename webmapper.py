@@ -78,6 +78,7 @@ def open_gui(port):
 graph = mpr.Graph()
 webmapper_dev = mpr.Device("webmapper", graph)
 webmapper_dev['display'] = False
+webmapper_dev['hidden'] = True
 
 def monitor_handler(sig, event, id, val, timetag):
     server.send_command("update_sig_monitor", val)
@@ -85,6 +86,7 @@ def monitor_handler(sig, event, id, val, timetag):
 monitor_sig = webmapper_dev.add_signal(mpr.Signal.Direction.INCOMING, "monitor", 1, mpr.Type.FLOAT,
                                        None, -100000, 100000, None, monitor_handler)
 monitor_sig['display'] = False
+monitor_sig['hidden'] = True
 
 def dev_props(dev):
     props = dev.properties.copy()
@@ -325,6 +327,7 @@ def set_sig_properties(props):
 
 def on_save(args):
     global graph
+    # TODO: include view-specific metadata
     sessionJson = session.save("", "", [], [], graph=graph)
     server.send_command("save_session", sessionJson)
     # also need to tag maps with new session name
@@ -334,18 +337,19 @@ def start_monitor_sig(sig_name):
     print("Monitoring signal: ", sig_name)
     stop_monitor_sig(None)
     webmapper_sig_name = (webmapper_dev[mpr.Property.NAME] + "/" + monitor_sig[mpr.Property.NAME])
-    new_map([[sig_name], webmapper_sig_name, {"expr": "y=x"}])
+    new_map([[sig_name], webmapper_sig_name, {"expr": "y=x", "no_save": True}])
 
 def stop_monitor_sig(args):
     global monitor_sig
     # Clear any maps to the 'monitor_sig' signal
     for map in monitor_sig.maps():
         map.release()
-        map.push()
 
 def on_load(args):
     global graph
-    views = session.load_json(args[0], args[1], graph=graph)
+    session.load_json(args[0], args[1], graph=graph)
+    # TODO: load value tweaks contained in file
+    # TODO: load view-specific metadata e.g. canvas positions
 
 def on_unload(args):
     global graph
