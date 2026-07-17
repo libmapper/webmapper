@@ -74,6 +74,10 @@ coll = COLLECT(
 )
 # Build a .app if on OS X
 if sys.platform == 'darwin':
-   app = BUNDLE(exe,
-                name='webmapper.app',
-                icon=None)
+    app = BUNDLE(
+        coll, # instead of exe otherwise dependencies are not bundled
+        name='webmapper.app',
+        icon='images/libmapper.icns',
+        bundle_identifier=None,
+        version=libmapper.__version__, # until a webmapper version is defined
+)
