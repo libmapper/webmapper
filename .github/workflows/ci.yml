@@ -47,11 +47,13 @@ jobs:
     - name: build standalone
       run:
         pyinstaller webmapper.spec
+    - name: cleanup build
+      run:
+        rm -frv dist/webmapper
     - uses: actions/upload-artifact@v4
       with:
         name: webmapper-macosx-standalone
-        path: dist/webmapper
-
+        path: dist/
   Windows-Latest:
     runs-on: windows-latest
     steps:
