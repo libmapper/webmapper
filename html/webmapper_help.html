@@ -538,10 +538,12 @@ pre.line-numbers > code {
 
 <p>If the browser doesn&#39;t open, open it manually and type &quot;localhost:#####&quot; into the address bar, where ##### is the same string of numbers displayed in the terminal</p>
 
-<h3 id="toc_4">To build standalone application:</h3>
+<h3 id="toc_4">To build a standalone application:</h3>
 
 <ol>
-<li>$ python setup.py py2app</li>
+<li>$ pip3 install -r requirements.txt</li>
+<li>$ pip3 install pyinstaller</li>
+<li>$ pyinstaller webmapper.spec</li>
 </ol>
 
 <h3 id="toc_5">Saving and loading:</h3>

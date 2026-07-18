@@ -55,10 +55,12 @@ By default webmapper will open a browser window when it is launched, but there m
 python3 webmapper.py --no-browser --stay-alive
 ~~~
 
-## To build a standalone application for macOS:
+## To build a standalone application:
 
 ~~~
-python3 setup.py py2app
+pip3 install -r requirements.txt
+pip3 install pyinstaller
+pyinstaller webmapper.spec
 ~~~
 
 ---
