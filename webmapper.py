@@ -165,6 +165,21 @@ def map_props(map):
         # convert device list to names
         devnames = [d['name'] for d in props['scope']]
         props['scope'] = devnames
+    if 'allow_origin' in props:
+        if props['allow_origin'] == None:
+            props['allow_origin'] = 'all'
+        else:
+            # convert device list to names
+            devnames = [d['name'] for d in props['allow_origin']]
+            props['allow_origin'] = devnames
+    if 'block_origin' in props:
+        if props['block_origin'] == None:
+            props['block_origin'] = 'all'
+        else:
+            # convert device list to names
+            devnames = [d['name'] for d in props['block_origin']]
+            props['block_origin'] = devnames
+
 #    print("map_props", props)
     return props
 
