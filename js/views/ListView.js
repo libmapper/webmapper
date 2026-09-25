@@ -157,10 +157,22 @@ class ListMapPainter extends MapPainter
             return;
         }
 
-        if (Math.abs(src.x - dst.x) < 1)
-            this.vertical(src, dst, i);
+        if (Math.abs(src.x - dst.x) < 1) {
+            if (src == dst)
+                this.self(src, i);
+            else
+                this.vertical(src, dst, i);
+        }
         else
             this.betweenTables(src, dst, i);
+    }
+
+    self(src, i)
+    {
+        // looping curve
+        this.pathspecs[i] = [['M', src.x, src.y],
+                             ['C', this.frame.width * 0.5, src.y - 100,
+                                   this.frame.width * 0.5, src.y + 100, src.x, src.y]];
     }
 
     betweenTables(src, dst, i, dstPos)

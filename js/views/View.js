@@ -801,7 +801,7 @@ class View {
                                 dst = self.tables[index].getRowFromPosition(x, y, snap_factor);
                                 if (!dst)
                                     continue;
-                                if (dst.id !== src.id) {
+                                if (dst.id !== src.id || src_table === self.tables.right) {
                                     self.newMap.dst = self.graph.find_signal(dst.id);
                                     self.tables[index].highlightRow(dst, false);
                                 }

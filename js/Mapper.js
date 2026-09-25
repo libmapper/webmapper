@@ -17,7 +17,6 @@ class Mapper
     // make a one to one map
     map(srckey, dstkey, props)
     {
-        if (srckey === dstkey) return;
         if (this._mapExists(srckey, dstkey)) return;
         else
         {
@@ -36,8 +35,6 @@ class Mapper
 
     converge(srckey, dstmap, method)
     {
-        if (srckey === dstmap.dst.key || dstmap.srcs.map(s => s.key).indexOf(srckey) >= 0)
-            return;
         this.convergent.converge(srckey, dstmap, method);
     }
 
