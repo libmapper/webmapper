@@ -161,10 +161,6 @@ def map_props(map):
     del props['is_local']
     if 'mode' in props:
         del props['mode']
-    if 'scope' in props and props['scope'] != None:
-        # convert device list to names
-        devnames = [d['name'] for d in props['scope']]
-        props['scope'] = devnames
     if 'allow_origin' in props:
         if props['allow_origin'] == None:
             props['allow_origin'] = 'all'
@@ -287,7 +283,7 @@ def set_map_properties(props, map):
                 map[mpr.Property.PROTOCOL] = mpr.Map.Protocol.TCP
         elif key == 'scope':
             # skip for now
-            print("skipping scope property for now")
+            print("skipping deprecated scope property")
         else:
             map[key] = val
     map.push()
