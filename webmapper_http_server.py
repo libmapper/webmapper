@@ -5,7 +5,6 @@ import socket, errno
 import urllib
 #import urllib.request, urllib.parse, urllib.error
 #import urllib.parse
-import cgi
 import threading, queue
 import time
 import json
@@ -42,6 +41,9 @@ class ReuseTCPServer(socketserver.ThreadingTCPServer):
 
 class MprHTTPServer(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
+        # cgi was removed in Python 3.13 (PEP 594). Importing it here keeps the
+        # server importable there; only this handler uses it.
+        import cgi
         ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
         if ctype == 'multipart/form-data':
             query = cgi.parse_multipart(self.rfile, pdict)
